@@ -1,0 +1,31 @@
+{
+  "frames": {
+    "corsair_bg03": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 1136,
+        "h": 520
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 120,
+        "w": 1136,
+        "h": 520
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 640
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_game_view_corsairbg.png",
+    "size": {
+      "w": 2048,
+      "h": 1024
+    }
+  }
+}

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test CB</title></head>
+<body>
+<script src="js/libs/laya.core.js"></script>
+<script src="js/libs/laya.webgl_2D.js"></script>
+<script>
+    var out = [];
+    var cbs = Laya.Laya._beforeInitCallbacks;
+    out.push("callbacks count: " + cbs.length);
+    for (var i = 0; i < cbs.length; i++) {
+        try {
+            cbs[i]({});
+            out.push("cb " + i + " OK");
+        } catch(e) {
+            out.push("cb " + i + " ERR: " + e.message);
+        }
+    }
+    out.push("renderDeviceFactory after: " + (Laya.LayaGL.renderDeviceFactory ? "SET" : "undefined"));
+    document.body.innerHTML = "<pre>" + out.join("\n") + "</pre>";
+</script>
+</body>
+</html>

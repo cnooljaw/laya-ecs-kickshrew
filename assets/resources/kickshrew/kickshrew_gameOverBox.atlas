@@ -1,0 +1,111 @@
+{
+  "frames": {
+    "kickshrew_gameOverBox_bg": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 430,
+        "h": 646
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 4,
+        "w": 430,
+        "h": 646
+      },
+      "sourceSize": {
+        "w": 432,
+        "h": 652
+      }
+    },
+    "kickshrew_gameOverBox_btn_back": {
+      "frame": {
+        "x": 128,
+        "y": 650,
+        "w": 124,
+        "h": 280
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 124,
+        "h": 280
+      },
+      "sourceSize": {
+        "w": 126,
+        "h": 282
+      }
+    },
+    "kickshrew_gameOverBox_btn_back_down": {
+      "frame": {
+        "x": 2,
+        "y": 650,
+        "w": 124,
+        "h": 280
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 124,
+        "h": 280
+      },
+      "sourceSize": {
+        "w": 126,
+        "h": 282
+      }
+    },
+    "kickshrew_gameOverBox_btn_continue": {
+      "frame": {
+        "x": 380,
+        "y": 650,
+        "w": 124,
+        "h": 276
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 2,
+        "w": 124,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 126,
+        "h": 282
+      }
+    },
+    "kickshrew_gameOverBox_btn_continue_down": {
+      "frame": {
+        "x": 254,
+        "y": 650,
+        "w": 124,
+        "h": 276
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 2,
+        "w": 124,
+        "h": 276
+      },
+      "sourceSize": {
+        "w": 126,
+        "h": 282
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_gameOverBox.png",
+    "size": {
+      "w": 512,
+      "h": 1024
+    }
+  }
+}

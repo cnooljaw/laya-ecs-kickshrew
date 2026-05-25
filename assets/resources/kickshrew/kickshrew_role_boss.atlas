@@ -1,0 +1,331 @@
+{
+  "frames": {
+    "boss_Swelling": {
+      "frame": {
+        "x": 220,
+        "y": 26,
+        "w": 24,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 24,
+        "h": 22
+      }
+    },
+    "boss_body": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 100,
+        "h": 108
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 100,
+        "h": 108
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 110
+      }
+    },
+    "boss_body_space": {
+      "frame": {
+        "x": 2,
+        "y": 112,
+        "w": 94,
+        "h": 108
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 94,
+        "h": 108
+      },
+      "sourceSize": {
+        "w": 96,
+        "h": 110
+      }
+    },
+    "boss_ear": {
+      "frame": {
+        "x": 146,
+        "y": 2,
+        "w": 13,
+        "h": 15
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 13,
+        "h": 15
+      },
+      "sourceSize": {
+        "w": 15,
+        "h": 15
+      }
+    },
+    "boss_ear_left": {
+      "frame": {
+        "x": 104,
+        "y": 88,
+        "w": 23,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 23,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 27,
+        "h": 22
+      }
+    },
+    "boss_ear_right": {
+      "frame": {
+        "x": 220,
+        "y": 2,
+        "w": 24,
+        "h": 22
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 22
+      },
+      "sourceSize": {
+        "w": 24,
+        "h": 22
+      }
+    },
+    "boss_face_angry": {
+      "frame": {
+        "x": 162,
+        "y": 2,
+        "w": 56,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 1,
+        "w": 56,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 60,
+        "h": 46
+      }
+    },
+    "boss_face_miserable": {
+      "frame": {
+        "x": 98,
+        "y": 174,
+        "w": 52,
+        "h": 46
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 52,
+        "h": 46
+      },
+      "sourceSize": {
+        "w": 54,
+        "h": 46
+      }
+    },
+    "boss_face_smile": {
+      "frame": {
+        "x": 98,
+        "y": 112,
+        "w": 46,
+        "h": 60
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 46,
+        "h": 60
+      },
+      "sourceSize": {
+        "w": 46,
+        "h": 60
+      }
+    },
+    "boss_hand_left_dizzy": {
+      "frame": {
+        "x": 40,
+        "y": 222,
+        "w": 38,
+        "h": 31
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 3,
+        "w": 38,
+        "h": 31
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 35
+      }
+    },
+    "boss_hand_left_down": {
+      "frame": {
+        "x": 162,
+        "y": 48,
+        "w": 44,
+        "h": 38
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 44,
+        "h": 38
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 38
+      }
+    },
+    "boss_hand_left_up": {
+      "frame": {
+        "x": 142,
+        "y": 222,
+        "w": 18,
+        "h": 30
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 30
+      }
+    },
+    "boss_hand_right_dizzy": {
+      "frame": {
+        "x": 2,
+        "y": 222,
+        "w": 36,
+        "h": 32
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 32
+      }
+    },
+    "boss_hand_right_down": {
+      "frame": {
+        "x": 104,
+        "y": 2,
+        "w": 38,
+        "h": 44
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 38,
+        "h": 44
+      },
+      "sourceSize": {
+        "w": 38,
+        "h": 44
+      }
+    },
+    "boss_hand_right_up": {
+      "frame": {
+        "x": 122,
+        "y": 222,
+        "w": 18,
+        "h": 30
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 18,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 18,
+        "h": 30
+      }
+    },
+    "boss_scar": {
+      "frame": {
+        "x": 80,
+        "y": 222,
+        "w": 40,
+        "h": 30
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 30
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_role_boss.png",
+    "size": {
+      "w": 256,
+      "h": 256
+    }
+  }
+}

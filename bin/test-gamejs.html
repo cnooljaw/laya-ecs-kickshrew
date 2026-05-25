@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test GameJS</title></head>
+<body>
+<script src="js/libs/laya.core.js"></script>
+<script src="js/libs/laya.webgl_2D.js"></script>
+<script src="js/game.js"></script>
+<script>
+    var out = [];
+    out.push("game.js loaded");
+    out.push("Laya._inited: " + Laya.Laya._inited);
+    Laya.init(750, 1334).then(function() {
+        out.push("INIT OK");
+        document.body.innerHTML = "<pre>" + out.join("\n") + "</pre>";
+    }).catch(function(err) {
+        out.push("INIT FAIL: " + (err.message || String(err)));
+        document.body.innerHTML = "<pre>" + out.join("\n") + "</pre>";
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "frames": {
+    "moon_bg02": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 1136,
+        "h": 618
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 22,
+        "w": 1136,
+        "h": 618
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 640
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_game_view_moonbg.png",
+    "size": {
+      "w": 2048,
+      "h": 1024
+    }
+  }
+}

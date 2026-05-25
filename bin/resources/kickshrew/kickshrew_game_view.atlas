@@ -1,0 +1,851 @@
+{
+  "frames": {
+    "game_hammerList_Bg": {
+      "frame": {
+        "x": 242,
+        "y": 224,
+        "w": 578,
+        "h": 97
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 578,
+        "h": 97
+      },
+      "sourceSize": {
+        "w": 580,
+        "h": 99
+      }
+    },
+    "game_hammer_countBg": {
+      "frame": {
+        "x": 176,
+        "y": 374,
+        "w": 26,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 2,
+        "w": 26,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 30,
+        "h": 30
+      }
+    },
+    "game_laft_handle": {
+      "frame": {
+        "x": 145,
+        "y": 2,
+        "w": 64,
+        "h": 112
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 4,
+        "w": 64,
+        "h": 112
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 120
+      }
+    },
+    "hammer/game_current_hammerBg": {
+      "frame": {
+        "x": 211,
+        "y": 2,
+        "w": 99,
+        "h": 99
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 99,
+        "h": 99
+      },
+      "sourceSize": {
+        "w": 103,
+        "h": 101
+      }
+    },
+    "hammer/hammer_99": {
+      "frame": {
+        "x": 79,
+        "y": 170,
+        "w": 44,
+        "h": 38
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 4,
+        "w": 44,
+        "h": 38
+      },
+      "sourceSize": {
+        "w": 46,
+        "h": 46
+      }
+    },
+    "hammer/hammer_big_1": {
+      "frame": {
+        "x": 393,
+        "y": 88,
+        "w": 70,
+        "h": 73
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 70,
+        "h": 73
+      },
+      "sourceSize": {
+        "w": 70,
+        "h": 73
+      }
+    },
+    "hammer/hammer_big_2": {
+      "frame": {
+        "x": 140,
+        "y": 435,
+        "w": 70,
+        "h": 73
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 70,
+        "h": 73
+      },
+      "sourceSize": {
+        "w": 70,
+        "h": 73
+      }
+    },
+    "hammer/hammer_big_3": {
+      "frame": {
+        "x": 68,
+        "y": 436,
+        "w": 70,
+        "h": 73
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 70,
+        "h": 73
+      },
+      "sourceSize": {
+        "w": 70,
+        "h": 73
+      }
+    },
+    "hammer/hammer_big_4": {
+      "frame": {
+        "x": 128,
+        "y": 156,
+        "w": 73,
+        "h": 66
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 73,
+        "h": 66
+      },
+      "sourceSize": {
+        "w": 73,
+        "h": 70
+      }
+    },
+    "hammer/hammer_big_5": {
+      "frame": {
+        "x": 465,
+        "y": 77,
+        "w": 70,
+        "h": 71
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 70,
+        "h": 71
+      },
+      "sourceSize": {
+        "w": 70,
+        "h": 73
+      }
+    },
+    "hammer/hammer_big_6": {
+      "frame": {
+        "x": 398,
+        "y": 2,
+        "w": 68,
+        "h": 73
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 68,
+        "h": 73
+      },
+      "sourceSize": {
+        "w": 70,
+        "h": 73
+      }
+    },
+    "hammer/hammer_big_99": {
+      "frame": {
+        "x": 103,
+        "y": 225,
+        "w": 137,
+        "h": 147
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 137,
+        "h": 147
+      },
+      "sourceSize": {
+        "w": 137,
+        "h": 147
+      }
+    },
+    "hammer/hammer_normal_ItemBg": {
+      "frame": {
+        "x": 312,
+        "y": 2,
+        "w": 84,
+        "h": 84
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "sourceSize": {
+        "w": 86,
+        "h": 86
+      }
+    },
+    "hammer/hammer_seleted_ItemBg": {
+      "frame": {
+        "x": 307,
+        "y": 103,
+        "w": 84,
+        "h": 84
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 84,
+        "h": 84
+      },
+      "sourceSize": {
+        "w": 86,
+        "h": 86
+      }
+    },
+    "hammer/hammer_small_1": {
+      "frame": {
+        "x": 531,
+        "y": 2,
+        "w": 61,
+        "h": 64
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 61,
+        "h": 64
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 64
+      }
+    },
+    "hammer/hammer_small_2": {
+      "frame": {
+        "x": 468,
+        "y": 2,
+        "w": 61,
+        "h": 64
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 61,
+        "h": 64
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 64
+      }
+    },
+    "hammer/hammer_small_3": {
+      "frame": {
+        "x": 528,
+        "y": 150,
+        "w": 61,
+        "h": 64
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 61,
+        "h": 64
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 64
+      }
+    },
+    "hammer/hammer_small_4": {
+      "frame": {
+        "x": 110,
+        "y": 374,
+        "w": 64,
+        "h": 59
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 64,
+        "h": 59
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 61
+      }
+    },
+    "hammer/hammer_small_5": {
+      "frame": {
+        "x": 465,
+        "y": 150,
+        "w": 61,
+        "h": 64
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 61,
+        "h": 64
+      },
+      "sourceSize": {
+        "w": 61,
+        "h": 64
+      }
+    },
+    "hammer/hammer_small_6": {
+      "frame": {
+        "x": 2,
+        "y": 450,
+        "w": 64,
+        "h": 59
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 64,
+        "h": 59
+      },
+      "sourceSize": {
+        "w": 64,
+        "h": 61
+      }
+    },
+    "hammer/number/0": {
+      "frame": {
+        "x": 160,
+        "y": 116,
+        "w": 13,
+        "h": 19
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 13,
+        "h": 19
+      },
+      "sourceSize": {
+        "w": 13,
+        "h": 25
+      }
+    },
+    "hammer/number/1": {
+      "frame": {
+        "x": 145,
+        "y": 137,
+        "w": 19,
+        "h": 13
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 19,
+        "h": 13
+      },
+      "sourceSize": {
+        "w": 25,
+        "h": 13
+      }
+    },
+    "hammer/number/2": {
+      "frame": {
+        "x": 145,
+        "y": 116,
+        "w": 13,
+        "h": 19
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 13,
+        "h": 19
+      },
+      "sourceSize": {
+        "w": 13,
+        "h": 25
+      }
+    },
+    "hammer/number/3": {
+      "frame": {
+        "x": 191,
+        "y": 417,
+        "w": 19,
+        "h": 13
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 19,
+        "h": 13
+      },
+      "sourceSize": {
+        "w": 25,
+        "h": 13
+      }
+    },
+    "hammer/number/4": {
+      "frame": {
+        "x": 191,
+        "y": 402,
+        "w": 19,
+        "h": 13
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 19,
+        "h": 13
+      },
+      "sourceSize": {
+        "w": 25,
+        "h": 13
+      }
+    },
+    "hammer/number/5": {
+      "frame": {
+        "x": 176,
+        "y": 402,
+        "w": 13,
+        "h": 19
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 3,
+        "w": 13,
+        "h": 19
+      },
+      "sourceSize": {
+        "w": 13,
+        "h": 25
+      }
+    },
+    "hammer/number/6": {
+      "frame": {
+        "x": 107,
+        "y": 210,
+        "w": 19,
+        "h": 13
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 19,
+        "h": 13
+      },
+      "sourceSize": {
+        "w": 25,
+        "h": 13
+      }
+    },
+    "hammer/number/7": {
+      "frame": {
+        "x": 86,
+        "y": 210,
+        "w": 19,
+        "h": 13
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 19,
+        "h": 13
+      },
+      "sourceSize": {
+        "w": 25,
+        "h": 13
+      }
+    },
+    "hammer/number/8": {
+      "frame": {
+        "x": 65,
+        "y": 210,
+        "w": 19,
+        "h": 13
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 19,
+        "h": 13
+      },
+      "sourceSize": {
+        "w": 25,
+        "h": 13
+      }
+    },
+    "hammer/number/9": {
+      "frame": {
+        "x": 44,
+        "y": 210,
+        "w": 19,
+        "h": 13
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 19,
+        "h": 13
+      },
+      "sourceSize": {
+        "w": 25,
+        "h": 13
+      }
+    },
+    "playerInfo/game_faceFrame": {
+      "frame": {
+        "x": 212,
+        "y": 374,
+        "w": 130,
+        "h": 130
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 130
+      },
+      "sourceSize": {
+        "w": 130,
+        "h": 130
+      }
+    },
+    "playerInfo/game_face_default": {
+      "frame": {
+        "x": 203,
+        "y": 116,
+        "w": 102,
+        "h": 106
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 15,
+        "y": 12,
+        "w": 102,
+        "h": 106
+      },
+      "sourceSize": {
+        "w": 130,
+        "h": 130
+      }
+    },
+    "playerInfo/game_hammer99_famerBg": {
+      "frame": {
+        "x": 79,
+        "y": 2,
+        "w": 39,
+        "h": 166
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 39,
+        "h": 166
+      },
+      "sourceSize": {
+        "w": 39,
+        "h": 168
+      }
+    },
+    "playerInfo/game_level_0": {
+      "frame": {
+        "x": 78,
+        "y": 225,
+        "w": 23,
+        "h": 152
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 23,
+        "h": 152
+      },
+      "sourceSize": {
+        "w": 23,
+        "h": 152
+      }
+    },
+    "playerInfo/game_level_1": {
+      "frame": {
+        "x": 120,
+        "y": 2,
+        "w": 23,
+        "h": 152
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 23,
+        "h": 152
+      },
+      "sourceSize": {
+        "w": 23,
+        "h": 152
+      }
+    },
+    "playerInfo/game_money_buy_down": {
+      "frame": {
+        "x": 285,
+        "y": 323,
+        "w": 41,
+        "h": 41
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 41,
+        "h": 41
+      },
+      "sourceSize": {
+        "w": 43,
+        "h": 43
+      }
+    },
+    "playerInfo/game_money_buy_up": {
+      "frame": {
+        "x": 242,
+        "y": 323,
+        "w": 41,
+        "h": 43
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 0,
+        "w": 41,
+        "h": 43
+      },
+      "sourceSize": {
+        "w": 43,
+        "h": 43
+      }
+    },
+    "playerInfo/game_money_icon": {
+      "frame": {
+        "x": 78,
+        "y": 379,
+        "w": 30,
+        "h": 46
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 30,
+        "h": 46
+      },
+      "sourceSize": {
+        "w": 30,
+        "h": 46
+      }
+    },
+    "playerInfo/game_power_0": {
+      "frame": {
+        "x": 44,
+        "y": 2,
+        "w": 33,
+        "h": 206
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 33,
+        "h": 206
+      },
+      "sourceSize": {
+        "w": 33,
+        "h": 208
+      }
+    },
+    "playerInfo/game_power_1": {
+      "frame": {
+        "x": 43,
+        "y": 228,
+        "w": 33,
+        "h": 206
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 33,
+        "h": 206
+      },
+      "sourceSize": {
+        "w": 33,
+        "h": 208
+      }
+    },
+    "playerInfo/player_money_frameBg": {
+      "frame": {
+        "x": 2,
+        "y": 228,
+        "w": 39,
+        "h": 220
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 39,
+        "h": 220
+      },
+      "sourceSize": {
+        "w": 39,
+        "h": 220
+      }
+    },
+    "playerInfo/player_name_frameBg": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 40,
+        "h": 224
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 224
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 224
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_game_view.png",
+    "size": {
+      "w": 1024,
+      "h": 512
+    }
+  }
+}

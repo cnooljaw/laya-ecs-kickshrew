@@ -1,0 +1,191 @@
+{
+  "frames": {
+    "kickshrew_treasure_box_10": {
+      "frame": {
+        "x": 292,
+        "y": 582,
+        "w": 286,
+        "h": 302
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 38,
+        "w": 286,
+        "h": 302
+      },
+      "sourceSize": {
+        "w": 288,
+        "h": 350
+      }
+    },
+    "kickshrew_treasure_box_11": {
+      "frame": {
+        "x": 630,
+        "y": 292,
+        "w": 326,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 0,
+        "w": 326,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 350,
+        "h": 288
+      }
+    },
+    "kickshrew_treasure_box_12": {
+      "frame": {
+        "x": 292,
+        "y": 292,
+        "w": 336,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 10,
+        "y": 0,
+        "w": 336,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 350,
+        "h": 288
+      }
+    },
+    "kickshrew_treasure_box_13": {
+      "frame": {
+        "x": 2,
+        "y": 630,
+        "w": 288,
+        "h": 336
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 4,
+        "w": 288,
+        "h": 336
+      },
+      "sourceSize": {
+        "w": 288,
+        "h": 350
+      }
+    },
+    "kickshrew_treasure_box_14": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 338,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 10,
+        "y": 0,
+        "w": 338,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 350,
+        "h": 288
+      }
+    },
+    "kickshrew_treasure_box_15": {
+      "frame": {
+        "x": 2,
+        "y": 292,
+        "w": 288,
+        "h": 336
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 4,
+        "w": 288,
+        "h": 336
+      },
+      "sourceSize": {
+        "w": 288,
+        "h": 350
+      }
+    },
+    "kickshrew_treasure_box_16": {
+      "frame": {
+        "x": 680,
+        "y": 2,
+        "w": 336,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 0,
+        "w": 336,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 350,
+        "h": 288
+      }
+    },
+    "kickshrew_treasure_box_17": {
+      "frame": {
+        "x": 342,
+        "y": 2,
+        "w": 336,
+        "h": 288
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 0,
+        "w": 336,
+        "h": 288
+      },
+      "sourceSize": {
+        "w": 350,
+        "h": 288
+      }
+    },
+    "kickshrew_treasure_box_9": {
+      "frame": {
+        "x": 580,
+        "y": 582,
+        "w": 276,
+        "h": 286
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 0,
+        "w": 276,
+        "h": 286
+      },
+      "sourceSize": {
+        "w": 350,
+        "h": 288
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_treasure_box.png",
+    "size": {
+      "w": 1024,
+      "h": 1024
+    }
+  }
+}

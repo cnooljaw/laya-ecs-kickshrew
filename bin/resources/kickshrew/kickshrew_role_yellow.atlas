@@ -1,0 +1,331 @@
+{
+  "frames": {
+    "Yellow_prop_bean": {
+      "frame": {
+        "x": 145,
+        "y": 2,
+        "w": 40,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 40,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 30
+      }
+    },
+    "yellow_body": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 95,
+        "h": 110
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 95,
+        "h": 110
+      },
+      "sourceSize": {
+        "w": 95,
+        "h": 110
+      }
+    },
+    "yellow_ear_left_down": {
+      "frame": {
+        "x": 97,
+        "y": 114,
+        "w": 27,
+        "h": 46
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 27,
+        "h": 46
+      },
+      "sourceSize": {
+        "w": 35,
+        "h": 46
+      }
+    },
+    "yellow_ear_left_normal": {
+      "frame": {
+        "x": 105,
+        "y": 205,
+        "w": 38,
+        "h": 41
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 2,
+        "w": 38,
+        "h": 41
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 45
+      }
+    },
+    "yellow_ear_left_up": {
+      "frame": {
+        "x": 99,
+        "y": 33,
+        "w": 40,
+        "h": 29
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 3,
+        "w": 40,
+        "h": 29
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 35
+      }
+    },
+    "yellow_ear_right_down": {
+      "frame": {
+        "x": 76,
+        "y": 187,
+        "w": 27,
+        "h": 46
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 0,
+        "w": 27,
+        "h": 46
+      },
+      "sourceSize": {
+        "w": 35,
+        "h": 46
+      }
+    },
+    "yellow_ear_right_normal": {
+      "frame": {
+        "x": 105,
+        "y": 162,
+        "w": 38,
+        "h": 41
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 2,
+        "w": 38,
+        "h": 41
+      },
+      "sourceSize": {
+        "w": 40,
+        "h": 45
+      }
+    },
+    "yellow_ear_right_up": {
+      "frame": {
+        "x": 99,
+        "y": 2,
+        "w": 40,
+        "h": 29
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 3,
+        "w": 40,
+        "h": 29
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 35
+      }
+    },
+    "yellow_face_cry": {
+      "frame": {
+        "x": 67,
+        "y": 114,
+        "w": 28,
+        "h": 53
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 28,
+        "h": 53
+      },
+      "sourceSize": {
+        "w": 30,
+        "h": 55
+      }
+    },
+    "yellow_face_smile": {
+      "frame": {
+        "x": 2,
+        "y": 191,
+        "w": 25,
+        "h": 58
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 25,
+        "h": 58
+      },
+      "sourceSize": {
+        "w": 25,
+        "h": 58
+      }
+    },
+    "yellow_hand_left": {
+      "frame": {
+        "x": 76,
+        "y": 235,
+        "w": 14,
+        "h": 19
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 3,
+        "w": 14,
+        "h": 19
+      },
+      "sourceSize": {
+        "w": 20,
+        "h": 25
+      }
+    },
+    "yellow_hand_right": {
+      "frame": {
+        "x": 57,
+        "y": 171,
+        "w": 19,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 3,
+        "w": 19,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 25,
+        "h": 20
+      }
+    },
+    "yellow_prop_black_glassess": {
+      "frame": {
+        "x": 2,
+        "y": 114,
+        "w": 36,
+        "h": 75
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 75
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 75
+      }
+    },
+    "yellow_prop_light": {
+      "frame": {
+        "x": 40,
+        "y": 114,
+        "w": 25,
+        "h": 55
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 25,
+        "h": 55
+      },
+      "sourceSize": {
+        "w": 25,
+        "h": 55
+      }
+    },
+    "yellow_prop_one_eye": {
+      "frame": {
+        "x": 29,
+        "y": 191,
+        "w": 45,
+        "h": 57
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 45,
+        "h": 57
+      },
+      "sourceSize": {
+        "w": 45,
+        "h": 57
+      }
+    },
+    "yellow_swelling": {
+      "frame": {
+        "x": 40,
+        "y": 171,
+        "w": 15,
+        "h": 18
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 15,
+        "h": 18
+      },
+      "sourceSize": {
+        "w": 15,
+        "h": 18
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_role_yellow.png",
+    "size": {
+      "w": 256,
+      "h": 256
+    }
+  }
+}

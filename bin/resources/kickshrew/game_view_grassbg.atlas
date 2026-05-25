@@ -1,0 +1,31 @@
+{
+  "frames": {
+    "shrew_grass_bg": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 1136,
+        "h": 640
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 640
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 640
+      }
+    }
+  },
+  "meta": {
+    "image": "game_view_grassbg.png",
+    "size": {
+      "w": 2048,
+      "h": 1024
+    }
+  }
+}

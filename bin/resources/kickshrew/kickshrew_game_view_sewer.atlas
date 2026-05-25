@@ -1,0 +1,171 @@
+{
+  "frames": {
+    "sewer_1": {
+      "frame": {
+        "x": 2,
+        "y": 334,
+        "w": 1136,
+        "h": 146
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 146
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 146
+      }
+    },
+    "sewer_1_1": {
+      "frame": {
+        "x": 2,
+        "y": 757,
+        "w": 1136,
+        "h": 87
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 28,
+        "w": 1136,
+        "h": 87
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 115
+      }
+    },
+    "sewer_2": {
+      "frame": {
+        "x": 2,
+        "y": 621,
+        "w": 1136,
+        "h": 134
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 134
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 134
+      }
+    },
+    "sewer_2_1": {
+      "frame": {
+        "x": 55,
+        "y": 482,
+        "w": 1136,
+        "h": 102
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 32,
+        "w": 1136,
+        "h": 102
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 134
+      }
+    },
+    "sewer_3": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 1136,
+        "h": 180
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 180
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 180
+      }
+    },
+    "sewer_3_1": {
+      "frame": {
+        "x": 2,
+        "y": 184,
+        "w": 1136,
+        "h": 148
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 32,
+        "w": 1136,
+        "h": 148
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 180
+      }
+    },
+    "sewer_wheel": {
+      "frame": {
+        "x": 2,
+        "y": 846,
+        "w": 64,
+        "h": 64
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 1,
+        "w": 64,
+        "h": 64
+      },
+      "sourceSize": {
+        "w": 68,
+        "h": 68
+      }
+    },
+    "sewer_wheelWater": {
+      "frame": {
+        "x": 2,
+        "y": 482,
+        "w": 51,
+        "h": 137
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 2,
+        "w": 51,
+        "h": 137
+      },
+      "sourceSize": {
+        "w": 55,
+        "h": 139
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_game_view_sewer.png",
+    "size": {
+      "w": 2048,
+      "h": 1024
+    }
+  }
+}

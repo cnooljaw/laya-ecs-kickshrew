@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Inited</title></head>
+<body>
+<script src="js/libs/laya.core.js"></script>
+<script src="js/libs/laya.webgl_2D.js"></script>
+<script>
+    var out = [];
+    out.push("_inited before: " + Laya.Laya._inited);
+    var p = Laya.init(750, 1334);
+    out.push("_inited after: " + Laya.Laya._inited);
+    out.push("promise: " + (p && typeof p.then));
+    document.body.innerHTML = "<pre>" + out.join("\n") + "</pre>";
+</script>
+</body>
+</html>

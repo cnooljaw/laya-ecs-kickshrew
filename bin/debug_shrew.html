@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Shrew Debug</title>
+    <style>
+        body { background: #111; color: #eee; font-family: monospace; }
+        canvas { display: block; }
+        #log { position: fixed; top: 0; right: 0; width: 500px; height: 100vh; overflow-y: auto;
+               background: rgba(0,0,0,0.85); padding: 8px; font-size: 11px; z-index: 9999; }
+        .ok { color: #4f4; } .err { color: #f44; } .info { color: #4af; }
+    </style>
+</head>
+<body>
+    <div id="log"></div>
+    <script src="js/libs/laya.core.js"></script>
+    <script src="js/libs/laya.webgl_2D.js"></script>
+    <script src="js/libs/laya.ui2.js"></script>
+    <script src="js/game.js"></script>
+    <script>
+        var log = document.getElementById('log');
+        function lg(msg, cls) {
+            var d = document.createElement('div');
+            d.className = cls || '';
+            d.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+            log.appendChild(d);
+            log.scrollTop = log.scrollHeight;
+            console.log(msg);
+        }
+
+        // 从 AtlasResource.frames 按帧名后缀查找 Texture（与 getFrameTexture 逻辑一致）
+        function getFrameTexture(atlasRes, frameName) {
+            if (!atlasRes || !atlasRes.frames) return null;
+            var suffix = '/' + frameName;
+            return atlasRes.frames.find(function(t) {
+                return t && t.url && t.url.endsWith(suffix);
+            }) || null;
+        }
+
+        if (!Laya.PlayerConfig) Laya.PlayerConfig = {};
+        if (!Laya.PlayerConfig.UI) Laya.PlayerConfig.UI = {};
+
+        Laya.init(960, 640).then(function() {
+            Laya.stage.scaleMode = Laya.Stage.SCALE_FIXED_AUTO;
+            Laya.stage.bgColor = "#222";
+            lg('Laya init OK', 'ok');
+
+            var atlasUrl = 'resources/kickshrew/kickshrew_role_red.atlas';
+
+            Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then(function(atlasRes) {
+                lg('Atlas load OK, frames count: ' + (atlasRes && atlasRes.frames ? atlasRes.frames.length : 0), 'ok');
+
+                // 打印前3帧的 url
+                if (atlasRes && atlasRes.frames) {
+                    atlasRes.frames.slice(0, 3).forEach(function(t, i) {
+                        lg('  frame[' + i + '].url = "' + t.url + '"', 'info');
+                    });
+                }
+
+                // 用 getFrameTexture 取 body 帧
+                var bodyTex = getFrameTexture(atlasRes, 'red_body');
+                if (bodyTex) {
+                    lg('getFrameTexture(red_body) OK: ' + bodyTex.width + 'x' + bodyTex.height, 'ok');
+                    var sp = new Laya.Sprite();
+                    sp.x = 200; sp.y = 200;
+                    Laya.stage.addChild(sp);
+                    sp.graphics.drawTexture(bodyTex, 0, 0, bodyTex.width * 2, bodyTex.height * 2);
+                    lg('Drawn at (200,200)', 'ok');
+                } else {
+                    lg('getFrameTexture(red_body) FAIL', 'err');
+                }
+
+            }).catch(function(e) { lg('Atlas error: ' + e, 'err'); });
+
+            // 启动主游戏
+            setTimeout(function() {
+                lg('Starting main game...', 'info');
+                var main = new Game.Main();
+                if (main.onStart) main.onStart();
+                setTimeout(function() {
+                    function walk(node, depth) {
+                        if (!node) return;
+                        var name = node.name || '?';
+                        if (name.includes('Shrew') || name.includes('Hole') || name.includes('Scene') || name.includes('Bg')) {
+                            lg(Array(depth+1).join('  ') + name + ' vis=' + node.visible + ' x=' + Math.round(node.x) + ' y=' + Math.round(node.y), 'info');
+                        }
+                        if (node._children) node._children.forEach(function(c){ walk(c, depth+1); });
+                    }
+                    walk(Laya.stage, 0);
+                }, 5000);
+            }, 500);
+
+        }).catch(function(err) { lg('Init FAILED: ' + err, 'err'); });
+    </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+{
+  "frames": {
+    "dizzy_star1": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 96,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 15,
+        "w": 96,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 50
+      }
+    },
+    "dizzy_star2": {
+      "frame": {
+        "x": 2,
+        "y": 90,
+        "w": 90,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 14,
+        "w": 90,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 50
+      }
+    },
+    "dizzy_star3": {
+      "frame": {
+        "x": 2,
+        "y": 32,
+        "w": 92,
+        "h": 28
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 13,
+        "w": 92,
+        "h": 28
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 50
+      }
+    },
+    "dizzy_star4": {
+      "frame": {
+        "x": 100,
+        "y": 2,
+        "w": 26,
+        "h": 94
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 11,
+        "y": 2,
+        "w": 26,
+        "h": 94
+      },
+      "sourceSize": {
+        "w": 50,
+        "h": 100
+      }
+    },
+    "dizzy_star5": {
+      "frame": {
+        "x": 2,
+        "y": 62,
+        "w": 92,
+        "h": 26
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 4,
+        "y": 10,
+        "w": 92,
+        "h": 26
+      },
+      "sourceSize": {
+        "w": 100,
+        "h": 50
+      }
+    },
+    "dizzy_star6": {
+      "frame": {
+        "x": 94,
+        "y": 98,
+        "w": 28,
+        "h": 74
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 23,
+        "w": 28,
+        "h": 74
+      },
+      "sourceSize": {
+        "w": 50,
+        "h": 100
+      }
+    }
+  },
+  "meta": {
+    "image": "shrew_dizzy_star.png",
+    "size": {
+      "w": 128,
+      "h": 256
+    }
+  }
+}

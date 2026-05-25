@@ -1,0 +1,31 @@
+{
+  "frames": {
+    "sewer_bg": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 1136,
+        "h": 430
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 210,
+        "w": 1136,
+        "h": 430
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 640
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_game_view_sewerbg_02.png",
+    "size": {
+      "w": 2048,
+      "h": 512
+    }
+  }
+}

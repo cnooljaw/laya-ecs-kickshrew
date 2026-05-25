@@ -1,0 +1,171 @@
+{
+  "frames": {
+    "corsair_1": {
+      "frame": {
+        "x": 218,
+        "y": 282,
+        "w": 1136,
+        "h": 118
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 118
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 118
+      }
+    },
+    "corsair_2": {
+      "frame": {
+        "x": 218,
+        "y": 148,
+        "w": 1136,
+        "h": 132
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 132
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 132
+      }
+    },
+    "corsair_3": {
+      "frame": {
+        "x": 218,
+        "y": 2,
+        "w": 1136,
+        "h": 144
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 144
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 144
+      }
+    },
+    "corsair_bg01": {
+      "frame": {
+        "x": 2,
+        "y": 752,
+        "w": 1136,
+        "h": 221
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 221
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 221
+      }
+    },
+    "corsair_bg02": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 214,
+        "h": 748
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 214,
+        "h": 748
+      },
+      "sourceSize": {
+        "w": 214,
+        "h": 750
+      }
+    },
+    "corsair_cloud_1": {
+      "frame": {
+        "x": 20,
+        "y": 997,
+        "w": 50,
+        "h": 18
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 1,
+        "w": 50,
+        "h": 18
+      },
+      "sourceSize": {
+        "w": 50,
+        "h": 20
+      }
+    },
+    "corsair_cloud_2": {
+      "frame": {
+        "x": 20,
+        "y": 975,
+        "w": 50,
+        "h": 20
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 1,
+        "w": 50,
+        "h": 20
+      },
+      "sourceSize": {
+        "w": 52,
+        "h": 22
+      }
+    },
+    "corsair_cloud_3": {
+      "frame": {
+        "x": 2,
+        "y": 975,
+        "w": 16,
+        "h": 42
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 16,
+        "h": 42
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_game_view_corsair.png",
+    "size": {
+      "w": 2048,
+      "h": 1024
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "laya-ecs-kickshrew",
+  "version": "1.0.0",
+  "description": "Kick Shrew game with bitECS + Dirty Binding + Laya rendering",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "bitecs": "^0.3.40"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.3",
+    "vitest": "^2.1.8"
+  }
+}

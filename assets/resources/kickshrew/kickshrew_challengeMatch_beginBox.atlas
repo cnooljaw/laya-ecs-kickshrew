@@ -1,0 +1,331 @@
+{
+  "frames": {
+    "kickshrew_challengeMatch_beginBox_btn_down": {
+      "frame": {
+        "x": 915,
+        "y": 2,
+        "w": 91,
+        "h": 911
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 91,
+        "h": 911
+      },
+      "sourceSize": {
+        "w": 91,
+        "h": 911
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_btn_up": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 911,
+        "h": 91
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 911,
+        "h": 91
+      },
+      "sourceSize": {
+        "w": 911,
+        "h": 91
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_frame_lastCount": {
+      "frame": {
+        "x": 546,
+        "y": 915,
+        "w": 217,
+        "h": 76
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 217,
+        "h": 76
+      },
+      "sourceSize": {
+        "w": 217,
+        "h": 76
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_frame_r": {
+      "frame": {
+        "x": 498,
+        "y": 95,
+        "w": 388,
+        "h": 464
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 388,
+        "h": 464
+      },
+      "sourceSize": {
+        "w": 390,
+        "h": 464
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_frame_rank": {
+      "frame": {
+        "x": 50,
+        "y": 915,
+        "w": 446,
+        "h": 84
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 2,
+        "w": 446,
+        "h": 84
+      },
+      "sourceSize": {
+        "w": 448,
+        "h": 86
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_btnDown": {
+      "frame": {
+        "x": 296,
+        "y": 149,
+        "w": 190,
+        "h": 52
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 190,
+        "h": 52
+      },
+      "sourceSize": {
+        "w": 190,
+        "h": 54
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_btnUp": {
+      "frame": {
+        "x": 296,
+        "y": 95,
+        "w": 190,
+        "h": 52
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 190,
+        "h": 52
+      },
+      "sourceSize": {
+        "w": 190,
+        "h": 54
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_content": {
+      "frame": {
+        "x": 2,
+        "y": 605,
+        "w": 180,
+        "h": 304
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 2,
+        "w": 180,
+        "h": 304
+      },
+      "sourceSize": {
+        "w": 182,
+        "h": 308
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_matchTime": {
+      "frame": {
+        "x": 2,
+        "y": 561,
+        "w": 292,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 0,
+        "w": 292,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 298,
+        "h": 40
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_rank1": {
+      "frame": {
+        "x": 765,
+        "y": 915,
+        "w": 44,
+        "h": 74
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 13,
+        "w": 44,
+        "h": 74
+      },
+      "sourceSize": {
+        "w": 50,
+        "h": 96
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_rank2": {
+      "frame": {
+        "x": 2,
+        "y": 915,
+        "w": 46,
+        "h": 90
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 4,
+        "w": 46,
+        "h": 90
+      },
+      "sourceSize": {
+        "w": 50,
+        "h": 96
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_rank3": {
+      "frame": {
+        "x": 498,
+        "y": 915,
+        "w": 46,
+        "h": 80
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 10,
+        "w": 46,
+        "h": 80
+      },
+      "sourceSize": {
+        "w": 50,
+        "h": 96
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_rank4": {
+      "frame": {
+        "x": 811,
+        "y": 643,
+        "w": 44,
+        "h": 114
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 29,
+        "w": 44,
+        "h": 114
+      },
+      "sourceSize": {
+        "w": 44,
+        "h": 144
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_rank5": {
+      "frame": {
+        "x": 765,
+        "y": 561,
+        "w": 140,
+        "h": 42
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 2,
+        "y": 2,
+        "w": 140,
+        "h": 42
+      },
+      "sourceSize": {
+        "w": 144,
+        "h": 44
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_slash": {
+      "frame": {
+        "x": 888,
+        "y": 95,
+        "w": 24,
+        "h": 38
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 3,
+        "y": 2,
+        "w": 24,
+        "h": 38
+      },
+      "sourceSize": {
+        "w": 30,
+        "h": 40
+      }
+    },
+    "kickshrew_challengeMatch_beginBox_label_title": {
+      "frame": {
+        "x": 765,
+        "y": 605,
+        "w": 134,
+        "h": 36
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 134,
+        "h": 36
+      },
+      "sourceSize": {
+        "w": 134,
+        "h": 38
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_challengeMatch_beginBox.png",
+    "size": {
+      "w": 1024,
+      "h": 1024
+    }
+  }
+}

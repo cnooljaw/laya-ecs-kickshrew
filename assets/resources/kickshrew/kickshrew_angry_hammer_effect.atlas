@@ -1,0 +1,111 @@
+{
+  "frames": {
+    "kickshrew_angry_hammer_effect_1": {
+      "frame": {
+        "x": 2,
+        "y": 804,
+        "w": 128,
+        "h": 128
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 128,
+        "h": 128
+      },
+      "sourceSize": {
+        "w": 128,
+        "h": 128
+      }
+    },
+    "kickshrew_angry_hammer_effect_2": {
+      "frame": {
+        "x": 347,
+        "y": 695,
+        "w": 263,
+        "h": 264
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 1,
+        "y": 0,
+        "w": 263,
+        "h": 264
+      },
+      "sourceSize": {
+        "w": 265,
+        "h": 264
+      }
+    },
+    "kickshrew_angry_hammer_effect_3": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 400,
+        "h": 400
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 400,
+        "h": 400
+      },
+      "sourceSize": {
+        "w": 400,
+        "h": 400
+      }
+    },
+    "kickshrew_angry_hammer_effect_4": {
+      "frame": {
+        "x": 2,
+        "y": 404,
+        "w": 343,
+        "h": 398
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 343,
+        "h": 398
+      },
+      "sourceSize": {
+        "w": 345,
+        "h": 398
+      }
+    },
+    "kickshrew_angry_hammer_effect_5": {
+      "frame": {
+        "x": 347,
+        "y": 404,
+        "w": 220,
+        "h": 289
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 2,
+        "w": 220,
+        "h": 289
+      },
+      "sourceSize": {
+        "w": 222,
+        "h": 291
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_angry_hammer_effect.png",
+    "size": {
+      "w": 1024,
+      "h": 1024
+    }
+  }
+}

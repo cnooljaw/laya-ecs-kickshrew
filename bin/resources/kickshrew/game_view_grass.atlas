@@ -1,0 +1,71 @@
+{
+  "frames": {
+    "grass_cover_1": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 1136,
+        "h": 151
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 151
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 151
+      }
+    },
+    "grass_cover_2": {
+      "frame": {
+        "x": 2,
+        "y": 155,
+        "w": 1136,
+        "h": 133
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 133
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 133
+      }
+    },
+    "grass_cover_3": {
+      "frame": {
+        "x": 2,
+        "y": 290,
+        "w": 1136,
+        "h": 118
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 118
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 118
+      }
+    }
+  },
+  "meta": {
+    "image": "game_view_grass.png",
+    "size": {
+      "w": 2048,
+      "h": 512
+    }
+  }
+}

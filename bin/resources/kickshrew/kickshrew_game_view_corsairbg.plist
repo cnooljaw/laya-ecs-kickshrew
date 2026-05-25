@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>frames</key>
+        <dict>
+            <key>corsair_bg03.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,2},{1136,520}}</string>
+                <key>offset</key>
+                <string>{0,-60}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,120},{1136,520}}</string>
+                <key>sourceSize</key>
+                <string>{1136,640}</string>
+            </dict>
+        </dict>
+        <key>metadata</key>
+        <dict>
+            <key>format</key>
+            <integer>2</integer>
+            <key>realTextureFileName</key>
+            <string>kickshrew_game_view_corsairbg.png</string>
+            <key>size</key>
+            <string>{2048,1024}</string>
+            <key>smartupdate</key>
+            <string>$TexturePacker:SmartUpdate:827e60cd23d6f6e668ccf35e0b491512:1/1$</string>
+            <key>textureFileName</key>
+            <string>kickshrew_game_view_corsairbg.png</string>
+        </dict>
+    </dict>
+</plist>

@@ -1,0 +1,151 @@
+{
+  "frames": {
+    "moon_1": {
+      "frame": {
+        "x": 2,
+        "y": 444,
+        "w": 1136,
+        "h": 147
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 147
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 147
+      }
+    },
+    "moon_2": {
+      "frame": {
+        "x": 2,
+        "y": 593,
+        "w": 1136,
+        "h": 133
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 133
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 133
+      }
+    },
+    "moon_3": {
+      "frame": {
+        "x": 2,
+        "y": 728,
+        "w": 1136,
+        "h": 116
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 116
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 116
+      }
+    },
+    "moon_bg01": {
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 1136,
+        "h": 440
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1136,
+        "h": 440
+      },
+      "sourceSize": {
+        "w": 1136,
+        "h": 440
+      }
+    },
+    "moon_rocket_rise01": {
+      "frame": {
+        "x": 59,
+        "y": 846,
+        "w": 34,
+        "h": 50
+      },
+      "rotated": true,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 5,
+        "y": 5,
+        "w": 34,
+        "h": 50
+      },
+      "sourceSize": {
+        "w": 46,
+        "h": 60
+      }
+    },
+    "moon_saturn_1": {
+      "frame": {
+        "x": 2,
+        "y": 933,
+        "w": 55,
+        "h": 85
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 55,
+        "h": 85
+      },
+      "sourceSize": {
+        "w": 55,
+        "h": 85
+      }
+    },
+    "moon_saturn_2": {
+      "frame": {
+        "x": 2,
+        "y": 846,
+        "w": 55,
+        "h": 85
+      },
+      "rotated": true,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 55,
+        "h": 85
+      },
+      "sourceSize": {
+        "w": 55,
+        "h": 85
+      }
+    }
+  },
+  "meta": {
+    "image": "kickshrew_game_view_moon.png",
+    "size": {
+      "w": 2048,
+      "h": 1024
+    }
+  }
+}

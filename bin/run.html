@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Kick Shrew - 打地鼠</title>
+    <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #222; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="js/libs/laya.core.js"></script>
+    <script src="js/libs/laya.webgl_2D.js"></script>
+    <script src="js/libs/laya.ui2.js"></script>
+    <script src="js/libs/laya.ani.js"></script>
+    <script src="js/game.js"></script>
+    <script>
+        function log(msg) {
+            console.log(msg);
+            var d = document.createElement("div");
+            d.textContent = msg;
+            d.style.color = "#0f0";
+            d.style.fontFamily = "monospace";
+            d.style.fontSize = "12px";
+            document.body.appendChild(d);
+        }
+        function errLog(msg) {
+            console.error(msg);
+            var d = document.createElement("div");
+            d.textContent = "ERR: " + msg;
+            d.style.color = "#f00";
+            d.style.fontFamily = "monospace";
+            d.style.fontSize = "12px";
+            document.body.appendChild(d);
+        }
+
+        log("starting...");
+        Laya.init(750, 1334).then(function() {
+            log("init OK");
+            Laya.stage.scaleMode = Laya.Stage.SCALE_FIXED_WIDTH;
+            Laya.stage.alignH = Laya.Stage.ALIGN_CENTER;
+            Laya.stage.alignV = Laya.Stage.ALIGN_MIDDLE;
+            Laya.stage.screenMode = Laya.Stage.SCREEN_VERTICAL;
+            Laya.stage.bgColor = "#333333";
+
+            var main = new Game.Main();
+            log("main created");
+            if (main.onStart) {
+                main.onStart();
+                log("onStart done");
+            }
+
+            Laya.stage.on(Laya.Event.MOUSE_DOWN, null, function() {
+                if (main._onTouch) main._onTouch();
+            });
+            log("READY");
+        }).catch(function(err) {
+            errLog("fail: " + (err.message || String(err)));
+        });
+    </script>
+</body>
+</html>
