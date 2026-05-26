@@ -155,7 +155,8 @@ describe("ECS Components & World", () => {
       const holes = createHoleEntities(world, MapType.Meadow);
 
       expect(HoleComponent.posXRatio[holes[0]]).toBeCloseTo(0.2855, 3);
-      expect(HoleComponent.posYRatio[holes[0]]).toBeCloseTo(0.56, 2);
+      // Laya 使用 Y-down 坐标，旧 Cocos 0.56 对应 Laya 0.44。
+      expect(HoleComponent.posYRatio[holes[0]]).toBeCloseTo(0.44, 2);
     });
   });
 

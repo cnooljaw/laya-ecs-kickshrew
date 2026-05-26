@@ -17,7 +17,7 @@
  *   同时旋转帧的 tex.width/height 在 atlas 中是互换的，drawTexture 时尺寸已正确
  *
  * _mainLayer.y 值：
- *   STAND_Y  = 0      (Cocos: 0, 地鼠完全显示在洞口)
+ *   STAND_Y  = -8     (比 Cocos 完全显示位置再上提一点，避免手被 cover 压住)
  *   HIDDEN_Y = bh*1.5 (Cocos: -bh*1.5 向下；Laya Y-down: +bh*1.5 向下=藏在洞下)
  *
  * ZOrder（参考 ShrewData.lua）：hand=0, ear=1, body=3, face=6
@@ -25,6 +25,9 @@
 import type { IShrewNode } from "../binding/ShrewViewBinding";
 import { ShrewType, ShrewAction } from "../ecs/types";
 import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
+
+const STAND_LIFT_PX = 8;
+const HIDDEN_OFFSET_RATIO = 1.5;
 
 /** 各类型地鼠的 atlas 和部件帧名映射 */
 const SHREW_FRAMES: Record<number, {
@@ -96,7 +99,7 @@ export class ShrewNode implements IShrewNode {
     this._container.addChild(this._mainLayer);
 
     // 初始藏在洞下（HIDDEN_Y = bh * 1.5）
-    this._mainLayer.y = this._bodyH * 1.5;
+    this._mainLayer.y = this._bodyH * HIDDEN_OFFSET_RATIO;
   }
 
   setSpriteFrame(shrewType: number, mapType: number): void {
@@ -143,11 +146,19 @@ export class ShrewNode implements IShrewNode {
       if (this._container) {
         this._container.x = -bw * 0.5;
         this._container.y = -bh;
+        if (Laya.Rectangle) {
+          this._container.scrollRect = new Laya.Rectangle(
+            -bw * 0.5,
+            -bh * 0.5 - STAND_LIFT_PX,
+            bw * 1.7,
+            bh * HIDDEN_OFFSET_RATIO + STAND_LIFT_PX
+          );
+        }
       }
 
       // 更新 mainLayer 初始隐藏位置
       // Cocos: STAND_Y=0, HIDDEN_Y=-bh*1.5; Laya Y-down: HIDDEN_Y=+bh*1.5
-      this._mainLayer.y = bh * 1.5;
+      this._mainLayer.y = bh * HIDDEN_OFFSET_RATIO;
 
       // 旋转帧集合（O(1) 查找）
       const rotatedSet = new Set(def.rotatedFrames);
@@ -243,8 +254,8 @@ export class ShrewNode implements IShrewNode {
     // Cocos: STAND_Y=0, HIDDEN_Y=-contentHeight*1.5
     // Laya Y-down: STAND_Y=0 (洞口位置), HIDDEN_Y=+bh*1.5 (向下=藏在洞下)
     // 出洞: mainLayer.y 从 +bh*1.5 → 0 (递减=向上) ✓
-    const STAND_Y  = 0;
-    const HIDDEN_Y = bh * 1.5;
+    const STAND_Y  = -STAND_LIFT_PX;
+    const HIDDEN_Y = bh * HIDDEN_OFFSET_RATIO;
 
     switch (actionState) {
       case ShrewAction.None:

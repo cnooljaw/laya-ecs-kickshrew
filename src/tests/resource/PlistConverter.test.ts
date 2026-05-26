@@ -192,10 +192,11 @@ describe('PlistConverter', () => {
     it('旋转帧的 frame 正确映射', () => {
       const atlas = convertPlistToAtlas(sampleXml);
       const frame = atlas.frames['red_ear_left_down'];
-      expect(frame.frame).toEqual({ x: 167, y: 31, w: 27, h: 46 });
+      // Laya AtlasLoader 按图集实际像素区域取图，rotated 帧需要交换 w/h。
+      expect(frame.frame).toEqual({ x: 167, y: 31, w: 46, h: 27 });
       expect(frame.rotated).toBe(true);
-      expect(frame.spriteSourceSize).toEqual({ x: 4, y: 0, w: 27, h: 46 });
-      expect(frame.sourceSize).toEqual({ w: 35, h: 46 });
+      expect(frame.spriteSourceSize).toEqual({ x: 0, y: 4, w: 46, h: 27 });
+      expect(frame.sourceSize).toEqual({ w: 46, h: 35 });
     });
 
     it('meta 字段正确映射', () => {

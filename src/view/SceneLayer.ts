@@ -34,12 +34,20 @@ const MAP_BG_ATLAS: Record<number, string> = {
   [MapType.Space]:  "scene_moonbg",
 };
 
+const MAP_BG_EXTRA_ATLAS: Partial<Record<number, string>> = {
+  [MapType.Sewer]: "scene_sewerbg_02",
+};
+
 /** 地图类型 → atlas 中的背景帧名 */
 const MAP_BG_FRAME: Record<number, string> = {
   [MapType.Meadow]: "shrew_grass_bg",
   [MapType.Ship]:   "corsair_bg03",
   [MapType.Sewer]:  "sewer_viewBg",
   [MapType.Space]:  "moon_bg02",
+};
+
+const MAP_BG_EXTRA_FRAME: Partial<Record<number, string>> = {
+  [MapType.Sewer]: "sewer_bg",
 };
 
 /** 地图类型 → 前景 cover atlas 逻辑名 */
@@ -182,6 +190,31 @@ export class SceneLayer implements ISceneLayer {
       // 背景：拉伸到屏幕尺寸（trimmed 帧的空白区域由独立精灵覆盖，如船场景的天空）
       this._bgSprite.graphics.drawTexture(tex, 0, 0, W, H);
     });
+
+    this._loadExtraBackground(Laya, mapType);
+  }
+
+  private _loadExtraBackground(Laya: any, mapType: number): void {
+    const atlasName = MAP_BG_EXTRA_ATLAS[mapType];
+    const frameName = MAP_BG_EXTRA_FRAME[mapType];
+    if (!atlasName || !frameName) return;
+
+    const atlasPath = getAtlasPath(atlasName);
+    const atlasUrl = `resources/${atlasPath}.atlas`;
+
+    Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
+      if (!this._parent || this._currentMap !== mapType) return;
+      const tex = getFrameTexture(atlasRes, frameName);
+      if (!tex) return;
+
+      const sp = new Laya.Sprite();
+      sp.name = "SewerBgOverlay";
+      sp.zOrder = -90;
+      // sewer_bg 是 trimmed 帧，原图高 640，内容从 y=210 开始。
+      sp.graphics.drawTexture(tex, 0, 210, W, tex.height);
+      this._parent.addChild(sp);
+      this._coverSprites.push(sp);
+    });
   }
 
   private _loadCovers(Laya: any, mapType: number): void {
@@ -193,7 +226,7 @@ export class SceneLayer implements ISceneLayer {
     const atlasUrl = `resources/${atlasPath}.atlas`;
 
     Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
-      if (!this._parent) return;
+      if (!this._parent || this._currentMap !== mapType) return;
       if (!atlasRes) {
         console.error(`[SceneLayer] cover atlas load failed: ${atlasUrl}`);
         return;
@@ -208,11 +241,11 @@ export class SceneLayer implements ISceneLayer {
         return;
       }
 
-      this._clearCovers(Laya);
-
       // 下水道场景：中心坐标定位
       // Cocos 中 cover 以原始分辨率显示，高度为自然值（未缩放）
       if (coverCfg.sewerCenter && coverCfg.centerYRatios) {
+        this._loadSewerDecorations(Laya, atlasRes, mapType);
+
         const covers = [tex1, tex2, tex3];
         for (let i = 0; i < covers.length; i++) {
           const tex = covers[i];
@@ -273,9 +306,92 @@ export class SceneLayer implements ISceneLayer {
 
   private _clearCovers(Laya: any): void {
     for (const sp of this._coverSprites) {
-      if (sp) sp.destroy();
+      if (sp) {
+        Laya.timer?.clearAll?.(sp);
+        Laya.Tween?.clearAll?.(sp);
+        sp.destroy();
+      }
     }
     this._coverSprites = [];
+  }
+
+  private _loadSewerDecorations(Laya: any, sewerAtlasRes: any, mapType: number): void {
+    if (!this._parent || mapType !== MapType.Sewer) return;
+
+    const wheelWater = getFrameTexture(sewerAtlasRes, "sewer_wheelWater");
+    if (wheelWater) {
+      const water = this._createCenteredSprite(Laya, wheelWater, W * 0.61, H * (1 - 0.43), 13, -90);
+      water.name = "SewerWheelWater";
+    }
+
+    const wheelTex = getFrameTexture(sewerAtlasRes, "sewer_wheel");
+    if (wheelTex) {
+      const wheel = this._createCenteredSprite(Laya, wheelTex, W * 0.61, H * (1 - 0.48), 12);
+      wheel.name = "SewerWheel";
+      const spin = () => {
+        if (!wheel.destroyed && this._currentMap === MapType.Sewer) {
+          wheel.rotation = 0;
+          Laya.Tween.to(wheel, { rotation: 360 }, 20000, null, Laya.Handler.create(this, spin));
+        }
+      };
+      spin();
+    }
+
+    this._loadSewerFx(Laya, mapType);
+  }
+
+  private _loadSewerFx(Laya: any, mapType: number): void {
+    const atlasPath = getAtlasPath("swear_animation");
+    const atlasUrl = `resources/${atlasPath}.atlas`;
+
+    Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
+      if (!this._parent || this._currentMap !== mapType) return;
+
+      this._createFrameAnimation(Laya, atlasRes, "ripples_", 32, W * 0.49, H * (1 - 0.68), 0, 200);
+      this._createFrameAnimation(Laya, atlasRes, "ripples_", 32, W * 0.575, H * (1 - 0.69), 0, 300);
+      this._createFrameAnimation(Laya, atlasRes, "bubble_", 13, W * 0.24, H * (1 - 0.596), 1, 250);
+      this._createFrameAnimation(Laya, atlasRes, "bubble_2_", 10, W * 0.78, H * (1 - 0.677), 1, 250);
+    });
+  }
+
+  private _createCenteredSprite(Laya: any, tex: any, x: number, y: number, zOrder: number, rotation: number = 0): any {
+    const sp = new Laya.Sprite();
+    sp.zOrder = zOrder;
+    sp.x = x;
+    sp.y = y;
+    sp.rotation = rotation;
+    sp.graphics.drawTexture(tex, -tex.width * 0.5, -tex.height * 0.5, tex.width, tex.height);
+    this._parent.addChild(sp);
+    this._coverSprites.push(sp);
+    return sp;
+  }
+
+  private _createFrameAnimation(
+    Laya: any,
+    atlasRes: any,
+    prefix: string,
+    count: number,
+    x: number,
+    y: number,
+    zOrder: number,
+    intervalMs: number
+  ): void {
+    const frames: any[] = [];
+    for (let i = 1; i <= count; i++) {
+      const tex = getFrameTexture(atlasRes, `${prefix}${i}`);
+      if (tex) frames.push(tex);
+    }
+    if (frames.length === 0) return;
+
+    const sp = this._createCenteredSprite(Laya, frames[0], x, y, zOrder);
+    let index = 0;
+    Laya.timer.loop(intervalMs, sp, () => {
+      if (sp.destroyed || this._currentMap !== MapType.Sewer) return;
+      index = (index + 1) % frames.length;
+      const tex = frames[index];
+      sp.graphics.clear();
+      sp.graphics.drawTexture(tex, -tex.width * 0.5, -tex.height * 0.5, tex.width, tex.height);
+    });
   }
 
   setTransitioning(transitioning: boolean): void {

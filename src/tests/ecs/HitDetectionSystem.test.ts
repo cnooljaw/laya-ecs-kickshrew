@@ -24,8 +24,8 @@ describe('HitDetectionSystem', () => {
   });
 
   it('触摸点在地鼠 hitArea 内: 返回击中结果', () => {
-    // 模拟触摸洞位 1 (x=0.496, y=0.56) 的坐标
-    const result = hitDetectionSystem(world, 0.496, 0.56);
+    // 模拟触摸洞位 1 (x=0.496, y=0.44) 的 Laya Y-down 坐标
+    const result = hitDetectionSystem(world, 0.496, 0.44);
 
     expect(result.bKickShrew).toBe(1);
     expect(result.hitHoleIndex).toBeGreaterThanOrEqual(0);
@@ -39,7 +39,7 @@ describe('HitDetectionSystem', () => {
       ShrewComponent.isClickable[shrewEid] = 0;
     }
 
-    const result = hitDetectionSystem(world, 0.496, 0.56);
+    const result = hitDetectionSystem(world, 0.496, 0.44);
 
     expect(result.bKickShrew).toBe(0);
   });
@@ -47,7 +47,7 @@ describe('HitDetectionSystem', () => {
   it('锤子 hitTable=0 时(动画中): 不响应触摸', () => {
     HammerComponent.hitTable[singletons.hammer] = 0;
 
-    const result = hitDetectionSystem(world, 0.496, 0.56);
+    const result = hitDetectionSystem(world, 0.496, 0.44);
 
     expect(result.bKickShrew).toBe(0);
   });
@@ -55,18 +55,18 @@ describe('HitDetectionSystem', () => {
   it('锤子 hitTable=1 时: 正常响应触摸', () => {
     HammerComponent.hitTable[singletons.hammer] = 1;
 
-    const result = hitDetectionSystem(world, 0.496, 0.56);
+    const result = hitDetectionSystem(world, 0.496, 0.44);
 
     expect(result.bKickShrew).toBe(1);
   });
 
   it('击中红鼠: hp-1, actionState=Dizzy', () => {
-    // 洞位1: x=0.496, y=0.56
+    // 洞位1: x=0.496, y=0.44
     const shrewEid = HoleComponent.shrewEid[holes[1]];
     ShrewComponent.hp[shrewEid] = 1;
     ShrewComponent.isClickable[shrewEid] = 1;
 
-    hitDetectionSystem(world, 0.496, 0.56);
+    hitDetectionSystem(world, 0.496, 0.44);
 
     expect(ShrewComponent.hp[shrewEid]).toBe(0);
     expect(ShrewComponent.actionState[shrewEid]).toBe(ShrewAction.Dizzy);
@@ -81,7 +81,7 @@ describe('HitDetectionSystem', () => {
     ShrewComponent.isClickable[shrewEid] = 1;
     ShrewComponent.actionState[shrewEid] = ShrewAction.Stand;
 
-    hitDetectionSystem(world, 0.496, 0.56);
+    hitDetectionSystem(world, 0.496, 0.44);
 
     expect(ShrewComponent.hp[shrewEid]).toBe(1);
     expect(ShrewComponent.hasHat[shrewEid]).toBe(0);
@@ -98,7 +98,7 @@ describe('HitDetectionSystem', () => {
   it('击中后 hitTable 设为 0 (防止连点)', () => {
     HammerComponent.hitTable[singletons.hammer] = 1;
 
-    hitDetectionSystem(world, 0.496, 0.56);
+    hitDetectionSystem(world, 0.496, 0.44);
 
     expect(HammerComponent.hitTable[singletons.hammer]).toBe(0);
   });

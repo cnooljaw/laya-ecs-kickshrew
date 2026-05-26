@@ -1,12 +1,7 @@
 /**
  * HammerNode — 光标锤子 + 击打特效
  *
- * 参考原始 Cocos GameView.lua:
- *   锚点 (0.75, 0.15)：锤子握柄处在锚点附近
- *   位置: (touch.x + width*0.65, touch.y + height*0.15)
- *   综合效果：点击点在锤子图像底部 (0.1*w, 底部)，锤头向上延伸
- *
- * Laya 实现：drawTexture 偏移使图像点 (0.1*w, 底部) 对齐 Sprite 原点
+ * Laya 实现：锤子中心点对齐点击点，避免点击位置与锤子视觉中心错位。
  */
 import type { IHammerNode } from "../binding/HammerViewBinding";
 import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
@@ -35,15 +30,20 @@ const HAMMER_ATLAS_NAME = "game_view";
 
 export class HammerNode implements IHammerNode {
   private _sprite: any = null;
+  private _parent: any = null;
   private _currentHammerType: number = -1;
+  private _baseRotation: number = 0;
 
   create(parent: any): void {
     const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
     if (Laya) {
       this._sprite = new Laya.Sprite();
       this._sprite.name = "HammerNode";
+      this._sprite.zOrder = 10000;
+      this._parent = parent;
       if (parent) {
         parent.addChild(this._sprite);
+        parent.setChildIndex?.(this._sprite, parent.numChildren - 1);
       }
     }
   }
@@ -69,16 +69,10 @@ export class HammerNode implements IHammerNode {
         this._sprite.graphics.clear();
 
         const isRotated = HAMMER_ROTATED_FRAMES.has(frameName);
-        if (isRotated) {
-          this._sprite.rotation = -90;
-        } else {
-          this._sprite.rotation = 0;
-        }
+        this._baseRotation = isRotated ? -90 : 0;
+        this._sprite.rotation = this._baseRotation;
 
-        // 原始 Cocos: 锚点(0.75, 0.15)，位置偏移(+0.65w, +0.15h)
-        // 综合效果: 点击点在图像 (0.1*w, 底部)
-        // drawTexture 偏移: 让图像点 (0.1*w, h) 对齐原点(0,0)
-        this._sprite.graphics.drawTexture(tex, -tex.width * 0.1, -tex.height, tex.width, tex.height);
+        this._sprite.graphics.drawTexture(tex, -tex.width * 0.5, -tex.height * 0.5, tex.width, tex.height);
       }
     });
   }
@@ -92,9 +86,9 @@ export class HammerNode implements IHammerNode {
     const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
     if (Laya) {
       // 锤子击打动画: 旋转 30°→-30°→0° (0.24秒)
-      Laya.Tween.to(this._sprite, { rotation: 30 }, 80);
-      Laya.Tween.to(this._sprite, { rotation: -30 }, 80, null, Laya.Handler.create(this, () => {
-        Laya.Tween.to(this._sprite, { rotation: 0 }, 80);
+      Laya.Tween.to(this._sprite, { rotation: this._baseRotation + 30 }, 80);
+      Laya.Tween.to(this._sprite, { rotation: this._baseRotation - 30 }, 80, null, Laya.Handler.create(this, () => {
+        Laya.Tween.to(this._sprite, { rotation: this._baseRotation }, 80);
       }), 80);
     }
   }
@@ -102,6 +96,10 @@ export class HammerNode implements IHammerNode {
   followTouch(x: number, y: number): void {
     if (this._sprite) {
       this._sprite.pos(x, y);
+      this._sprite.zOrder = 10000;
+      if (this._parent) {
+        this._parent.setChildIndex?.(this._sprite, this._parent.numChildren - 1);
+      }
     }
   }
 
@@ -110,5 +108,6 @@ export class HammerNode implements IHammerNode {
       this._sprite.destroy();
       this._sprite = null;
     }
+    this._parent = null;
   }
 }
