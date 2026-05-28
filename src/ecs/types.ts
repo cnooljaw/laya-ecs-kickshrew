@@ -25,9 +25,8 @@ export const enum MapType {
   None = 1,
   Meadow = 2,
   Ship = 3,
-  Sewer = 4,
-  Space = 5,
-  Max = 6,
+  Space = 4,
+  Max = 5,
 }
 
 /** 锤子类型 */

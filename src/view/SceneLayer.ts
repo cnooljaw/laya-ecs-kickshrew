@@ -1,13 +1,12 @@
 /**
- * SceneLayer — 背景层 + cover遮罩层 + 装饰物
+ * SceneLayer — 背景层 + cover遮罩层
  *
  * 场景结构（参考各 GameViewXxx.lua）：
  * - 背景图铺满屏幕
  * - cover1/2/3 是叠在背景上的前景遮罩，形成洞口视觉效果
  *   Cocos 中从下往上：cover1(y=0) → cover2(y=h1) → cover3(y=h1+h2)
  *   Laya Y-down 转换：cover3 在顶部，cover1 在底部
- *   cover3.y = H - h3 - h2 - h1（实际从下计算）
- *   简化：cover1 y = H - h1，cover2 y = H - h1 - h2，cover3 y = H - h1 - h2 - h3
+ *   cover1 y = H - h1，cover2 y = H - h1 - h2，cover3 y = H - h1 - h2 - h3
  *
  * ZOrder（cover 要盖在地鼠上方）：
  *   背景 zOrder=-100，cover 各行夹在洞位行之间
@@ -30,68 +29,37 @@ const H = 640;
 const MAP_BG_ATLAS: Record<number, string> = {
   [MapType.Meadow]: "scene_grassbg",
   [MapType.Ship]:   "scene_corsairbg",
-  [MapType.Sewer]:  "scene_sewerbg_01",
   [MapType.Space]:  "scene_moonbg",
-};
-
-const MAP_BG_EXTRA_ATLAS: Partial<Record<number, string>> = {
-  [MapType.Sewer]: "scene_sewerbg_02",
 };
 
 /** 地图类型 → atlas 中的背景帧名 */
 const MAP_BG_FRAME: Record<number, string> = {
   [MapType.Meadow]: "shrew_grass_bg",
   [MapType.Ship]:   "corsair_bg03",
-  [MapType.Sewer]:  "sewer_viewBg",
   [MapType.Space]:  "moon_bg02",
-};
-
-const MAP_BG_EXTRA_FRAME: Partial<Record<number, string>> = {
-  [MapType.Sewer]: "sewer_bg",
 };
 
 /** 地图类型 → 前景 cover atlas 逻辑名 */
 const MAP_COVER_ATLAS: Record<number, string> = {
   [MapType.Meadow]: "scene_grass",
   [MapType.Ship]:   "scene_corsair",
-  [MapType.Sewer]:  "scene_sewer",
   [MapType.Space]:  "scene_moon",
 };
 
 /**
  * 各场景 cover 帧配置
- * frames[0] = 底部行遮罩（Cocos cover1，Lua setPosition y=0，zOrder=7）
- * frames[1] = 中间行遮罩（Cocos cover2，Lua setPosition y=h1，zOrder=5）
- * frames[2] = 顶部行遮罩（Cocos cover3，Lua setPosition y=h1+h2，zOrder=3）
- *
- * Cocos Y-up → Laya Y-down 转换（设计分辨率 H=640）：
- *   cover1 在 Cocos 底部（y=0）    → Laya y = H - h1，    zOrder=7
- *   cover2 在 Cocos 中部（y=h1）   → Laya y = H - h1 - h2，zOrder=5
- *   cover3 在 Cocos 顶部（y=h1+h2）→ Laya y = H - h1 - h2 - h3，zOrder=3
+ * frames[0] = 底部行遮罩（Cocos cover1，zOrder=7）
+ * frames[1] = 中间行遮罩（Cocos cover2，zOrder=5）
+ * frames[2] = 顶部行遮罩（Cocos cover3，zOrder=3）
  *
  * 参考各 GameViewXxx.lua setScene() 函数：
- *   草地:  cover1=grass_cover_1(h=151), cover2=grass_cover_2(h=133), cover3=grass_cover_3(h=118)
- *   帆船:  cover1=corsair_3(h=144),     cover2=corsair_2(h=132),     cover3=corsair_1(h=118)
- *   下水道: 中心定位（非底部堆叠），单独处理，用各行中心 y 坐标
- *   太空:  cover1=moon_1(h=147),        cover2=moon_2(h=133),        cover3=moon_3(h=116)
+ *   草地:  cover1=grass_cover_1, cover2=grass_cover_2, cover3=grass_cover_3
+ *   帆船:  cover1=corsair_3, cover2=corsair_2, cover3=corsair_1
+ *   太空:  cover1=moon_1, cover2=moon_2, cover3=moon_3
  */
 interface CoverConfig {
   frames: string[];   // 从底到顶：[cover1_frameName, cover2_frameName, cover3_frameName]
   zOrders: number[];  // 对应 zOrder
-  sewerCenter?: boolean; // 下水道特殊：按中心坐标定位而非底部堆叠
-  centerYRatios?: number[]; // 各 cover 中心 y 比例（Cocos Y-up，需转换）
-}
-
-/** 下水道叠加层 cover（在 hole 上方，真正遮挡地鼠的前景遮罩）
- *  overlay 帧是 trimmed 的（顶部被裁剪），定位需用 sourceSize 中心 + trimTopY 偏移：
- *    sp.y = H * (1 - centerYRatio) - sourceH/2 + trimTopY
- */
-interface SewerOverlayConfig {
-  frames: string[];
-  zOrders: number[];
-  centerYRatios: number[];
-  sourceHeights: number[];   // sourceSize.h（Cocos 定位基于 sourceSize 中心）
-  trimTopYs: number[];       // spriteSourceSize.y（顶部裁剪像素数）
 }
 
 const MAP_COVER_CONFIG: Record<number, CoverConfig> = {
@@ -103,31 +71,10 @@ const MAP_COVER_CONFIG: Record<number, CoverConfig> = {
     frames:  ["corsair_3", "corsair_2", "corsair_1"],
     zOrders: [7, 5, 3],
   },
-  [MapType.Sewer]: {
-    // 下水道基础 cover（在 hole 下方，作为行背景）
-    // Cocos: sewer_1(z=2), sewer_2(z=6), sewer_3(z=10)
-    frames:  ["sewer_1", "sewer_2", "sewer_3"],
-    zOrders: [2, 6, 10],
-    sewerCenter: true,
-    centerYRatios: [0.55, 0.378, 0.14],
-  },
   [MapType.Space]: {
     frames:  ["moon_1", "moon_2", "moon_3"],
     zOrders: [7, 5, 3],
   },
-};
-
-/** 下水道叠加层 cover（在 hole 上方，真正遮挡地鼠）
- *  Cocos: sewer_1_1(z=4), sewer_2_1(z=8), sewer_3_1(z=12)
- *  洞位 zOrder: 底行=3, 中行=7, 顶行=11
- *  渲染顺序: base_cover(z=2) < hole(z=3) < overlay(z=4) → 三明治结构
- */
-const SEWER_OVERLAY: SewerOverlayConfig = {
-  frames:  ["sewer_1_1", "sewer_2_1", "sewer_3_1"],
-  zOrders: [4, 8, 12],
-  centerYRatios: [0.58, 0.38, 0.14],
-  sourceHeights: [115, 134, 180],  // sourceSize.h (trimmed 前的原始高度)
-  trimTopYs: [28, 32, 32],         // spriteSourceSize.y (顶部裁剪像素)
 };
 
 export class SceneLayer implements ISceneLayer {
@@ -187,33 +134,7 @@ export class SceneLayer implements ISceneLayer {
         return;
       }
       this._bgSprite.graphics.clear();
-      // 背景：拉伸到屏幕尺寸（trimmed 帧的空白区域由独立精灵覆盖，如船场景的天空）
       this._bgSprite.graphics.drawTexture(tex, 0, 0, W, H);
-    });
-
-    this._loadExtraBackground(Laya, mapType);
-  }
-
-  private _loadExtraBackground(Laya: any, mapType: number): void {
-    const atlasName = MAP_BG_EXTRA_ATLAS[mapType];
-    const frameName = MAP_BG_EXTRA_FRAME[mapType];
-    if (!atlasName || !frameName) return;
-
-    const atlasPath = getAtlasPath(atlasName);
-    const atlasUrl = `resources/${atlasPath}.atlas`;
-
-    Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
-      if (!this._parent || this._currentMap !== mapType) return;
-      const tex = getFrameTexture(atlasRes, frameName);
-      if (!tex) return;
-
-      const sp = new Laya.Sprite();
-      sp.name = "SewerBgOverlay";
-      sp.zOrder = -90;
-      // sewer_bg 是 trimmed 帧，原图高 640，内容从 y=210 开始。
-      sp.graphics.drawTexture(tex, 0, 210, W, tex.height);
-      this._parent.addChild(sp);
-      this._coverSprites.push(sp);
     });
   }
 
@@ -241,47 +162,7 @@ export class SceneLayer implements ISceneLayer {
         return;
       }
 
-      // 下水道场景：中心坐标定位
-      // Cocos 中 cover 以原始分辨率显示，高度为自然值（未缩放）
-      if (coverCfg.sewerCenter && coverCfg.centerYRatios) {
-        this._loadSewerDecorations(Laya, atlasRes, mapType);
-
-        const covers = [tex1, tex2, tex3];
-        for (let i = 0; i < covers.length; i++) {
-          const tex = covers[i];
-          if (!tex) continue;
-          const h = tex.height;
-          const layaY = H * (1 - coverCfg.centerYRatios[i]) - h / 2;
-          const sp = new Laya.Sprite();
-          sp.zOrder = coverCfg.zOrders[i];
-          sp.graphics.drawTexture(tex, 0, 0, W, h);
-          sp.y = layaY;
-          this._parent.addChild(sp);
-          this._coverSprites.push(sp);
-        }
-        // 渲染 overlay 遮罩（在 hole 上方，真正遮挡地鼠）
-        // overlay 帧是 trimmed 的，定位基于 sourceSize 中心而非 frame 中心
-        for (let i = 0; i < SEWER_OVERLAY.frames.length; i++) {
-          const overlayTex = getFrameTexture(atlasRes, SEWER_OVERLAY.frames[i]);
-          if (!overlayTex) continue;
-          const frameH = overlayTex.height;
-          const sourceH = SEWER_OVERLAY.sourceHeights[i];
-          const trimTop = SEWER_OVERLAY.trimTopYs[i];
-          const olayaY = H * (1 - SEWER_OVERLAY.centerYRatios[i]) - sourceH / 2 + trimTop;
-          const osp = new Laya.Sprite();
-          osp.zOrder = SEWER_OVERLAY.zOrders[i];
-          osp.graphics.drawTexture(overlayTex, 0, 0, W, frameH);
-          osp.y = olayaY;
-          this._parent.addChild(osp);
-          this._coverSprites.push(osp);
-        }
-        return;
-      }
-
-      // 普通场景（草地/帆船/太空）：底部堆叠布局
-      // Cocos 中 cover 以原始分辨率（1136px宽）显示，高度为自然高度（未缩放）。
-      // Laya 中将 cover 压缩到 960px 宽度，但高度必须保持自然值，
-      // 否则 cover 过短，无法正确遮挡洞口区域。
+      // 底部堆叠布局
       const h1 = tex1 ? tex1.height : 0;
       const h2 = tex2 ? tex2.height : 0;
       const h3 = tex3 ? tex3.height : 0;
@@ -313,85 +194,6 @@ export class SceneLayer implements ISceneLayer {
       }
     }
     this._coverSprites = [];
-  }
-
-  private _loadSewerDecorations(Laya: any, sewerAtlasRes: any, mapType: number): void {
-    if (!this._parent || mapType !== MapType.Sewer) return;
-
-    const wheelWater = getFrameTexture(sewerAtlasRes, "sewer_wheelWater");
-    if (wheelWater) {
-      const water = this._createCenteredSprite(Laya, wheelWater, W * 0.61, H * (1 - 0.43), 13, -90);
-      water.name = "SewerWheelWater";
-    }
-
-    const wheelTex = getFrameTexture(sewerAtlasRes, "sewer_wheel");
-    if (wheelTex) {
-      const wheel = this._createCenteredSprite(Laya, wheelTex, W * 0.61, H * (1 - 0.48), 12);
-      wheel.name = "SewerWheel";
-      const spin = () => {
-        if (!wheel.destroyed && this._currentMap === MapType.Sewer) {
-          wheel.rotation = 0;
-          Laya.Tween.to(wheel, { rotation: 360 }, 20000, null, Laya.Handler.create(this, spin));
-        }
-      };
-      spin();
-    }
-
-    this._loadSewerFx(Laya, mapType);
-  }
-
-  private _loadSewerFx(Laya: any, mapType: number): void {
-    const atlasPath = getAtlasPath("swear_animation");
-    const atlasUrl = `resources/${atlasPath}.atlas`;
-
-    Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
-      if (!this._parent || this._currentMap !== mapType) return;
-
-      this._createFrameAnimation(Laya, atlasRes, "ripples_", 32, W * 0.49, H * (1 - 0.68), 0, 200);
-      this._createFrameAnimation(Laya, atlasRes, "ripples_", 32, W * 0.575, H * (1 - 0.69), 0, 300);
-      this._createFrameAnimation(Laya, atlasRes, "bubble_", 13, W * 0.24, H * (1 - 0.596), 1, 250);
-      this._createFrameAnimation(Laya, atlasRes, "bubble_2_", 10, W * 0.78, H * (1 - 0.677), 1, 250);
-    });
-  }
-
-  private _createCenteredSprite(Laya: any, tex: any, x: number, y: number, zOrder: number, rotation: number = 0): any {
-    const sp = new Laya.Sprite();
-    sp.zOrder = zOrder;
-    sp.x = x;
-    sp.y = y;
-    sp.rotation = rotation;
-    sp.graphics.drawTexture(tex, -tex.width * 0.5, -tex.height * 0.5, tex.width, tex.height);
-    this._parent.addChild(sp);
-    this._coverSprites.push(sp);
-    return sp;
-  }
-
-  private _createFrameAnimation(
-    Laya: any,
-    atlasRes: any,
-    prefix: string,
-    count: number,
-    x: number,
-    y: number,
-    zOrder: number,
-    intervalMs: number
-  ): void {
-    const frames: any[] = [];
-    for (let i = 1; i <= count; i++) {
-      const tex = getFrameTexture(atlasRes, `${prefix}${i}`);
-      if (tex) frames.push(tex);
-    }
-    if (frames.length === 0) return;
-
-    const sp = this._createCenteredSprite(Laya, frames[0], x, y, zOrder);
-    let index = 0;
-    Laya.timer.loop(intervalMs, sp, () => {
-      if (sp.destroyed || this._currentMap !== MapType.Sewer) return;
-      index = (index + 1) % frames.length;
-      const tex = frames[index];
-      sp.graphics.clear();
-      sp.graphics.drawTexture(tex, -tex.width * 0.5, -tex.height * 0.5, tex.width, tex.height);
-    });
   }
 
   setTransitioning(transitioning: boolean): void {

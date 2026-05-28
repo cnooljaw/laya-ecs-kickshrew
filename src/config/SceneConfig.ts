@@ -20,12 +20,6 @@ export const SCENE_CONFIGS: Record<number, SceneConfig> = {
     bgFrame: "shrew_corsair_bg.png",
     coverFrames: ["corsair_cover_3.png", "corsair_cover_2.png", "corsair_cover_1.png"],
   },
-  [MapType.Sewer]: {
-    mapType: MapType.Sewer,
-    bgAtlas: "kickshrew_game_view_sewerbg_01",
-    bgFrame: "shrew_sewer_bg.png",
-    coverFrames: ["sewer_cover_1.png", "sewer_cover_2.png", "sewer_cover_3.png"],
-  },
   [MapType.Space]: {
     mapType: MapType.Space,
     bgAtlas: "kickshrew_game_view_moonbg",
@@ -34,8 +28,8 @@ export const SCENE_CONFIGS: Record<number, SceneConfig> = {
   },
 };
 
-/** 场景循环顺序 */
-export const SCENE_CYCLE: MapType[] = [MapType.Meadow, MapType.Ship, MapType.Sewer, MapType.Space];
+/** 场景循环顺序：Meadow → Ship → Space → Meadow */
+export const SCENE_CYCLE: MapType[] = [MapType.Meadow, MapType.Ship, MapType.Space];
 
 /** 场景切换间隔（秒） */
-export const SCENE_CYCLE_INTERVAL = 15;
+export const SCENE_CYCLE_INTERVAL = 16;

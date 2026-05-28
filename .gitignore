@@ -7,3 +7,4 @@ node_modules
 bin/js/bundles
 bin/js/game.js
 bin/js/game.js.map
+bin/js/debug/

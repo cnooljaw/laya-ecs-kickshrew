@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "sourceMap": true,
+    "noEmitHelpers": false,
+    "importHelpers": true,
+    "ignoreDeprecations": "6.0",
+    "lib": ["es2017", "dom"],
+    "outDir": "bin/js/debug/src",
+    "rootDir": "src"
+  },
+  "include": [
+    "src",
+    "engine",
+    "assets"
+  ],
+  "exclude": [
+    "src/tests",
+    "src/resource/rebuild-atlases.ts",
+    "src/resource/convertAll.ts"
+  ]
+}

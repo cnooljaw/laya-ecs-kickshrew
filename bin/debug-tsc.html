@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Kick Shrew - tsc Debug</title>
+    <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #222; }
+        canvas { display: block; }
+    </style>
+
+    <!-- Laya 运行库：全局脚本，先于 ES module 加载 -->
+    <script src="js/libs/laya.core.js"></script>
+    <script src="js/libs/laya.webgl_2D.js"></script>
+    <script src="js/libs/laya.ui2.js"></script>
+
+    <!-- Import Map：映射裸模块到 vendor 文件 -->
+    <script type="importmap">
+    {
+        "imports": {
+            "bitecs": "./js/debug/vendor/bitecs/index.mjs",
+            "tslib": "./js/debug/vendor/tslib/tslib.es6.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- ES module 入口：延迟执行，Laya 运行库已就绪 -->
+    <script type="module" src="./js/debug/src/Bootstrap.js"></script>
+</body>
+</html>

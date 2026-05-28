@@ -4,12 +4,15 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
+          {
             "type": "chrome",
             "request": "launch",
-            "name": "LayaAir Debug",
-            "url": "http://localhost:18090",
-            "webRoot": "${workspaceFolder}/bin"
+            "name": "tsc Debug",
+            "url": "http://localhost:8080/debug-tsc.html",
+            "webRoot": "${workspaceFolder}/bin",
+            "sourceMapPathOverrides": {
+                "bin/js/debug/src/*": "${workspaceFolder}/src/*"
+            }
         }
     ]
 }

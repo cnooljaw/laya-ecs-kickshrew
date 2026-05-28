@@ -3,7 +3,7 @@
  *
  * 职责:
  * 1. 检查 sceneTimer >= cycleInterval 时切换场景
- * 2. 按 Meadow→Ship→Sewer→Space→Meadow 循环
+ * 2. 按 Meadow→Ship→Space→Meadow 循环
  * 3. 切换时重置 sceneTimer
  * 4. 切换时设置 forceFullSync=1 通知视图层完整重建
  * 5. 切换时所有地鼠强制进入 Refresh 状态
@@ -50,7 +50,7 @@ export function sceneCycleSystem(world: any): void {
     DirtyComponent.forceFullSync[eid] = 1;
   }
 
-  // 更新所有洞位的坐标比例和 zOrder（不同场景坐标不同，下水道 zOrder 为三明治结构）
+  // 更新所有洞位的坐标比例和 zOrder
   const holeEntities = holeQuery(world);
   const holePos = HolePositions[nextMap];
   if (holePos) {
@@ -58,7 +58,7 @@ export function sceneCycleSystem(world: any): void {
       const eid = holeEntities[i];
       HoleComponent.posXRatio[eid] = holePos.xRatios[i];
       HoleComponent.posYRatio[eid] = holePos.yRatios[i];
-      HoleComponent.zIndex[eid] = getHoleZOrder(HoleComponent.gridRow[eid], nextMap);
+      HoleComponent.zIndex[eid] = getHoleZOrder(HoleComponent.gridRow[eid]);
       DirtyComponent.forceFullSync[eid] = 1;
     }
   }

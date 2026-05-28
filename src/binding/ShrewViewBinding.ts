@@ -49,6 +49,7 @@ export const shrewViewBinding: BindingFn = (eid: number, dirtyBits: number, forc
 
   if (forceFull || (dirtyBits & BIT_SHREW_ACTION)) {
     node.setAnimation(ShrewComponent.actionState[eid], AnimationComponent.animType[eid], AnimationComponent.progress[eid]);
+    console.log(`Set shrew ${eid} animation: actionState=${ShrewComponent.actionState[eid]}, animType=${AnimationComponent.animType[eid]}, progress=${AnimationComponent.progress[eid]}`);
   }
 
   if (forceFull || (dirtyBits & BIT_SHREW_CLICKABLE)) {

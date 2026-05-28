@@ -48,12 +48,6 @@ resMap.set(k(ShrewType.Red, MapType.Ship), {
   leftEar: "red_ear_left_up.png", rightEar: "red_ear_right_up1.png",
   swelling: "red_swelling.png", prop: "red_prop_Belt.png",
 });
-resMap.set(k(ShrewType.Red, MapType.Sewer), {
-  body: "red_body.png", face: "red_face_smile.png", faceCry: "red_face_cry.png",
-  leftHand: "red_hand_left.png", rightHand: "red_hand_right.png",
-  leftEar: "red_ear_left_up.png", rightEar: "red_ear_right_up.png",
-  swelling: "red_swelling.png", prop: "red_prop_glasses.png",
-});
 resMap.set(k(ShrewType.Red, MapType.Space), {
   body: "red_body.png", face: "red_face_smile.png", faceCry: "red_face_cry.png",
   leftHand: "red_hand_left.png", rightHand: "red_hand_right.png",
@@ -84,17 +78,6 @@ resMap.set(k(ShrewType.Blue, MapType.Ship), {
   handLeftUp: "boss_hand_left_up.png", handRightUp: "boss_hand_right_up.png",
   handLeftDizzy: "boss_hand_left_dizzy.png", handRightDizzy: "boss_hand_right_dizzy.png",
 });
-resMap.set(k(ShrewType.Blue, MapType.Sewer), {
-  body: "boss_body.png", face: "boss_face_smile.png", faceCry: "boss_face_miserable.png",
-  faceAngry: "boss_face_angry.png",
-  leftHand: "boss_hand_left_down.png", rightHand: "boss_hand_right_down.png",
-  leftEar: "boss_ear_left.png", rightEar: "boss_ear_right.png",
-  swelling: "boss_Swelling.png", prop: "",
-  hat: "farmer01.png",
-  hatFrames: ["farmer01.png", "farmer02.png", "farmer03.png", "farmer04.png", "farmer05.png"],
-  handLeftUp: "boss_hand_left_up.png", handRightUp: "boss_hand_right_up.png",
-  handLeftDizzy: "boss_hand_left_dizzy.png", handRightDizzy: "boss_hand_right_dizzy.png",
-});
 resMap.set(k(ShrewType.Blue, MapType.Space), {
   body: "boss_body.png", face: "boss_face_smile.png", faceCry: "boss_face_miserable.png",
   faceAngry: "boss_face_angry.png",
@@ -120,12 +103,6 @@ resMap.set(k(ShrewType.Yellow, MapType.Ship), {
   leftEar: "yellow_ear_left_up.png", rightEar: "yellow_ear_right_up.png",
   swelling: "yellow_swelling.png", prop: "yellow_prop_one_eye.png",
 });
-resMap.set(k(ShrewType.Yellow, MapType.Sewer), {
-  body: "yellow_body.png", face: "yellow_face_smile.png", faceCry: "yellow_face_cry.png",
-  leftHand: "yellow_hand_left.png", rightHand: "yellow_hand_right.png",
-  leftEar: "yellow_ear_left_up.png", rightEar: "yellow_ear_right_up.png",
-  swelling: "yellow_swelling.png", prop: "yellow_prop_light.png",
-});
 resMap.set(k(ShrewType.Yellow, MapType.Space), {
   body: "yellow_body.png", face: "yellow_face_smile.png", faceCry: "yellow_face_cry.png",
   leftHand: "yellow_hand_left.png", rightHand: "yellow_hand_right.png",
@@ -148,15 +125,6 @@ resMap.set(k(ShrewType.Green, MapType.Ship), {
   leftHand: "second_hand_up_left.png", rightHand: "second_hand_up_right.png",
   leftEar: "second_ear_left.png", rightEar: "second_ear_right.png",
   swelling: "second_swelling_red.png", prop: "second_prop_redbelt_1.png",
-  leftEye: "second_red_eye_left.png", rightEye: "second_red_eye_right.png",
-  leftEyeDizzy: "second_eye_right_dizzy.png", rightEyeDizzy: "second_eye_left_dizzy.png",
-  leftEyeDizzy1: "second_eye_right_dizzy1.png", rightEyeDizzy1: "second_eye_left_dizzy1.png",
-});
-resMap.set(k(ShrewType.Green, MapType.Sewer), {
-  body: "second_body.png", face: "second_face_smile.png", faceCry: "second_face_cry.png",
-  leftHand: "second_hand_up_left.png", rightHand: "second_hand_up_right.png",
-  leftEar: "second_ear_left.png", rightEar: "second_ear_right.png",
-  swelling: "red_swelling.png", prop: "second_prop_glasses.png",
   leftEye: "second_red_eye_left.png", rightEye: "second_red_eye_right.png",
   leftEyeDizzy: "second_eye_right_dizzy.png", rightEyeDizzy: "second_eye_left_dizzy.png",
   leftEyeDizzy1: "second_eye_right_dizzy1.png", rightEyeDizzy1: "second_eye_left_dizzy1.png",

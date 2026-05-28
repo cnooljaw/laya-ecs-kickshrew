@@ -39,14 +39,8 @@ export const ATLAS_MAP: Record<string, string> = {
   scene_grassbg: "kickshrew/game_view_grassbg",
   scene_corsair: "kickshrew/kickshrew_game_view_corsair",
   scene_corsairbg: "kickshrew/kickshrew_game_view_corsairbg",
-  scene_sewer: "kickshrew/kickshrew_game_view_sewer",
-  scene_sewerbg_01: "kickshrew/kickshrew_game_view_sewerbg_01",
-  scene_sewerbg_02: "kickshrew/kickshrew_game_view_sewerbg_02",
   scene_moon: "kickshrew/kickshrew_game_view_moon",
   scene_moonbg: "kickshrew/kickshrew_game_view_moonbg",
-
-  // ---- 表情动画 ----
-  swear_animation: "kickshrew/kickshrew_swear_animation",
 
   // ---- 抽屉(洞口蒙版) ----
   drawer: "kickshrew/kickshrew_game_view_drawer",

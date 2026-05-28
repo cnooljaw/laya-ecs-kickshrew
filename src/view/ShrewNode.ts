@@ -138,20 +138,28 @@ export class ShrewNode implements IShrewNode {
       this._bodyH = bh;
 
       // 地鼠容器偏移：对齐 Cocos 的定位逻辑
-      // Cocos: shrew 节点位于 (holeX - shrewWidth*0.5, holeY)
-      //   body 中心在 (holeX, holeY + bh*0.5) — 即 holeX 处、holeY 上方 bh*0.5
-      // Laya: _container 在 (hole.x, hole.y)，body 中心在 (hole.x + bw*0.5, hole.y + bh*0.5)
-      //   需要偏移 _container 使 body 中心对齐到 (hole.x, hole.y - bh*0.5)
-      //   偏移量: (-bw*0.5, -bh)
+      // Cocos: 洞位容器在 (holeX - shrewWidth*0.5, holeY)
+      //   地鼠 anchor(0.5, 0) → 地鼠底部在 holeY（洞口位置），中心在 holeY 上方 bh*0.5
+      // Laya Y-down: HoleNode.y = yRatio * H（洞口位置）
+      //   _container 在 HoleNode 坐标 (0, 0)
+      //   需要让 body 底部对齐到洞口（HoleNode.y），即 body 中心在 -bh*0.5
+      //   body 中心在 _mainLayer 坐标 (bw*0.5, bh*0.5)
+      //   STAND_Y = -8 时 body 中心在 _container 坐标 (bw*0.5, bh*0.5 - 8)
+      //   要 body 底部在 _container y=0: container.y = 0（底部已对齐洞口）
+      //   STAND_Y=-8 使 body 上提 8px，需补偿：container.y = STAND_LIFT_PX
       if (this._container) {
         this._container.x = -bw * 0.5;
-        this._container.y = -bh;
+        this._container.y = STAND_LIFT_PX;
         if (Laya.Rectangle) {
+          // scrollRect: 裁剪洞口以下区域，只显示洞口以上的地鼠部分
+          // 地鼠站立时 body 顶部在 _container 坐标 y = -STAND_LIFT_PX
+          // body 底部在 y = bh - STAND_LIFT_PX
+          // 需要可见区域从 body 顶部到 body 底部
           this._container.scrollRect = new Laya.Rectangle(
             -bw * 0.5,
-            -bh * 0.5 - STAND_LIFT_PX,
+            -STAND_LIFT_PX,
             bw * 1.7,
-            bh * HIDDEN_OFFSET_RATIO + STAND_LIFT_PX
+            bh + STAND_LIFT_PX
           );
         }
       }
@@ -270,6 +278,7 @@ export class ShrewNode implements IShrewNode {
         this._container.visible = true;
         if (this._mainLayer) {
           this._mainLayer.y = HIDDEN_Y + (STAND_Y - HIDDEN_Y) * progress;
+          console.log(this._mainLayer.y );
         }
         break;
 

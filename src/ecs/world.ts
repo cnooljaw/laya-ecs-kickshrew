@@ -12,6 +12,7 @@ import {
   NetworkComponent,
 } from "./components";
 import { HolePositions, getHoleGrid, getHoleZOrder } from "../config/HolePositions";
+import { SCENE_CYCLE_INTERVAL } from "../config/SceneConfig";
 
 /** 创建基础 ECS 世界 */
 export function createGameWorld() {
@@ -66,7 +67,7 @@ export function createHoleEntities(world: ReturnType<typeof createWorld>, mapTyp
     HoleComponent.posXRatio[entity] = positions.xRatios[i];
     HoleComponent.posYRatio[entity] = positions.yRatios[i];
     HoleComponent.shrewEid[entity] = 0;
-    HoleComponent.zIndex[entity] = getHoleZOrder(row, mapType);
+    HoleComponent.zIndex[entity] = getHoleZOrder(row);
 
     DirtyComponent.holeDirty[entity] = 0;
     DirtyComponent.forceFullSync[entity] = 0;
@@ -115,7 +116,7 @@ export function createSingletonEntities(world: ReturnType<typeof createWorld>): 
   addComponent(world, DirtyComponent, scene);
   SceneComponent.currentMap[scene] = MapType.Meadow;
   SceneComponent.sceneTimer[scene] = 0;
-  SceneComponent.cycleInterval[scene] = 100;
+  SceneComponent.cycleInterval[scene] = SCENE_CYCLE_INTERVAL;
   SceneComponent.transitioning[scene] = 0;
   DirtyComponent.sceneDirty[scene] = 0;
   DirtyComponent.forceFullSync[scene] = 0;
