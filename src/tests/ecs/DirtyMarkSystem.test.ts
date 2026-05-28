@@ -1,8 +1,39 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createGameWorld, createShrewEntity, createSingletonEntities } from '../../ecs/world';
-import { ShrewComponent, DirtyComponent, AnimationComponent } from '../../ecs/components';
+import { addComponent, addEntity } from 'bitecs';
+import { createGameWorld, createShrewEntity, createSingletonEntities, createHoleEntities } from '../../ecs/world';
+import {
+  ShrewComponent,
+  DirtyComponent,
+  AnimationComponent,
+  HoleComponent,
+  HammerComponent,
+  SceneComponent,
+  PlayerComponent,
+  HitComponent,
+  ComboComponent,
+} from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType } from '../../ecs/types';
 import { dirtyMarkSystem } from '../../ecs/systems/DirtyMarkSystem';
+import {
+  BIT_HOLE_POS,
+  BIT_HOLE_SHREW,
+  BIT_HAMMER_TYPE,
+  BIT_HAMMER_THUNDER,
+  BIT_HAMMER_HITTABLE,
+  BIT_SCENE_MAP,
+  BIT_SCENE_TIMER,
+  BIT_SCENE_TRANSITION,
+  BIT_PLAYER_MONEY,
+  BIT_PLAYER_ANGRY,
+  BIT_PLAYER_POWER,
+  BIT_PLAYER_LEVEL,
+  BIT_HIT_INDEX,
+  BIT_HIT_REWARD,
+  BIT_HIT_WASHIT,
+  BIT_COMBO_COUNT,
+  BIT_COMBO_ID,
+  BIT_COMBO_TARGETS,
+} from '../../binding/DirtyFlags';
 
 describe('DirtyMarkSystem', () => {
   let world: ReturnType<typeof createGameWorld>;
@@ -79,5 +110,92 @@ describe('DirtyMarkSystem', () => {
     dirtyMarkSystem(world);
 
     expect(DirtyComponent.forceFullSync[singletons.scene]).toBe(1);
+  });
+
+  it('HoleComponent 变化: 位置和关联地鼠 dirty bit 被设置', () => {
+    const [holeEid] = createHoleEntities(world, MapType.Meadow);
+    dirtyMarkSystem(world);
+
+    HoleComponent.posXRatio[holeEid] += 0.01;
+    HoleComponent.shrewEid[holeEid] = 99;
+    dirtyMarkSystem(world);
+
+    expect(DirtyComponent.holeDirty[holeEid] & BIT_HOLE_POS).toBeTruthy();
+    expect(DirtyComponent.holeDirty[holeEid] & BIT_HOLE_SHREW).toBeTruthy();
+  });
+
+  it('HammerComponent 变化: 类型、雷神状态和可击打状态 dirty bit 被设置', () => {
+    const singletons = createSingletonEntities(world);
+    dirtyMarkSystem(world);
+
+    HammerComponent.selectedType[singletons.hammer] = 2;
+    HammerComponent.isThunderActive[singletons.hammer] = 1;
+    HammerComponent.hitTable[singletons.hammer] = 0;
+    dirtyMarkSystem(world);
+
+    expect(DirtyComponent.hammerDirty[singletons.hammer] & BIT_HAMMER_TYPE).toBeTruthy();
+    expect(DirtyComponent.hammerDirty[singletons.hammer] & BIT_HAMMER_THUNDER).toBeTruthy();
+    expect(DirtyComponent.hammerDirty[singletons.hammer] & BIT_HAMMER_HITTABLE).toBeTruthy();
+  });
+
+  it('SceneComponent 变化: 地图、计时和过渡 dirty bit 被设置', () => {
+    const singletons = createSingletonEntities(world);
+    dirtyMarkSystem(world);
+
+    SceneComponent.currentMap[singletons.scene] = MapType.Ship;
+    SceneComponent.sceneTimer[singletons.scene] = 1;
+    SceneComponent.transitioning[singletons.scene] = 1;
+    dirtyMarkSystem(world);
+
+    expect(DirtyComponent.sceneDirty[singletons.scene] & BIT_SCENE_MAP).toBeTruthy();
+    expect(DirtyComponent.sceneDirty[singletons.scene] & BIT_SCENE_TIMER).toBeTruthy();
+    expect(DirtyComponent.sceneDirty[singletons.scene] & BIT_SCENE_TRANSITION).toBeTruthy();
+  });
+
+  it('PlayerComponent 变化: HUD 相关 dirty bit 被设置', () => {
+    const singletons = createSingletonEntities(world);
+    dirtyMarkSystem(world);
+
+    PlayerComponent.money[singletons.player] = 100;
+    PlayerComponent.angry[singletons.player] = 50;
+    PlayerComponent.power[singletons.player] = 10;
+    PlayerComponent.powerTop[singletons.player] = 100;
+    PlayerComponent.level[singletons.player] = 2;
+    dirtyMarkSystem(world);
+
+    expect(DirtyComponent.playerDirty[singletons.player] & BIT_PLAYER_MONEY).toBeTruthy();
+    expect(DirtyComponent.playerDirty[singletons.player] & BIT_PLAYER_ANGRY).toBeTruthy();
+    expect(DirtyComponent.playerDirty[singletons.player] & BIT_PLAYER_POWER).toBeTruthy();
+    expect(DirtyComponent.playerDirty[singletons.player] & BIT_PLAYER_LEVEL).toBeTruthy();
+  });
+
+  it('ComboComponent 变化: 次数、ID 和目标 dirty bit 被设置', () => {
+    const singletons = createSingletonEntities(world);
+    dirtyMarkSystem(world);
+
+    ComboComponent.comboCount[singletons.combo] = 2;
+    ComboComponent.comboID[singletons.combo] = 7;
+    ComboComponent.targetHole0[singletons.combo] = 1;
+    dirtyMarkSystem(world);
+
+    expect(DirtyComponent.comboDirty[singletons.combo] & BIT_COMBO_COUNT).toBeTruthy();
+    expect(DirtyComponent.comboDirty[singletons.combo] & BIT_COMBO_ID).toBeTruthy();
+    expect(DirtyComponent.comboDirty[singletons.combo] & BIT_COMBO_TARGETS).toBeTruthy();
+  });
+
+  it('HitComponent 变化: 命中索引、奖励和命中状态 dirty bit 被设置', () => {
+    const hitEid = addEntity(world);
+    addComponent(world, HitComponent, hitEid);
+    addComponent(world, DirtyComponent, hitEid);
+    dirtyMarkSystem(world);
+
+    HitComponent.shrewIndex[hitEid] = 3;
+    HitComponent.reward[hitEid] = 50;
+    HitComponent.wasHit[hitEid] = 1;
+    dirtyMarkSystem(world);
+
+    expect(DirtyComponent.hitDirty[hitEid] & BIT_HIT_INDEX).toBeTruthy();
+    expect(DirtyComponent.hitDirty[hitEid] & BIT_HIT_REWARD).toBeTruthy();
+    expect(DirtyComponent.hitDirty[hitEid] & BIT_HIT_WASHIT).toBeTruthy();
   });
 });

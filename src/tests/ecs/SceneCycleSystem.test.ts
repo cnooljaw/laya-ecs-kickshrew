@@ -2,29 +2,33 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld, createShrewEntity, createHoleEntities, createSingletonEntities } from '../../ecs/world';
 import { SceneComponent, ShrewComponent, DirtyComponent } from '../../ecs/components';
 import { MapType, ShrewAction, ShrewType, HOLE_COUNT } from '../../ecs/types';
+import { SCENE_CYCLE_INTERVAL } from '../../config/SceneConfig';
 import { sceneCycleSystem } from '../../ecs/systems/SceneCycleSystem';
 
 describe('SceneCycleSystem', () => {
   let world: ReturnType<typeof createGameWorld>;
   let singletons: ReturnType<typeof createSingletonEntities>;
   let holes: number[];
+  let shrews: number[];
 
   beforeEach(() => {
     world = createGameWorld();
     singletons = createSingletonEntities(world);
     holes = createHoleEntities(world, MapType.Meadow);
+    shrews = [];
 
     // 创建地鼠
     for (let i = 0; i < HOLE_COUNT; i++) {
       const shrewEid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
       ShrewComponent.actionState[shrewEid] = ShrewAction.Stand;
       ShrewComponent.isClickable[shrewEid] = 1;
+      shrews.push(shrewEid);
     }
   });
 
   it('sceneTimer < cycleInterval: 不切换场景', () => {
-    SceneComponent.sceneTimer[singletons.scene] = 50;
-    SceneComponent.cycleInterval[singletons.scene] = 100;
+    SceneComponent.sceneTimer[singletons.scene] = SCENE_CYCLE_INTERVAL - 0.01;
+    SceneComponent.cycleInterval[singletons.scene] = SCENE_CYCLE_INTERVAL;
 
     sceneCycleSystem(world);
 
@@ -32,8 +36,8 @@ describe('SceneCycleSystem', () => {
   });
 
   it('sceneTimer >= cycleInterval: 切换到下一个场景', () => {
-    SceneComponent.sceneTimer[singletons.scene] = 100;
-    SceneComponent.cycleInterval[singletons.scene] = 100;
+    SceneComponent.sceneTimer[singletons.scene] = SCENE_CYCLE_INTERVAL;
+    SceneComponent.cycleInterval[singletons.scene] = SCENE_CYCLE_INTERVAL;
     SceneComponent.currentMap[singletons.scene] = MapType.Meadow;
 
     sceneCycleSystem(world);
@@ -41,34 +45,29 @@ describe('SceneCycleSystem', () => {
     expect(SceneComponent.currentMap[singletons.scene]).toBe(MapType.Ship);
   });
 
-  it('场景循环 Meadow→Ship→Sewer→Space→Meadow', () => {
-    SceneComponent.cycleInterval[singletons.scene] = 100;
+  it('场景循环 Meadow→Ship→Space→Meadow', () => {
+    SceneComponent.cycleInterval[singletons.scene] = SCENE_CYCLE_INTERVAL;
 
     // Meadow → Ship
-    SceneComponent.sceneTimer[singletons.scene] = 100;
+    SceneComponent.sceneTimer[singletons.scene] = SCENE_CYCLE_INTERVAL;
     SceneComponent.currentMap[singletons.scene] = MapType.Meadow;
     sceneCycleSystem(world);
     expect(SceneComponent.currentMap[singletons.scene]).toBe(MapType.Ship);
 
-    // Ship → Sewer
-    SceneComponent.sceneTimer[singletons.scene] = 100;
-    sceneCycleSystem(world);
-    expect(SceneComponent.currentMap[singletons.scene]).toBe(MapType.Sewer);
-
-    // Sewer → Space
-    SceneComponent.sceneTimer[singletons.scene] = 100;
+    // Ship → Space
+    SceneComponent.sceneTimer[singletons.scene] = SCENE_CYCLE_INTERVAL;
     sceneCycleSystem(world);
     expect(SceneComponent.currentMap[singletons.scene]).toBe(MapType.Space);
 
     // Space → Meadow
-    SceneComponent.sceneTimer[singletons.scene] = 100;
+    SceneComponent.sceneTimer[singletons.scene] = SCENE_CYCLE_INTERVAL;
     sceneCycleSystem(world);
     expect(SceneComponent.currentMap[singletons.scene]).toBe(MapType.Meadow);
   });
 
   it('切换时重置 sceneTimer', () => {
-    SceneComponent.sceneTimer[singletons.scene] = 150;
-    SceneComponent.cycleInterval[singletons.scene] = 100;
+    SceneComponent.sceneTimer[singletons.scene] = SCENE_CYCLE_INTERVAL * 1.5;
+    SceneComponent.cycleInterval[singletons.scene] = SCENE_CYCLE_INTERVAL;
 
     sceneCycleSystem(world);
 
@@ -76,8 +75,8 @@ describe('SceneCycleSystem', () => {
   });
 
   it('切换时设置 forceFullSync=1', () => {
-    SceneComponent.sceneTimer[singletons.scene] = 100;
-    SceneComponent.cycleInterval[singletons.scene] = 100;
+    SceneComponent.sceneTimer[singletons.scene] = SCENE_CYCLE_INTERVAL;
+    SceneComponent.cycleInterval[singletons.scene] = SCENE_CYCLE_INTERVAL;
 
     sceneCycleSystem(world);
 
@@ -86,17 +85,16 @@ describe('SceneCycleSystem', () => {
   });
 
   it('切换时所有地鼠强制 Refresh', () => {
-    SceneComponent.sceneTimer[singletons.scene] = 100;
-    SceneComponent.cycleInterval[singletons.scene] = 100;
+    SceneComponent.sceneTimer[singletons.scene] = SCENE_CYCLE_INTERVAL;
+    SceneComponent.cycleInterval[singletons.scene] = SCENE_CYCLE_INTERVAL;
 
     sceneCycleSystem(world);
 
-    // 验证所有地鼠都进入了 Refresh 状态
-    for (let i = 0; i < HOLE_COUNT; i++) {
-      const shrewEid = ShrewComponent.actionState;
-      // 地鼠应该被设为不可点击（Refresh前奏）
+    for (const shrewEid of shrews) {
+      expect(ShrewComponent.actionState[shrewEid]).toBe(ShrewAction.Refresh);
+      expect(ShrewComponent.isClickable[shrewEid]).toBe(0);
+      expect(ShrewComponent.mapType[shrewEid]).toBe(MapType.Ship);
+      expect(DirtyComponent.forceFullSync[shrewEid]).toBe(1);
     }
-    // 简化验证: forceFullSync 已设为 1
-    expect(DirtyComponent.forceFullSync[singletons.scene]).toBe(1);
   });
 });

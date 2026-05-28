@@ -246,11 +246,8 @@ npm test
 当前项目基线状态：
 
 - `npm test` 可以正常启动 Vitest。
-- 最近基线：111 项测试中 107 项通过、4 项失败。
-- 已知失败集中在：
-  - `src/tests/ecs/components.test.ts`：洞位 `posYRatio` 期望与当前 `HolePositions` 配置不一致。
-  - `src/tests/ecs/HitDetectionSystem.test.ts`：命中测试点击坐标仍按旧洞位 Y 坐标。
-  - `src/tests/resource/PlistConverter.test.ts`：rotated 帧宽高期望与当前转换结果不一致。
+- 最近基线：117 项测试全部通过。
+- `DirtyMarkSystem` 已覆盖 Shrew/Animation/Hole/Hammer/Combo/Scene/Player/Hit 的字段差异，并有对应测试。
 
 修复测试时，不要只改测试让它变绿；先判断代码行为与 Laya 运行时资源格式哪个是正确事实。
 
@@ -400,10 +397,8 @@ VS Code 按 `F5`，选择 "LayaAir Debug"。sourceMap 是二级链路（TS → b
 
 如果重新开始会话后要继续提升项目质量，建议优先处理：
 
-1. 修复当前 4 个基线测试失败，恢复 `npm test` 全绿。
-2. 补齐 Player/Hammer/Scene/Hole/Hit 等组件的 dirty 标记策略，并补对应测试与教学说明。
-3. 完善 `GameScene.stop()` 生命周期清理：timer、stage event、binding 注册表、节点、音效、network callback。
-4. 统一 `ShrewStateSystem` 的固定 `1/60` timer 与真实 `deltaSec`，说明帧率变化对 ECS 状态机的影响。
-5. 把点击输入和网络回包整理成 command/event 入口，降低 `GameScene` 直接编排规则的比例。
-6. 为 dirty binding 和 entity/component 调试补 Q&A 或轻量工具，帮助定位“数据变了但画面没变”的问题。
-7. 梳理真实 socket 接入点，保留 `KickSocket` 的 seqId/pending 机制。
+1. 完善 `GameScene.stop()` 生命周期清理：timer、stage event、binding 注册表、节点、音效、network callback。
+2. 统一 `ShrewStateSystem` 的固定 `1/60` timer 与真实 `deltaSec`，说明帧率变化对 ECS 状态机的影响。
+3. 把点击输入和网络回包整理成 command/event 入口，降低 `GameScene` 直接编排规则的比例。
+4. 为 dirty binding 和 entity/component 调试补轻量工具：实体快照、关键组件 dump、dirty bit 名称解析。
+5. 梳理真实 socket 接入点，保留 `KickSocket` 的 seqId/pending 机制。

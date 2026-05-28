@@ -8,6 +8,7 @@
     "sourceMap": false,
     "experimentalDecorators": true,
     "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

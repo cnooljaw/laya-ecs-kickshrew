@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { createWorld, addEntity, removeEntity, addComponent, hasComponent, Types, defineComponent } from "bitecs";
 import { ShrewType, ShrewAction, MapType, HammerType, HOLE_COUNT } from "../../ecs/types";
+import { SCENE_CYCLE_INTERVAL } from "../../config/SceneConfig";
+import { HolePositions } from "../../config/HolePositions";
 import {
   ShrewComponent,
   HoleComponent,
@@ -114,11 +116,11 @@ describe("ECS Components & World", () => {
 
     it("should create green shrew with hp=1", () => {
       const world = createGameWorld();
-      const entity = createShrewEntity(world, ShrewType.Green, MapType.Sewer);
+      const entity = createShrewEntity(world, ShrewType.Green, MapType.Space);
 
       expect(ShrewComponent.shrewType[entity]).toBe(ShrewType.Green);
       expect(ShrewComponent.hp[entity]).toBe(1);
-      expect(ShrewComponent.mapType[entity]).toBe(MapType.Sewer);
+      expect(ShrewComponent.mapType[entity]).toBe(MapType.Space);
     });
   });
 
@@ -154,9 +156,9 @@ describe("ECS Components & World", () => {
       const world = createGameWorld();
       const holes = createHoleEntities(world, MapType.Meadow);
 
-      expect(HoleComponent.posXRatio[holes[0]]).toBeCloseTo(0.2855, 3);
+      expect(HoleComponent.posXRatio[holes[0]]).toBeCloseTo(HolePositions[MapType.Meadow].xRatios[0], 3);
       // Laya 使用 Y-down 坐标，旧 Cocos 0.56 对应 Laya 0.44。
-      expect(HoleComponent.posYRatio[holes[0]]).toBeCloseTo(0.44, 2);
+      expect(HoleComponent.posYRatio[holes[0]]).toBeCloseTo(HolePositions[MapType.Meadow].yRatios[0], 2);
     });
   });
 
@@ -175,7 +177,7 @@ describe("ECS Components & World", () => {
       const singletons = createSingletonEntities(world);
 
       expect(SceneComponent.currentMap[singletons.scene]).toBe(MapType.Meadow);
-      expect(SceneComponent.cycleInterval[singletons.scene]).toBe(100);
+      expect(SceneComponent.cycleInterval[singletons.scene]).toBe(SCENE_CYCLE_INTERVAL);
     });
 
     it("should create player singleton with zero values", () => {

@@ -153,7 +153,7 @@ DirtyComponent       各组件 dirty bitmask + forceFullSync
 
 - `ShrewType`：红、蓝、黄、绿。
 - `ShrewAction`：`None -> Wait -> Up -> Stand -> Down -> Refresh -> None`，以及 `Dizzy/Delay`。
-- `MapType`：草地、船、下水道、太空。
+- `MapType`：草地、船、太空。
 - `HammerType`：木、石、铜、银、金、神、雷神锤。
 - `AnimType`：Idle、Up、Stand、Down、Dizzy 等。
 
@@ -241,7 +241,7 @@ touchYRatio = stage.mouseY / 640
 顺序来自 `src/config/SceneConfig.ts`：
 
 ```text
-Meadow -> Ship -> Sewer -> Space -> Meadow
+Meadow -> Ship -> Space -> Meadow
 ```
 
 切图时会：
@@ -266,9 +266,17 @@ Meadow -> Ship -> Sewer -> Space -> Meadow
 
 #### DirtyMarkSystem
 
-`DirtyMarkSystem.ts` 当前只比较地鼠和动画组件，把字段差异写入 `DirtyComponent.shrewDirty` 和 `DirtyComponent.animDirty`。
+`DirtyMarkSystem.ts` 按 world 保存上一帧快照，比较当前帧组件字段，把差异写入 `DirtyComponent` 的各类 bitmask：
 
-要注意：其他组件的 dirty 目前更多依赖 `forceFullSync` 或系统手动写 dirty。以后如果发现 HUD、锤子、场景变化不同步，优先检查相关 dirty 是否被标记。
+- `shrewDirty` / `animDirty`：地鼠状态和动画进度。
+- `holeDirty`：洞位坐标、绑定地鼠、zIndex。
+- `hammerDirty`：锤子类型、雷神锤状态、是否可击打。
+- `comboDirty`：连击次数、comboID、目标洞位。
+- `sceneDirty`：当前地图、场景计时、切换状态。
+- `playerDirty`：金币、怒气、体力/体力上限、等级。
+- `hitDirty`：击中特效的地鼠索引、奖励、是否命中。
+
+第一次看到某个实体时会把对应组件标成全脏，后续帧只标记变化字段。`forceFullSync` 独立于这些 bit，通常用于首次同步或场景切换时要求 binding 全量刷新。
 
 ### 第 40-50 分钟：dirty binding 怎么把 ECS 显示出来
 
@@ -357,13 +365,7 @@ NodePool            简单节点对象池
 
 #### SceneLayer 是场景遮罩重点
 
-`SceneLayer.ts` 管背景、cover 和下水道的三明治结构：
-
-```text
-base cover < hole/shrew < overlay cover
-```
-
-下水道 zOrder 比其他场景复杂，洞位 zOrder 来自 `getHoleZOrder(row, mapType)`。
+`SceneLayer.ts` 管背景和 cover 遮罩层。所有场景统一 zOrder 结构：洞位 zOrder 来自 `getHoleZOrder(row)`。
 
 #### 资源路径
 
@@ -535,7 +537,7 @@ GameScene.onTouch(x, y)
 - `src/binding/SceneViewBinding.ts`
 - `src/binding/HoleViewBinding.ts`
 
-下水道 zOrder 特殊，不要只改位置不看遮罩。
+修改洞位位置时注意 cover 遮罩的 zOrder 关系。
 
 ### 改锤子和怒气
 
@@ -642,6 +644,15 @@ GameScene -> everything for assembly
 
 binding 不是事件推送模型。它每帧遍历 dirty 实体，然后从 component 里读数据更新节点。
 
+### Q: ECS 数据变了但画面没变，应该从哪里查？
+
+A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 节点里猜状态。
+
+- 代码入口：`src/ecs/systems/DirtyMarkSystem.ts`、`src/binding/SyncView.ts`、对应 `src/binding/*ViewBinding.ts`。
+- 数据流：system 修改 component，`dirtyMarkSystem` 对比快照写 `DirtyComponent.xxxDirty`，`SyncView.sync()` 调 binding，binding 读取 component 更新 view node。
+- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；dirty mark 没比较这个字段；binding 没处理这个 bit；节点没有注册或已销毁但注册表还留着旧引用。
+- 验证方式：先跑 `npx vitest run src/tests/ecs/DirtyMarkSystem.test.ts`，再在相关 system 后打印 component 和 dirty bit。
+
 ### Laya 资源加载是异步的
 
 `ShrewNode.setSpriteFrame()`、`SceneLayer.switchScene()` 都会异步 `Laya.loader.load(...)`。节点销毁/切场景时，要防止异步回调回来操作空节点。当前部分代码已经有 `if (!this._mainLayer) return` 这类保护。
@@ -652,7 +663,6 @@ binding 不是事件推送模型。它每帧遍历 dirty 实体，然后从 comp
 
 - Cocos Y-up 到 Laya Y-down 的转换。
 - plist 的 rotated/trimmed 帧处理。
-- 下水道遮罩的特殊 zOrder。
 - `src1/` 的 Lua 命名和资源命名。
 
 这些不是杂音，是迁移线索。
@@ -661,7 +671,6 @@ binding 不是事件推送模型。它每帧遍历 dirty 实体，然后从 comp
 
 这些不是阻塞理解项目的问题，但后续开发要知道。
 
-- `DirtyMarkSystem` 当前主要覆盖地鼠和动画，玩家、锤子、场景、洞位等字段变化需要确认 dirty 标记是否完整。
 - `GameScene.stop()` 只停 `_running`，还没有完整清理 Laya timer、stage event、binding 注册表、节点和音效。
 - `ShrewStateSystem` 用固定 1/60 递减部分 timer，和真实 delta 不完全统一。
 - `HitComponent` 已有 binding，但当前击中奖励更多通过回包返回，是否要落到 `HitComponent` 需要后续统一。
@@ -678,13 +687,7 @@ npm test
 
 如果测试过了，说明纯 ECS、网络、资源转换的核心逻辑基本可用。
 
-当前项目快照中，`npm test` 可以正常启动 Vitest，但存在少量失败用例。最近一次检查结果是 111 个测试中 107 个通过，4 个失败：
-
-- `src/tests/ecs/components.test.ts` 期望洞位 0 的 `posYRatio` 约为 `0.56`，但当前 `HolePositions` 配置是 `0.44`。
-- `src/tests/ecs/HitDetectionSystem.test.ts` 有两个命中测试仍用 `y=0.56` 点击，和当前洞位配置不一致，因此没有命中，hp 没有扣。
-- `src/tests/resource/PlistConverter.test.ts` 对 rotated 帧的宽高期望是 `{ w: 27, h: 46 }`，当前转换结果是 `{ w: 46, h: 27 }`。
-
-新人排查时先判断这是“测试期望落后于当前配置”，还是“代码行为被改坏”。洞位相关失败很可能和坐标配置更新有关；plist rotated 帧则需要对齐 Laya atlas 格式和运行时补偿策略。
+当前项目快照中，`npm test` 可以正常启动 Vitest，最近一次检查结果是 117 个测试全部通过。新人排查失败时先判断这是“测试期望落后于当前配置”，还是“代码行为被改坏”；资源和坐标迁移相关测试尤其要对齐 Laya 运行时事实。
 
 ### 再开 Laya 运行时看画面
 
@@ -723,14 +726,14 @@ console.log("shrew", eid, ShrewComponent.actionState[eid], ShrewComponent.isClic
 - 改 `HIT_RADIUS_RATIO` 并补命中测试。
 - 新增一个地鼠等待时间配置。
 - 调整某个地图洞位坐标。
-- 给 `DirtyMarkSystem` 补 Player/Hammer/Scene dirty 对比。
+- 给 `GameScene.stop()` 增加事件、节点、音效、binding 注册表和 network callback 清理。
 - 给 `GameScene.stop()` 增加事件和节点清理。
 
 不建议第一个任务：
 
 - 重写资源加载。
 - 重写 ShrewNode 部件拼装。
-- 改下水道遮罩结构。
+- 改场景遮罩结构。
 - 一次性接真实服务器并改协议。
 
 ## 9. 一句话总结
