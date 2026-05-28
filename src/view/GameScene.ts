@@ -179,7 +179,7 @@ export class GameScene {
     animationTimerSystem(this._world, deltaSec);
 
     // 2. 地鼠状态机
-    shrewStateSystem(this._world);
+    shrewStateSystem(this._world, deltaSec);
 
     // 3. 场景切换检查
     sceneCycleSystem(this._world);

@@ -4,6 +4,8 @@ import { ShrewComponent, AnimationComponent, HammerComponent, HoleComponent } fr
 import { ShrewType, ShrewAction, MapType, AnimType } from '../../ecs/types';
 import { shrewStateSystem } from '../../ecs/systems/ShrewStateSystem';
 
+const FRAME_DELTA = 1 / 60;
+
 describe('ShrewStateSystem', () => {
   let world: ReturnType<typeof createGameWorld>;
 
@@ -26,7 +28,7 @@ describe('ShrewStateSystem', () => {
     ShrewComponent.actionState[eid] = ShrewAction.Wait;
     ShrewComponent.animTimer[eid] = 0;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Up);
     expect(AnimationComponent.animType[eid]).toBe(AnimType.Up);
@@ -39,10 +41,21 @@ describe('ShrewStateSystem', () => {
     ShrewComponent.actionState[eid] = ShrewAction.Wait;
     ShrewComponent.animTimer[eid] = 2.0;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
     expect(ShrewComponent.animTimer[eid]).toBeLessThan(2.0);
+  });
+
+  it('Wait 计时使用传入的 deltaSec，而不是固定 60fps', () => {
+    const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
+    ShrewComponent.actionState[eid] = ShrewAction.Wait;
+    ShrewComponent.animTimer[eid] = 2.0;
+
+    shrewStateSystem(world, 0.25);
+
+    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
+    expect(ShrewComponent.animTimer[eid]).toBeCloseTo(1.75, 5);
   });
 
   it('Up → Stand: 动画完成(progress>=1)后转 Stand', () => {
@@ -51,7 +64,7 @@ describe('ShrewStateSystem', () => {
     AnimationComponent.progress[eid] = 1.0;
     AnimationComponent.duration[eid] = 0.31;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Stand);
     expect(ShrewComponent.isClickable[eid]).toBe(1);
@@ -65,7 +78,7 @@ describe('ShrewStateSystem', () => {
     AnimationComponent.progress[eid] = 0.5;
     AnimationComponent.duration[eid] = 0.31;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Up);
   });
@@ -76,7 +89,7 @@ describe('ShrewStateSystem', () => {
     ShrewComponent.isClickable[eid] = 1;
     ShrewComponent.animTimer[eid] = 0;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Down);
     expect(ShrewComponent.isClickable[eid]).toBe(0);
@@ -90,7 +103,7 @@ describe('ShrewStateSystem', () => {
     ShrewComponent.actionState[eid] = ShrewAction.Stand;
     ShrewComponent.animTimer[eid] = 1.5;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Stand);
     expect(ShrewComponent.animTimer[eid]).toBeLessThan(1.5);
@@ -103,7 +116,7 @@ describe('ShrewStateSystem', () => {
     AnimationComponent.progress[eid] = 1.0;
     AnimationComponent.duration[eid] = 0.31;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
     expect(ShrewComponent.hp[eid]).toBe(1);
@@ -118,7 +131,7 @@ describe('ShrewStateSystem', () => {
     AnimationComponent.progress[eid] = 0.3;
     AnimationComponent.duration[eid] = 0.31;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Down);
   });
@@ -130,7 +143,7 @@ describe('ShrewStateSystem', () => {
     ShrewComponent.actionState[eid] = ShrewAction.Dizzy;
     ShrewComponent.animTimer[eid] = 0.3;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Dizzy);
     expect(ShrewComponent.animTimer[eid]).toBeLessThan(0.3);
@@ -142,7 +155,7 @@ describe('ShrewStateSystem', () => {
     ShrewComponent.hp[eid] = 0;
     ShrewComponent.animTimer[eid] = 0;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
     expect(ShrewComponent.hp[eid]).toBe(1);
@@ -162,7 +175,7 @@ describe('ShrewStateSystem', () => {
     ShrewComponent.actionState[eid] = ShrewAction.Dizzy;
     ShrewComponent.animTimer[eid] = 0;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     // Dizzy 结束后进入下一轮，蓝鼠属性恢复为新一轮初始值
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
@@ -178,7 +191,7 @@ describe('ShrewStateSystem', () => {
     ShrewComponent.actionState[eid] = ShrewAction.Dizzy;
     ShrewComponent.animTimer[eid] = 0;
 
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
 
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
     expect(ShrewComponent.hp[eid]).toBe(2);
@@ -195,26 +208,26 @@ describe('ShrewStateSystem', () => {
 
     // Wait → Up (强制 timer=0)
     ShrewComponent.animTimer[eid] = 0;
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Up);
 
     // Up → Stand (强制动画完成)
     AnimationComponent.progress[eid] = 1.0;
     AnimationComponent.duration[eid] = 0.31;
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Stand);
     expect(ShrewComponent.isClickable[eid]).toBe(1);
 
     // Stand → Down (强制 timer=0)
     ShrewComponent.animTimer[eid] = 0;
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Down);
     expect(ShrewComponent.isClickable[eid]).toBe(0);
 
     // Down → Wait (强制动画完成并重置)
     AnimationComponent.progress[eid] = 1.0;
     AnimationComponent.duration[eid] = 0.31;
-    shrewStateSystem(world);
+    shrewStateSystem(world, FRAME_DELTA);
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
     expect(ShrewComponent.hp[eid]).toBe(1);
   });

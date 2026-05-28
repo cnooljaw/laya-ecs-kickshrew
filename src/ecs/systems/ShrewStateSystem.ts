@@ -25,14 +25,11 @@ const UP_DURATION = SHREW_TIMING.upDurationSec;
 const DOWN_DURATION = SHREW_TIMING.downDurationSec;
 /** 站立停留时间(秒) */
 const STAND_TIME = SHREW_TIMING.standSec;
-/** 每帧固定 delta (秒), 60fps */
-const FRAME_DELTA = 1 / 60;
-
 /**
  * 地鼠状态机系统
  * 注意: animTimer 由本系统自行递减，不依赖 AnimationTimerSystem
  */
-export function shrewStateSystem(world: any): void {
+export function shrewStateSystem(world: any, deltaSec: number): void {
   const entities = shrewQuery(world);
 
   for (let i = 0; i < entities.length; i++) {
@@ -41,25 +38,25 @@ export function shrewStateSystem(world: any): void {
 
     switch (state) {
       case ShrewAction.Wait:
-        handleWait(eid);
+        handleWait(eid, deltaSec);
         break;
       case ShrewAction.Up:
         handleUp(eid);
         break;
       case ShrewAction.Stand:
-        handleStand(eid);
+        handleStand(eid, deltaSec);
         break;
       case ShrewAction.Down:
         handleDown(eid);
         break;
       case ShrewAction.Dizzy:
-        handleDizzy(eid);
+        handleDizzy(eid, deltaSec);
         break;
     }
   }
 }
 
-function handleWait(eid: number): void {
+function handleWait(eid: number, deltaSec: number): void {
   const timer = ShrewComponent.animTimer[eid];
   if (timer <= 0) {
     // Wait → Up
@@ -69,7 +66,7 @@ function handleWait(eid: number): void {
     AnimationComponent.duration[eid] = UP_DURATION;
   } else {
     // 继续等待
-    ShrewComponent.animTimer[eid] = timer - FRAME_DELTA;
+    ShrewComponent.animTimer[eid] = timer - deltaSec;
   }
 }
 
@@ -85,7 +82,7 @@ function handleUp(eid: number): void {
   }
 }
 
-function handleStand(eid: number): void {
+function handleStand(eid: number, deltaSec: number): void {
   const timer = ShrewComponent.animTimer[eid];
   if (timer <= 0) {
     // Stand → Down
@@ -96,7 +93,7 @@ function handleStand(eid: number): void {
     AnimationComponent.duration[eid] = DOWN_DURATION;
   } else {
     // 继续站立
-    ShrewComponent.animTimer[eid] = timer - FRAME_DELTA;
+    ShrewComponent.animTimer[eid] = timer - deltaSec;
   }
 }
 
@@ -107,11 +104,11 @@ function handleDown(eid: number): void {
   }
 }
 
-function handleDizzy(eid: number): void {
+function handleDizzy(eid: number, deltaSec: number): void {
   if (ShrewComponent.animTimer[eid] <= 0) {
     // Dizzy → Wait
     resetShrewForNextCycle(eid);
   } else {
-    ShrewComponent.animTimer[eid] -= FRAME_DELTA;
+    ShrewComponent.animTimer[eid] -= deltaSec;
   }
 }
