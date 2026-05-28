@@ -47,10 +47,11 @@ docs/                     项目文档
 Main.ts
   -> GameScene.init()
   -> createGameWorld/createSingletonEntities/createHoleEntities/createShrewEntity
-  -> 创建 Laya 节点并 registerXxxNode
+  -> 创建 Laya 节点并通过 ViewRegistry 注册
   -> 注册 SyncView bindings
+  -> 创建 GameLoopPipeline/KickInputAdapter
   -> Laya.timer.frameLoop
-  -> GameScene.update(delta)
+  -> GameScene.update(delta) -> GameLoopPipeline.update(delta)
 ```
 
 每帧系统顺序：
@@ -79,6 +80,7 @@ Dizzy(被击中短暂停留) -> Wait
 ```text
 Laya stage MOUSE_DOWN
   -> GameScene.onTouch(x, y)
+  -> KickInputAdapter.handleTouch(x, y)
   -> hitDetectionSystem(world, xRatio, yRatio)
   -> comboSystem
   -> NetworkAdapter.sendKick
@@ -422,8 +424,8 @@ VS Code 按 `F5`，选择 "LayaAir Debug"。sourceMap 是二级链路（TS → b
 
 如果重新开始会话后要继续提升项目质量，建议优先处理：
 
-1. 完善 `GameScene.stop()` 生命周期清理：timer、stage event、binding 注册表、节点、音效、network callback。
-2. 统一 `ShrewStateSystem` 的固定 `1/60` timer 与真实 `deltaSec`，说明帧率变化对 ECS 状态机的影响。
-3. 把点击输入和网络回包整理成 command/event 入口，降低 `GameScene` 直接编排规则的比例。
-4. 为 dirty binding 和 entity/component 调试补轻量工具：实体快照、关键组件 dump、dirty bit 名称解析。
-5. 梳理真实 socket 接入点，保留 `KickSocket` 的 seqId/pending 机制。
+1. 完善 `Main`/脚本层 teardown：清理 `Laya.timer.frameLoop`、stage event 和背景音乐。
+2. 把网络回包进一步整理成 command/event 入口，降低 `GameScene` 对回包 system 的直接感知。
+3. 为 dirty binding 和 entity/component 调试补轻量工具：实体快照、关键组件 dump、dirty bit 名称解析。
+4. 梳理真实 socket 接入点，保留 `KickSocket` 的 seqId/pending 机制。
+5. 评估 `NetworkComponent` 是否要承载 connected/pending 等运行态，避免网络状态半 ECS 半对象化。

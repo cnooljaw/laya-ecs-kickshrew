@@ -38,8 +38,12 @@ export class NetworkAdapter {
   }
 
   /** 设置回包回调 */
-  onResponse(fn: (resp: KickResponse) => void): void {
+  onResponse(fn: ((resp: KickResponse) => void) | null): void {
     this._onResponse = fn;
+  }
+
+  clearResponseHandler(): void {
+    this._onResponse = null;
   }
 
   /** 发送击打请求 */

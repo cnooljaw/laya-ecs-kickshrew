@@ -11,13 +11,13 @@
 import { createGameWorld, createShrewEntity, createHoleEntities, createSingletonEntities, SingletonEntities } from "../ecs/world";
 import { hitResponseSystem } from "../ecs/systems/HitResponseSystem";
 import { SyncView } from "../binding/SyncView";
-import { shrewViewBinding, shrewAnimationViewBinding, registerShrewNode } from "../binding/ShrewViewBinding";
-import { holeViewBinding, registerHoleNode } from "../binding/HoleViewBinding";
-import { hammerViewBinding, registerHammerNode } from "../binding/HammerViewBinding";
-import { comboViewBinding, registerComboNode } from "../binding/ComboViewBinding";
-import { sceneViewBinding, registerSceneLayer } from "../binding/SceneViewBinding";
-import { playerViewBinding, registerPlayerHUD } from "../binding/PlayerViewBinding";
-import { hitViewBinding, registerHitEffectNode } from "../binding/HitViewBinding";
+import { shrewViewBinding, shrewAnimationViewBinding } from "../binding/ShrewViewBinding";
+import { holeViewBinding } from "../binding/HoleViewBinding";
+import { hammerViewBinding } from "../binding/HammerViewBinding";
+import { comboViewBinding } from "../binding/ComboViewBinding";
+import { sceneViewBinding } from "../binding/SceneViewBinding";
+import { playerViewBinding } from "../binding/PlayerViewBinding";
+import { hitViewBinding } from "../binding/HitViewBinding";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";
 import { ShrewType, MapType, HOLE_COUNT, HammerType } from "../ecs/types";
@@ -32,6 +32,7 @@ import { HitEffectNode } from "./HitEffectNode";
 import { getAtlasPath } from "../resource/AtlasConfig";
 import { GameLoopPipeline } from "./GameLoopPipeline";
 import { KickInputAdapter } from "./KickInputAdapter";
+import { ViewRegistry } from "./ViewRegistry";
 
 /** 音效路径 */
 const SND = {
@@ -45,6 +46,7 @@ export class GameScene {
   private _shrews: number[] = [];
   private _syncView: SyncView;
   private _network: NetworkAdapter;
+  private _viewRegistry: ViewRegistry;
   private _running: boolean = false;
   private _root: any = null;
   private _hammerNode!: HammerNode;
@@ -55,6 +57,7 @@ export class GameScene {
   constructor() {
     this._syncView = new SyncView();
     this._network = new NetworkAdapter();
+    this._viewRegistry = new ViewRegistry();
   }
 
   /** 初始化游戏 */
@@ -76,7 +79,7 @@ export class GameScene {
     // 3. 创建场景背景层
     const sceneLayer = new SceneLayer();
     sceneLayer.create(this._root);
-    registerSceneLayer(this._singletons.scene, sceneLayer);
+    this._viewRegistry.registerSceneLayer(this._singletons.scene, sceneLayer);
 
     // 4. 创建洞位和地鼠（洞位在后，地鼠在前）
     this._holes = createHoleEntities(this._world, MapType.Meadow);
@@ -94,35 +97,35 @@ export class GameScene {
       holeNode.create(this._root);
       holeNode.setPosition(HoleComponent.posXRatio[holeEid], HoleComponent.posYRatio[holeEid]);
       holeNode.setZOrder(HoleComponent.zIndex[holeEid]);
-      registerHoleNode(holeEid, holeNode);
+      this._viewRegistry.registerHoleNode(holeEid, holeNode);
 
       // 创建地鼠视图节点（作为洞位子节点）
       const shrewNode = new ShrewNode();
       shrewNode.create(holeNode.getContainer() || this._root);
       shrewNode.setSpriteFrame(shrewType, MapType.Meadow);
-      registerShrewNode(shrewEid, shrewNode);
+      this._viewRegistry.registerShrewNode(shrewEid, shrewNode);
     }
 
     // 5. 创建锤子光标
     this._hammerNode = new HammerNode();
     this._hammerNode.create(this._root);
-    registerHammerNode(this._singletons.hammer, this._hammerNode);
+    this._viewRegistry.registerHammerNode(this._singletons.hammer, this._hammerNode);
 
     // 6. 创建玩家 HUD
     const playerHUD = new PlayerHUD();
     playerHUD.create(this._root);
-    registerPlayerHUD(this._singletons.player, playerHUD);
+    this._viewRegistry.registerPlayerHUD(this._singletons.player, playerHUD);
 
     // 7. 创建连击特效节点
     const comboNode = new ComboNode();
     comboNode.create(this._root);
-    registerComboNode(this._singletons.combo, comboNode);
+    this._viewRegistry.registerComboNode(this._singletons.combo, comboNode);
 
     // 8. 创建击中特效节点（金币/宝箱）
     this._hitEffectNode = new HitEffectNode();
     this._hitEffectNode.create(this._root);
     // HitEffectNode 使用单例 player 实体注册（简化）
-    registerHitEffectNode(this._singletons.player, this._hitEffectNode);
+    this._viewRegistry.registerHitEffectNode(this._singletons.player, this._hitEffectNode);
 
     // 9. 注册视图绑定
     this._syncView.registerShrewBinding(shrewViewBinding);
@@ -179,6 +182,19 @@ export class GameScene {
   /** 停止帧循环 */
   stop(): void {
     this._running = false;
+  }
+
+  /** 销毁场景运行时资源 */
+  destroy(): void {
+    this.stop();
+    this._network.clearResponseHandler();
+    this._kickInput = null;
+    this._loopPipeline = null;
+    this._viewRegistry.clear();
+    if (this._root) {
+      this._root.destroy();
+      this._root = null;
+    }
   }
 
   /** 每帧更新 (由 Laya.timer.frameLoop 调用) */
