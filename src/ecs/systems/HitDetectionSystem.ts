@@ -13,6 +13,7 @@ import { defineQuery } from "bitecs";
 import { ShrewComponent, HoleComponent, HammerComponent } from "../components";
 import { ShrewType, HOLE_COUNT } from "../types";
 import { startShrewDizzyHold } from "../ShrewLifecycle";
+import { HIT_DETECTION } from "../../config/GameTuning";
 
 const holeQuery = defineQuery([HoleComponent]);
 const hammerQuery = defineQuery([HammerComponent]);
@@ -26,7 +27,7 @@ export interface HitResult {
 }
 
 /** 洞位点击判定半径比例 (相对屏幕尺寸) */
-const HIT_RADIUS_RATIO = 0.15;
+const HIT_RADIUS_RATIO = HIT_DETECTION.radiusRatio;
 
 /**
  * 触摸碰撞检测

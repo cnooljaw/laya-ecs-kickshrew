@@ -10,11 +10,7 @@
  * 后续可替换为真实服务器连接
  */
 import type { KickRequest, KickResponse } from "./ProtocolTypes";
-
-/** 地鼠基础奖励 */
-const BASE_REWARD = 50;
-/** 蓝鼠奖励倍率 */
-const BOSS_REWARD_MULTIPLIER = 2;
+import { MOCK_SERVER_TUNING } from "../config/GameTuning";
 
 export class MockServer {
   private _angryAccum: number = 0;
@@ -30,13 +26,13 @@ export class MockServer {
     const shrewResp = req.shrews.map(s => {
       // 蓝鼠(shrewindex=2)双倍奖励
       const reward = s.protectType === 1
-        ? BASE_REWARD * BOSS_REWARD_MULTIPLIER
-        : BASE_REWARD;
+        ? MOCK_SERVER_TUNING.baseReward * MOCK_SERVER_TUNING.bossRewardMultiplier
+        : MOCK_SERVER_TUNING.baseReward;
       return { shrewIndex: s.shrewindex, reward };
     });
 
     const totalReward = shrewResp.reduce((sum, s) => sum + s.reward, 0);
-    const angryGain = this.randomRange(10, 30);
+    const angryGain = this.randomRange(MOCK_SERVER_TUNING.angryGainMin, MOCK_SERVER_TUNING.angryGainMax);
     this._angryAccum += angryGain;
 
     return {
@@ -45,8 +41,8 @@ export class MockServer {
       ret: 0,
       money: totalReward,
       angry: this._angryAccum,
-      power: this.randomRange(1, 5),
-      levelScore: totalReward * 2,
+      power: this.randomRange(MOCK_SERVER_TUNING.powerGainMin, MOCK_SERVER_TUNING.powerGainMax),
+      levelScore: totalReward * MOCK_SERVER_TUNING.levelScoreRewardMultiplier,
       hammerId: req.hammerType,
       numOfShrew: req.numOfShrew,
       shrewResp,

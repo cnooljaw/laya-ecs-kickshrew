@@ -3,13 +3,14 @@
  *
  * 职责:
  * 1. 切换锤子类型
- * 2. 检查愤怒值触发雷神锤 (angry>=1000)
+ * 2. 检查愤怒值触发雷神锤
  * 3. 雷神锤动画完成后恢复正常锤子
  * 4. 锤子动画结束后恢复 hitTable=1
  */
 import { defineQuery } from "bitecs";
 import { HammerComponent, PlayerComponent } from "../components";
 import { HammerType } from "../types";
+import { HAMMER_RULES } from "../../config/GameTuning";
 
 const hammerQuery = defineQuery([HammerComponent]);
 const playerQuery = defineQuery([PlayerComponent]);
@@ -46,7 +47,7 @@ export function hammerSystem(
   const playerEntities = playerQuery(world);
   if (playerEntities.length > 0 && HammerComponent.isThunderActive[hammerEid] !== 1) {
     const playerEid = playerEntities[0];
-    if (PlayerComponent.angry[playerEid] >= 1000) {
+    if (PlayerComponent.angry[playerEid] >= HAMMER_RULES.thunderAngryThreshold) {
       HammerComponent.isThunderActive[hammerEid] = 1;
       HammerComponent.selectedType[hammerEid] = HammerType.Thunder;
       HammerComponent.hitTable[hammerEid] = 0;

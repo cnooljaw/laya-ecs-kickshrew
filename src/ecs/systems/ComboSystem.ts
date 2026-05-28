@@ -10,6 +10,7 @@
 import { defineQuery } from "bitecs";
 import { ShrewComponent, HoleComponent, ComboComponent } from "../components";
 import { HOLE_COUNT, GRID_SIZE } from "../types";
+import { HOLE_PROTOCOL } from "../../config/GameTuning";
 
 const holeQuery = defineQuery([HoleComponent]);
 const comboQuery = defineQuery([ComboComponent]);
@@ -89,9 +90,9 @@ export function comboSystem(world: any, hitHoleIndex: number = -1): void {
 
   // 最多选3个连击目标
   const maxTargets = Math.min(clickableAdjacents.length, 3);
-  ComboComponent.targetHole0[comboEid] = maxTargets >= 1 ? clickableAdjacents[0] + 1 : 0; // +1 因为源码用1~9
-  ComboComponent.targetHole1[comboEid] = maxTargets >= 2 ? clickableAdjacents[1] + 1 : 0;
-  ComboComponent.targetHole2[comboEid] = maxTargets >= 3 ? clickableAdjacents[2] + 1 : 0;
+  ComboComponent.targetHole0[comboEid] = maxTargets >= 1 ? clickableAdjacents[0] + HOLE_PROTOCOL.clientIndexOffset : 0;
+  ComboComponent.targetHole1[comboEid] = maxTargets >= 2 ? clickableAdjacents[1] + HOLE_PROTOCOL.clientIndexOffset : 0;
+  ComboComponent.targetHole2[comboEid] = maxTargets >= 3 ? clickableAdjacents[2] + HOLE_PROTOCOL.clientIndexOffset : 0;
 
   // 递增 comboID
   ComboComponent.comboID[comboEid]++;

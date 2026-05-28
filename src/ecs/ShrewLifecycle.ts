@@ -1,9 +1,6 @@
 import { AnimationComponent, ShrewComponent } from "./components";
 import { AnimType, ShrewAction, ShrewType } from "./types";
-
-export const SHREW_WAIT_MIN = 1.0;
-export const SHREW_WAIT_MAX = 8.0;
-export const SHREW_DIZZY_HOLD_TIME = 0.3;
+import { SHREW_TIMING } from "../config/GameTuning";
 
 export function resetShrewForNextCycle(eid: number): void {
   const shrewType = ShrewComponent.shrewType[eid] as ShrewType;
@@ -11,7 +8,7 @@ export function resetShrewForNextCycle(eid: number): void {
   ShrewComponent.hasHat[eid] = shrewType === ShrewType.Blue ? 1 : 0;
   ShrewComponent.actionState[eid] = ShrewAction.Wait;
   ShrewComponent.isClickable[eid] = 0;
-  ShrewComponent.animTimer[eid] = randomRange(SHREW_WAIT_MIN, SHREW_WAIT_MAX);
+  ShrewComponent.animTimer[eid] = randomRange(SHREW_TIMING.waitMinSec, SHREW_TIMING.waitMaxSec);
 
   AnimationComponent.animType[eid] = AnimType.Idle;
   AnimationComponent.progress[eid] = 0;
@@ -21,7 +18,7 @@ export function resetShrewForNextCycle(eid: number): void {
 export function startShrewDizzyHold(eid: number): void {
   ShrewComponent.actionState[eid] = ShrewAction.Dizzy;
   ShrewComponent.isClickable[eid] = 0;
-  ShrewComponent.animTimer[eid] = SHREW_DIZZY_HOLD_TIME;
+  ShrewComponent.animTimer[eid] = SHREW_TIMING.dizzyHoldSec;
 
   AnimationComponent.animType[eid] = AnimType.Dizzy;
   AnimationComponent.progress[eid] = 0;

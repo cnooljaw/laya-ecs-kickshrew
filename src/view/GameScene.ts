@@ -37,10 +37,7 @@ import { SceneLayer } from "./SceneLayer";
 import { PlayerHUD } from "./PlayerHUD";
 import { HitEffectNode } from "./HitEffectNode";
 import { getAtlasPath } from "../resource/AtlasConfig";
-
-/** 设计分辨率（横版，与原始 Cocos 游戏一致）*/
-const DESIGN_WIDTH = 960;
-const DESIGN_HEIGHT = 640;
+import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../config/GameTuning";
 
 /** 音效路径 */
 const SND = {
@@ -205,8 +202,8 @@ export class GameScene {
    *  @param y 设计坐标系中的绝对 Y（stage.mouseY）
    */
   onTouch(x: number, y: number): void {
-    const xRatio = x / DESIGN_WIDTH;
-    const yRatio = y / DESIGN_HEIGHT;
+    const xRatio = x / DESIGN_RESOLUTION.width;
+    const yRatio = y / DESIGN_RESOLUTION.height;
     const result = hitDetectionSystem(this._world, xRatio, yRatio);
     const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
 
@@ -232,7 +229,7 @@ export class GameScene {
         hammerType: HammerComponent.selectedType[this._singletons.hammer],
         bKickShrew: result.bKickShrew,
         numOfShrew: result.numOfShrew,
-        shrews: result.bKickShrew ? [{ shrewindex: result.hitHoleIndex + 1, protectType: 0 }] : [],
+        shrews: result.bKickShrew ? [{ shrewindex: result.hitHoleIndex + HOLE_PROTOCOL.clientIndexOffset, protectType: 0 }] : [],
         comboID: 0,
       }).catch(() => {});
     } else {

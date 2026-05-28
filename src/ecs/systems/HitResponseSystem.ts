@@ -4,7 +4,7 @@
  * 职责:
  * 1. 解析服务器回包(KickResponse)
  * 2. 更新玩家数据: money/angry/power/level
- * 3. 检查愤怒值触发雷神锤(angry>=1000 → isThunderActive=1)
+ * 3. 检查愤怒值触发雷神锤
  * 4. 更新锤子选中类型(hammerId)
  * 5. 更新连击数据(combo/comboId)
  * 6. 返回击中奖励列表(shrewResp)，由视图层播放动画
@@ -12,6 +12,7 @@
 import { defineQuery } from "bitecs";
 import { PlayerComponent, HammerComponent, ComboComponent } from "../components";
 import { HammerType } from "../types";
+import { HAMMER_RULES } from "../../config/GameTuning";
 
 export interface KickShrewResponse {
   shrewIndex: number;
@@ -64,7 +65,7 @@ export function hitResponseSystem(world: any, resp: KickResponse): KickShrewResp
     HammerComponent.selectedType[eid] = resp.hammerId;
 
     // 检查愤怒值触发雷神锤
-    if (resp.angry >= 1000) {
+    if (resp.angry >= HAMMER_RULES.thunderAngryThreshold) {
       HammerComponent.isThunderActive[eid] = 1;
       HammerComponent.selectedType[eid] = HammerType.Thunder;
     }

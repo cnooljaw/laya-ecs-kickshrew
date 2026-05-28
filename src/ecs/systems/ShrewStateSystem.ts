@@ -15,15 +15,16 @@ import { defineQuery } from "bitecs";
 import { ShrewComponent, AnimationComponent } from "../components";
 import { ShrewAction, AnimType } from "../types";
 import { resetShrewForNextCycle } from "../ShrewLifecycle";
+import { SHREW_TIMING } from "../../config/GameTuning";
 
 const shrewQuery = defineQuery([ShrewComponent, AnimationComponent]);
 
 /** 上移动画时长(秒) */
-const UP_DURATION = 0.31;
+const UP_DURATION = SHREW_TIMING.upDurationSec;
 /** 下移动画时长(秒) */
-const DOWN_DURATION = 0.31;
+const DOWN_DURATION = SHREW_TIMING.downDurationSec;
 /** 站立停留时间(秒) */
-const STAND_TIME = 2.0;
+const STAND_TIME = SHREW_TIMING.standSec;
 /** 每帧固定 delta (秒), 60fps */
 const FRAME_DELTA = 1 / 60;
 
