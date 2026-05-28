@@ -69,7 +69,27 @@ const playerQuery = defineQuery([PlayerComponent, DirtyComponent]);
 const hitQuery = defineQuery([HitComponent, DirtyComponent]);
 
 type Snapshot = Record<string, number>;
-type DirtyGroup = { bit: number; fields: string[] };
+type DirtyTarget =
+  | "shrewDirty"
+  | "animDirty"
+  | "holeDirty"
+  | "hammerDirty"
+  | "comboDirty"
+  | "sceneDirty"
+  | "playerDirty"
+  | "hitDirty";
+
+type DirtyStoreKey = keyof DirtySnapshotStore;
+type FieldReader = { name: string; read: (eid: number) => number };
+type DirtyGroup = { bit: number; fields: FieldReader[] };
+
+interface DirtySchema {
+  query: (world: any) => ArrayLike<number>;
+  storeKey: DirtyStoreKey;
+  dirtyTarget: DirtyTarget;
+  allBits: number;
+  groups: DirtyGroup[];
+}
 
 interface DirtySnapshotStore {
   shrew: Map<number, Snapshot>;
@@ -113,7 +133,7 @@ function dirtyBitsFromSnapshot(
   let dirty = 0;
   for (const group of groups) {
     for (const field of group.fields) {
-      if (cur[field] !== prev[field]) {
+      if (cur[field.name] !== prev[field.name]) {
         dirty |= group.bit;
         break;
       }
@@ -122,174 +142,156 @@ function dirtyBitsFromSnapshot(
   return dirty;
 }
 
+function buildSnapshot(eid: number, groups: DirtyGroup[]): Snapshot {
+  const snapshot: Snapshot = {};
+  for (const group of groups) {
+    for (const field of group.fields) {
+      snapshot[field.name] = field.read(eid);
+    }
+  }
+  return snapshot;
+}
+
+function markSchemaDirty(world: any, store: DirtySnapshotStore, schema: DirtySchema): void {
+  const entities = schema.query(world);
+  const snapshotStore = store[schema.storeKey];
+  const dirtyArray = (DirtyComponent as any)[schema.dirtyTarget];
+
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i];
+    const cur = buildSnapshot(eid, schema.groups);
+    dirtyArray[eid] = dirtyBitsFromSnapshot(
+      snapshotStore.get(eid),
+      cur,
+      schema.groups,
+      schema.allBits,
+    );
+    snapshotStore.set(eid, cur);
+  }
+}
+
+const DIRTY_SCHEMAS: DirtySchema[] = [
+  {
+    query: shrewQuery,
+    storeKey: "shrew",
+    dirtyTarget: "shrewDirty",
+    allBits: BIT_SHREW_ALL,
+    groups: [
+      { bit: BIT_SHREW_TYPE, fields: [{ name: "shrewType", read: eid => ShrewComponent.shrewType[eid] }] },
+      { bit: BIT_SHREW_HP, fields: [{ name: "hp", read: eid => ShrewComponent.hp[eid] }] },
+      { bit: BIT_SHREW_ACTION, fields: [{ name: "actionState", read: eid => ShrewComponent.actionState[eid] }] },
+      { bit: BIT_SHREW_HAT, fields: [{ name: "hasHat", read: eid => ShrewComponent.hasHat[eid] }] },
+      { bit: BIT_SHREW_MAP, fields: [{ name: "mapType", read: eid => ShrewComponent.mapType[eid] }] },
+      { bit: BIT_SHREW_CLICKABLE, fields: [{ name: "isClickable", read: eid => ShrewComponent.isClickable[eid] }] },
+      { bit: BIT_SHREW_TIMER, fields: [{ name: "animTimer", read: eid => ShrewComponent.animTimer[eid] }] },
+      { bit: BIT_SHREW_PROP, fields: [{ name: "propType", read: eid => ShrewComponent.propType[eid] }] },
+    ],
+  },
+  {
+    query: shrewQuery,
+    storeKey: "anim",
+    dirtyTarget: "animDirty",
+    allBits: BIT_ANIM_ALL,
+    groups: [
+      { bit: BIT_ANIM_TYPE, fields: [{ name: "animType", read: eid => AnimationComponent.animType[eid] }] },
+      { bit: BIT_ANIM_PROGRESS, fields: [{ name: "progress", read: eid => AnimationComponent.progress[eid] }] },
+      { bit: BIT_ANIM_DURATION, fields: [{ name: "duration", read: eid => AnimationComponent.duration[eid] }] },
+    ],
+  },
+  {
+    query: holeQuery,
+    storeKey: "hole",
+    dirtyTarget: "holeDirty",
+    allBits: BIT_HOLE_ALL,
+    groups: [
+      {
+        bit: BIT_HOLE_POS,
+        fields: [
+          { name: "posXRatio", read: eid => HoleComponent.posXRatio[eid] },
+          { name: "posYRatio", read: eid => HoleComponent.posYRatio[eid] },
+        ],
+      },
+      { bit: BIT_HOLE_SHREW, fields: [{ name: "shrewEid", read: eid => HoleComponent.shrewEid[eid] }] },
+      { bit: BIT_HOLE_ZORDER, fields: [{ name: "zIndex", read: eid => HoleComponent.zIndex[eid] }] },
+    ],
+  },
+  {
+    query: hammerQuery,
+    storeKey: "hammer",
+    dirtyTarget: "hammerDirty",
+    allBits: BIT_HAMMER_ALL,
+    groups: [
+      { bit: BIT_HAMMER_TYPE, fields: [{ name: "selectedType", read: eid => HammerComponent.selectedType[eid] }] },
+      { bit: BIT_HAMMER_THUNDER, fields: [{ name: "isThunderActive", read: eid => HammerComponent.isThunderActive[eid] }] },
+      { bit: BIT_HAMMER_HITTABLE, fields: [{ name: "hitTable", read: eid => HammerComponent.hitTable[eid] }] },
+    ],
+  },
+  {
+    query: comboQuery,
+    storeKey: "combo",
+    dirtyTarget: "comboDirty",
+    allBits: BIT_COMBO_ALL,
+    groups: [
+      { bit: BIT_COMBO_COUNT, fields: [{ name: "comboCount", read: eid => ComboComponent.comboCount[eid] }] },
+      { bit: BIT_COMBO_ID, fields: [{ name: "comboID", read: eid => ComboComponent.comboID[eid] }] },
+      {
+        bit: BIT_COMBO_TARGETS,
+        fields: [
+          { name: "targetHole0", read: eid => ComboComponent.targetHole0[eid] },
+          { name: "targetHole1", read: eid => ComboComponent.targetHole1[eid] },
+          { name: "targetHole2", read: eid => ComboComponent.targetHole2[eid] },
+        ],
+      },
+    ],
+  },
+  {
+    query: sceneQuery,
+    storeKey: "scene",
+    dirtyTarget: "sceneDirty",
+    allBits: BIT_SCENE_ALL,
+    groups: [
+      { bit: BIT_SCENE_MAP, fields: [{ name: "currentMap", read: eid => SceneComponent.currentMap[eid] }] },
+      { bit: BIT_SCENE_TIMER, fields: [{ name: "sceneTimer", read: eid => SceneComponent.sceneTimer[eid] }] },
+      { bit: BIT_SCENE_TRANSITION, fields: [{ name: "transitioning", read: eid => SceneComponent.transitioning[eid] }] },
+    ],
+  },
+  {
+    query: playerQuery,
+    storeKey: "player",
+    dirtyTarget: "playerDirty",
+    allBits: BIT_PLAYER_ALL,
+    groups: [
+      { bit: BIT_PLAYER_MONEY, fields: [{ name: "money", read: eid => PlayerComponent.money[eid] }] },
+      { bit: BIT_PLAYER_ANGRY, fields: [{ name: "angry", read: eid => PlayerComponent.angry[eid] }] },
+      {
+        bit: BIT_PLAYER_POWER,
+        fields: [
+          { name: "power", read: eid => PlayerComponent.power[eid] },
+          { name: "powerTop", read: eid => PlayerComponent.powerTop[eid] },
+        ],
+      },
+      { bit: BIT_PLAYER_LEVEL, fields: [{ name: "level", read: eid => PlayerComponent.level[eid] }] },
+    ],
+  },
+  {
+    query: hitQuery,
+    storeKey: "hit",
+    dirtyTarget: "hitDirty",
+    allBits: BIT_HIT_ALL,
+    groups: [
+      { bit: BIT_HIT_INDEX, fields: [{ name: "shrewIndex", read: eid => HitComponent.shrewIndex[eid] }] },
+      { bit: BIT_HIT_REWARD, fields: [{ name: "reward", read: eid => HitComponent.reward[eid] }] },
+      { bit: BIT_HIT_WASHIT, fields: [{ name: "wasHit", read: eid => HitComponent.wasHit[eid] }] },
+    ],
+  },
+];
+
 /**
  * 脏标记系统: 比较前后帧差异，设置 dirty bits
  */
 export function dirtyMarkSystem(world: any): void {
   const store = getStore(world);
-  markShrewAndAnimationDirty(world, store);
-  markHoleDirty(world, store);
-  markHammerDirty(world, store);
-  markComboDirty(world, store);
-  markSceneDirty(world, store);
-  markPlayerDirty(world, store);
-  markHitDirty(world, store);
-}
-
-function markShrewAndAnimationDirty(world: any, store: DirtySnapshotStore): void {
-  const entities = shrewQuery(world);
-
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i];
-
-    const curShrew = {
-      shrewType: ShrewComponent.shrewType[eid],
-      hp: ShrewComponent.hp[eid],
-      actionState: ShrewComponent.actionState[eid],
-      hasHat: ShrewComponent.hasHat[eid],
-      mapType: ShrewComponent.mapType[eid],
-      isClickable: ShrewComponent.isClickable[eid],
-      animTimer: ShrewComponent.animTimer[eid],
-      propType: ShrewComponent.propType[eid],
-    };
-    const curAnim = {
-      animType: AnimationComponent.animType[eid],
-      progress: AnimationComponent.progress[eid],
-      duration: AnimationComponent.duration[eid],
-    };
-
-    DirtyComponent.shrewDirty[eid] = dirtyBitsFromSnapshot(store.shrew.get(eid), curShrew, [
-      { bit: BIT_SHREW_TYPE, fields: ["shrewType"] },
-      { bit: BIT_SHREW_HP, fields: ["hp"] },
-      { bit: BIT_SHREW_ACTION, fields: ["actionState"] },
-      { bit: BIT_SHREW_HAT, fields: ["hasHat"] },
-      { bit: BIT_SHREW_MAP, fields: ["mapType"] },
-      { bit: BIT_SHREW_CLICKABLE, fields: ["isClickable"] },
-      { bit: BIT_SHREW_TIMER, fields: ["animTimer"] },
-      { bit: BIT_SHREW_PROP, fields: ["propType"] },
-    ], BIT_SHREW_ALL);
-
-    DirtyComponent.animDirty[eid] = dirtyBitsFromSnapshot(store.anim.get(eid), curAnim, [
-      { bit: BIT_ANIM_TYPE, fields: ["animType"] },
-      { bit: BIT_ANIM_PROGRESS, fields: ["progress"] },
-      { bit: BIT_ANIM_DURATION, fields: ["duration"] },
-    ], BIT_ANIM_ALL);
-
-    store.shrew.set(eid, curShrew);
-    store.anim.set(eid, curAnim);
-  }
-}
-
-function markHoleDirty(world: any, store: DirtySnapshotStore): void {
-  const entities = holeQuery(world);
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i];
-    const cur = {
-      posXRatio: HoleComponent.posXRatio[eid],
-      posYRatio: HoleComponent.posYRatio[eid],
-      shrewEid: HoleComponent.shrewEid[eid],
-      zIndex: HoleComponent.zIndex[eid],
-    };
-    DirtyComponent.holeDirty[eid] = dirtyBitsFromSnapshot(store.hole.get(eid), cur, [
-      { bit: BIT_HOLE_POS, fields: ["posXRatio", "posYRatio"] },
-      { bit: BIT_HOLE_SHREW, fields: ["shrewEid"] },
-      { bit: BIT_HOLE_ZORDER, fields: ["zIndex"] },
-    ], BIT_HOLE_ALL);
-    store.hole.set(eid, cur);
-  }
-}
-
-function markHammerDirty(world: any, store: DirtySnapshotStore): void {
-  const entities = hammerQuery(world);
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i];
-    const cur = {
-      selectedType: HammerComponent.selectedType[eid],
-      isThunderActive: HammerComponent.isThunderActive[eid],
-      hitTable: HammerComponent.hitTable[eid],
-    };
-    DirtyComponent.hammerDirty[eid] = dirtyBitsFromSnapshot(store.hammer.get(eid), cur, [
-      { bit: BIT_HAMMER_TYPE, fields: ["selectedType"] },
-      { bit: BIT_HAMMER_THUNDER, fields: ["isThunderActive"] },
-      { bit: BIT_HAMMER_HITTABLE, fields: ["hitTable"] },
-    ], BIT_HAMMER_ALL);
-    store.hammer.set(eid, cur);
-  }
-}
-
-function markComboDirty(world: any, store: DirtySnapshotStore): void {
-  const entities = comboQuery(world);
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i];
-    const cur = {
-      comboCount: ComboComponent.comboCount[eid],
-      comboID: ComboComponent.comboID[eid],
-      targetHole0: ComboComponent.targetHole0[eid],
-      targetHole1: ComboComponent.targetHole1[eid],
-      targetHole2: ComboComponent.targetHole2[eid],
-    };
-    DirtyComponent.comboDirty[eid] = dirtyBitsFromSnapshot(store.combo.get(eid), cur, [
-      { bit: BIT_COMBO_COUNT, fields: ["comboCount"] },
-      { bit: BIT_COMBO_ID, fields: ["comboID"] },
-      { bit: BIT_COMBO_TARGETS, fields: ["targetHole0", "targetHole1", "targetHole2"] },
-    ], BIT_COMBO_ALL);
-    store.combo.set(eid, cur);
-  }
-}
-
-function markSceneDirty(world: any, store: DirtySnapshotStore): void {
-  const entities = sceneQuery(world);
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i];
-    const cur = {
-      currentMap: SceneComponent.currentMap[eid],
-      sceneTimer: SceneComponent.sceneTimer[eid],
-      transitioning: SceneComponent.transitioning[eid],
-    };
-    DirtyComponent.sceneDirty[eid] = dirtyBitsFromSnapshot(store.scene.get(eid), cur, [
-      { bit: BIT_SCENE_MAP, fields: ["currentMap"] },
-      { bit: BIT_SCENE_TIMER, fields: ["sceneTimer"] },
-      { bit: BIT_SCENE_TRANSITION, fields: ["transitioning"] },
-    ], BIT_SCENE_ALL);
-    store.scene.set(eid, cur);
-  }
-}
-
-function markPlayerDirty(world: any, store: DirtySnapshotStore): void {
-  const entities = playerQuery(world);
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i];
-    const cur = {
-      money: PlayerComponent.money[eid],
-      angry: PlayerComponent.angry[eid],
-      power: PlayerComponent.power[eid],
-      powerTop: PlayerComponent.powerTop[eid],
-      level: PlayerComponent.level[eid],
-    };
-    DirtyComponent.playerDirty[eid] = dirtyBitsFromSnapshot(store.player.get(eid), cur, [
-      { bit: BIT_PLAYER_MONEY, fields: ["money"] },
-      { bit: BIT_PLAYER_ANGRY, fields: ["angry"] },
-      { bit: BIT_PLAYER_POWER, fields: ["power", "powerTop"] },
-      { bit: BIT_PLAYER_LEVEL, fields: ["level"] },
-    ], BIT_PLAYER_ALL);
-    store.player.set(eid, cur);
-  }
-}
-
-function markHitDirty(world: any, store: DirtySnapshotStore): void {
-  const entities = hitQuery(world);
-  for (let i = 0; i < entities.length; i++) {
-    const eid = entities[i];
-    const cur = {
-      shrewIndex: HitComponent.shrewIndex[eid],
-      reward: HitComponent.reward[eid],
-      wasHit: HitComponent.wasHit[eid],
-    };
-    DirtyComponent.hitDirty[eid] = dirtyBitsFromSnapshot(store.hit.get(eid), cur, [
-      { bit: BIT_HIT_INDEX, fields: ["shrewIndex"] },
-      { bit: BIT_HIT_REWARD, fields: ["reward"] },
-      { bit: BIT_HIT_WASHIT, fields: ["wasHit"] },
-    ], BIT_HIT_ALL);
-    store.hit.set(eid, cur);
+  for (const schema of DIRTY_SCHEMAS) {
+    markSchemaDirty(world, store, schema);
   }
 }
