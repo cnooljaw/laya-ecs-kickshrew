@@ -9,14 +9,7 @@
  * 5. 启动网络层
  */
 import { createGameWorld, createShrewEntity, createHoleEntities, createSingletonEntities, SingletonEntities } from "../ecs/world";
-import { animationTimerSystem } from "../ecs/systems/AnimationTimerSystem";
-import { shrewStateSystem } from "../ecs/systems/ShrewStateSystem";
-import { comboSystem } from "../ecs/systems/ComboSystem";
-import { sceneCycleSystem } from "../ecs/systems/SceneCycleSystem";
-import { hammerSystem } from "../ecs/systems/HammerSystem";
-import { hitDetectionSystem } from "../ecs/systems/HitDetectionSystem";
 import { hitResponseSystem } from "../ecs/systems/HitResponseSystem";
-import { dirtyMarkSystem } from "../ecs/systems/DirtyMarkSystem";
 import { SyncView } from "../binding/SyncView";
 import { shrewViewBinding, shrewAnimationViewBinding, registerShrewNode } from "../binding/ShrewViewBinding";
 import { holeViewBinding, registerHoleNode } from "../binding/HoleViewBinding";
@@ -28,7 +21,7 @@ import { hitViewBinding, registerHitEffectNode } from "../binding/HitViewBinding
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";
 import { ShrewType, MapType, HOLE_COUNT, HammerType } from "../ecs/types";
-import { HoleComponent, PlayerComponent, HammerComponent, DirtyComponent } from "../ecs/components";
+import { HoleComponent, DirtyComponent } from "../ecs/components";
 import { ShrewNode } from "./ShrewNode";
 import { HoleNode } from "./HoleNode";
 import { HammerNode } from "./HammerNode";
@@ -37,14 +30,12 @@ import { SceneLayer } from "./SceneLayer";
 import { PlayerHUD } from "./PlayerHUD";
 import { HitEffectNode } from "./HitEffectNode";
 import { getAtlasPath } from "../resource/AtlasConfig";
-import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../config/GameTuning";
+import { GameLoopPipeline } from "./GameLoopPipeline";
+import { KickInputAdapter } from "./KickInputAdapter";
 
 /** 音效路径 */
 const SND = {
   bg:      "resources/sound/sound_shrew/back.wav",
-  hitOne:  "resources/sound/sound_shrew/Hit_One.wav",
-  hitNull: "resources/sound/sound_shrew/Hit_Null.wav",
-  mouse1:  "resources/sound/sound_shrew/mouse_1.wav",
 };
 
 export class GameScene {
@@ -58,6 +49,8 @@ export class GameScene {
   private _root: any = null;
   private _hammerNode!: HammerNode;
   private _hitEffectNode!: HitEffectNode;
+  private _loopPipeline: GameLoopPipeline | null = null;
+  private _kickInput: KickInputAdapter | null = null;
 
   constructor() {
     this._syncView = new SyncView();
@@ -146,6 +139,23 @@ export class GameScene {
       hitResponseSystem(this._world, resp);
     });
 
+    this._loopPipeline = new GameLoopPipeline({
+      world: this._world,
+      network: this._network,
+      syncView: this._syncView,
+    });
+
+    this._kickInput = new KickInputAdapter({
+      world: this._world,
+      singletons: this._singletons,
+      network: this._network,
+      getHammerNode: () => this._hammerNode ?? null,
+      playSound: (url: string) => {
+        const RuntimeLaya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+        if (RuntimeLaya) RuntimeLaya.SoundManager.playSound(url);
+      },
+    });
+
     // 11. 首次全量同步（设置 forceFullSync，确保所有节点显示正确初始状态）
     const allEntities = [
       this._singletons.scene,
@@ -174,27 +184,7 @@ export class GameScene {
   /** 每帧更新 (由 Laya.timer.frameLoop 调用) */
   update(deltaSec: number): void {
     if (!this._running) return;
-
-    // 1. 推进计时器
-    animationTimerSystem(this._world, deltaSec);
-
-    // 2. 地鼠状态机
-    shrewStateSystem(this._world, deltaSec);
-
-    // 3. 场景切换检查
-    sceneCycleSystem(this._world);
-
-    // 4. 锤子系统
-    hammerSystem(this._world);
-
-    // 5. 网络超时检查
-    this._network.update();
-
-    // 6. 脏标记
-    dirtyMarkSystem(this._world);
-
-    // 7. 视图同步
-    this._syncView.sync(this._world);
+    this._loopPipeline?.update(deltaSec);
   }
 
   /** 触摸事件处理 (由 Laya 触摸事件调用)
@@ -202,40 +192,7 @@ export class GameScene {
    *  @param y 设计坐标系中的绝对 Y（stage.mouseY）
    */
   onTouch(x: number, y: number): void {
-    const xRatio = x / DESIGN_RESOLUTION.width;
-    const yRatio = y / DESIGN_RESOLUTION.height;
-    const result = hitDetectionSystem(this._world, xRatio, yRatio);
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
-
-    // 锤子跟随触摸位置（使用绝对坐标）
-    if (this._hammerNode) {
-      this._hammerNode.followTouch(x, y);
-      this._hammerNode.playHitAnimation();
-    }
-
-    if (result.bKickShrew === 1) {
-      // 击中地鼠音效
-      if (Laya) {
-        Laya.SoundManager.playSound(SND.hitOne);
-        Laya.SoundManager.playSound(SND.mouse1);
-      }
-
-      // 检查连击
-      comboSystem(this._world, result.hitHoleIndex);
-
-      // 发送网络请求
-      this._network.sendKick({
-        cmd: 'kick',
-        hammerType: HammerComponent.selectedType[this._singletons.hammer],
-        bKickShrew: result.bKickShrew,
-        numOfShrew: result.numOfShrew,
-        shrews: result.bKickShrew ? [{ shrewindex: result.hitHoleIndex + HOLE_PROTOCOL.clientIndexOffset, protectType: 0 }] : [],
-        comboID: 0,
-      }).catch(() => {});
-    } else {
-      // 未击中音效
-      if (Laya) Laya.SoundManager.playSound(SND.hitNull);
-    }
+    this._kickInput?.handleTouch(x, y);
   }
 
   /** 随机选择地鼠类型 */
