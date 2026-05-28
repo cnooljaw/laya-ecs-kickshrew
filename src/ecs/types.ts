@@ -16,8 +16,6 @@ export const enum ShrewAction {
   Dizzy = 6,
   Refresh = 7,
   Delay = 8,
-  Max = 9,
-  Sleep = 10,
 }
 
 /** 地图类型 */

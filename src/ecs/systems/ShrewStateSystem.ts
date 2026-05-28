@@ -132,6 +132,10 @@ function handleDown(eid: number): void {
 
 function handleRefresh(eid: number): void {
   // Refresh → None: 重置地鼠属性
+  resetShrewForNextCycle(eid);
+}
+
+function resetShrewForNextCycle(eid: number): void {
   const shrewType = ShrewComponent.shrewType[eid] as ShrewType;
   ShrewComponent.hp[eid] = shrewType === ShrewType.Blue ? 2 : 1;
   ShrewComponent.hasHat[eid] = shrewType === ShrewType.Blue ? 1 : 0;

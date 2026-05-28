@@ -668,7 +668,7 @@ A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `Animatio
 
 ### Q: 地鼠状态是不是太多，能不能精简？
 
-A: 可以精简，但要先区分“权威阶段”和“瞬时实现细节”。当前真正影响规则和同步的是 `Wait/Up/Stand/Down/Dizzy`；`Refresh` 是场景切换和一轮结束时的重置入口，`Delay` 是被击中后短暂停留，`Max/Sleep` 暂未承担运行时职责。短期最安全的精简是清理未使用枚举和把重置逻辑收敛成 helper；如果要删除 `Refresh` 或 `Delay`，需要同时调整 `SceneCycleSystem`、`ShrewStateSystem`、`ShrewNode` 和相关测试。
+A: 可以精简，但要先区分“权威阶段”和“瞬时实现细节”。当前真正影响规则和同步的是 `Wait/Up/Stand/Down/Dizzy`；`Refresh` 是场景切换和一轮结束时的重置入口，`Delay` 是被击中后短暂停留。未使用的 `Max/Sleep` 已从 `ShrewAction` 清理，`Refresh` 的重置逻辑已收敛到 `resetShrewForNextCycle()`；如果要继续删除 `Refresh` 或 `Delay`，需要同时调整 `SceneCycleSystem`、`ShrewStateSystem`、`ShrewNode` 和相关测试。
 
 ### Laya 资源加载是异步的
 
