@@ -25,9 +25,7 @@
 import type { IShrewNode } from "../binding/ShrewViewBinding";
 import { ShrewType, ShrewAction } from "../ecs/types";
 import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
-
-const STAND_LIFT_PX = 8;
-const HIDDEN_OFFSET_RATIO = 1.5;
+import { SHREW_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 
 /** 各类型地鼠的 atlas 和部件帧名映射 */
 const SHREW_FRAMES: Record<number, {
@@ -99,7 +97,7 @@ export class ShrewNode implements IShrewNode {
     this._container.addChild(this._mainLayer);
 
     // 初始藏在洞下（HIDDEN_Y = bh * 1.5）
-    this._mainLayer.y = this._bodyH * HIDDEN_OFFSET_RATIO;
+    this._mainLayer.y = this._bodyH * SHREW_VIEW_LAYOUT.hiddenOffsetRatio;
   }
 
   setSpriteFrame(shrewType: number, mapType: number): void {
@@ -146,27 +144,27 @@ export class ShrewNode implements IShrewNode {
       //   body 中心在 _mainLayer 坐标 (bw*0.5, bh*0.5)
       //   STAND_Y = -8 时 body 中心在 _container 坐标 (bw*0.5, bh*0.5 - 8)
       //   要 body 底部在 _container y=0: container.y = 0（底部已对齐洞口）
-      //   STAND_Y=-8 使 body 上提 8px，需补偿：container.y = STAND_LIFT_PX
+      //   standLiftPx 使 body 略微上提，需补偿：container.y = standLiftPx
       if (this._container) {
         this._container.x = -bw * 0.5;
-        this._container.y = STAND_LIFT_PX;
+        this._container.y = SHREW_VIEW_LAYOUT.standLiftPx;
         if (Laya.Rectangle) {
           // scrollRect: 裁剪洞口以下区域，只显示洞口以上的地鼠部分
-          // 地鼠站立时 body 顶部在 _container 坐标 y = -STAND_LIFT_PX
-          // body 底部在 y = bh - STAND_LIFT_PX
+          // 地鼠站立时 body 顶部在 _container 坐标 y = -standLiftPx
+          // body 底部在 y = bh - standLiftPx
           // 需要可见区域从 body 顶部到 body 底部
           this._container.scrollRect = new Laya.Rectangle(
             -bw * 0.5,
-            -STAND_LIFT_PX,
+            -SHREW_VIEW_LAYOUT.standLiftPx,
             bw * 1.7,
-            bh + STAND_LIFT_PX
+            bh + SHREW_VIEW_LAYOUT.standLiftPx
           );
         }
       }
 
       // 更新 mainLayer 初始隐藏位置
       // Cocos: STAND_Y=0, HIDDEN_Y=-bh*1.5; Laya Y-down: HIDDEN_Y=+bh*1.5
-      this._mainLayer.y = bh * HIDDEN_OFFSET_RATIO;
+      this._mainLayer.y = bh * SHREW_VIEW_LAYOUT.hiddenOffsetRatio;
 
       // 旋转帧集合（O(1) 查找）
       const rotatedSet = new Set(def.rotatedFrames);
@@ -262,8 +260,8 @@ export class ShrewNode implements IShrewNode {
     // Cocos: STAND_Y=0, HIDDEN_Y=-contentHeight*1.5
     // Laya Y-down: STAND_Y=0 (洞口位置), HIDDEN_Y=+bh*1.5 (向下=藏在洞下)
     // 出洞: mainLayer.y 从 +bh*1.5 → 0 (递减=向上) ✓
-    const STAND_Y  = -STAND_LIFT_PX;
-    const HIDDEN_Y = bh * HIDDEN_OFFSET_RATIO;
+    const STAND_Y  = -SHREW_VIEW_LAYOUT.standLiftPx;
+    const HIDDEN_Y = bh * SHREW_VIEW_LAYOUT.hiddenOffsetRatio;
 
     switch (actionState) {
       case ShrewAction.Wait:

@@ -3,10 +3,7 @@
  * 含裁剪遮罩 + ShrewNode 子节点
  */
 import type { IHoleNode } from "../binding/HoleViewBinding";
-
-/** 设计分辨率（横版）*/
-const DESIGN_WIDTH = 960;
-const DESIGN_HEIGHT = 640;
+import { VIEWPORT } from "../config/ViewLayoutConfig";
 
 export class HoleNode implements IHoleNode {
   private _container: any = null;
@@ -35,8 +32,8 @@ export class HoleNode implements IHoleNode {
 
   setPosition(xRatio: number, yRatio: number): void {
     if (this._container) {
-      this._container.x = xRatio * DESIGN_WIDTH;
-      this._container.y = yRatio * DESIGN_HEIGHT;
+      this._container.x = xRatio * VIEWPORT.width;
+      this._container.y = yRatio * VIEWPORT.height;
     }
   }
 

@@ -20,10 +20,7 @@
 import type { ISceneLayer } from "../binding/SceneViewBinding";
 import { MapType } from "../ecs/types";
 import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
-
-/** 设计分辨率（横版）*/
-const W = 960;
-const H = 640;
+import { SCENE_LAYOUT, VIEWPORT } from "../config/ViewLayoutConfig";
 
 /** 地图类型 → 背景 atlas 逻辑名 */
 const MAP_BG_ATLAS: Record<number, string> = {
@@ -88,10 +85,10 @@ export class SceneLayer implements ISceneLayer {
     if (Laya) {
       this._parent = parent;
 
-      // 背景精灵直接加到 parent（_root），zOrder=-100 保证在最底层
+      // 背景精灵直接加到 parent（_root），保证在最底层
       this._bgSprite = new Laya.Sprite();
       this._bgSprite.name = "BgSprite";
-      this._bgSprite.zOrder = -100;
+      this._bgSprite.zOrder = SCENE_LAYOUT.backgroundZOrder;
       if (parent) parent.addChild(this._bgSprite);
     }
   }
@@ -134,7 +131,7 @@ export class SceneLayer implements ISceneLayer {
         return;
       }
       this._bgSprite.graphics.clear();
-      this._bgSprite.graphics.drawTexture(tex, 0, 0, W, H);
+      this._bgSprite.graphics.drawTexture(tex, 0, 0, VIEWPORT.width, VIEWPORT.height);
     });
   }
 
@@ -168,16 +165,16 @@ export class SceneLayer implements ISceneLayer {
       const h3 = tex3 ? tex3.height : 0;
 
       const coverData = [
-        { tex: tex1, y: H - h1,           h: h1, z: coverCfg.zOrders[0] },
-        { tex: tex2, y: H - h1 - h2,      h: h2, z: coverCfg.zOrders[1] },
-        { tex: tex3, y: H - h1 - h2 - h3, h: h3, z: coverCfg.zOrders[2] },
+        { tex: tex1, y: VIEWPORT.height - h1,           h: h1, z: coverCfg.zOrders[0] },
+        { tex: tex2, y: VIEWPORT.height - h1 - h2,      h: h2, z: coverCfg.zOrders[1] },
+        { tex: tex3, y: VIEWPORT.height - h1 - h2 - h3, h: h3, z: coverCfg.zOrders[2] },
       ];
 
       for (const { tex, y, h, z } of coverData) {
         if (!tex) continue;
         const sp = new Laya.Sprite();
         sp.zOrder = z;
-        sp.graphics.drawTexture(tex, 0, 0, W, h);
+        sp.graphics.drawTexture(tex, 0, 0, VIEWPORT.width, h);
         sp.y = y;
         this._parent.addChild(sp);
         this._coverSprites.push(sp);
@@ -201,12 +198,12 @@ export class SceneLayer implements ISceneLayer {
       const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
       if (Laya) {
         const mask = new Laya.Sprite();
-        mask.graphics.drawRect(0, 0, W, H, "#FFFFFF");
+        mask.graphics.drawRect(0, 0, VIEWPORT.width, VIEWPORT.height, SCENE_LAYOUT.transitionMaskColor);
         mask.alpha = 0;
-        mask.zOrder = 999;
+        mask.zOrder = SCENE_LAYOUT.transitionMaskZOrder;
         this._parent.addChild(mask);
-        Laya.Tween.to(mask, { alpha: 1 }, 300).then(() => {
-          Laya.Tween.to(mask, { alpha: 0 }, 300).then(() => {
+        Laya.Tween.to(mask, { alpha: 1 }, SCENE_LAYOUT.transitionFadeInMs).then(() => {
+          Laya.Tween.to(mask, { alpha: 0 }, SCENE_LAYOUT.transitionFadeOutMs).then(() => {
             mask.destroy();
           });
         });

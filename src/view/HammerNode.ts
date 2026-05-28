@@ -5,6 +5,7 @@
  */
 import type { IHammerNode } from "../binding/HammerViewBinding";
 import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
+import { HAMMER_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 
 /** 锤子类型 → atlas 中的帧名（game_view.atlas 内的大图锤子帧）*/
 const HAMMER_FRAME_MAP: Record<number, string> = {
@@ -39,7 +40,7 @@ export class HammerNode implements IHammerNode {
     if (Laya) {
       this._sprite = new Laya.Sprite();
       this._sprite.name = "HammerNode";
-      this._sprite.zOrder = 10000;
+      this._sprite.zOrder = HAMMER_VIEW_LAYOUT.zOrder;
       this._parent = parent;
       if (parent) {
         parent.addChild(this._sprite);
@@ -85,18 +86,20 @@ export class HammerNode implements IHammerNode {
     if (!this._sprite) return;
     const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
     if (Laya) {
-      // 锤子击打动画: 旋转 30°→-30°→0° (0.24秒)
-      Laya.Tween.to(this._sprite, { rotation: this._baseRotation + 30 }, 80);
-      Laya.Tween.to(this._sprite, { rotation: this._baseRotation - 30 }, 80, null, Laya.Handler.create(this, () => {
-        Laya.Tween.to(this._sprite, { rotation: this._baseRotation }, 80);
-      }), 80);
+      const swing = HAMMER_VIEW_LAYOUT.hitSwingDeg;
+      const duration = HAMMER_VIEW_LAYOUT.hitTweenMs;
+      // 锤子击打动画: 正向摆动 → 反向摆动 → 复位
+      Laya.Tween.to(this._sprite, { rotation: this._baseRotation + swing }, duration);
+      Laya.Tween.to(this._sprite, { rotation: this._baseRotation - swing }, duration, null, Laya.Handler.create(this, () => {
+        Laya.Tween.to(this._sprite, { rotation: this._baseRotation }, duration);
+      }), HAMMER_VIEW_LAYOUT.hitSecondTweenDelayMs);
     }
   }
 
   followTouch(x: number, y: number): void {
     if (this._sprite) {
       this._sprite.pos(x, y);
-      this._sprite.zOrder = 10000;
+      this._sprite.zOrder = HAMMER_VIEW_LAYOUT.zOrder;
       if (this._parent) {
         this._parent.setChildIndex?.(this._sprite, this._parent.numChildren - 1);
       }

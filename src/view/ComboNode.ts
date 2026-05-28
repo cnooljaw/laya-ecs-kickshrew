@@ -2,6 +2,7 @@
  * ComboNode — 连击闪电动画
  */
 import type { IComboNode } from "../binding/ComboViewBinding";
+import { COMBO_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 
 export class ComboNode implements IComboNode {
   private _container: any = null;
@@ -35,18 +36,17 @@ export class ComboNode implements IComboNode {
     // 目前简化：显示连击数字
     const text = new Laya.Text();
     text.text = `COMBO x${count}`;
-    text.color = "#FFD700";
-    text.fontSize = 48;
+    text.color = COMBO_VIEW_LAYOUT.color;
+    text.fontSize = COMBO_VIEW_LAYOUT.fontSize;
     text.bold = true;
-    text.x = 375;
-    text.y = 500;
-    text.anchorX = 0.5;
-    text.anchorY = 0.5;
+    text.x = COMBO_VIEW_LAYOUT.x;
+    text.y = COMBO_VIEW_LAYOUT.y;
+    text.anchorX = COMBO_VIEW_LAYOUT.anchorX;
+    text.anchorY = COMBO_VIEW_LAYOUT.anchorY;
     this._container.addChild(text);
     this._lightningSprites.push(text);
 
-    // 1.5秒后隐藏
-    Laya.timer.once(1500, this, () => {
+    Laya.timer.once(COMBO_VIEW_LAYOUT.visibleMs, this, () => {
       this.hideCombo();
     });
   }
