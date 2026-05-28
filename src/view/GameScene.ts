@@ -18,7 +18,7 @@ import { hitDetectionSystem } from "../ecs/systems/HitDetectionSystem";
 import { hitResponseSystem } from "../ecs/systems/HitResponseSystem";
 import { dirtyMarkSystem } from "../ecs/systems/DirtyMarkSystem";
 import { SyncView } from "../binding/SyncView";
-import { shrewViewBinding, registerShrewNode } from "../binding/ShrewViewBinding";
+import { shrewViewBinding, shrewAnimationViewBinding, registerShrewNode } from "../binding/ShrewViewBinding";
 import { holeViewBinding, registerHoleNode } from "../binding/HoleViewBinding";
 import { hammerViewBinding, registerHammerNode } from "../binding/HammerViewBinding";
 import { comboViewBinding, registerComboNode } from "../binding/ComboViewBinding";
@@ -136,6 +136,7 @@ export class GameScene {
 
     // 9. 注册视图绑定
     this._syncView.registerShrewBinding(shrewViewBinding);
+    this._syncView.registerAnimBinding(shrewAnimationViewBinding);
     this._syncView.registerHoleBinding(holeViewBinding);
     this._syncView.registerHammerBinding(hammerViewBinding);
     this._syncView.registerComboBinding(comboViewBinding);

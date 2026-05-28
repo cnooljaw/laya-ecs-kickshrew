@@ -278,7 +278,6 @@ export class ShrewNode implements IShrewNode {
         this._container.visible = true;
         if (this._mainLayer) {
           this._mainLayer.y = HIDDEN_Y + (STAND_Y - HIDDEN_Y) * progress;
-          console.log(this._mainLayer.y );
         }
         break;
 

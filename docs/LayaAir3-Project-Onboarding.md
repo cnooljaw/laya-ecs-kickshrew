@@ -298,6 +298,8 @@ ECS Component 数据变化
 
 ```text
 shrewViewBinding   ShrewComponent + AnimationComponent -> ShrewNode
+shrewAnimationViewBinding
+                   AnimationComponent.progress -> ShrewNode 位移
 holeViewBinding    HoleComponent -> HoleNode
 hammerViewBinding  HammerComponent -> HammerNode
 comboViewBinding   ComboComponent -> ComboNode
@@ -315,6 +317,8 @@ registerPlayerHUD(playerEid, playerHUD);
 ```
 
 这些注册发生在 `GameScene.init()`。也就是说，ECS 实体 eid 和 Laya 节点对象之间的关系不是由 Laya 节点自己找的，而是由 `GameScene` 装配时建立的。
+
+地鼠出洞/入洞有两条 dirty 链路：`ShrewComponent.actionState` 变化时由 `shrewViewBinding` 切换动作，`AnimationComponent.progress` 在 0.31 秒动画期间变化时由 `shrewAnimationViewBinding` 持续推进 `ShrewNode.setAnimation()`。如果只注册前者，地鼠会收到 Up/Down 起始状态，但后续 progress 不再同步，画面看起来就不会上下运动。
 
 这套结构的好处：
 
@@ -652,6 +656,19 @@ A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 
 - 数据流：system 修改 component，`dirtyMarkSystem` 对比快照写 `DirtyComponent.xxxDirty`，`SyncView.sync()` 调 binding，binding 读取 component 更新 view node。
 - 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；dirty mark 没比较这个字段；binding 没处理这个 bit；节点没有注册或已销毁但注册表还留着旧引用。
 - 验证方式：先跑 `npx vitest run src/tests/ecs/DirtyMarkSystem.test.ts`，再在相关 system 后打印 component 和 dirty bit。
+
+### Q: 地鼠 Up/Down 状态有了，为什么 0.31 秒内没有真正上下移动？
+
+A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `AnimationComponent.progress`。`DirtyMarkSystem` 会把 progress 变化写进 `DirtyComponent.animDirty`，`GameScene` 必须注册 `shrewAnimationViewBinding`，让 `SyncView` 在 anim dirty 时继续调用 `ShrewNode.setAnimation(actionState, animType, progress)`。
+
+- 代码入口：`src/ecs/systems/AnimationTimerSystem.ts`、`src/ecs/systems/DirtyMarkSystem.ts`、`src/binding/ShrewViewBinding.ts`、`src/view/GameScene.ts`。
+- 数据流：`AnimationComponent.progress -> DirtyComponent.animDirty -> shrewAnimationViewBinding -> ShrewNode.setAnimation -> mainLayer.y`。
+- 常见坑：只处理 `BIT_SHREW_ACTION` 会同步动作开始，但不会同步动作中间帧；`animDirty` 有值但没有注册 anim binding 时，`SyncView` 会清掉 dirty，画面仍不动。
+- 验证方式：`npm test -- --run src/tests/binding/ShrewViewBinding.test.ts`。
+
+### Q: 地鼠状态是不是太多，能不能精简？
+
+A: 可以精简，但要先区分“权威阶段”和“瞬时实现细节”。当前真正影响规则和同步的是 `Wait/Up/Stand/Down/Dizzy`；`Refresh` 是场景切换和一轮结束时的重置入口，`Delay` 是被击中后短暂停留，`Max/Sleep` 暂未承担运行时职责。短期最安全的精简是清理未使用枚举和把重置逻辑收敛成 helper；如果要删除 `Refresh` 或 `Delay`，需要同时调整 `SceneCycleSystem`、`ShrewStateSystem`、`ShrewNode` 和相关测试。
 
 ### Laya 资源加载是异步的
 

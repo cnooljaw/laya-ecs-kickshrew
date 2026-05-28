@@ -8,11 +8,12 @@
  * - 帽子显示 (hasHat)
  * - 道具 (propType)
  */
-import { ShrewComponent, AnimationComponent, DirtyComponent } from "../ecs/components";
+import { ShrewComponent, AnimationComponent } from "../ecs/components";
 import {
-  BIT_SHREW_TYPE, BIT_SHREW_HP, BIT_SHREW_ACTION,
+  BIT_SHREW_TYPE, BIT_SHREW_ACTION,
   BIT_SHREW_HAT, BIT_SHREW_MAP, BIT_SHREW_CLICKABLE,
   BIT_SHREW_PROP,
+  BIT_ANIM_TYPE, BIT_ANIM_PROGRESS, BIT_ANIM_DURATION,
 } from "./DirtyFlags";
 import type { BindingFn } from "./SyncView";
 
@@ -49,7 +50,6 @@ export const shrewViewBinding: BindingFn = (eid: number, dirtyBits: number, forc
 
   if (forceFull || (dirtyBits & BIT_SHREW_ACTION)) {
     node.setAnimation(ShrewComponent.actionState[eid], AnimationComponent.animType[eid], AnimationComponent.progress[eid]);
-    console.log(`Set shrew ${eid} animation: actionState=${ShrewComponent.actionState[eid]}, animType=${AnimationComponent.animType[eid]}, progress=${AnimationComponent.progress[eid]}`);
   }
 
   if (forceFull || (dirtyBits & BIT_SHREW_CLICKABLE)) {
@@ -62,5 +62,16 @@ export const shrewViewBinding: BindingFn = (eid: number, dirtyBits: number, forc
 
   if (forceFull || (dirtyBits & BIT_SHREW_PROP)) {
     node.setPropType(ShrewComponent.propType[eid]);
+  }
+};
+
+/** 地鼠动画绑定函数: AnimationComponent.progress 变化时驱动 0.31s 出洞/入洞位移 */
+export const shrewAnimationViewBinding: BindingFn = (eid: number, dirtyBits: number, forceFull: boolean) => {
+  const node = shrewNodeMap.get(eid);
+  if (!node) return;
+
+  const animationDirty = BIT_ANIM_TYPE | BIT_ANIM_PROGRESS | BIT_ANIM_DURATION;
+  if (forceFull || (dirtyBits & animationDirty)) {
+    node.setAnimation(ShrewComponent.actionState[eid], AnimationComponent.animType[eid], AnimationComponent.progress[eid]);
   }
 };

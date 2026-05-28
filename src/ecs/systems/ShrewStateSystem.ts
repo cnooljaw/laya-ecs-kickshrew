@@ -97,7 +97,6 @@ function handleWait(eid: number): void {
 }
 
 function handleUp(eid: number): void {
-  const progress = AnimationComponent.progress[eid];
   if (AnimationComponent.progress[eid] >= 1.0) {
     // Up → Stand
     ShrewComponent.actionState[eid] = ShrewAction.Stand;
@@ -106,14 +105,11 @@ function handleUp(eid: number): void {
     AnimationComponent.animType[eid] = AnimType.Stand;
     AnimationComponent.progress[eid] = 0;
     AnimationComponent.duration[eid] = 0;
-  } else {
-    console.log(`Shrew ${eid} up progress: ${progress.toFixed(2)}`);
   }
 }
 
 function handleStand(eid: number): void {
   const timer = ShrewComponent.animTimer[eid];
-  console.log(`Shrew ${eid} stand timer: ${timer.toFixed(2)}s`);
   if (timer <= 0) {
     // Stand → Down
     ShrewComponent.actionState[eid] = ShrewAction.Down;
