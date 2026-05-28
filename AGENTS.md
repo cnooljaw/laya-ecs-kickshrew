@@ -7,6 +7,8 @@
 - 项目名称：`laya-ecs-kickshrew`
 - 项目类型：LayaAir3 + TypeScript 打地鼠游戏原型
 - 当前核心目标：用 `bitecs` 承载游戏状态和规则，用 dirty binding 将 ECS 数据差量同步到 Laya 节点。
+- 学习目标：本项目不只追求功能完成，还要把 ECS、dirty binding、Laya 表现层解耦、资源迁移和网络边界讲清楚，形成可复用的教学材料。
+- 架构目标：在保留 ECS 可测试、数据驱动优势的同时，主动规避 ECS 在小型游戏项目中常见的调试困难、状态分散、样板代码膨胀、生命周期不清和视图同步遗漏问题。
 - 迁移背景：`src1/` 是历史 Lua/Cocos 参考实现；当前运行主线在 `src/`。
 - 主要教程文档：`docs/LayaAir3-Project-Onboarding.md`
 
@@ -76,6 +78,23 @@ Laya stage MOUSE_DOWN
   -> hitResponseSystem
 ```
 
+## 项目定位：代码 + 教学 + 架构实验
+
+这是一个学习项目。后续 Agent 不能只把功能“做完”，还要同步沉淀为什么这样做、有什么取舍、容易踩哪些坑。
+
+每次有效改动优先同时满足三件事：
+
+1. **代码优雅**：边界清晰、命名准确、测试覆盖关键规则、避免把 Laya 节点当状态源。
+2. **教学清晰**：让后来者能从入口、数据流、系统顺序和 Q&A 理解改动，不需要猜。
+3. **架构升级**：每次改动都尽量降低 ECS 的副作用，而不是继续堆组件、dirty bit 和散落的单例。
+
+如果代码改动涉及 ECS、binding、网络、生命周期、资源加载、坐标转换或调试链路，应同步评估是否需要更新：
+
+- `docs/LayaAir3-Project-Onboarding.md`
+- 本文件的“当前优先级建议”
+- 新增或更新相关 Q&A
+- 相关测试说明或调试说明
+
 ## 架构边界
 
 保持以下边界，不要随意打穿：
@@ -96,6 +115,24 @@ view -> Laya + resource/config
 GameScene -> 运行时装配
 ```
 
+架构升级时优先保持以下方向：
+
+```text
+input/network/resource callback
+  -> command/event adapter
+  -> ECS systems / domain services
+  -> dirty state
+  -> binding projection
+  -> Laya view nodes
+```
+
+可以保留 `GameScene` 作为当前阶段的总装配器，但新增复杂逻辑时应优先下沉到可测试模块：
+
+- 输入坐标、点击意图、协议回包：先转成 command/event，再进入系统。
+- 地鼠、锤子、场景、玩家规则：放在 ECS system 或纯函数 helper。
+- Laya 节点、音效、动画、异步资源：放在 view/runtime adapter。
+- 运行时装配、实体和节点映射：保留在 `GameScene` 或专门 registry，不让 view 自己查 ECS。
+
 新增 ECS 字段并显示到画面时，通常需要同步修改：
 
 1. `src/ecs/components/index.ts`
@@ -106,6 +143,83 @@ GameScene -> 运行时装配
 6. 对应 `src/binding/*ViewBinding.ts`
 7. 对应 `src/view/*Node.ts`
 8. 对应 `src/tests/**/*.test.ts`
+
+## ECS 教学与架构升级规范
+
+### 教学产出要求
+
+当改动能体现 ECS 思路时，回答或文档里要尽量说明：
+
+- **权威状态在哪里**：对应 component 字段是什么，谁负责写。
+- **规则在哪里执行**：哪个 system 或纯函数改变了状态。
+- **表现如何同步**：dirty bit 如何产生，哪个 binding 读取，哪个 view node 展示。
+- **为什么不用传统节点状态**：说明这样做带来的测试性、解耦或调试收益。
+- **代价是什么**：例如字段链路变长、dirty 容易漏、entity id 映射难读。
+
+推荐解释模板：
+
+```text
+需求/现象
+  -> ECS 数据建模
+  -> System 规则流
+  -> Dirty 标记
+  -> Binding 到 Laya
+  -> 测试和调试入口
+  -> Q&A：为什么这么做/可能出什么问题
+```
+
+### ECS 缺点规避清单
+
+使用 ECS 时要主动控制这些风险：
+
+- **状态分散**：新增组件字段前先判断是否属于已有组件、单例组件、临时 view state，避免把一次性表现状态放进权威 ECS。
+- **样板膨胀**：新增 dirty bit、binding、node 方法时保持命名一一对应；如果同类字段重复增长，考虑抽 helper 或 projection。
+- **调试困难**：复杂 system 要能从测试里重放；关键状态变化优先在 system 边界写清楚输入、输出和测试断言。
+- **同步遗漏**：任何 ECS 字段如果需要显示到画面，必须同时检查 dirty 标记和 binding；不要依赖 `forceFullSync` 掩盖常规同步缺口。
+- **生命周期不清**：ECS world、view node、timer、stage event、network callback、sound/tween 必须有明确 owner 和 teardown。
+- **过度 ECS 化**：纯视觉动画进度、临时按钮 hover、一次性粒子生命周期不一定进入 ECS；进入 ECS 的条件是它影响规则、同步、回放、测试或网络一致性。
+- **系统顺序隐式依赖**：新增 system 时必须说明它在帧循环中的位置，以及依赖哪个上游 system 的结果。
+- **单例实体滥用**：Player/Hammer/Scene/Network 这类单例可以保留，但新增单例前先确认是否真的是全局状态。
+
+### 架构升级优先级
+
+后续重构优先围绕“让数据流更显性、让生命周期更可控”：
+
+1. 恢复测试全绿，避免在不稳定基线上继续教学和重构。
+2. 补齐 Player/Hammer/Scene/Hole/Hit 等组件的 dirty 标记策略，减少 `forceFullSync` 依赖。
+3. 把输入、网络回包、场景切换整理成 command/event 入口，降低 `GameScene` 规则职责。
+4. 完善 `GameScene.stop()` 和相关 registry 的清理，避免 Laya timer、stage event、binding、节点、音效泄漏。
+5. 统一真实 `deltaSec` 与状态机计时，避免固定 `1/60` 隐式假设。
+6. 为 ECS 调试补轻量工具：实体快照、关键组件 dump、dirty bit 名称解析。
+7. 真实 socket 接入时保留 `KickSocket` 的 seqId/pending/乱序/超时机制，让 transport 可替换。
+
+## Q&A 沉淀规范
+
+当修复问题、升级架构或发现坑点时，要把可复用解释沉淀为 Q&A。可以写在相关文档章节中；如果 Q&A 变多，再拆成 `docs/Architecture-QA.md`。
+
+Q&A 应回答真实疑问，而不是写口号。优先覆盖：
+
+- 为什么这个状态放 ECS，而不是放 Laya 节点？
+- 为什么 dirty binding 用拉取同步，而不是事件直接推 UI？
+- 为什么 socket 回包不能直接操作 view？
+- 为什么某个 system 必须排在另一个 system 前后？
+- 为什么某个表现状态不进入 ECS？
+- 为什么测试应该断言 component，而不是断言 Laya 节点？
+- 如果画面没变，是 ECS 没变、dirty 没标、binding 没跑，还是 view node 没实现？
+- 如果新增地图/地鼠/锤子资源，需要同步哪些配置和测试？
+
+推荐格式：
+
+```md
+### Q: <具体问题>
+
+A: <直接答案>
+
+- 代码入口：`src/...`
+- 数据流：`Component -> System -> Dirty -> Binding -> View`
+- 常见坑：<1-3 条>
+- 验证方式：<测试命令或调试页面>
+```
 
 ## TDD 工作流
 
@@ -197,14 +311,64 @@ git show --stat --oneline HEAD
 - `bin/js/bundles/`
 - `bin/js/game.js`
 - `bin/js/game.js.map`
+- `bin/js/debug/`
 
-`bin/js/game.js` 典型生成命令：
+## 构建与调试
+
+### 生产构建（esbuild，无 sourceMap）
 
 ```bash
 npx esbuild src/Main.ts --bundle --format=iife --global-name=Game --platform=browser --target=es6 --external:Laya --outfile=bin/js/game.js
 ```
 
-这类浏览器运行 bundle 是生成物，不提交。`bin/js/libs/*.js` 是 Laya 运行库，不能因为 `game.js` 是生成物就粗暴忽略整个 `bin/js/`。
+### 调试构建（tsc + sourceMap，VS Code 直接断点）
+
+```bash
+npm run build:debug
+```
+
+等价于：
+
+```bash
+npx tsc -p tsconfig.debug.json && node scripts/fix-esm-extensions.js && node scripts/copy-vendor.js
+```
+
+流程说明：
+
+1. `tsc` 按 `tsconfig.debug.json` 编译，每个 TS 文件生成独立的 `.js` + `.js.map` 到 `bin/js/debug/src/`
+2. `fix-esm-extensions.js` 后处理：给相对路径 import 添加 `.js` 扩展名（浏览器 ES module 必需）
+3. `copy-vendor.js`：将 `bitecs` 和 `tslib` 的 ES module 复制到 `bin/js/debug/vendor/`
+
+调试页面：`bin/debug-tsc.html`，通过 Import Map 映射裸模块 + `<script type="module">` 加载 `Bootstrap.js`。
+
+`Bootstrap.ts` 是 ES module 入口，调用 `Laya.init + new Main().onStart()`，不改动 `Main.ts`。
+
+### 本地 HTTP 服务
+
+```bash
+cd bin && python3 -m http.server 8080
+```
+
+调试页面访问地址：
+- 生产：`http://localhost:8080`
+- tsc 调试：`http://localhost:8080/debug-tsc.html`
+
+### VS Code 断点调试（推荐）
+
+1. `npm run build:debug`
+2. 启动 HTTP 服务（端口 8080）
+3. VS Code 按 `F5`，选择 **"tsc Debug"** 配置
+4. 在 TS 源文件中直接设断点 — sourceMap 一级精确映射，断点命中
+
+### esbuild + sourceMap 调试（备选）
+
+```bash
+npx esbuild src/Main.ts --bundle --format=iife --global-name=Game --platform=browser --target=es6 --external:Laya --outfile=bin/js/game.js --sourcemap
+```
+
+VS Code 按 `F5`，选择 "LayaAir Debug"。sourceMap 是二级链路（TS → bundle JS），断点精度不如 tsc 方案。
+
+这类浏览器运行 bundle 和 tsc debug 输出都是生成物，不提交。`bin/js/libs/*.js` 是 Laya 运行库，不能因为 `game.js` 是生成物就粗暴忽略整个 `bin/js/`。
 
 ## 阅读和排查约定
 
@@ -231,14 +395,15 @@ npx esbuild src/Main.ts --bundle --format=iife --global-name=Game --platform=bro
 - Laya 资源加载是异步的，节点销毁或切场景后回调可能迟到。新增异步加载时要加生命周期保护。
 - Cocos 到 Laya 的坐标转换是高风险区：Cocos Y-up，Laya Y-down。
 - atlas rotated/trimmed 帧是资源迁移高风险区。修改 `PlistConverter` 或 `ShrewNode` 前先看现有测试和实际 atlas 格式。
-- 下水道场景有特殊 zOrder/遮罩结构，不要只看草地场景推断所有地图。
 
 ## 当前优先级建议
 
 如果重新开始会话后要继续提升项目质量，建议优先处理：
 
 1. 修复当前 4 个基线测试失败，恢复 `npm test` 全绿。
-2. 补齐 Player/Hammer/Scene/Hole 等组件的 dirty 标记策略。
-3. 完善 `GameScene.stop()` 生命周期清理：timer、stage event、binding 注册表、节点、音效。
-4. 统一 `ShrewStateSystem` 的固定 `1/60` timer 与真实 `deltaSec`。
-5. 梳理真实 socket 接入点，保留 `KickSocket` 的 seqId/pending 机制。
+2. 补齐 Player/Hammer/Scene/Hole/Hit 等组件的 dirty 标记策略，并补对应测试与教学说明。
+3. 完善 `GameScene.stop()` 生命周期清理：timer、stage event、binding 注册表、节点、音效、network callback。
+4. 统一 `ShrewStateSystem` 的固定 `1/60` timer 与真实 `deltaSec`，说明帧率变化对 ECS 状态机的影响。
+5. 把点击输入和网络回包整理成 command/event 入口，降低 `GameScene` 直接编排规则的比例。
+6. 为 dirty binding 和 entity/component 调试补 Q&A 或轻量工具，帮助定位“数据变了但画面没变”的问题。
+7. 梳理真实 socket 接入点，保留 `KickSocket` 的 seqId/pending 机制。
