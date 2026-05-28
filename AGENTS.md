@@ -350,12 +350,28 @@ cd bin && python3 -m http.server 8080
 - 生产：`http://localhost:8080`
 - tsc 调试：`http://localhost:8080/debug-tsc.html`
 
+自动化入口：
+
+```bash
+npm run debug:ready
+```
+
+等价于先执行 `npm run build:debug`，再由 `scripts/start-debug-server.js` 检查 `http://localhost:8080/debug-tsc.html`。如果 8080 已经可用则复用现有服务；否则在 `bin/` 下后台启动 `python3 -m http.server 8080`，日志写到 `bin/js/debug/http-server.log`（生成物，不提交）。
+
 ### VS Code 断点调试（推荐）
 
-1. `npm run build:debug`
-2. 启动 HTTP 服务（端口 8080）
-3. VS Code 按 `F5`，选择 **"tsc Debug"** 配置
-4. 在 TS 源文件中直接设断点 — sourceMap 一级精确映射，断点命中
+1. VS Code 按 `F5`，选择 **"tsc Debug"** 配置。
+2. `.vscode/launch.json` 会通过 `preLaunchTask: debug:ready` 自动构建并确保 8080 服务已启动。
+3. Chrome 会打开 `http://localhost:8080/debug-tsc.html`。
+4. 在 TS 源文件中直接设断点 — sourceMap 一级精确映射，断点命中。
+
+后续 Agent 每次完成代码改动并按 TDD 规则提交后，如果改动影响运行时、画面、资源、输入、生命周期、网络或调试链路，应继续执行：
+
+```bash
+npm run debug:ready
+```
+
+然后提示用户在 VS Code 中按 `F5` 使用 **"tsc Debug"** 到 Chrome 观察界面结果；如果当前环境能直接操作浏览器，再打开 `http://localhost:8080/debug-tsc.html` 做基础冒烟检查。
 
 ### esbuild + sourceMap 调试（备选）
 

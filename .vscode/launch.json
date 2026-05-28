@@ -9,6 +9,7 @@
             "request": "launch",
             "name": "tsc Debug",
             "url": "http://localhost:8080/debug-tsc.html",
+            "preLaunchTask": "debug:ready",
             "webRoot": "${workspaceFolder}/bin",
             "sourceMapPathOverrides": {
                 "bin/js/debug/src/*": "${workspaceFolder}/src/*"
