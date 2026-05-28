@@ -8,14 +8,11 @@ export const enum ShrewType {
 
 /** 地鼠动作状态 */
 export const enum ShrewAction {
-  None = 1,
-  Wait = 2,
-  Up = 3,
+  Wait = 1,
+  Up = 2,
+  Stand = 3,
   Down = 4,
-  Stand = 5,
-  Dizzy = 6,
-  Refresh = 7,
-  Delay = 8,
+  Dizzy = 5,
 }
 
 /** 地图类型 */

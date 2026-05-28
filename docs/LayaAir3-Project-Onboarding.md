@@ -152,7 +152,7 @@ DirtyComponent       各组件 dirty bitmask + forceFullSync
 重要枚举在 `src/ecs/types.ts`：
 
 - `ShrewType`：红、蓝、黄、绿。
-- `ShrewAction`：`None -> Wait -> Up -> Stand -> Down -> Refresh -> None`，以及 `Dizzy/Delay`。
+- `ShrewAction`：`Wait -> Up -> Stand -> Down -> Wait`，以及被击中短暂停留的 `Dizzy`。
 - `MapType`：草地、船、太空。
 - `HammerType`：木、石、铜、银、金、神、雷神锤。
 - `AnimType`：Idle、Up、Stand、Down、Dizzy 等。
@@ -186,24 +186,20 @@ DirtyComponent       各组件 dirty bitmask + forceFullSync
 主循环：
 
 ```text
-None
-  -> Wait       随机等待 1-8 秒
+Wait           随机等待 1-8 秒，隐藏在洞下
   -> Up         出洞动画
   -> Stand      可点击，停留 2 秒
   -> Down       入洞动画
-  -> Refresh    重置 hp/帽子/状态
-  -> None
+  -> Wait       重置 hp/帽子/状态，进入下一轮等待
 ```
 
 被击中特殊路径：
 
 ```text
 Stand/可点击
-  -> HitDetectionSystem 设置 Dizzy
-  -> Delay
+  -> HitDetectionSystem 设置 Dizzy 和 0.3 秒短暂停留
   -> Down
-  -> Refresh
-  -> None
+  -> Wait
 ```
 
 注意：当前 `ShrewStateSystem` 内部用固定 `FRAME_DELTA = 1 / 60` 递减 `animTimer`，而 `AnimationTimerSystem` 用真实 `deltaSec` 推进动画进度。以后如果要做低帧率适配，应该优先统一这个时间来源。
@@ -217,7 +213,7 @@ Stand/可点击
 - 检查 `HammerComponent.hitTable`，不可击打则直接返回 miss。
 - 按洞位比例坐标寻找最近洞位。
 - 只命中 `ShrewComponent.isClickable === 1` 的地鼠。
-- 命中后扣 hp、关点击、设 `Dizzy`，并把 `hitTable` 置 0 防连点。
+- 命中后扣 hp、关点击、设 `Dizzy` 的 0.3 秒短暂停留，并把 `hitTable` 置 0 防连点。
 
 输入坐标是比例：
 
@@ -668,7 +664,12 @@ A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `Animatio
 
 ### Q: 地鼠状态是不是太多，能不能精简？
 
-A: 可以精简，但要先区分“权威阶段”和“瞬时实现细节”。当前真正影响规则和同步的是 `Wait/Up/Stand/Down/Dizzy`；`Refresh` 是场景切换和一轮结束时的重置入口，`Delay` 是被击中后短暂停留。未使用的 `Max/Sleep` 已从 `ShrewAction` 清理，`Refresh` 的重置逻辑已收敛到 `resetShrewForNextCycle()`；如果要继续删除 `Refresh` 或 `Delay`，需要同时调整 `SceneCycleSystem`、`ShrewStateSystem`、`ShrewNode` 和相关测试。
+A: 已精简为 `Wait/Up/Stand/Down/Dizzy`。`Wait` 同时承担“隐藏等待”和“下一轮入口”，所以不再需要 `None`；`Down` 完成时直接调用 `resetShrewForNextCycle()`，所以不再需要 `Refresh`；`Dizzy` 自己用 `animTimer=0.3` 表达被击中后的短暂停留，所以不再需要 `Delay`。
+
+- 代码入口：`src/ecs/ShrewLifecycle.ts`、`src/ecs/systems/ShrewStateSystem.ts`、`src/ecs/systems/HitDetectionSystem.ts`、`src/ecs/systems/SceneCycleSystem.ts`。
+- 数据流：`HitDetectionSystem -> startShrewDizzyHold -> Dizzy -> Down -> resetShrewForNextCycle -> Wait`。
+- 常见坑：如果在命中时不重置 `animTimer`，`Dizzy` 会继承 Stand 的剩余停留时间；如果场景切换还写旧的 `Refresh`，地鼠会进入不存在的状态。
+- 验证方式：`npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts src/tests/ecs/SceneCycleSystem.test.ts src/tests/ecs/HitDetectionSystem.test.ts`。
 
 ### Laya 资源加载是异步的
 

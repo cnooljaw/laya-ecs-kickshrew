@@ -84,15 +84,17 @@ describe('SceneCycleSystem', () => {
     expect(DirtyComponent.forceFullSync[singletons.scene]).toBe(1);
   });
 
-  it('切换时所有地鼠强制 Refresh', () => {
+  it('切换时所有地鼠重置为 Wait', () => {
     SceneComponent.sceneTimer[singletons.scene] = SCENE_CYCLE_INTERVAL;
     SceneComponent.cycleInterval[singletons.scene] = SCENE_CYCLE_INTERVAL;
 
     sceneCycleSystem(world);
 
     for (const shrewEid of shrews) {
-      expect(ShrewComponent.actionState[shrewEid]).toBe(ShrewAction.Refresh);
+      expect(ShrewComponent.actionState[shrewEid]).toBe(ShrewAction.Wait);
       expect(ShrewComponent.isClickable[shrewEid]).toBe(0);
+      expect(ShrewComponent.animTimer[shrewEid]).toBeGreaterThanOrEqual(1);
+      expect(ShrewComponent.animTimer[shrewEid]).toBeLessThanOrEqual(8);
       expect(ShrewComponent.mapType[shrewEid]).toBe(MapType.Ship);
       expect(DirtyComponent.forceFullSync[shrewEid]).toBe(1);
     }

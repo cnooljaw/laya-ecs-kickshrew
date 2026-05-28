@@ -1,22 +1,20 @@
 /**
  * ShrewStateSystem — 地鼠状态机系统
  *
- * 状态循环: None → Wait → Up → Stand → Down → Refresh → None
- * 特殊状态: Dizzy(被击中) → Delay → Down
+ * 状态循环: Wait → Up → Stand → Down → Wait
+ * 特殊状态: Dizzy(被击中短暂停留) → Down
  *
  * 状态转换规则:
- * - None → Wait: 随机等待 1~8 秒
  * - Wait → Up: animTimer 倒计时到 0，启动上移动画(0.31s)
  * - Up → Stand: 动画完成(progress>=1)，设为可点击，停留2秒
  * - Stand → Down: animTimer 倒计时到 0，启动下移动画(0.31s)
- * - Down → Refresh: 动画完成(progress>=1)
- * - Refresh → None: 重置地鼠属性(hp/hasHat/isClickable)，随机新类型
- * - Dizzy → Delay: 眩晕动画完成
- * - Delay → Down: 短暂停留后下移
+ * - Down → Wait: 动画完成后重置 hp/hasHat/isClickable，随机等待下一轮
+ * - Dizzy → Down: 被击中后短暂停留，再下移
  */
 import { defineQuery } from "bitecs";
 import { ShrewComponent, AnimationComponent } from "../components";
-import { ShrewAction, ShrewType, AnimType } from "../types";
+import { ShrewAction, AnimType } from "../types";
+import { resetShrewForNextCycle } from "../ShrewLifecycle";
 
 const shrewQuery = defineQuery([ShrewComponent, AnimationComponent]);
 
@@ -26,10 +24,6 @@ const UP_DURATION = 0.31;
 const DOWN_DURATION = 0.31;
 /** 站立停留时间(秒) */
 const STAND_TIME = 2.0;
-/** 等待时间范围 */
-const WAIT_MIN = 1.0;
-const WAIT_MAX = 8.0;
-
 /** 每帧固定 delta (秒), 60fps */
 const FRAME_DELTA = 1 / 60;
 
@@ -45,9 +39,6 @@ export function shrewStateSystem(world: any): void {
     const state = ShrewComponent.actionState[eid] as ShrewAction;
 
     switch (state) {
-      case ShrewAction.None:
-        handleNone(eid);
-        break;
       case ShrewAction.Wait:
         handleWait(eid);
         break;
@@ -60,26 +51,11 @@ export function shrewStateSystem(world: any): void {
       case ShrewAction.Down:
         handleDown(eid);
         break;
-      case ShrewAction.Refresh:
-        handleRefresh(eid);
-        break;
       case ShrewAction.Dizzy:
         handleDizzy(eid);
         break;
-      case ShrewAction.Delay:
-        handleDelay(eid);
-        break;
     }
   }
-}
-
-function handleNone(eid: number): void {
-  // None → Wait: 随机等待时间
-  ShrewComponent.actionState[eid] = ShrewAction.Wait;
-  ShrewComponent.animTimer[eid] = randomRange(WAIT_MIN, WAIT_MAX);
-  AnimationComponent.animType[eid] = AnimType.Idle;
-  AnimationComponent.progress[eid] = 0;
-  AnimationComponent.duration[eid] = 0;
 }
 
 function handleWait(eid: number): void {
@@ -125,44 +101,14 @@ function handleStand(eid: number): void {
 
 function handleDown(eid: number): void {
   if (AnimationComponent.progress[eid] >= 1.0) {
-    // Down → Refresh
-    ShrewComponent.actionState[eid] = ShrewAction.Refresh;
+    // Down → Wait
+    resetShrewForNextCycle(eid);
   }
-}
-
-function handleRefresh(eid: number): void {
-  // Refresh → None: 重置地鼠属性
-  resetShrewForNextCycle(eid);
-}
-
-function resetShrewForNextCycle(eid: number): void {
-  const shrewType = ShrewComponent.shrewType[eid] as ShrewType;
-  ShrewComponent.hp[eid] = shrewType === ShrewType.Blue ? 2 : 1;
-  ShrewComponent.hasHat[eid] = shrewType === ShrewType.Blue ? 1 : 0;
-  ShrewComponent.actionState[eid] = ShrewAction.None;
-  ShrewComponent.isClickable[eid] = 0;
-  ShrewComponent.animTimer[eid] = 0;
-  AnimationComponent.animType[eid] = AnimType.Idle;
-  AnimationComponent.progress[eid] = 0;
-  AnimationComponent.duration[eid] = 0;
 }
 
 function handleDizzy(eid: number): void {
-  // Dizzy 动画完成后进入 Delay
-  if (AnimationComponent.progress[eid] >= 1.0 || ShrewComponent.animTimer[eid] <= 0) {
-    ShrewComponent.actionState[eid] = ShrewAction.Delay;
-    ShrewComponent.animTimer[eid] = 0.3; // 短暂停留
-    AnimationComponent.animType[eid] = AnimType.Dizzy;
-    AnimationComponent.progress[eid] = 0;
-    AnimationComponent.duration[eid] = 0;
-  } else {
-    ShrewComponent.animTimer[eid] -= FRAME_DELTA;
-  }
-}
-
-function handleDelay(eid: number): void {
   if (ShrewComponent.animTimer[eid] <= 0) {
-    // Delay → Down
+    // Dizzy → Down
     ShrewComponent.actionState[eid] = ShrewAction.Down;
     AnimationComponent.animType[eid] = AnimType.Down;
     AnimationComponent.progress[eid] = 0;
@@ -170,9 +116,4 @@ function handleDelay(eid: number): void {
   } else {
     ShrewComponent.animTimer[eid] -= FRAME_DELTA;
   }
-}
-
-/** 随机范围 [min, max] */
-function randomRange(min: number, max: number): number {
-  return min + Math.random() * (max - min);
 }

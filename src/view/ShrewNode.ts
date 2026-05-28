@@ -266,9 +266,7 @@ export class ShrewNode implements IShrewNode {
     const HIDDEN_Y = bh * HIDDEN_OFFSET_RATIO;
 
     switch (actionState) {
-      case ShrewAction.None:
       case ShrewAction.Wait:
-      case ShrewAction.Refresh:
         this._container.visible = false;
         if (this._mainLayer) this._mainLayer.y = HIDDEN_Y;
         break;

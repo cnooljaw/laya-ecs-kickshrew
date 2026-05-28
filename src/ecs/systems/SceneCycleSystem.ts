@@ -6,13 +6,14 @@
  * 2. 按 Meadow→Ship→Space→Meadow 循环
  * 3. 切换时重置 sceneTimer
  * 4. 切换时设置 forceFullSync=1 通知视图层完整重建
- * 5. 切换时所有地鼠强制进入 Refresh 状态
+ * 5. 切换时所有地鼠重置为 Wait 状态
  */
 import { defineQuery } from "bitecs";
 import { SceneComponent, ShrewComponent, HoleComponent, DirtyComponent } from "../components";
-import { MapType, ShrewAction } from "../types";
+import { MapType } from "../types";
 import { SCENE_CYCLE } from "../../config/SceneConfig";
 import { HolePositions, getHoleZOrder } from "../../config/HolePositions";
+import { resetShrewForNextCycle } from "../ShrewLifecycle";
 
 const sceneQuery = defineQuery([SceneComponent]);
 const shrewQuery = defineQuery([ShrewComponent, DirtyComponent]);
@@ -40,12 +41,11 @@ export function sceneCycleSystem(world: any): void {
   // 设置 forceFullSync
   DirtyComponent.forceFullSync[sceneEid] = 1;
 
-  // 所有地鼠强制进入 Refresh 状态
+  // 所有地鼠重置到下一轮等待
   const shrewEntities = shrewQuery(world);
   for (let i = 0; i < shrewEntities.length; i++) {
     const eid = shrewEntities[i];
-    ShrewComponent.actionState[eid] = ShrewAction.Refresh;
-    ShrewComponent.isClickable[eid] = 0;
+    resetShrewForNextCycle(eid);
     ShrewComponent.mapType[eid] = nextMap;
     DirtyComponent.forceFullSync[eid] = 1;
   }

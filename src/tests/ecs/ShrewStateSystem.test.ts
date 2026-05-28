@@ -13,15 +13,12 @@ describe('ShrewStateSystem', () => {
 
   // ---- 基本状态转换 ----
 
-  it('None → Wait: 初始状态为 None，执行后转为 Wait，animTimer 在 1~9 范围', () => {
+  it('创建后直接处于 Wait: animTimer 在等待范围内', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-    ShrewComponent.actionState[eid] = ShrewAction.None;
 
-    shrewStateSystem(world);
-
-    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
     expect(ShrewComponent.animTimer[eid]).toBeGreaterThanOrEqual(1);
-    expect(ShrewComponent.animTimer[eid]).toBeLessThanOrEqual(9);
+    expect(ShrewComponent.animTimer[eid]).toBeLessThanOrEqual(8);
+    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
   });
 
   it('Wait → Up: animTimer 递减到 0 后转 Up，设置动画参数', () => {
@@ -99,15 +96,20 @@ describe('ShrewStateSystem', () => {
     expect(ShrewComponent.animTimer[eid]).toBeLessThan(1.5);
   });
 
-  it('Down → Refresh: 动画完成(progress>=1)后转 Refresh', () => {
+  it('Down → Wait: 动画完成(progress>=1)后重置并进入下一轮等待', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
     ShrewComponent.actionState[eid] = ShrewAction.Down;
+    ShrewComponent.hp[eid] = 0;
     AnimationComponent.progress[eid] = 1.0;
     AnimationComponent.duration[eid] = 0.31;
 
     shrewStateSystem(world);
 
-    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Refresh);
+    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
+    expect(ShrewComponent.hp[eid]).toBe(1);
+    expect(ShrewComponent.isClickable[eid]).toBe(0);
+    expect(ShrewComponent.animTimer[eid]).toBeGreaterThanOrEqual(1);
+    expect(ShrewComponent.animTimer[eid]).toBeLessThanOrEqual(8);
   });
 
   it('Down 动画未完成: 保持 Down 状态', () => {
@@ -121,38 +123,22 @@ describe('ShrewStateSystem', () => {
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Down);
   });
 
-  it('Refresh → None: 重置地鼠属性回到初始', () => {
-    const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-    ShrewComponent.actionState[eid] = ShrewAction.Refresh;
-    ShrewComponent.hp[eid] = 0;
-    ShrewComponent.hasHat[eid] = 0;
-
-    shrewStateSystem(world);
-
-    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.None);
-    // hp 应重置: 红鼠=1, 蓝鼠=2
-    expect(ShrewComponent.hp[eid]).toBe(1);
-    expect(ShrewComponent.hasHat[eid]).toBe(0);
-    expect(ShrewComponent.isClickable[eid]).toBe(0);
-    expect(AnimationComponent.animType[eid]).toBe(AnimType.Idle);
-  });
-
   // ---- 特殊状态 ----
 
-  it('Dizzy → Delay: 外部设置 Dizzy 状态，系统推进到 Delay', () => {
+  it('Dizzy 计时中: 保持 Dizzy 并递减短暂停留时间', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
     ShrewComponent.actionState[eid] = ShrewAction.Dizzy;
-    ShrewComponent.animTimer[eid] = 0;
+    ShrewComponent.animTimer[eid] = 0.3;
 
     shrewStateSystem(world);
 
-    // Dizzy 动画完成后转到 Delay
-    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Delay);
+    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Dizzy);
+    expect(ShrewComponent.animTimer[eid]).toBeLessThan(0.3);
   });
 
-  it('Delay → Down: Delay 计时到 0 后转入 Down', () => {
+  it('Dizzy → Down: 短暂停留结束后转入 Down', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-    ShrewComponent.actionState[eid] = ShrewAction.Delay;
+    ShrewComponent.actionState[eid] = ShrewAction.Dizzy;
     ShrewComponent.animTimer[eid] = 0;
 
     shrewStateSystem(world);
@@ -173,10 +159,10 @@ describe('ShrewStateSystem', () => {
 
     shrewStateSystem(world);
 
-    // 蓝鼠 hp=1 仍有生命，Dizzy→Delay→Down→Refresh
+    // 蓝鼠 hp=1 仍有生命，Dizzy 短暂停留后 Down，再进入下一轮 Wait
     expect(ShrewComponent.hp[eid]).toBe(1);
     expect(ShrewComponent.hasHat[eid]).toBe(0);
-    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Delay);
+    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Down);
   });
 
   it('蓝鼠第二击: hp 从 1→0, 进入 Dizzy', () => {
@@ -194,11 +180,10 @@ describe('ShrewStateSystem', () => {
 
   // ---- 完整循环 ----
 
-  it('完整状态循环 None→Wait→Up→Stand→Down→Refresh→None', () => {
+  it('完整状态循环 Wait→Up→Stand→Down→Wait', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
 
-    // None → Wait
-    shrewStateSystem(world);
+    // 初始就是 Wait
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
 
     // Wait → Up (强制 timer=0)
@@ -219,15 +204,11 @@ describe('ShrewStateSystem', () => {
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Down);
     expect(ShrewComponent.isClickable[eid]).toBe(0);
 
-    // Down → Refresh (强制动画完成)
+    // Down → Wait (强制动画完成并重置)
     AnimationComponent.progress[eid] = 1.0;
     AnimationComponent.duration[eid] = 0.31;
     shrewStateSystem(world);
-    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Refresh);
-
-    // Refresh → None
-    shrewStateSystem(world);
-    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.None);
+    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
     expect(ShrewComponent.hp[eid]).toBe(1);
   });
 });

@@ -70,6 +70,7 @@ describe('HitDetectionSystem', () => {
 
     expect(ShrewComponent.hp[shrewEid]).toBe(0);
     expect(ShrewComponent.actionState[shrewEid]).toBe(ShrewAction.Dizzy);
+    expect(ShrewComponent.animTimer[shrewEid]).toBeCloseTo(0.3, 3);
     expect(ShrewComponent.isClickable[shrewEid]).toBe(0);
   });
 

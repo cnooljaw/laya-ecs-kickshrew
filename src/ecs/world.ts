@@ -1,5 +1,5 @@
 import { createWorld, addEntity, addComponent } from "bitecs";
-import { ShrewType, ShrewAction, MapType, HammerType, HOLE_COUNT } from "./types";
+import { ShrewType, MapType, HammerType, HOLE_COUNT } from "./types";
 import {
   ShrewComponent,
   HoleComponent,
@@ -13,6 +13,7 @@ import {
 } from "./components";
 import { HolePositions, getHoleGrid, getHoleZOrder } from "../config/HolePositions";
 import { SCENE_CYCLE_INTERVAL } from "../config/SceneConfig";
+import { resetShrewForNextCycle } from "./ShrewLifecycle";
 
 /** 创建基础 ECS 世界 */
 export function createGameWorld() {
@@ -26,22 +27,10 @@ export function createShrewEntity(world: ReturnType<typeof createWorld>, shrewTy
   addComponent(world, AnimationComponent, entity);
   addComponent(world, DirtyComponent, entity);
 
-  // 根据 type 设置初始值
-  const hp = shrewType === ShrewType.Blue ? 2 : 1;
-  const hasHat = shrewType === ShrewType.Blue ? 1 : 0;
-
   ShrewComponent.shrewType[entity] = shrewType;
-  ShrewComponent.hp[entity] = hp;
-  ShrewComponent.actionState[entity] = ShrewAction.None;
-  ShrewComponent.hasHat[entity] = hasHat;
   ShrewComponent.mapType[entity] = mapType;
-  ShrewComponent.isClickable[entity] = 0;
-  ShrewComponent.animTimer[entity] = 0;
   ShrewComponent.propType[entity] = 0;
-
-  AnimationComponent.animType[entity] = 0;
-  AnimationComponent.progress[entity] = 0;
-  AnimationComponent.duration[entity] = 0;
+  resetShrewForNextCycle(entity);
 
   DirtyComponent.shrewDirty[entity] = 0;
   DirtyComponent.animDirty[entity] = 0;

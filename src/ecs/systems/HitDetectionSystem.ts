@@ -4,14 +4,15 @@
  * 职责:
  * 1. 检查锤子 hitTable 是否可用 (hitTable=1时可敲击)
  * 2. 将触摸坐标映射到洞位，检查该洞位地鼠是否可点击
- * 3. 击中时: hp-1, hasHat 处理(蓝鼠), 设 actionState=Dizzy, isClickable=0
+ * 3. 击中时: hp-1, hasHat 处理(蓝鼠), 进入 Dizzy 短暂停留, isClickable=0
  * 4. 击中后设 hitTable=0 防止连点 (~0.24秒后由锤子动画系统恢复)
  *
  * 此系统由触摸事件异步触发，不在帧循环中。
  */
 import { defineQuery } from "bitecs";
 import { ShrewComponent, HoleComponent, HammerComponent } from "../components";
-import { ShrewAction, ShrewType, HOLE_COUNT } from "../types";
+import { ShrewType, HOLE_COUNT } from "../types";
+import { startShrewDizzyHold } from "../ShrewLifecycle";
 
 const holeQuery = defineQuery([HoleComponent]);
 const hammerQuery = defineQuery([HammerComponent]);
@@ -80,8 +81,7 @@ export function hitDetectionSystem(world: any, touchXRatio: number, touchYRatio:
 
   // 处理击中逻辑
   ShrewComponent.hp[shrewEid] -= 1;
-  ShrewComponent.isClickable[shrewEid] = 0;
-  ShrewComponent.actionState[shrewEid] = ShrewAction.Dizzy;
+  startShrewDizzyHold(shrewEid);
 
   // 蓝鼠帽子处理: hp>0 且 hasHat=1 时，帽子碎
   if (shrewType === ShrewType.Blue && ShrewComponent.hasHat[shrewEid] === 1 && ShrewComponent.hp[shrewEid] > 0) {

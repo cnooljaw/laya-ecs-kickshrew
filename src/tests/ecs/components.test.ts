@@ -27,7 +27,7 @@ describe("ECS Components & World", () => {
       // Set values
       ShrewComponent.shrewType[entity] = ShrewType.Red;
       ShrewComponent.hp[entity] = 1;
-      ShrewComponent.actionState[entity] = ShrewAction.None;
+      ShrewComponent.actionState[entity] = ShrewAction.Wait;
       ShrewComponent.hasHat[entity] = 0;
       ShrewComponent.mapType[entity] = MapType.Meadow;
       ShrewComponent.isClickable[entity] = 0;
@@ -37,7 +37,7 @@ describe("ECS Components & World", () => {
       expect(hasComponent(world, ShrewComponent, entity)).toBe(true);
       expect(ShrewComponent.shrewType[entity]).toBe(ShrewType.Red);
       expect(ShrewComponent.hp[entity]).toBe(1);
-      expect(ShrewComponent.actionState[entity]).toBe(ShrewAction.None);
+      expect(ShrewComponent.actionState[entity]).toBe(ShrewAction.Wait);
     });
 
     it("HoleComponent should have correct fields", () => {
@@ -90,7 +90,9 @@ describe("ECS Components & World", () => {
       expect(hasComponent(world, ShrewComponent, entity)).toBe(true);
       expect(ShrewComponent.shrewType[entity]).toBe(ShrewType.Red);
       expect(ShrewComponent.hp[entity]).toBe(1);
-      expect(ShrewComponent.actionState[entity]).toBe(ShrewAction.None);
+      expect(ShrewComponent.actionState[entity]).toBe(ShrewAction.Wait);
+      expect(ShrewComponent.animTimer[entity]).toBeGreaterThanOrEqual(1);
+      expect(ShrewComponent.animTimer[entity]).toBeLessThanOrEqual(8);
       expect(ShrewComponent.hasHat[entity]).toBe(0);
       expect(ShrewComponent.mapType[entity]).toBe(MapType.Meadow);
       expect(ShrewComponent.isClickable[entity]).toBe(0);
