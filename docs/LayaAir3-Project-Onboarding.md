@@ -198,7 +198,6 @@ Wait           随机等待 1-8 秒，隐藏在洞下
 ```text
 Stand/可点击
   -> HitDetectionSystem 设置 Dizzy 和 0.3 秒短暂停留
-  -> Down
   -> Wait
 ```
 
@@ -664,11 +663,11 @@ A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `Animatio
 
 ### Q: 地鼠状态是不是太多，能不能精简？
 
-A: 已精简为 `Wait/Up/Stand/Down/Dizzy`。`Wait` 同时承担“隐藏等待”和“下一轮入口”，所以不再需要 `None`；`Down` 完成时直接调用 `resetShrewForNextCycle()`，所以不再需要 `Refresh`；`Dizzy` 自己用 `animTimer=0.3` 表达被击中后的短暂停留，所以不再需要 `Delay`。
+A: 已精简为 `Wait/Up/Stand/Down/Dizzy`。`Wait` 同时承担“隐藏等待”和“下一轮入口”，所以不再需要 `None`；自然超时入洞时，`Down` 完成后调用 `resetShrewForNextCycle()`，所以不再需要 `Refresh`；命中后，`Dizzy` 自己用 `animTimer=0.3` 表达短暂停留，结束后直接重置到 `Wait`，所以不再需要 `Delay`，也不会复用 `Down`。
 
 - 代码入口：`src/ecs/ShrewLifecycle.ts`、`src/ecs/systems/ShrewStateSystem.ts`、`src/ecs/systems/HitDetectionSystem.ts`、`src/ecs/systems/SceneCycleSystem.ts`。
-- 数据流：`HitDetectionSystem -> startShrewDizzyHold -> Dizzy -> Down -> resetShrewForNextCycle -> Wait`。
-- 常见坑：如果在命中时不重置 `animTimer`，`Dizzy` 会继承 Stand 的剩余停留时间；如果场景切换还写旧的 `Refresh`，地鼠会进入不存在的状态。
+- 数据流：自然循环是 `Stand -> Down -> resetShrewForNextCycle -> Wait`；命中循环是 `HitDetectionSystem -> startShrewDizzyHold -> Dizzy -> resetShrewForNextCycle -> Wait`。
+- 常见坑：如果在命中时不重置 `animTimer`，`Dizzy` 会继承 Stand 的剩余停留时间；如果命中后还转 `Down`，会把“自然入洞动画”和“被击中消失”两种语义混在一起。
 - 验证方式：`npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts src/tests/ecs/SceneCycleSystem.test.ts src/tests/ecs/HitDetectionSystem.test.ts`。
 
 ### Laya 资源加载是异步的

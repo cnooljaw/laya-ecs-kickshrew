@@ -69,7 +69,7 @@ syncView.sync
 
 ```text
 Wait -> Up -> Stand -> Down -> Wait
-Dizzy(被击中短暂停留) -> Down
+Dizzy(被击中短暂停留) -> Wait
 ```
 
 `None/Refresh/Delay` 已从地鼠动作状态中移除。下一轮重置统一走 `src/ecs/ShrewLifecycle.ts` 的 `resetShrewForNextCycle()`，命中短暂停留统一走 `startShrewDizzyHold()`。

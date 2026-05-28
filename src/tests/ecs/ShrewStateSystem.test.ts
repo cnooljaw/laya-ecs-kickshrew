@@ -136,15 +136,20 @@ describe('ShrewStateSystem', () => {
     expect(ShrewComponent.animTimer[eid]).toBeLessThan(0.3);
   });
 
-  it('Dizzy → Down: 短暂停留结束后转入 Down', () => {
+  it('Dizzy → Wait: 短暂停留结束后直接重置到下一轮等待', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
     ShrewComponent.actionState[eid] = ShrewAction.Dizzy;
+    ShrewComponent.hp[eid] = 0;
     ShrewComponent.animTimer[eid] = 0;
 
     shrewStateSystem(world);
 
-    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Down);
-    expect(AnimationComponent.animType[eid]).toBe(AnimType.Down);
+    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
+    expect(ShrewComponent.hp[eid]).toBe(1);
+    expect(ShrewComponent.isClickable[eid]).toBe(0);
+    expect(ShrewComponent.animTimer[eid]).toBeGreaterThanOrEqual(1);
+    expect(ShrewComponent.animTimer[eid]).toBeLessThanOrEqual(8);
+    expect(AnimationComponent.animType[eid]).toBe(AnimType.Idle);
   });
 
   // ---- 蓝鼠双击 ----
@@ -159,13 +164,13 @@ describe('ShrewStateSystem', () => {
 
     shrewStateSystem(world);
 
-    // 蓝鼠 hp=1 仍有生命，Dizzy 短暂停留后 Down，再进入下一轮 Wait
-    expect(ShrewComponent.hp[eid]).toBe(1);
-    expect(ShrewComponent.hasHat[eid]).toBe(0);
-    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Down);
+    // Dizzy 结束后进入下一轮，蓝鼠属性恢复为新一轮初始值
+    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
+    expect(ShrewComponent.hp[eid]).toBe(2);
+    expect(ShrewComponent.hasHat[eid]).toBe(1);
   });
 
-  it('蓝鼠第二击: hp 从 1→0, 进入 Dizzy', () => {
+  it('蓝鼠第二击: Dizzy 结束后进入下一轮 Wait', () => {
     const eid = createShrewEntity(world, ShrewType.Blue, MapType.Meadow);
     // 模拟第二击
     ShrewComponent.hp[eid] = 0;
@@ -175,7 +180,9 @@ describe('ShrewStateSystem', () => {
 
     shrewStateSystem(world);
 
-    expect(ShrewComponent.hp[eid]).toBe(0);
+    expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
+    expect(ShrewComponent.hp[eid]).toBe(2);
+    expect(ShrewComponent.hasHat[eid]).toBe(1);
   });
 
   // ---- 完整循环 ----
