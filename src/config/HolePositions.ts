@@ -1,7 +1,7 @@
 import { MapType } from "../ecs/types";
 
 /**
- * 洞位比例坐标（Laya 屏幕空间，960x640），表示洞口视觉中心。
+ * 洞位比例坐标（Laya 屏幕空间，960x640），表示地鼠出洞的视觉锚点。
  *
  * 来源：src1/ Lua 代码中 holePositionX/Y 基于 bg(1136x640) 的比例
  * Cocos 中 bg(1136x640) 居中在 960x640 屏幕上，左右各超 88px
@@ -13,7 +13,7 @@ import { MapType } from "../ecs/types";
 export const HolePositions: Record<number, { xRatios: number[]; yRatios: number[] }> = {
   [MapType.Meadow]: {
     xRatios: [0.2852, 0.4950, 0.7136, 0.2722, 0.5023, 0.7333, 0.2642, 0.5055, 0.7503],
-    yRatios: [0.3427, 0.3427, 0.3427, 0.5578, 0.5578, 0.5578, 0.7676, 0.7676, 0.7676],
+    yRatios: [0.3427, 0.3427, 0.3427, 0.5422, 0.5422, 0.5422, 0.7518, 0.7518, 0.7518],
   },
   [MapType.Ship]: {
     xRatios: [0.2468, 0.4976, 0.7544, 0.2349, 0.5,    0.7745, 0.2219, 0.5,    0.7899],
