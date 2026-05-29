@@ -14,6 +14,12 @@ interface PreviewShrew {
   progress: number;
 }
 
+const MEADOW_COVER_DEBUG = [
+  { id: "cover3", zOrder: 3, y: 238, height: 118, color: "#00d2ff" },
+  { id: "cover2", zOrder: 5, y: 356, height: 133, color: "#ffd60a" },
+  { id: "cover1", zOrder: 7, y: 489, height: 151, color: "#bf5af2" },
+] as const;
+
 const POSE_CONFIG: Record<PreviewPose, { action: ShrewAction; animType: AnimType; progress: number; title: string }> = {
   up0: {
     action: ShrewAction.Up,
@@ -51,7 +57,7 @@ function createOverlay(LayaRuntime: any, root: any): void {
     marker.graphics.drawLine(0, -34, 0, 34, "#ff3b30", 2);
     marker.graphics.drawCircle(0, 0, 4, "#ff3b30");
     marker.graphics.fillText(
-      `${i + 1} r${row}c${col} z${getHoleZOrder(row)}`,
+      `${i + 1} r${row}c${col} shrew z${getHoleZOrder(row)}`,
       8,
       -34,
       "13px monospace",
@@ -60,6 +66,30 @@ function createOverlay(LayaRuntime: any, root: any): void {
     );
     marker.pos(x, y);
     root.addChild(marker);
+  }
+}
+
+function createCoverOverlay(LayaRuntime: any, root: any): void {
+  for (const cover of MEADOW_COVER_DEBUG) {
+    const overlay = new LayaRuntime.Sprite();
+    overlay.name = `CoverDebug_${cover.id}`;
+    overlay.zOrder = 195;
+    overlay.mouseEnabled = false;
+
+    const bottomY = cover.y + cover.height;
+    overlay.graphics.drawLine(0, cover.y, VIEWPORT.width, cover.y, cover.color, 2);
+    overlay.graphics.drawLine(0, bottomY, VIEWPORT.width, bottomY, cover.color, 3);
+    overlay.graphics.drawLine(0, cover.y, 0, bottomY, cover.color, 2);
+    overlay.graphics.drawLine(VIEWPORT.width, cover.y, VIEWPORT.width, bottomY, cover.color, 2);
+    overlay.graphics.fillText(
+      `${cover.id} z${cover.zOrder} y=${cover.y} bottom=${bottomY}`,
+      10,
+      cover.y + 8,
+      "14px monospace",
+      cover.color,
+      "left"
+    );
+    root.addChild(overlay);
   }
 }
 
@@ -121,6 +151,7 @@ function createPreview(LayaRuntime: any, pose: PreviewPose): void {
     });
   }
 
+  if (pose === "up0") createCoverOverlay(LayaRuntime, root);
   createOverlay(LayaRuntime, root);
   schedulePoseSync(LayaRuntime, previewShrews);
 

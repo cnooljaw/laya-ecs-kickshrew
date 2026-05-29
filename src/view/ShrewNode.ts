@@ -18,7 +18,7 @@
  *
  * _mainLayer.y 值：
  *   STAND_Y  = -bh*0.5（body 中心对齐 HoleNode 原点/洞口中心）
- *   HIDDEN_Y = bh*1.5  （Cocos: -bh*1.5 向下；Laya Y-down: +bh*1.5 向下=藏在洞下）
+ *   HIDDEN_Y = bh*0.52 （向下藏入 cover 裁剪区，Up 起点不露头）
  *
  * ZOrder（参考 ShrewData.lua）：hand=0, ear=1, body=3, face=6
  */
@@ -43,6 +43,23 @@ export function getShrewMainLayerY(actionState: number, bodyH: number, progress:
     default:
       return hiddenY;
   }
+}
+
+export function getShrewClipLayout(bodyW: number, bodyH: number): { x: number; y: number; width: number; height: number; mainLayerX: number } {
+  const x = -bodyW * 0.85;
+  const y = -bodyH * 0.5;
+  return {
+    x,
+    y,
+    width: bodyW * 1.7,
+    height: bodyH,
+    mainLayerX: -bodyW * 0.5 - x,
+  };
+}
+
+export function getShrewMainLayerLocalY(actionState: number, bodyH: number, progress: number): number {
+  const clip = getShrewClipLayout(1, bodyH);
+  return getShrewMainLayerY(actionState, bodyH, progress) - clip.y;
 }
 
 /** 各类型地鼠的 atlas 和部件帧名映射 */
@@ -93,6 +110,7 @@ const SHREW_FRAMES: Record<number, {
 
 export class ShrewNode implements IShrewNode {
   private _container: any = null;   // 洞位容器的子容器
+  private _clipLayer: any = null;   // 本地裁剪层，限制地鼠只在洞口上方显示
   private _mainLayer: any = null;   // 部件层，做出洞/入洞动画
   private _bodyW: number = 94;
   private _bodyH: number = 110;
@@ -109,13 +127,18 @@ export class ShrewNode implements IShrewNode {
     this._container.visible = false;
     if (parent) parent.addChild(this._container);
 
+    this._clipLayer = new Laya.Sprite();
+    this._clipLayer.name = "ShrewClipLayer";
+    this._container.addChild(this._clipLayer);
+
     // mainLayer：所有部件都挂在这里，出洞/入洞靠移动它的 y
     this._mainLayer = new Laya.Sprite();
     this._mainLayer.name = "ShrewMainLayer";
-    this._container.addChild(this._mainLayer);
+    this._clipLayer.addChild(this._mainLayer);
 
-    // 初始藏在洞中心下方（HIDDEN_Y = bh * 1.5）
-    this._mainLayer.y = getShrewMainLayerY(ShrewAction.Wait, this._bodyH, 0);
+    // 初始藏在洞中心下方（HIDDEN_Y = bh * hiddenOffsetRatio）
+    this._configureClip(Laya, this._bodyW, this._bodyH);
+    this._mainLayer.y = getShrewMainLayerLocalY(ShrewAction.Wait, this._bodyH, 0);
   }
 
   setSpriteFrame(shrewType: number, mapType: number): void {
@@ -153,18 +176,15 @@ export class ShrewNode implements IShrewNode {
       this._bodyW = bw;
       this._bodyH = bh;
 
-      // HoleNode 原点代表洞口视觉中心。地鼠 stand 时 body 中心也对齐到这个原点。
       if (this._container) {
-        this._container.x = -bw * 0.5;
+        this._container.x = 0;
         this._container.y = 0;
-        // 不在 ShrewNode 上做 scrollRect：Laya 的 scrollRect x/y 会滚动内容，
-        // 负数裁剪起点会把地鼠整体推到右下。洞口遮挡统一交给 SceneLayer cover。
-        this._container.scrollRect = null;
       }
+      this._configureClip(Laya, bw, bh);
 
       // 更新 mainLayer 初始隐藏位置
-      // Cocos: HIDDEN_Y=-bh*1.5; Laya Y-down: HIDDEN_Y=+bh*1.5
-      this._mainLayer.y = getShrewMainLayerY(ShrewAction.Wait, bh, 0);
+      // Laya Y-down: HIDDEN_Y=+bh*hiddenOffsetRatio，向下藏入 cover。
+      this._mainLayer.y = getShrewMainLayerLocalY(ShrewAction.Wait, bh, 0);
 
       // 旋转帧集合（O(1) 查找）
       const rotatedSet = new Set(def.rotatedFrames);
@@ -259,29 +279,29 @@ export class ShrewNode implements IShrewNode {
     switch (actionState) {
       case ShrewAction.Wait:
         this._container.visible = false;
-        if (this._mainLayer) this._mainLayer.y = getShrewMainLayerY(actionState, this._bodyH, progress);
+        if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Up:
         // 出洞：progress 0→1，mainLayer.y 从下方隐藏点 → 洞中心点
         this._container.visible = true;
-        if (this._mainLayer) this._mainLayer.y = getShrewMainLayerY(actionState, this._bodyH, progress);
+        if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Stand:
         this._container.visible = true;
-        if (this._mainLayer) this._mainLayer.y = getShrewMainLayerY(actionState, this._bodyH, progress);
+        if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Down:
         // 入洞：progress 0→1，mainLayer.y 从洞中心点 → 下方隐藏点
         this._container.visible = true;
-        if (this._mainLayer) this._mainLayer.y = getShrewMainLayerY(actionState, this._bodyH, progress);
+        if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Dizzy:
         this._container.visible = true;
-        if (this._mainLayer) this._mainLayer.y = getShrewMainLayerY(actionState, this._bodyH, progress);
+        if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       default:
@@ -301,11 +321,25 @@ export class ShrewNode implements IShrewNode {
     // TODO: 根据 propType 显示不同道具
   }
 
+  private _configureClip(Laya: any, bodyW: number, bodyH: number): void {
+    if (!this._clipLayer || !this._mainLayer) return;
+
+    const clip = getShrewClipLayout(bodyW, bodyH);
+    this._clipLayer.x = clip.x;
+    this._clipLayer.y = clip.y;
+    this._mainLayer.x = clip.mainLayerX;
+
+    if (Laya.Rectangle) {
+      this._clipLayer.scrollRect = new Laya.Rectangle(0, 0, clip.width, clip.height);
+    }
+  }
+
   destroy(): void {
     if (this._container) {
       this._container.destroy();
       this._container = null;
     }
+    this._clipLayer = null;
     this._mainLayer = null;
   }
 }

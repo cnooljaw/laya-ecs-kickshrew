@@ -13,7 +13,7 @@ import { MapType } from "../ecs/types";
 export const HolePositions: Record<number, { xRatios: number[]; yRatios: number[] }> = {
   [MapType.Meadow]: {
     xRatios: [0.2852, 0.4950, 0.7136, 0.2722, 0.5023, 0.7333, 0.2642, 0.5055, 0.7503],
-    yRatios: [0.3427, 0.3427, 0.3427, 0.5422, 0.5422, 0.5422, 0.7518, 0.7518, 0.7518],
+    yRatios: [0.3427, 0.3427, 0.3427, 0.5297, 0.5297, 0.5297, 0.7393, 0.7393, 0.7393],
   },
   [MapType.Ship]: {
     xRatios: [0.2468, 0.4976, 0.7544, 0.2349, 0.5,    0.7745, 0.2219, 0.5,    0.7899],

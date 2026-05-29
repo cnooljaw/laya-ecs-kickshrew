@@ -32,7 +32,7 @@ export const HAMMER_VIEW_LAYOUT = {
 } as const;
 
 export const SHREW_VIEW_LAYOUT = {
-  hiddenOffsetRatio: 1.5,
+  hiddenOffsetRatio: 0.52,
 } as const;
 
 export const COMBO_VIEW_LAYOUT = {
