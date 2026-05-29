@@ -32,7 +32,6 @@ export const HAMMER_VIEW_LAYOUT = {
 } as const;
 
 export const SHREW_VIEW_LAYOUT = {
-  standLiftPx: 8,
   hiddenOffsetRatio: 1.5,
 } as const;
 

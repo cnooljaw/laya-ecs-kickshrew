@@ -95,7 +95,8 @@ touchYRatio = stage.mouseY / DESIGN_RESOLUTION.height
 - 部件坐标从 Cocos Y-up 转成 Laya Y-down。
 - 部分 atlas 帧有 `rotated=true`，Laya AtlasLoader 不自动补偿，需要手动 `rotation = -90`。
 - 出洞/入洞通过移动 `_mainLayer.y` 实现。
-- `standLiftPx` 和 `hiddenOffsetRatio` 在 `ViewLayoutConfig`。
+- `HolePositions` 表示洞口视觉中心；地鼠 `Stand` 时 body 中心对齐该点，`Up/Down` 在该点与下方隐藏点之间插值。
+- `hiddenOffsetRatio` 在 `ViewLayoutConfig`。
 
 调地鼠表现前先读 `ShrewNode.ts` 注释和 `SHREW_FRAMES`，不要直接改状态机来修视觉问题。
 
