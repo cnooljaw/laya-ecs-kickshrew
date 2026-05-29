@@ -1,0 +1,221 @@
+# 架构说明
+
+本文说明项目模块边界、运行流和后续重构方向。每次需要理解“代码应该放哪里”“谁拥有生命周期”“一个输入怎么流到画面”时读这里。
+
+## 项目结构
+
+```text
+src/
+  Main.ts                 Laya 脚本入口
+  ecs/                    bitecs world、components、systems
+  binding/                ECS -> Laya 节点的 dirty binding
+  view/                   Laya 节点封装、运行时装配和输入适配
+  network/                协议、KickSocket、NetworkAdapter、MockServer
+  resource/               atlas/plist 转换与资源路径映射
+  config/                 地图、洞位、规则和表现配置
+  tests/                  Vitest 测试
+
+src1/                     老 Lua/Cocos 参考实现，不是当前运行主线
+assets/                   Laya 工程资源
+bin/                      浏览器运行和调试入口、运行资源
+docs/                     项目知识库
+```
+
+## 分层边界
+
+```text
+Laya 入口层
+  Main.ts
+
+运行时装配层
+  view/GameScene.ts
+  view/GameLoopPipeline.ts
+  view/KickInputAdapter.ts
+  view/ViewRegistry.ts
+
+纯游戏状态/规则层
+  ecs/components
+  ecs/systems
+  ecs/types
+  ecs/ShrewLifecycle.ts
+
+表现同步层
+  binding/SyncView.ts
+  binding/*ViewBinding.ts
+
+Laya 表现层
+  view/*Node.ts
+
+网络协议层
+  network/ProtocolTypes.ts
+  network/KickSocket.ts
+  network/NetworkAdapter.ts
+  network/MockServer.ts
+
+资源工具层
+  resource/AtlasConfig.ts
+  resource/PlistConverter.ts
+  resource/convertAll.ts
+  resource/rebuild-atlases.ts
+
+配置层
+  config/*.ts
+```
+
+依赖方向：
+
+```text
+input/network/resource callback
+  -> command/event adapter
+  -> ECS systems / domain helpers
+  -> DirtyComponent
+  -> binding projection
+  -> Laya view nodes
+```
+
+不要让 ECS system 直接操作 Laya 节点。不要让 Laya 节点直接改权威游戏规则。socket 回包应先转成系统可消费的数据，再更新 ECS。
+
+## 启动和主循环
+
+```text
+Main.ts
+  -> new GameScene()
+  -> GameScene.init()
+  -> GameScene.start()
+  -> Laya.timer.frameLoop(...)
+  -> GameScene.update(delta)
+  -> GameLoopPipeline.update(delta)
+```
+
+`GameScene.init()` 负责装配：
+
+```text
+createGameWorld()
+createSingletonEntities()
+createHoleEntities()
+createShrewEntity()
+new SceneLayer/HoleNode/ShrewNode/HammerNode/PlayerHUD/...
+viewRegistry.registerXxxNode(eid, node)
+syncView.registerXxxBinding(...)
+network.onResponse(resp => hitResponseSystem(world, resp))
+new GameLoopPipeline(...)
+new KickInputAdapter(...)
+forceFullSync all entities
+syncView.sync(world)
+```
+
+`GameLoopPipeline.update(deltaSec)` 的系统顺序：
+
+```text
+animationTimerSystem(world, deltaSec)
+shrewStateSystem(world, deltaSec)
+sceneCycleSystem(world)
+hammerSystem(world)
+network.update()
+dirtyMarkSystem(world)
+syncView.sync(world)
+```
+
+这个顺序的含义是：先推进规则和状态，再标记 dirty，最后把变化投影到 Laya 节点。
+
+## 点击流程
+
+```text
+Laya stage MOUSE_DOWN
+  -> Main._onTouch()
+  -> GameScene.onTouch(x, y)
+  -> KickInputAdapter.handleTouch(x, y)
+      -> 设计坐标转比例
+      -> hitDetectionSystem(world, xRatio, yRatio)
+      -> HammerNode.followTouch/playHitAnimation
+      -> comboSystem(world, hitHoleIndex)
+      -> NetworkAdapter.sendKick(...)
+          -> KickSocket.sendKick(...)
+          -> MockServer.handleKick(...)
+          -> KickSocket.onMessage(...)
+          -> hitResponseSystem(world, resp)
+```
+
+输入适配器负责把 Laya 输入转换成 ECS/网络命令，避免 `GameScene` 继续膨胀。
+
+## 地鼠状态机
+
+当前状态：
+
+```text
+Wait -> Up -> Stand -> Down -> Wait
+Dizzy(被击中短暂停留) -> Wait
+```
+
+`None/Refresh/Delay` 已移除。下一轮重置统一走 `src/ecs/ShrewLifecycle.ts` 的 `resetShrewForNextCycle()`，命中短暂停留统一走 `startShrewDizzyHold()`。
+
+自然循环：
+
+```text
+Wait 随机等待
+  -> Up 出洞动画
+  -> Stand 可点击停留
+  -> Down 入洞动画
+  -> resetShrewForNextCycle()
+  -> Wait
+```
+
+命中循环：
+
+```text
+HitDetectionSystem
+  -> startShrewDizzyHold()
+  -> Dizzy
+  -> resetShrewForNextCycle()
+  -> Wait
+```
+
+`ShrewStateSystem` 和 `AnimationTimerSystem` 都使用 `GameScene.update(deltaSec)` 传入的真实帧间隔，不再依赖固定 60fps。
+
+## 网络边界
+
+`KickSocket` 负责：
+
+- `seqId` 自增。
+- pending request 保存。
+- 乱序回包匹配。
+- 超时清理。
+
+`NetworkAdapter` 是运行时桥接：
+
+- 默认用 `MockServer`。
+- 真实 socket 接入时优先替换 `ISocketTransport`。
+- 回包进入 `hitResponseSystem`，不要直接操作 view。
+
+后续优先把 `network.onResponse(resp => hitResponseSystem(world, resp))` 再包一层 command/event adapter，进一步降低 `GameScene` 对具体 system 的感知。
+
+## 生命周期边界
+
+当前 owner：
+
+- `Main`：Laya `frameLoop`、stage 事件、脚本生命周期。
+- `GameScene`：world、singletons、运行时 adapter、view registry、network callback。
+- `ViewRegistry`：ECS eid 和 view node 的注册关系，集中 unregister 和 destroy。
+- `view/*Node.ts`：自己创建的 Laya 子节点、timer/tween/异步资源回调保护。
+
+当前仍需补强：
+
+- `Main`/脚本层 teardown：清理 `Laya.timer.frameLoop`、stage event 和背景音乐。
+- 资源预加载与释放 owner 还不完整。
+- 网络连接状态目前未完全落到 `NetworkComponent`。
+
+## 扩展入口
+
+- 改状态机：`src/ecs/systems/ShrewStateSystem.ts`、`src/ecs/ShrewLifecycle.ts`
+- 改命中规则：`src/ecs/systems/HitDetectionSystem.ts`、`src/view/KickInputAdapter.ts`
+- 改地图/洞位：`src/config/HolePositions.ts`、`src/config/SceneConfig.ts`、`src/ecs/systems/SceneCycleSystem.ts`
+- 改锤子/怒气：`src/ecs/systems/HammerSystem.ts`、`src/config/HammerConfig.ts`、`src/view/HammerNode.ts`
+- 接真实服务器：`src/network/KickSocket.ts`、`src/network/NetworkAdapter.ts`、`src/ecs/systems/HitResponseSystem.ts`
+
+## 架构原则
+
+- 权威状态放 ECS，Laya 节点只表现。
+- 输入、网络回包、资源回调先转成 command/event，再进入规则或 adapter。
+- 新增复杂逻辑优先下沉到可测试模块，不塞进 `GameScene`。
+- 视图同步依赖 dirty binding，不用 `forceFullSync` 掩盖常规同步缺口。
+- 异步加载、timer、tween、event 都要有 owner 和 teardown。

@@ -2,6 +2,15 @@
 
 本教程面向已经熟悉 LayaAir3、TypeScript、场景节点和资源加载的开发者。目标是：用 1 小时理解这个项目的运行方式、代码边界、核心数据流，以及以后改功能应该从哪里下手。
 
+如果只是为了完成某类任务，优先阅读更短的专题文档：
+
+- 架构边界和运行流：`docs/architecture.md`
+- ECS、dirty、binding：`docs/ecs-binding.md`
+- Laya 生命周期、资源、坐标：`docs/laya-rules.md`
+- 测试、调试、提交：`docs/test-guide.md`
+
+本文件保留为完整教程，不作为 Agent 每次必读上下文。
+
 项目当前是一个打地鼠游戏原型，核心组合是：
 
 - LayaAir3：负责舞台、节点、纹理、音效、输入和渲染。
@@ -711,7 +720,7 @@ npm test
 
 如果测试过了，说明纯 ECS、网络、资源转换的核心逻辑基本可用。
 
-当前项目快照中，`npm test` 可以正常启动 Vitest，最近一次检查结果是 117 个测试全部通过。新人排查失败时先判断这是“测试期望落后于当前配置”，还是“代码行为被改坏”；资源和坐标迁移相关测试尤其要对齐 Laya 运行时事实。
+当前项目快照中，`npm test` 可以正常启动 Vitest，最近一次检查结果是 121 个测试全部通过。新人排查失败时先判断这是“测试期望落后于当前配置”，还是“代码行为被改坏”；资源和坐标迁移相关测试尤其要对齐 Laya 运行时事实。
 
 ### 再开 Laya 运行时看画面
 
@@ -750,8 +759,8 @@ console.log("shrew", eid, ShrewComponent.actionState[eid], ShrewComponent.isClic
 - 改 `HIT_RADIUS_RATIO` 并补命中测试。
 - 新增一个地鼠等待时间配置。
 - 调整某个地图洞位坐标。
-- 给 `GameScene.stop()` 增加事件、节点、音效、binding 注册表和 network callback 清理。
-- 给 `GameScene.stop()` 增加事件和节点清理。
+- 给 `Main`/脚本层增加 frameLoop、stage event 和背景音乐清理。
+- 给网络回包补 command/event adapter，减少 `GameScene` 直接调用 system。
 
 不建议第一个任务：
 

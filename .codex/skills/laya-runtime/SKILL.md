@@ -1,0 +1,44 @@
+---
+name: laya-runtime
+description: Use when changing Laya view nodes, resource loading, scene switching, timers, tweens, input handling, lifecycle cleanup, or visual runtime behavior in this project.
+---
+
+# Laya Runtime Workflow
+
+Use this project skill for changes that touch Laya presentation or runtime ownership.
+
+## Read First
+
+- `AGENTS.md`
+- `docs/laya-rules.md`
+- `docs/architecture.md` when lifecycle or ownership changes
+
+## Workflow
+
+1. Locate the owner:
+   - `Main` for frameLoop and stage events
+   - `GameScene` for runtime assembly
+   - `ViewRegistry` for binding map registration and node destroy
+   - view node for local children, tweens, timers, and async load guards
+2. Keep rules out of view nodes. Convert input to adapter calls or ECS/system updates.
+3. Move new visual tuning numbers into `src/config/ViewLayoutConfig.ts` unless they are resource data.
+4. Guard async loader callbacks against destroyed nodes or stale scene state.
+5. Clear timers/tweens/events using the same owner that registered them.
+6. For runtime-visible changes, run related tests and then `npm run debug:ready` when practical.
+
+## Common Test Commands
+
+```bash
+npm test -- --run src/tests/view/KickInputAdapter.test.ts
+npm test -- --run src/tests/view/ViewRegistry.test.ts
+npx tsc --noEmit
+npm run debug:ready
+```
+
+## Review Checklist
+
+- No Laya object becomes the authoritative game state.
+- Repeated `destroy()` or scene switch does not retain dead nodes.
+- Async load callbacks are idempotent.
+- Resource path changes match `src/resource/AtlasConfig.ts`.
+- Cocos Y-up to Laya Y-down conversions remain documented near the code.
