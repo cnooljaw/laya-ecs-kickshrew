@@ -157,15 +157,9 @@ export class ShrewNode implements IShrewNode {
       if (this._container) {
         this._container.x = -bw * 0.5;
         this._container.y = 0;
-        if (Laya.Rectangle) {
-          // scrollRect 只限制地鼠复合节点自身范围；洞口遮挡由 SceneLayer cover 负责。
-          this._container.scrollRect = new Laya.Rectangle(
-            -bw * 0.5,
-            -bh * 0.5,
-            bw * 1.7,
-            bh
-          );
-        }
+        // 不在 ShrewNode 上做 scrollRect：Laya 的 scrollRect x/y 会滚动内容，
+        // 负数裁剪起点会把地鼠整体推到右下。洞口遮挡统一交给 SceneLayer cover。
+        this._container.scrollRect = null;
       }
 
       // 更新 mainLayer 初始隐藏位置
