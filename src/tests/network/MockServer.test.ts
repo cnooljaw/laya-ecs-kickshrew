@@ -55,7 +55,7 @@ describe('MockServer', () => {
     expect(resp.shrewResp.length).toBe(3);
   });
 
-  it('回包 JSON 格式与 KickResponse 接口一致', () => {
+  it('回包结构与 KickResponse 接口一致', () => {
     const req: KickRequest = {
       seqId: 5, cmd: 'kick', hammerType: 1, bKickShrew: 1,
       numOfShrew: 1, shrews: [{ shrewindex: 1, protectType: 0 }], comboID: 0,

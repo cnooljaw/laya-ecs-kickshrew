@@ -1,7 +1,8 @@
 /**
  * ProtocolTypes — 网络协议接口定义
  *
- * 使用 JSON 格式，seqId 保证请求-回包一一对应。
+ * 使用 api/proto/kick.proto 对应的 protobuf 二进制格式，
+ * seqId 保证请求-回包一一对应。
  */
 
 /** 客户端 → 服务器: 击打请求 */

@@ -11,10 +11,13 @@
  * 传输层抽象为 ISocketTransport，便于测试时注入 mock
  */
 import type { KickRequest, KickResponse } from "./ProtocolTypes";
+import { decodeKickResponse, encodeKickRequest } from "./KickProtoCodec";
+
+export type SocketMessageData = Uint8Array | ArrayBuffer | number[];
 
 /** 传输层接口，Laya.Socket 或测试 mock 均可实现 */
 export interface ISocketTransport {
-  send(data: string): void;
+  send(data: Uint8Array): void;
   // onMessage 回调由构造函数或 setter 设置
 }
 
@@ -62,17 +65,17 @@ export class KickSocket {
         resolve,
         reject,
       });
-      this._transport.send(JSON.stringify(fullReq));
+      this._transport.send(encodeKickRequest(fullReq));
     });
   }
 
   /**
    * 收到消息，按 seqId 匹配 pending 请求
-   * @param data JSON 字符串
+   * @param data protobuf 二进制 KickResponse
    */
-  onMessage(data: string): void {
+  onMessage(data: SocketMessageData): void {
     try {
-      const resp: KickResponse = JSON.parse(data);
+      const resp: KickResponse = decodeKickResponse(data);
       const pending = this._pendingRequests.get(resp.seqId);
       if (pending) {
         this._pendingRequests.delete(resp.seqId);
@@ -80,7 +83,7 @@ export class KickSocket {
       }
       // 无匹配 seqId 则丢弃（可能是超时后的迟到回包）
     } catch (e) {
-      console.error('KickSocket: failed to parse message', e);
+      console.error('KickSocket: failed to decode protobuf message', e);
     }
   }
 

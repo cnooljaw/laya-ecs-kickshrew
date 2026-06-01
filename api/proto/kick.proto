@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package kick.v1;
+
+option go_package = "goserveractorfsm/internal/protocol/pb;kickpb";
+
+message Envelope {
+  uint32 seq_id = 1;
+  string cmd = 2;
+  bytes payload = 3;
+}
+
+message KickRequest {
+  uint32 seq_id = 1;
+  string cmd = 2;
+  int32 hammer_type = 3;
+  bool kick_shrew = 4;
+  int32 num_of_shrew = 5;
+  repeated KickShrew shrews = 6;
+  int32 combo_id = 7;
+}
+
+message KickShrew {
+  int32 shrew_index = 1;
+  int32 protect_type = 2;
+}
+
+message KickResponse {
+  uint32 seq_id = 1;
+  string cmd = 2;
+  int32 ret = 3;
+  int32 money = 4;
+  int32 angry = 5;
+  int32 power = 6;
+  int32 level_score = 7;
+  int32 hammer_id = 8;
+  int32 num_of_shrew = 9;
+  repeated ShrewReward shrew_resp = 10;
+  int32 combo = 11;
+  int32 combo_id = 12;
+}
+
+message ShrewReward {
+  int32 shrew_index = 1;
+  int32 reward = 2;
+}
+
+message ErrorResponse {
+  uint32 seq_id = 1;
+  string cmd = 2;
+  int32 code = 3;
+  string message = 4;
+}
+
+message Ping {
+  uint32 seq_id = 1;
+  string cmd = 2;
+}
+
+message Pong {
+  uint32 seq_id = 1;
+  string cmd = 2;
+}

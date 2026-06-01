@@ -1,15 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { KickSocket } from '../../network/KickSocket';
 import type { KickResponse } from '../../network/ProtocolTypes';
+import { decodeKickRequest, encodeKickResponse } from '../../network/KickProtoCodec';
 
 describe('KickSocket', () => {
   let socket: KickSocket;
-  let sentMessages: string[];
+  let sentMessages: Uint8Array[];
 
   beforeEach(() => {
     sentMessages = [];
     socket = new KickSocket({
-      send: (data: string) => { sentMessages.push(data); },
+      send: (data: Uint8Array) => { sentMessages.push(data); },
     });
   });
 
@@ -18,14 +19,14 @@ describe('KickSocket', () => {
     socket.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 1, shrews: [], comboID: 0 });
     socket.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 1, shrews: [], comboID: 0 });
 
-    expect(JSON.parse(sentMessages[0]).seqId).toBe(1);
-    expect(JSON.parse(sentMessages[1]).seqId).toBe(2);
-    expect(JSON.parse(sentMessages[2]).seqId).toBe(3);
+    expect(decodeKickRequest(sentMessages[0]).seqId).toBe(1);
+    expect(decodeKickRequest(sentMessages[1]).seqId).toBe(2);
+    expect(decodeKickRequest(sentMessages[2]).seqId).toBe(3);
   });
 
   it('单请求匹配: 发送seqId=1请求，收到seqId=1回包', async () => {
     const p = socket.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0 });
-    socket.onMessage(JSON.stringify({
+    socket.onMessage(encodeKickResponse({
       seqId: 1, cmd: 'kickResult', ret: 0, money: 100, angry: 50,
       power: 10, levelScore: 200, hammerId: 1, numOfShrew: 0,
       shrewResp: [], combo: 0, comboId: 0,
@@ -38,9 +39,9 @@ describe('KickSocket', () => {
   it('乱序回包: 先回seqId=2再seqId=1', async () => {
     const p1 = socket.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 1, shrews: [], comboID: 0 });
     const p2 = socket.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 1, shrews: [], comboID: 0 });
-    socket.onMessage(JSON.stringify({ seqId: 2, cmd: 'kickResult', ret: 0, money: 200, angry: 60, power: 20, levelScore: 400, hammerId: 1, numOfShrew: 1, shrewResp: [], combo: 0, comboId: 0 }));
+    socket.onMessage(encodeKickResponse({ seqId: 2, cmd: 'kickResult', ret: 0, money: 200, angry: 60, power: 20, levelScore: 400, hammerId: 1, numOfShrew: 1, shrewResp: [], combo: 0, comboId: 0 }));
     expect((await p2).money).toBe(200);
-    socket.onMessage(JSON.stringify({ seqId: 1, cmd: 'kickResult', ret: 0, money: 100, angry: 50, power: 10, levelScore: 200, hammerId: 1, numOfShrew: 1, shrewResp: [], combo: 0, comboId: 0 }));
+    socket.onMessage(encodeKickResponse({ seqId: 1, cmd: 'kickResult', ret: 0, money: 100, angry: 50, power: 10, levelScore: 200, hammerId: 1, numOfShrew: 1, shrewResp: [], combo: 0, comboId: 0 }));
     expect((await p1).money).toBe(100);
     expect(socket.getPendingCount()).toBe(0);
   });
@@ -51,7 +52,7 @@ describe('KickSocket', () => {
       promises.push(socket.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 1, shrews: [], comboID: 0 }));
     }
     for (const seqId of [3, 1, 5, 2, 4]) {
-      socket.onMessage(JSON.stringify({ seqId, cmd: 'kickResult', ret: 0, money: seqId * 100, angry: 50, power: 10, levelScore: 200, hammerId: 1, numOfShrew: 1, shrewResp: [], combo: 0, comboId: 0 }));
+      socket.onMessage(encodeKickResponse({ seqId, cmd: 'kickResult', ret: 0, money: seqId * 100, angry: 50, power: 10, levelScore: 200, hammerId: 1, numOfShrew: 1, shrewResp: [], combo: 0, comboId: 0 }));
     }
     const results = await Promise.all(promises);
     expect(results.map(r => r.money)).toEqual([100, 200, 300, 400, 500]);
@@ -59,7 +60,7 @@ describe('KickSocket', () => {
   });
 
   it('未知seqId丢弃', () => {
-    socket.onMessage(JSON.stringify({ seqId: 999, cmd: 'kickResult', ret: 0, money: 0, angry: 0, power: 0, levelScore: 0, hammerId: 1, numOfShrew: 0, shrewResp: [], combo: 0, comboId: 0 }));
+    socket.onMessage(encodeKickResponse({ seqId: 999, cmd: 'kickResult', ret: 0, money: 0, angry: 0, power: 0, levelScore: 0, hammerId: 1, numOfShrew: 0, shrewResp: [], combo: 0, comboId: 0 }));
     expect(socket.getPendingCount()).toBe(0);
   });
 
@@ -82,7 +83,7 @@ describe('KickSocket', () => {
     currentTime = 3001;
     ts.checkTimeout();
     expect(ts.getPendingCount()).toBe(1);
-    ts.onMessage(JSON.stringify({ seqId: 2, cmd: 'kickResult', ret: 0, money: 200, angry: 50, power: 10, levelScore: 200, hammerId: 1, numOfShrew: 0, shrewResp: [], combo: 0, comboId: 0 }));
+    ts.onMessage(encodeKickResponse({ seqId: 2, cmd: 'kickResult', ret: 0, money: 200, angry: 50, power: 10, levelScore: 200, hammerId: 1, numOfShrew: 0, shrewResp: [], combo: 0, comboId: 0 }));
     expect((await p2).money).toBe(200);
     expect(ts.getPendingCount()).toBe(0);
   });

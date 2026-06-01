@@ -12,6 +12,7 @@
 import { KickSocket, ISocketTransport } from "./KickSocket";
 import { MockServer } from "./MockServer";
 import type { KickRequest, KickResponse } from "./ProtocolTypes";
+import { decodeKickRequest, encodeKickResponse } from "./KickProtoCodec";
 
 export class NetworkAdapter {
   private _socket: KickSocket;
@@ -21,14 +22,14 @@ export class NetworkAdapter {
   constructor(transport?: ISocketTransport) {
     this._mockServer = new MockServer();
     this._socket = new KickSocket(transport || {
-      send: (data: string) => {
+      send: (data: Uint8Array) => {
         // 本地模拟: 直接将请求交给 MockServer 处理
         try {
-          const req: KickRequest = JSON.parse(data);
+          const req: KickRequest = decodeKickRequest(data);
           const resp = this._mockServer.handleKick(req);
           // 异步回包，模拟网络延迟
           setTimeout(() => {
-            this._socket.onMessage(JSON.stringify(resp));
+            this._socket.onMessage(encodeKickResponse(resp));
           }, 50);
         } catch (e) {
           console.error('NetworkAdapter: mock send error', e);
