@@ -6,6 +6,7 @@ import { SceneLayer } from "../view/SceneLayer";
 import { ShrewNode } from "../view/ShrewNode";
 
 type PreviewPose = "up0" | "stand";
+type PreviewMapKey = "meadow" | "ship" | "space";
 
 interface PreviewShrew {
   node: ShrewNode;
@@ -14,26 +15,73 @@ interface PreviewShrew {
   progress: number;
 }
 
-const MEADOW_COVER_DEBUG = [
-  { id: "cover3", zOrder: 3, y: 238, height: 118, color: "#00d2ff" },
-  { id: "cover2", zOrder: 5, y: 356, height: 133, color: "#ffd60a" },
-  { id: "cover1", zOrder: 7, y: 489, height: 151, color: "#bf5af2" },
-] as const;
+interface CoverDebug {
+  id: string;
+  zOrder: number;
+  y: number;
+  height: number;
+  color: string;
+}
 
-const POSE_CONFIG: Record<PreviewPose, { action: ShrewAction; animType: AnimType; progress: number; title: string }> = {
+interface PreviewMapConfig {
+  label: string;
+  mapType: MapType;
+  coverDebug: CoverDebug[];
+}
+
+function createCoverDebug(bottomHeight: number, middleHeight: number, topHeight: number): CoverDebug[] {
+  const cover1Y = VIEWPORT.height - bottomHeight;
+  const cover2Y = cover1Y - middleHeight;
+  const cover3Y = cover2Y - topHeight;
+
+  return [
+    { id: "cover3", zOrder: 3, y: cover3Y, height: topHeight, color: "#00d2ff" },
+    { id: "cover2", zOrder: 5, y: cover2Y, height: middleHeight, color: "#ffd60a" },
+    { id: "cover1", zOrder: 7, y: cover1Y, height: bottomHeight, color: "#bf5af2" },
+  ];
+}
+
+const MAP_CONFIG: Record<PreviewMapKey, PreviewMapConfig> = {
+  meadow: {
+    label: "Meadow",
+    mapType: MapType.Meadow,
+    coverDebug: createCoverDebug(151, 133, 118),
+  },
+  ship: {
+    label: "Ship",
+    mapType: MapType.Ship,
+    coverDebug: createCoverDebug(144, 132, 118),
+  },
+  space: {
+    label: "Space",
+    mapType: MapType.Space,
+    coverDebug: createCoverDebug(147, 133, 116),
+  },
+};
+
+const POSE_CONFIG: Record<PreviewPose, { action: ShrewAction; animType: AnimType; progress: number; label: string }> = {
   up0: {
     action: ShrewAction.Up,
     animType: AnimType.Up,
     progress: 0,
-    title: "Meadow Up Start",
+    label: "Up Start",
   },
   stand: {
     action: ShrewAction.Stand,
     animType: AnimType.Stand,
     progress: 1,
-    title: "Meadow Stand",
+    label: "Stand",
   },
 };
+
+function getMapFromQuery(): PreviewMapKey {
+  const params = new URLSearchParams(window.location.search);
+  const map = params.get("map");
+  if (map === "ship" || map === "space" || map === "meadow") return map;
+  if (window.location.pathname.includes("ship")) return "ship";
+  if (window.location.pathname.includes("space")) return "space";
+  return "meadow";
+}
 
 function getPoseFromQuery(): PreviewPose {
   const params = new URLSearchParams(window.location.search);
@@ -41,8 +89,8 @@ function getPoseFromQuery(): PreviewPose {
   return params.get("pose") === "stand" ? "stand" : "up0";
 }
 
-function createOverlay(LayaRuntime: any, root: any): void {
-  const positions = HolePositions[MapType.Meadow];
+function createOverlay(LayaRuntime: any, root: any, mapConfig: PreviewMapConfig): void {
+  const positions = HolePositions[mapConfig.mapType];
 
   for (let i = 0; i < HOLE_COUNT; i++) {
     const x = positions.xRatios[i] * VIEWPORT.width;
@@ -69,8 +117,8 @@ function createOverlay(LayaRuntime: any, root: any): void {
   }
 }
 
-function createCoverOverlay(LayaRuntime: any, root: any): void {
-  for (const cover of MEADOW_COVER_DEBUG) {
+function createCoverOverlay(LayaRuntime: any, root: any, coverDebug: CoverDebug[]): void {
+  for (const cover of coverDebug) {
     const overlay = new LayaRuntime.Sprite();
     overlay.name = `CoverDebug_${cover.id}`;
     overlay.zOrder = 195;
@@ -107,29 +155,33 @@ function schedulePoseSync(LayaRuntime: any, previewShrews: PreviewShrew[]): void
   }
 }
 
-function addPoseLinks(pose: PreviewPose): void {
+function addPoseLinks(mapKey: PreviewMapKey, pose: PreviewPose): void {
+  const isActive = (targetMap: PreviewMapKey, targetPose: PreviewPose) => mapKey === targetMap && pose === targetPose;
   const panel = document.createElement("div");
   panel.id = "pose-preview-panel";
   panel.innerHTML = `
-    <a href="./debug-meadow-shrews-up0.html" data-active="${pose === "up0"}">Up start</a>
-    <a href="./debug-meadow-shrews-stand.html" data-active="${pose === "stand"}">Stand</a>
+    <a href="./debug-meadow-shrews-up0.html" data-active="${isActive("meadow", "up0")}">Meadow Up</a>
+    <a href="./debug-meadow-shrews-stand.html" data-active="${isActive("meadow", "stand")}">Meadow Stand</a>
+    <a href="./debug-ship-shrews-stand.html" data-active="${isActive("ship", "stand")}">Ship Stand</a>
+    <a href="./debug-space-shrews-stand.html" data-active="${isActive("space", "stand")}">Space Stand</a>
   `;
   document.body.appendChild(panel);
 }
 
-function createPreview(LayaRuntime: any, pose: PreviewPose): void {
+function createPreview(LayaRuntime: any, mapKey: PreviewMapKey, pose: PreviewPose): void {
+  const mapConfig = MAP_CONFIG[mapKey];
   const poseConfig = POSE_CONFIG[pose];
 
   const root = new LayaRuntime.Sprite();
-  root.name = "MeadowShrewPosePreviewRoot";
+  root.name = `${mapConfig.label}ShrewPosePreviewRoot`;
   LayaRuntime.stage.addChild(root);
 
   const sceneLayer = new SceneLayer();
   sceneLayer.create(root);
-  sceneLayer.switchScene(MapType.Meadow);
+  sceneLayer.switchScene(mapConfig.mapType);
 
   const previewShrews: PreviewShrew[] = [];
-  const positions = HolePositions[MapType.Meadow];
+  const positions = HolePositions[mapConfig.mapType];
 
   for (let i = 0; i < HOLE_COUNT; i++) {
     const { row } = getHoleGrid(i);
@@ -141,7 +193,7 @@ function createPreview(LayaRuntime: any, pose: PreviewPose): void {
 
     const shrewNode = new ShrewNode();
     shrewNode.create(holeNode.getContainer() || root);
-    shrewNode.setSpriteFrame(ShrewType.Red, MapType.Meadow);
+    shrewNode.setSpriteFrame(ShrewType.Red, mapConfig.mapType);
 
     previewShrews.push({
       node: shrewNode,
@@ -151,24 +203,25 @@ function createPreview(LayaRuntime: any, pose: PreviewPose): void {
     });
   }
 
-  if (pose === "up0") createCoverOverlay(LayaRuntime, root);
-  createOverlay(LayaRuntime, root);
+  if (pose === "up0") createCoverOverlay(LayaRuntime, root, mapConfig.coverDebug);
+  createOverlay(LayaRuntime, root, mapConfig);
   schedulePoseSync(LayaRuntime, previewShrews);
 
-  document.title = poseConfig.title;
+  document.title = `${mapConfig.label} Shrews - ${poseConfig.label}`;
 }
 
 if (!(Laya as any).PlayerConfig) (Laya as any).PlayerConfig = {};
 if (!(Laya as any).PlayerConfig.UI) (Laya as any).PlayerConfig.UI = {};
 
+const mapKey = getMapFromQuery();
 const pose = getPoseFromQuery();
-addPoseLinks(pose);
+addPoseLinks(mapKey, pose);
 
 Laya.init(VIEWPORT.width, VIEWPORT.height).then(() => {
   Laya.stage.scaleMode = Laya.Stage.SCALE_FIXED_AUTO;
   Laya.stage.bgColor = "#222222";
-  createPreview(Laya, pose);
-  console.log(`[MeadowShrewPosePreview] ${POSE_CONFIG[pose].title} ready`);
+  createPreview(Laya, mapKey, pose);
+  console.log(`[MeadowShrewPosePreview] ${MAP_CONFIG[mapKey].label} ${POSE_CONFIG[pose].label} ready`);
 }).catch((err: unknown) => {
   console.error("[MeadowShrewPosePreview] init failed:", err);
 });

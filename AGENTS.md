@@ -105,6 +105,7 @@ input/network/resource callback
 - `.codex/skills/ecs-binding/SKILL.md`：改 ECS 字段、dirty、binding、view 同步。
 - `.codex/skills/laya-runtime/SKILL.md`：改 Laya 节点、资源、timer/tween、生命周期。
 - `.codex/skills/test-workflow/SKILL.md`：补测试、跑测试、调试构建和提交。
+- `.codex/skills/hole-position-tuning/SKILL.md`：调 9 个洞位中心点、地鼠 Stand/Up 对齐、cover 边框调试页。
 
 这些 skill 只定义工作流；背景知识看 `docs/`。
 
