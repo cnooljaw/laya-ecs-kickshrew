@@ -17,6 +17,7 @@
    - 架构边界和运行流：`docs/architecture.md`
    - ECS、dirty、binding：`docs/ecs-binding.md`
    - Laya 生命周期、资源、坐标：`docs/laya-rules.md`
+   - 协议同步和 protobuf 网络边界：`docs/protocol.md`
    - 测试、调试、提交：`docs/test-guide.md`
    - 完整新人教程：`docs/LayaAir3-Project-Onboarding.md`
 3. 如果是代码结构、调用链、bug 或“怎么工作”类问题，优先用 codegraph 获取上下文，再读具体文件。
@@ -89,61 +90,6 @@ input/network/resource callback
 - 改网络：`src/network/KickSocket.ts`、`src/network/NetworkAdapter.ts`、`src/ecs/systems/HitResponseSystem.ts`
 - 改协议：`api/proto/kick.proto`、`src/network/KickProtoCodec.ts`、`src/network/ProtocolTypes.ts`、`src/tests/network/*`
 - 改测试/调试流程：`docs/test-guide.md`
-
-## 协议同步和更新
-
-服务端兄弟项目：
-
-```text
-../GoServerActorFsm
-```
-
-服务端权威 proto：
-
-```text
-../GoServerActorFsm/api/proto/kick.proto
-```
-
-客户端只保留一份对应 proto：
-
-```text
-api/proto/kick.proto
-```
-
-手动同步 proto：
-
-```bash
-cp ../GoServerActorFsm/api/proto/kick.proto api/proto/kick.proto
-diff -u ../GoServerActorFsm/api/proto/kick.proto api/proto/kick.proto
-```
-
-同步后按字段更新客户端协议边界：
-
-- `src/network/KickProtoCodec.ts`：protobuf wire 编解码和 proto snake_case ↔ 业务 camelCase/旧字段名映射。
-- `src/network/ProtocolTypes.ts`：业务侧请求/回包类型，保持 view/ECS 不直接依赖 proto 细节。
-- `src/network/KickSocket.ts`：只处理 `Uint8Array` protobuf 二进制收发和 `seqId` pending 匹配。
-- `src/network/NetworkAdapter.ts`：MockServer 链路也必须走 protobuf 编解码，不要退回 JSON。
-- `src/tests/network/KickProtoCodec.test.ts`、`src/tests/network/KickSocket.test.ts`、`src/tests/network/MockServer.test.ts`：同步协议测试。
-
-协议更新后检查旧 JSON 协议是否残留：
-
-```bash
-rg -n "JSON.stringify\\(fullReq|JSON.parse\\(data|send\\(data: string\\)|onMessage\\(data: string|failed to parse message" src src/tests
-```
-
-协议相关最小验证：
-
-```bash
-npm test -- --run src/tests/network/KickProtoCodec.test.ts src/tests/network/KickSocket.test.ts src/tests/network/MockServer.test.ts
-npx tsc --noEmit
-```
-
-协议改动影响运行时网络链路，最终还要跑：
-
-```bash
-npm test
-npm run debug:ready
-```
 
 ## 工作流规则
 

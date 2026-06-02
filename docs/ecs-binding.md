@@ -75,6 +75,22 @@ BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding
 
 新增字段时优先改 schema，而不是手写一段新的比较逻辑。
 
+记忆顺序：
+
+```text
+Component 字段
+  -> DirtyFlags bit
+  -> DIRTY_SCHEMAS group
+  -> ViewBinding 处理 bit
+  -> ViewNode 方法
+```
+
+新增可视字段时，先写出这一行再改代码：
+
+```text
+BIT_组件_字段 -> Component.field -> DIRTY_SCHEMAS -> xxxViewBinding -> XxxNode.setXxx(...)
+```
+
 示意：
 
 ```text
@@ -88,6 +104,14 @@ BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding
   ]
 }
 ```
+
+多字段共用一个表现更新时，把多个 reader 放进同一个 group。例如洞位位置：
+
+```text
+BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding -> HoleNode.setPosition(...)
+```
+
+这表示 X 或 Y 任一变化都触发同一个位置更新 bit。
 
 ## SyncView 和 Binding
 
