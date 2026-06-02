@@ -47,6 +47,8 @@ Laya 表现层
   view/*Node.ts
 
 网络协议层
+  api/proto/kick.proto
+  network/KickProtoCodec.ts
   network/ProtocolTypes.ts
   network/KickSocket.ts
   network/NetworkAdapter.ts
@@ -130,9 +132,9 @@ Laya stage MOUSE_DOWN
       -> HammerNode.followTouch/playHitAnimation
       -> comboSystem(world, hitHoleIndex)
       -> NetworkAdapter.sendKick(...)
-          -> KickSocket.sendKick(...)
-          -> MockServer.handleKick(...)
-          -> KickSocket.onMessage(...)
+          -> KickSocket.sendKick(...) protobuf encode/send
+          -> MockServer.handleKick(...)（本地 mock 先 protobuf decode，回包再 encode）
+          -> KickSocket.onMessage(...) protobuf decode
           -> hitResponseSystem(world, resp)
 ```
 
@@ -177,6 +179,7 @@ HitDetectionSystem
 `KickSocket` 负责：
 
 - `seqId` 自增。
+- protobuf `KickRequest/KickResponse` 二进制编解码。
 - pending request 保存。
 - 乱序回包匹配。
 - 超时清理。
@@ -187,7 +190,7 @@ HitDetectionSystem
 - 真实 socket 接入时优先替换 `ISocketTransport`。
 - 回包进入 `hitResponseSystem`，不要直接操作 view。
 
-后续优先把 `network.onResponse(resp => hitResponseSystem(world, resp))` 再包一层 command/event adapter，进一步降低 `GameScene` 对具体 system 的感知。
+协议文件同步入口见 `AGENTS.md` 的“协议同步和更新”。
 
 ## 生命周期边界
 
@@ -197,12 +200,6 @@ HitDetectionSystem
 - `GameScene`：world、singletons、运行时 adapter、view registry、network callback。
 - `ViewRegistry`：ECS eid 和 view node 的注册关系，集中 unregister 和 destroy。
 - `view/*Node.ts`：自己创建的 Laya 子节点、timer/tween/异步资源回调保护。
-
-当前仍需补强：
-
-- `Main`/脚本层 teardown：清理 `Laya.timer.frameLoop`、stage event 和背景音乐。
-- 资源预加载与释放 owner 还不完整。
-- 网络连接状态目前未完全落到 `NetworkComponent`。
 
 ## 扩展入口
 

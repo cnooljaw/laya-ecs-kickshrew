@@ -17,7 +17,7 @@ SceneComponent       当前地图、场景计时、循环间隔、切换状态
 PlayerComponent      金币、怒气、体力、等级
 AnimationComponent   动画类型、进度、时长
 HitComponent         击中结果表现数据
-NetworkComponent     网络连接/击打 pending 状态，当前使用较少
+NetworkComponent     网络连接/击打 pending 状态
 DirtyComponent       各组件 dirty bitmask + forceFullSync
 ```
 

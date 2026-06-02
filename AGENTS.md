@@ -55,8 +55,8 @@ Laya stage MOUSE_DOWN
   -> hitDetectionSystem(world, xRatio, yRatio)
   -> comboSystem
   -> NetworkAdapter.sendKick
-  -> KickSocket
-  -> MockServer
+  -> KickSocket protobuf encode/send
+  -> MockServer protobuf decode/encode（本地 mock）
   -> hitResponseSystem
 ```
 
@@ -164,11 +164,3 @@ npm run debug:ready
 - `.codex/skills/hole-position-tuning/SKILL.md`：调 9 个洞位中心点、地鼠 Stand/Up 对齐、cover 边框调试页。
 
 这些 skill 只定义工作流；背景知识看 `docs/`。
-
-## 当前优先级
-
-1. 完善 `Main`/脚本层 teardown：清理 `Laya.timer.frameLoop`、stage event 和背景音乐。
-2. 把网络回包进一步整理成 command/event 入口，降低 `GameScene` 对回包 system 的直接感知。
-3. 为 dirty binding 和 entity/component 调试补轻量工具：实体快照、关键组件 dump、dirty bit 名称解析。
-4. 梳理真实 socket 接入点，保留 `KickSocket` 的 seqId/pending 机制。
-5. 评估 `NetworkComponent` 是否要承载 connected/pending 等运行态，避免网络状态半 ECS 半对象化。

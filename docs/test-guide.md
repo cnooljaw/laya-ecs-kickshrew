@@ -53,7 +53,7 @@ npm test -- --run src/tests/view/KickInputAdapter.test.ts
 网络：
 
 ```bash
-npm test -- --run src/tests/network/KickSocket.test.ts src/tests/network/MockServer.test.ts
+npm test -- --run src/tests/network/KickProtoCodec.test.ts src/tests/network/KickSocket.test.ts src/tests/network/MockServer.test.ts
 ```
 
 资源转换：

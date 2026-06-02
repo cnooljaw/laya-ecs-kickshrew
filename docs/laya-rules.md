@@ -47,11 +47,6 @@ NodePool            简单节点对象池
 - `ViewRegistry`：binding 注册表和 view node 销毁。
 - view node：自己创建的 Laya 子节点、局部 timer/tween/异步回调保护。
 
-当前待补：
-
-- `Main`/脚本层 teardown：清理 frameLoop、stage event、背景音乐。
-- 资源预加载和释放策略仍需按场景 ownership 收敛。
-
 ## 配置和调参入口
 
 - 规则常量：`src/config/GameTuning.ts`
