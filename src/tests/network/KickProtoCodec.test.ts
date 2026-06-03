@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { decodeKickRequest, decodeKickResponse, encodeKickRequest, encodeKickResponse } from '../../network/KickProtoCodec';
+import { PROTOCOL_MSG_IDS } from '../../network/ProtocolTypes';
 import type { KickRequest, KickResponse } from '../../network/ProtocolTypes';
 
 type BytesLike = Uint8Array | ArrayBuffer | number[];
@@ -66,46 +67,45 @@ class TestProtoReader {
   }
 }
 
-function readEnvelope(data: Uint8Array): { seqId: number; cmd: string; payload: Uint8Array } {
+function readEnvelope(data: Uint8Array): { seqId: number; msgId: number; payload: Uint8Array } {
   const reader = new TestProtoReader(data);
-  const envelope: { seqId: number; cmd: string; payload: Uint8Array } = {
+  const envelope: { seqId: number; msgId: number; payload: Uint8Array } = {
     seqId: 0,
-    cmd: "",
+    msgId: 0,
     payload: new Uint8Array(),
   };
   while (!reader.done) {
     const { field, wireType } = reader.tag();
     if (field === 1) envelope.seqId = reader.uint32();
-    else if (field === 2) envelope.cmd = reader.string();
+    else if (field === 2) envelope.msgId = reader.uint32();
     else if (field === 3) envelope.payload = reader.bytesField();
     else reader.skip(wireType);
   }
   return envelope;
 }
 
-function readKickRequestPayload(data: Uint8Array): { fieldNumbers: number[]; cmd: string; hammerType: number; kickShrew: boolean } {
+function readKickRequestPayload(data: Uint8Array): { fieldNumbers: number[]; hammerType: number; kickShrew: boolean; numOfShrew: number } {
   const reader = new TestProtoReader(data);
-  const payload = { fieldNumbers: [] as number[], cmd: "", hammerType: 0, kickShrew: false };
+  const payload = { fieldNumbers: [] as number[], hammerType: 0, kickShrew: false, numOfShrew: 0 };
   while (!reader.done) {
     const { field, wireType } = reader.tag();
     payload.fieldNumbers.push(field);
-    if (field === 1) payload.cmd = reader.string();
-    else if (field === 2) payload.hammerType = reader.uint32() | 0;
-    else if (field === 3) payload.kickShrew = reader.bool();
+    if (field === 1) payload.hammerType = reader.uint32() | 0;
+    else if (field === 2) payload.kickShrew = reader.bool();
+    else if (field === 3) payload.numOfShrew = reader.uint32() | 0;
     else reader.skip(wireType);
   }
   return payload;
 }
 
-function readKickResponsePayload(data: Uint8Array): { fieldNumbers: number[]; cmd: string; ret: number; money: number } {
+function readKickResponsePayload(data: Uint8Array): { fieldNumbers: number[]; ret: number; money: number } {
   const reader = new TestProtoReader(data);
-  const payload = { fieldNumbers: [] as number[], cmd: "", ret: 0, money: 0 };
+  const payload = { fieldNumbers: [] as number[], ret: 0, money: 0 };
   while (!reader.done) {
     const { field, wireType } = reader.tag();
     payload.fieldNumbers.push(field);
-    if (field === 1) payload.cmd = reader.string();
-    else if (field === 2) payload.ret = reader.uint32() | 0;
-    else if (field === 3) payload.money = reader.uint32() | 0;
+    if (field === 1) payload.ret = reader.uint32() | 0;
+    else if (field === 2) payload.money = reader.uint32() | 0;
     else reader.skip(wireType);
   }
   return payload;
@@ -128,7 +128,7 @@ describe('KickProtoCodec', () => {
     expect(output).toEqual(input);
   });
 
-  it('按 Envelope.seq_id 封包请求，业务 payload 不再写 seq_id', () => {
+  it('按 Envelope.seq_id/msg_id 封包请求，业务 payload 不再写 seq_id/cmd', () => {
     const input: KickRequest = {
       seqId: 3,
       cmd: 'kick',
@@ -143,11 +143,11 @@ describe('KickProtoCodec', () => {
     const payload = readKickRequestPayload(envelope.payload);
 
     expect(envelope.seqId).toBe(3);
-    expect(envelope.cmd).toBe("kick");
-    expect(payload.cmd).toBe("kick");
+    expect(envelope.msgId).toBe(PROTOCOL_MSG_IDS.KickReq);
     expect(payload.hammerType).toBe(1);
     expect(payload.kickShrew).toBe(true);
-    expect(payload.fieldNumbers).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(payload.numOfShrew).toBe(1);
+    expect(payload.fieldNumbers).toEqual([1, 2, 3, 4, 5]);
   });
 
   it('按 kick.proto 编解码 KickResponse', () => {
@@ -171,7 +171,7 @@ describe('KickProtoCodec', () => {
     expect(output).toEqual(input);
   });
 
-  it('按 Envelope.seq_id 封包回包，业务 payload 不再写 seq_id', () => {
+  it('按 Envelope.seq_id/msg_id 封包回包，业务 payload 不再写 seq_id/cmd', () => {
     const input: KickResponse = {
       seqId: 3,
       cmd: 'kickResult',
@@ -191,11 +191,10 @@ describe('KickProtoCodec', () => {
     const payload = readKickResponsePayload(envelope.payload);
 
     expect(envelope.seqId).toBe(3);
-    expect(envelope.cmd).toBe("kickResult");
-    expect(payload.cmd).toBe("kickResult");
+    expect(envelope.msgId).toBe(PROTOCOL_MSG_IDS.KickResp);
     expect(payload.ret).toBe(0);
     expect(payload.money).toBe(10);
-    expect(payload.fieldNumbers).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+    expect(payload.fieldNumbers).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   });
 
   it('把 proto bool kick_shrew 映射回旧业务字段 bKickShrew', () => {

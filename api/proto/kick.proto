@@ -6,17 +6,16 @@ option go_package = "goserveractorfsm/internal/protocol/pb;kickpb";
 
 message Envelope {
   uint32 seq_id = 1;
-  string cmd = 2;
+  uint32 msg_id = 2;
   bytes payload = 3;
 }
 
 message KickRequest {
-  string cmd = 1;
-  int32 hammer_type = 2;
-  bool kick_shrew = 3;
-  int32 num_of_shrew = 4;
-  repeated KickShrew shrews = 5;
-  int32 combo_id = 6;
+  int32 hammer_type = 1;
+  bool kick_shrew = 2;
+  int32 num_of_shrew = 3;
+  repeated KickShrew shrews = 4;
+  int32 combo_id = 5;
 }
 
 message KickShrew {
@@ -25,17 +24,16 @@ message KickShrew {
 }
 
 message KickResponse {
-  string cmd = 1;
-  int32 ret = 2;
-  int32 money = 3;
-  int32 angry = 4;
-  int32 power = 5;
-  int32 level_score = 6;
-  int32 hammer_id = 7;
-  int32 num_of_shrew = 8;
-  repeated ShrewReward shrew_resp = 9;
-  int32 combo = 10;
-  int32 combo_id = 11;
+  int32 ret = 1;
+  int32 money = 2;
+  int32 angry = 3;
+  int32 power = 4;
+  int32 level_score = 5;
+  int32 hammer_id = 6;
+  int32 num_of_shrew = 7;
+  repeated ShrewReward shrew_resp = 8;
+  int32 combo = 9;
+  int32 combo_id = 10;
 }
 
 message ShrewReward {
@@ -44,15 +42,10 @@ message ShrewReward {
 }
 
 message ErrorResponse {
-  string cmd = 1;
-  int32 code = 2;
-  string message = 3;
+  int32 code = 1;
+  string message = 2;
 }
 
-message Ping {
-  string cmd = 1;
-}
+message Ping {}
 
-message Pong {
-  string cmd = 1;
-}
+message Pong {}
