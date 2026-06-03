@@ -10,8 +10,11 @@ import {
   AnimationComponent,
   DirtyComponent,
   NetworkComponent,
+  PerfLadybirdComponent,
 } from "./components";
 import { HolePositions, getHoleGrid, getHoleZOrder } from "../config/HolePositions";
+import { DESIGN_RESOLUTION } from "../config/GameTuning";
+import { PERF_LADYBIRD_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 import { SCENE_CYCLE_INTERVAL } from "../config/SceneConfig";
 import { resetShrewForNextCycle } from "./ShrewLifecycle";
 
@@ -64,6 +67,37 @@ export function createHoleEntities(world: ReturnType<typeof createWorld>, mapTyp
     holes.push(entity);
   }
   return holes;
+}
+
+/** 创建调试压测小瓢虫实体 */
+export function createPerfLadybirdEntities(world: ReturnType<typeof createWorld>, count: number): number[] {
+  const safeCount = Math.max(0, Math.floor(count));
+  const entities: number[] = [];
+
+  for (let i = 0; i < safeCount; i++) {
+    const entity = addEntity(world);
+    addComponent(world, PerfLadybirdComponent, entity);
+    addComponent(world, DirtyComponent, entity);
+
+    const corner = i % 4;
+    const base = randomCornerBase(corner);
+    PerfLadybirdComponent.corner[entity] = corner;
+    PerfLadybirdComponent.baseX[entity] = base.x;
+    PerfLadybirdComponent.baseY[entity] = base.y;
+    PerfLadybirdComponent.posX[entity] = base.x;
+    PerfLadybirdComponent.posY[entity] = base.y;
+    PerfLadybirdComponent.phase[entity] = Math.random() * Math.PI * 2;
+    PerfLadybirdComponent.speed[entity] = randomRange(PERF_LADYBIRD_VIEW_LAYOUT.minSpeed, PERF_LADYBIRD_VIEW_LAYOUT.maxSpeed);
+    PerfLadybirdComponent.radiusX[entity] = randomRange(PERF_LADYBIRD_VIEW_LAYOUT.jitterRadiusX * 0.4, PERF_LADYBIRD_VIEW_LAYOUT.jitterRadiusX);
+    PerfLadybirdComponent.radiusY[entity] = randomRange(PERF_LADYBIRD_VIEW_LAYOUT.jitterRadiusY * 0.4, PERF_LADYBIRD_VIEW_LAYOUT.jitterRadiusY);
+    PerfLadybirdComponent.scale[entity] = randomRange(PERF_LADYBIRD_VIEW_LAYOUT.minScale, PERF_LADYBIRD_VIEW_LAYOUT.maxScale);
+    DirtyComponent.perfLadybirdDirty[entity] = 0;
+    DirtyComponent.forceFullSync[entity] = 0;
+
+    entities.push(entity);
+  }
+
+  return entities;
 }
 
 /** 单例实体集合 */
@@ -130,4 +164,25 @@ export function createSingletonEntities(world: ReturnType<typeof createWorld>): 
   NetworkComponent.pendingKick[network] = 0;
 
   return { hammer, combo, scene, player, network };
+}
+
+function randomCornerBase(corner: number): { x: number; y: number } {
+  const layout = PERF_LADYBIRD_VIEW_LAYOUT;
+  const localX = Math.random() * layout.clusterWidth;
+  const localY = Math.random() * layout.clusterHeight;
+  const left = layout.marginX + localX;
+  const right = DESIGN_RESOLUTION.width - layout.marginX - localX;
+  const top = layout.marginY + localY;
+  const bottom = DESIGN_RESOLUTION.height - layout.marginY - localY;
+
+  switch (corner) {
+    case 0: return { x: left, y: top };
+    case 1: return { x: right, y: top };
+    case 2: return { x: left, y: bottom };
+    default: return { x: right, y: bottom };
+  }
+}
+
+function randomRange(min: number, max: number): number {
+  return min + Math.random() * (max - min);
 }

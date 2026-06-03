@@ -15,16 +15,10 @@ import { defineQuery } from "bitecs";
 import { ShrewComponent, AnimationComponent } from "../components";
 import { ShrewAction, AnimType } from "../types";
 import { resetShrewForNextCycle } from "../ShrewLifecycle";
-import { SHREW_TIMING } from "../../config/GameTuning";
+import { getShrewTiming } from "../../config/GameTuning";
 
 const shrewQuery = defineQuery([ShrewComponent, AnimationComponent]);
 
-/** 上移动画时长(秒) */
-const UP_DURATION = SHREW_TIMING.upDurationSec;
-/** 下移动画时长(秒) */
-const DOWN_DURATION = SHREW_TIMING.downDurationSec;
-/** 站立停留时间(秒) */
-const STAND_TIME = SHREW_TIMING.standSec;
 /**
  * 地鼠状态机系统
  * 注意: animTimer 由本系统自行递减，不依赖 AnimationTimerSystem
@@ -57,13 +51,14 @@ export function shrewStateSystem(world: any, deltaSec: number): void {
 }
 
 function handleWait(eid: number, deltaSec: number): void {
+  const timing = getShrewTiming();
   const timer = ShrewComponent.animTimer[eid];
   if (timer <= 0) {
     // Wait → Up
     ShrewComponent.actionState[eid] = ShrewAction.Up;
     AnimationComponent.animType[eid] = AnimType.Up;
     AnimationComponent.progress[eid] = 0;
-    AnimationComponent.duration[eid] = UP_DURATION;
+    AnimationComponent.duration[eid] = timing.upDurationSec;
   } else {
     // 继续等待
     ShrewComponent.animTimer[eid] = timer - deltaSec;
@@ -71,11 +66,12 @@ function handleWait(eid: number, deltaSec: number): void {
 }
 
 function handleUp(eid: number): void {
+  const timing = getShrewTiming();
   if (AnimationComponent.progress[eid] >= 1.0) {
     // Up → Stand
     ShrewComponent.actionState[eid] = ShrewAction.Stand;
     ShrewComponent.isClickable[eid] = 1;
-    ShrewComponent.animTimer[eid] = STAND_TIME;
+    ShrewComponent.animTimer[eid] = timing.standSec;
     AnimationComponent.animType[eid] = AnimType.Stand;
     AnimationComponent.progress[eid] = 0;
     AnimationComponent.duration[eid] = 0;
@@ -83,6 +79,7 @@ function handleUp(eid: number): void {
 }
 
 function handleStand(eid: number, deltaSec: number): void {
+  const timing = getShrewTiming();
   const timer = ShrewComponent.animTimer[eid];
   if (timer <= 0) {
     // Stand → Down
@@ -90,7 +87,7 @@ function handleStand(eid: number, deltaSec: number): void {
     ShrewComponent.isClickable[eid] = 0;
     AnimationComponent.animType[eid] = AnimType.Down;
     AnimationComponent.progress[eid] = 0;
-    AnimationComponent.duration[eid] = DOWN_DURATION;
+    AnimationComponent.duration[eid] = timing.downDurationSec;
   } else {
     // 继续站立
     ShrewComponent.animTimer[eid] = timer - deltaSec;

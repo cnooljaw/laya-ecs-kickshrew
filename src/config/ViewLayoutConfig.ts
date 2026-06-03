@@ -54,3 +54,20 @@ export const COMBO_VIEW_LAYOUT = {
 export const HIT_EFFECT_VIEW_LAYOUT = {
   zOrder: 2100,
 } as const;
+
+export const PERF_LADYBIRD_VIEW_LAYOUT = {
+  zOrder: 9000,
+  defaultCount: 1000,
+  maxCount: 5000,
+  textureUrl: "resources/kickshrew/shrew_ladybird.png",
+  marginX: 44,
+  marginY: 40,
+  clusterWidth: 150,
+  clusterHeight: 110,
+  jitterRadiusX: 14,
+  jitterRadiusY: 10,
+  minScale: 0.7,
+  maxScale: 1.15,
+  minSpeed: 1.2,
+  maxSpeed: 3.2,
+} as const;

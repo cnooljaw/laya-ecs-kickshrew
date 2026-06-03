@@ -11,8 +11,18 @@
  * 注意: SyncView 依赖 Laya 运行时，视图节点由外部注入。
  */
 import { defineQuery } from "bitecs";
-import { DirtyComponent, ShrewComponent, HoleComponent, HammerComponent, ComboComponent, SceneComponent, PlayerComponent, AnimationComponent, HitComponent } from "../ecs/components";
-import { BIT_SHREW_ALL, BIT_HOLE_ALL, BIT_HAMMER_ALL, BIT_COMBO_ALL, BIT_SCENE_ALL, BIT_PLAYER_ALL, BIT_ANIM_ALL, BIT_HIT_ALL } from "./DirtyFlags";
+import { DirtyComponent } from "../ecs/components";
+import {
+  BIT_SHREW_ALL,
+  BIT_HOLE_ALL,
+  BIT_HAMMER_ALL,
+  BIT_COMBO_ALL,
+  BIT_SCENE_ALL,
+  BIT_PLAYER_ALL,
+  BIT_ANIM_ALL,
+  BIT_HIT_ALL,
+  BIT_PERF_LADYBIRD_ALL,
+} from "./DirtyFlags";
 
 const dirtyQuery = defineQuery([DirtyComponent]);
 
@@ -32,6 +42,7 @@ export class SyncView {
   private playerBinding: BindingFn | null = null;
   private animBinding: BindingFn | null = null;
   private hitBinding: BindingFn | null = null;
+  private perfLadybirdBinding: BindingFn | null = null;
 
   /** 注册地鼠绑定 */
   registerShrewBinding(fn: BindingFn): void { this.shrewBinding = fn; }
@@ -49,6 +60,8 @@ export class SyncView {
   registerAnimBinding(fn: BindingFn): void { this.animBinding = fn; }
   /** 注册击中绑定 */
   registerHitBinding(fn: BindingFn): void { this.hitBinding = fn; }
+  /** 注册调试压测小瓢虫绑定 */
+  registerPerfLadybirdBinding(fn: BindingFn): void { this.perfLadybirdBinding = fn; }
 
   /**
    * 执行同步: 遍历所有脏实体，调用对应 Binding，然后清除标记
@@ -108,6 +121,12 @@ export class SyncView {
         this.hitBinding?.(eid, hitDirty, forceFull);
       }
 
+      // 调试压测小瓢虫绑定
+      const perfLadybirdDirty = DirtyComponent.perfLadybirdDirty[eid];
+      if ((perfLadybirdDirty & BIT_PERF_LADYBIRD_ALL) || forceFull) {
+        this.perfLadybirdBinding?.(eid, perfLadybirdDirty, forceFull);
+      }
+
       // 清除 dirty bits (forceFullSync 也清除)
       DirtyComponent.shrewDirty[eid] = 0;
       DirtyComponent.holeDirty[eid] = 0;
@@ -117,6 +136,7 @@ export class SyncView {
       DirtyComponent.playerDirty[eid] = 0;
       DirtyComponent.animDirty[eid] = 0;
       DirtyComponent.hitDirty[eid] = 0;
+      DirtyComponent.perfLadybirdDirty[eid] = 0;
       DirtyComponent.forceFullSync[eid] = 0;
     }
   }

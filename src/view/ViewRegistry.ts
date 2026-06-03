@@ -3,6 +3,7 @@ import { registerHammerNode, unregisterHammerNode, IHammerNode } from "../bindin
 import { registerHitEffectNode, unregisterHitEffectNode, IHitEffectNode } from "../binding/HitViewBinding";
 import { registerHoleNode, unregisterHoleNode, IHoleNode } from "../binding/HoleViewBinding";
 import { registerPlayerHUD, unregisterPlayerHUD, IPlayerHUD } from "../binding/PlayerViewBinding";
+import { registerPerfLadybirdNode, unregisterPerfLadybirdNode, IPerfLadybirdNode } from "../binding/PerfLadybirdViewBinding";
 import { registerSceneLayer, unregisterSceneLayer, ISceneLayer } from "../binding/SceneViewBinding";
 import { registerShrewNode, unregisterShrewNode, IShrewNode } from "../binding/ShrewViewBinding";
 
@@ -45,6 +46,11 @@ export class ViewRegistry {
   registerHitEffectNode(eid: number, node: IHitEffectNode & Destroyable): void {
     registerHitEffectNode(eid, node);
     this._track(node, () => unregisterHitEffectNode(eid));
+  }
+
+  registerPerfLadybirdNode(eid: number, node: IPerfLadybirdNode & Destroyable): void {
+    registerPerfLadybirdNode(eid, node);
+    this._track(node, () => unregisterPerfLadybirdNode(eid));
   }
 
   clear(): void {

@@ -2,6 +2,7 @@ import { SyncView } from "../binding/SyncView";
 import { animationTimerSystem } from "../ecs/systems/AnimationTimerSystem";
 import { dirtyMarkSystem } from "../ecs/systems/DirtyMarkSystem";
 import { hammerSystem } from "../ecs/systems/HammerSystem";
+import { perfLadybirdSystem } from "../ecs/systems/PerfLadybirdSystem";
 import { sceneCycleSystem } from "../ecs/systems/SceneCycleSystem";
 import { shrewStateSystem } from "../ecs/systems/ShrewStateSystem";
 import { NetworkAdapter } from "../network/NetworkAdapter";
@@ -23,6 +24,7 @@ export class GameLoopPipeline {
     sceneCycleSystem(world);
     hammerSystem(world, undefined, false, false, deltaSec);
     network.update();
+    perfLadybirdSystem(world, deltaSec);
     dirtyMarkSystem(world);
     syncView.sync(world);
   }

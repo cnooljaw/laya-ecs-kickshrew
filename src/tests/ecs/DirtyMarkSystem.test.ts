@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { addComponent, addEntity } from 'bitecs';
-import { createGameWorld, createShrewEntity, createSingletonEntities, createHoleEntities } from '../../ecs/world';
+import { createGameWorld, createShrewEntity, createSingletonEntities, createHoleEntities, createPerfLadybirdEntities } from '../../ecs/world';
 import {
   ShrewComponent,
   DirtyComponent,
@@ -11,6 +11,7 @@ import {
   PlayerComponent,
   HitComponent,
   ComboComponent,
+  PerfLadybirdComponent,
 } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType } from '../../ecs/types';
 import { dirtyMarkSystem } from '../../ecs/systems/DirtyMarkSystem';
@@ -33,6 +34,8 @@ import {
   BIT_COMBO_COUNT,
   BIT_COMBO_ID,
   BIT_COMBO_TARGETS,
+  BIT_PERF_LADYBIRD_POS,
+  BIT_PERF_LADYBIRD_PHASE,
 } from '../../binding/DirtyFlags';
 
 describe('DirtyMarkSystem', () => {
@@ -197,5 +200,17 @@ describe('DirtyMarkSystem', () => {
     expect(DirtyComponent.hitDirty[hitEid] & BIT_HIT_INDEX).toBeTruthy();
     expect(DirtyComponent.hitDirty[hitEid] & BIT_HIT_REWARD).toBeTruthy();
     expect(DirtyComponent.hitDirty[hitEid] & BIT_HIT_WASHIT).toBeTruthy();
+  });
+
+  it('PerfLadybirdComponent 变化: 位置和相位 dirty bit 被设置', () => {
+    const [eid] = createPerfLadybirdEntities(world, 1);
+    dirtyMarkSystem(world);
+
+    PerfLadybirdComponent.posX[eid] += 1;
+    PerfLadybirdComponent.phase[eid] += 0.1;
+    dirtyMarkSystem(world);
+
+    expect(DirtyComponent.perfLadybirdDirty[eid] & BIT_PERF_LADYBIRD_POS).toBeTruthy();
+    expect(DirtyComponent.perfLadybirdDirty[eid] & BIT_PERF_LADYBIRD_PHASE).toBeTruthy();
   });
 });

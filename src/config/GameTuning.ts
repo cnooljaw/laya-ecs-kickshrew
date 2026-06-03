@@ -9,7 +9,16 @@ export const DESIGN_RESOLUTION = {
   height: 640,
 } as const;
 
-export const SHREW_TIMING = {
+export interface ShrewTiming {
+  waitMinSec: number;
+  waitMaxSec: number;
+  upDurationSec: number;
+  downDurationSec: number;
+  standSec: number;
+  dizzyHoldSec: number;
+}
+
+export const SHREW_TIMING: ShrewTiming = {
   waitMinSec: 1.0,
   waitMaxSec: 8.0,
   upDurationSec: 0.31,
@@ -17,6 +26,29 @@ export const SHREW_TIMING = {
   standSec: 2.0,
   dizzyHoldSec: 0.55,
 } as const;
+
+let shrewTimingOverride: ShrewTiming | null = null;
+
+export const PERF_SHREW_TIMING: ShrewTiming = {
+  waitMinSec: 0.05,
+  waitMaxSec: 0.2,
+  upDurationSec: 0.08,
+  downDurationSec: 0.08,
+  standSec: 0.25,
+  dizzyHoldSec: 0.15,
+} as const;
+
+export function getShrewTiming(): ShrewTiming {
+  return shrewTimingOverride ?? SHREW_TIMING;
+}
+
+export function setShrewTimingOverride(timing: ShrewTiming): void {
+  shrewTimingOverride = timing;
+}
+
+export function resetShrewTimingOverride(): void {
+  shrewTimingOverride = null;
+}
 
 export const HIT_DETECTION = {
   radiusRatio: 0.15,

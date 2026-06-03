@@ -8,7 +8,7 @@
  * 4. 处理触摸事件
  * 5. 启动网络层
  */
-import { createGameWorld, createShrewEntity, createHoleEntities, createSingletonEntities, SingletonEntities } from "../ecs/world";
+import { createGameWorld, createShrewEntity, createHoleEntities, createSingletonEntities, createPerfLadybirdEntities, SingletonEntities } from "../ecs/world";
 import { hitResponseSystem } from "../ecs/systems/HitResponseSystem";
 import { SyncView } from "../binding/SyncView";
 import { shrewViewBinding, shrewAnimationViewBinding } from "../binding/ShrewViewBinding";
@@ -18,6 +18,7 @@ import { comboViewBinding } from "../binding/ComboViewBinding";
 import { sceneViewBinding } from "../binding/SceneViewBinding";
 import { playerViewBinding } from "../binding/PlayerViewBinding";
 import { hitViewBinding } from "../binding/HitViewBinding";
+import { perfLadybirdViewBinding } from "../binding/PerfLadybirdViewBinding";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";
 import { ShrewType, MapType, HOLE_COUNT, HammerType } from "../ecs/types";
@@ -29,10 +30,12 @@ import { ComboNode } from "./ComboNode";
 import { SceneLayer } from "./SceneLayer";
 import { PlayerHUD } from "./PlayerHUD";
 import { HitEffectNode } from "./HitEffectNode";
-import { getAtlasPath } from "../resource/AtlasConfig";
 import { GameLoopPipeline } from "./GameLoopPipeline";
 import { KickInputAdapter } from "./KickInputAdapter";
 import { ViewRegistry } from "./ViewRegistry";
+import { PerfLadybirdNode } from "./PerfLadybirdNode";
+import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../config/PerfTestConfig";
+import { resetShrewTimingOverride, setShrewTimingOverride } from "../config/GameTuning";
 
 /** 音效路径 */
 const SND = {
@@ -44,9 +47,11 @@ export class GameScene {
   private _singletons!: SingletonEntities;
   private _holes: number[] = [];
   private _shrews: number[] = [];
+  private _perfLadybirds: number[] = [];
   private _syncView: SyncView;
   private _network: NetworkAdapter;
   private _viewRegistry: ViewRegistry;
+  private _perfConfig: PerfTestRuntimeConfig;
   private _running: boolean = false;
   private _root: any = null;
   private _hammerNode!: HammerNode;
@@ -58,6 +63,7 @@ export class GameScene {
     this._syncView = new SyncView();
     this._network = new NetworkAdapter();
     this._viewRegistry = new ViewRegistry();
+    this._perfConfig = getPerfTestRuntimeConfig();
   }
 
   /** 初始化游戏 */
@@ -65,6 +71,11 @@ export class GameScene {
     // 1. 创建 ECS 世界
     this._world = createGameWorld();
     this._singletons = createSingletonEntities(this._world);
+    if (this._perfConfig.shrewFast) {
+      setShrewTimingOverride(getPerfShrewTiming());
+    } else {
+      resetShrewTimingOverride();
+    }
 
     // 2. 创建 Laya 根容器，并播放背景音乐
     const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
@@ -127,6 +138,10 @@ export class GameScene {
     // HitEffectNode 使用单例 player 实体注册（简化）
     this._viewRegistry.registerHitEffectNode(this._singletons.player, this._hitEffectNode);
 
+    if (this._perfConfig.ladybirdCount > 0) {
+      this._createPerfLadybirds(this._perfConfig.ladybirdCount);
+    }
+
     // 9. 注册视图绑定
     this._syncView.registerShrewBinding(shrewViewBinding);
     this._syncView.registerAnimBinding(shrewAnimationViewBinding);
@@ -136,6 +151,7 @@ export class GameScene {
     this._syncView.registerSceneBinding(sceneViewBinding);
     this._syncView.registerPlayerBinding(playerViewBinding);
     this._syncView.registerHitBinding(hitViewBinding);
+    this._syncView.registerPerfLadybirdBinding(perfLadybirdViewBinding);
 
     // 10. 设置网络回调
     this._network.onResponse((resp: KickResponse) => {
@@ -167,6 +183,7 @@ export class GameScene {
       this._singletons.combo,
       ...this._holes,
       ...this._shrews,
+      ...this._perfLadybirds,
     ];
     for (const eid of allEntities) {
       DirtyComponent.forceFullSync[eid] = 1;
@@ -188,6 +205,7 @@ export class GameScene {
   destroy(): void {
     this.stop();
     this._network.destroy();
+    resetShrewTimingOverride();
     this._kickInput = null;
     this._loopPipeline = null;
     this._viewRegistry.clear();
@@ -215,5 +233,14 @@ export class GameScene {
   private _randomShrewType(): ShrewType {
     const types = [ShrewType.Red, ShrewType.Blue, ShrewType.Yellow, ShrewType.Green];
     return types[Math.floor(Math.random() * types.length)];
+  }
+
+  private _createPerfLadybirds(count: number): void {
+    this._perfLadybirds = createPerfLadybirdEntities(this._world, count);
+    for (const eid of this._perfLadybirds) {
+      const node = new PerfLadybirdNode();
+      node.create(this._root);
+      this._viewRegistry.registerPerfLadybirdNode(eid, node);
+    }
   }
 }

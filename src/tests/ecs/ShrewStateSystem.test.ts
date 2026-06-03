@@ -3,6 +3,7 @@ import { createGameWorld, createShrewEntity, createHoleEntities, createSingleton
 import { ShrewComponent, AnimationComponent, HammerComponent, HoleComponent } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType, AnimType } from '../../ecs/types';
 import { shrewStateSystem } from '../../ecs/systems/ShrewStateSystem';
+import { resetShrewTimingOverride, setShrewTimingOverride } from '../../config/GameTuning';
 
 const FRAME_DELTA = 1 / 60;
 
@@ -10,6 +11,7 @@ describe('ShrewStateSystem', () => {
   let world: ReturnType<typeof createGameWorld>;
 
   beforeEach(() => {
+    resetShrewTimingOverride();
     world = createGameWorld();
   });
 
@@ -21,6 +23,25 @@ describe('ShrewStateSystem', () => {
     expect(ShrewComponent.animTimer[eid]).toBeGreaterThanOrEqual(1);
     expect(ShrewComponent.animTimer[eid]).toBeLessThanOrEqual(8);
     expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
+  });
+
+  it('调试加速时序覆盖会缩短等待和出洞动画时长', () => {
+    setShrewTimingOverride({
+      waitMinSec: 0.05,
+      waitMaxSec: 0.05,
+      upDurationSec: 0.08,
+      downDurationSec: 0.08,
+      standSec: 0.2,
+      dizzyHoldSec: 0.15,
+    });
+    const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
+
+    expect(ShrewComponent.animTimer[eid]).toBeCloseTo(0.05, 5);
+
+    ShrewComponent.animTimer[eid] = 0;
+    shrewStateSystem(world, FRAME_DELTA);
+
+    expect(AnimationComponent.duration[eid]).toBeCloseTo(0.08, 5);
   });
 
   it('Wait → Up: animTimer 递减到 0 后转 Up，设置动画参数', () => {
