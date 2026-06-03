@@ -195,3 +195,11 @@ git checkout -- <file>
 - 先判断代码行为、Laya 运行时资源格式、测试期望哪个是正确事实。
 - 资源和坐标迁移相关测试尤其要对齐实际 atlas/plist 格式。
 - 复杂 system 要优先通过测试重放输入和输出。
+
+## HitTrace 排查要点
+
+- `socket.response matched=false` 优先查 `Envelope.seq_id` 是否回传一致，再查 pending 超时。
+- `score.applied` 出现说明服务端回包和分数应用已成功，画面无变化应转查 binding/view。
+- `binding.dizzyAnimation` 出现但肉眼无动画，说明 ECS 状态已到 Dizzy，优先查 `ShrewNode.setAnimation` 的可见表现和 tween 清理。
+- 第一击后连续 `hit.miss` 时先看 payload 里的 `hitTable`；`hitTable=0` 是锤子冷却/锁定，不是坐标 miss。冷却中的点击应记录为 `hit.blocked`。
+- 肉眼命中但真正 `hit.miss` 且 `hitTable=1` 时，才进入洞位坐标、stage 到游戏容器坐标、当前地图 `HolePositions` 的排查。

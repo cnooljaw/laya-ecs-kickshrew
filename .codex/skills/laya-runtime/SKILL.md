@@ -26,6 +26,12 @@ Use this project skill for changes that touch Laya presentation or runtime owner
 5. Clear timers/tweens/events using the same owner that registered them.
 6. For runtime-visible changes, run related tests and then `npm run debug:ready` when practical.
 
+## Runtime Debug Notes
+
+- Input logs with `hitTable=0` mean hammer cooldown/lock, not hole coordinate miss. Keep this distinct in logs (`hit.blocked` vs `hit.miss`).
+- If ECS/binding logs show Dizzy but the player cannot see it, fix the view node state (`setAnimation`) with an explicit visual cue and clear tweens on state exit/destroy.
+- Floating UI or hit effects must set an explicit zOrder above hole/cover layers; adding later is not enough across scene rebuilds.
+
 ## Common Test Commands
 
 ```bash
