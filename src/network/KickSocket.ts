@@ -18,6 +18,7 @@ export type SocketMessageData = Uint8Array | ArrayBuffer | number[];
 /** 传输层接口，Laya.Socket 或测试 mock 均可实现 */
 export interface ISocketTransport {
   send(data: Uint8Array): void;
+  close?(): void;
   // onMessage 回调由构造函数或 setter 设置
 }
 
@@ -105,5 +106,10 @@ export class KickSocket {
   /** 获取当前等待回包的请求数量 */
   getPendingCount(): number {
     return this._pendingRequests.size;
+  }
+
+  close(): void {
+    this._pendingRequests.clear();
+    this._transport.close?.();
   }
 }

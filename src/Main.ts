@@ -43,7 +43,7 @@ export class Main extends Laya.Script {
     }
 
     onDestroy(): void {
-        this._gameScene?.stop();
+        this._gameScene?.destroy();
         this._gameScene = null;
     }
 }

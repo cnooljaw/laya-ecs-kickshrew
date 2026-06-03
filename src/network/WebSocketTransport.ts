@@ -1,0 +1,95 @@
+import type { ISocketTransport, SocketMessageData } from "./KickSocket";
+
+type WebSocketEventHandler<T> = ((event: T) => void) | null;
+
+interface BrowserWebSocketLike {
+  binaryType: string;
+  readyState: number;
+  onopen: WebSocketEventHandler<unknown>;
+  onmessage: WebSocketEventHandler<{ data: unknown }>;
+  onclose: WebSocketEventHandler<unknown>;
+  onerror: WebSocketEventHandler<unknown>;
+  send(data: Uint8Array): void;
+  close(): void;
+}
+
+export type WebSocketCtorLike = new (url: string) => BrowserWebSocketLike;
+
+export interface WebSocketTransportOptions {
+  url: string;
+  onMessage: (data: SocketMessageData) => void;
+  WebSocketCtor?: WebSocketCtorLike;
+}
+
+const CONNECTING = 0;
+const OPEN = 1;
+
+export class WebSocketTransport implements ISocketTransport {
+  private readonly _url: string;
+  private readonly _onMessage: (data: SocketMessageData) => void;
+  private readonly _WebSocketCtor?: WebSocketCtorLike;
+  private _socket: BrowserWebSocketLike | null = null;
+  private readonly _sendQueue: Uint8Array[] = [];
+
+  constructor(options: WebSocketTransportOptions) {
+    this._url = options.url;
+    this._onMessage = options.onMessage;
+    this._WebSocketCtor = options.WebSocketCtor;
+  }
+
+  connect(): void {
+    if (this._socket && (this._socket.readyState === CONNECTING || this._socket.readyState === OPEN)) {
+      return;
+    }
+
+    const WebSocketCtor = this._WebSocketCtor ?? (globalThis as any).WebSocket;
+    if (!WebSocketCtor) {
+      throw new Error("WebSocketTransport: WebSocket is not available in this runtime");
+    }
+
+    const socket = new WebSocketCtor(this._url);
+    socket.binaryType = "arraybuffer";
+    socket.onopen = () => this._flushQueue(socket);
+    socket.onmessage = (event: { data: unknown }) => this._handleMessage(event.data);
+    socket.onclose = () => {
+      if (this._socket === socket) this._socket = null;
+    };
+    socket.onerror = (event: unknown) => {
+      console.error("WebSocketTransport: socket error", event);
+    };
+    this._socket = socket;
+  }
+
+  send(data: Uint8Array): void {
+    this.connect();
+    const socket = this._socket;
+    if (socket && socket.readyState === OPEN) {
+      socket.send(data);
+      return;
+    }
+    this._sendQueue.push(data);
+  }
+
+  close(): void {
+    this._sendQueue.length = 0;
+    const socket = this._socket;
+    this._socket = null;
+    socket?.close();
+  }
+
+  private _flushQueue(socket: BrowserWebSocketLike): void {
+    if (this._socket !== socket || socket.readyState !== OPEN) return;
+    while (this._sendQueue.length > 0) {
+      const data = this._sendQueue.shift();
+      if (data) socket.send(data);
+    }
+  }
+
+  private _handleMessage(data: unknown): void {
+    if (data instanceof Uint8Array || data instanceof ArrayBuffer || Array.isArray(data)) {
+      this._onMessage(data);
+      return;
+    }
+    console.error("WebSocketTransport: unsupported message data", data);
+  }
+}

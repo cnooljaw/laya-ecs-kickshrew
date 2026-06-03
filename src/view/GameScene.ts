@@ -187,7 +187,7 @@ export class GameScene {
   /** 销毁场景运行时资源 */
   destroy(): void {
     this.stop();
-    this._network.clearResponseHandler();
+    this._network.destroy();
     this._kickInput = null;
     this._loopPipeline = null;
     this._viewRegistry.clear();
