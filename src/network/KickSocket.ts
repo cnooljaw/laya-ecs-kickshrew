@@ -92,22 +92,16 @@ export class KickSocket {
   onMessage(data: SocketMessageData): void {
     try {
       const resp: KickResponse = decodeKickResponse(data);
-      const match = this._findPendingMatch(resp);
-      const pending = match?.pending;
+      const pending = this._pendingRequests.get(resp.seqId);
       if (pending) {
-        this._pendingRequests.delete(match.seqId);
-        const matchedResp: KickResponse = match.fallbackMatched
-          ? { ...resp, seqId: match.seqId }
-          : resp;
+        this._pendingRequests.delete(resp.seqId);
         this._traceLogger.log("socket.response", {
-          seqId: matchedResp.seqId,
-          originalSeqId: resp.seqId,
+          seqId: resp.seqId,
           matched: true,
-          fallbackMatched: match.fallbackMatched,
           pendingCount: this._pendingRequests.size,
-          response: matchedResp,
+          response: resp,
         });
-        pending.resolve(matchedResp);
+        pending.resolve(resp);
         return;
       }
       this._traceLogger.log("socket.response", {
@@ -123,20 +117,6 @@ export class KickSocket {
       });
       console.error('KickSocket: failed to decode protobuf message', e);
     }
-  }
-
-  private _findPendingMatch(resp: KickResponse): { seqId: number; pending: PendingEntry; fallbackMatched: boolean } | null {
-    const exact = this._pendingRequests.get(resp.seqId);
-    if (exact) {
-      return { seqId: resp.seqId, pending: exact, fallbackMatched: false };
-    }
-
-    if (resp.seqId !== 0) return null;
-
-    const first = this._pendingRequests.entries().next();
-    if (first.done) return null;
-    const [seqId, pending] = first.value;
-    return { seqId, pending, fallbackMatched: true };
   }
 
   /**

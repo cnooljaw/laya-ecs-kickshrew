@@ -64,8 +64,8 @@ describe('KickSocket', () => {
     expect(socket.getPendingCount()).toBe(0);
   });
 
-  it('服务端回包 seqId=0 时按最早 pending 请求兼容匹配', async () => {
-    const p = socket.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 1, shrews: [], comboID: 0 });
+  it('Envelope.seq_id=0 的回包不匹配 pending 请求', () => {
+    socket.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 1, shrews: [], comboID: 0 });
 
     socket.onMessage(encodeKickResponse({
       seqId: 0, cmd: 'kickResult', ret: 0, money: 150, angry: 40,
@@ -73,10 +73,7 @@ describe('KickSocket', () => {
       shrewResp: [{ shrewIndex: 7, reward: 150 }], combo: 1, comboId: 9,
     }));
 
-    const result = await p;
-    expect(result.seqId).toBe(1);
-    expect(result.money).toBe(150);
-    expect(socket.getPendingCount()).toBe(0);
+    expect(socket.getPendingCount()).toBe(1);
   });
 
   it('超时移除: 请求超时后从pending中移除', () => {

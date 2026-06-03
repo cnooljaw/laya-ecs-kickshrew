@@ -36,6 +36,7 @@ diff -u ../GoServerActorFsm/api/proto/kick.proto api/proto/kick.proto
 同步 proto 后按字段更新：
 
 - `src/network/KickProtoCodec.ts`：protobuf wire 编解码和 proto snake_case ↔ 业务 camelCase/旧字段名映射。
+- `Envelope.seq_id` 是请求-回包匹配的唯一权威 seq；业务 payload（如 `KickRequest`/`KickResponse`）不再携带 `seq_id`。
 - `src/network/ProtocolTypes.ts`：业务侧请求/回包类型，保持 view/ECS 不直接依赖 proto 细节。
 - `src/network/KickSocket.ts`：只处理 `Uint8Array` protobuf 二进制收发和 `seqId` pending 匹配。
 - `src/network/NetworkAdapter.ts`：MockServer 链路也必须走 protobuf 编解码，不要退回 JSON。

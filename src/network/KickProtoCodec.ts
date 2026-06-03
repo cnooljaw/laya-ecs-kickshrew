@@ -140,24 +140,78 @@ class ProtoReader {
 }
 
 export function encodeKickRequest(req: KickRequest): Uint8Array {
-  const writer = new ProtoWriter();
-  writer.uint32(1, req.seqId);
-  writer.string(2, req.cmd);
-  writer.int32(3, req.hammerType);
-  writer.bool(4, req.bKickShrew !== 0);
-  writer.int32(5, req.numOfShrew);
-  for (const shrew of req.shrews) {
-    writer.message(6, encodeKickShrew(shrew.shrewindex, shrew.protectType));
-  }
-  writer.int32(7, req.comboID);
-  return writer.finish();
+  return encodeEnvelope(req.seqId, req.cmd, encodeKickRequestPayload(req));
 }
 
 export function decodeKickRequest(data: BytesLike): KickRequest {
+  const envelope = decodeEnvelope(data);
+  return decodeKickRequestPayload(envelope.payload, envelope.seqId, envelope.cmd as KickRequest["cmd"]);
+}
+
+export function encodeKickResponse(resp: KickResponse): Uint8Array {
+  return encodeEnvelope(resp.seqId, resp.cmd, encodeKickResponsePayload(resp));
+}
+
+export function decodeKickResponse(data: BytesLike): KickResponse {
+  const envelope = decodeEnvelope(data);
+  return decodeKickResponsePayload(envelope.payload, envelope.seqId, envelope.cmd as KickResponse["cmd"]);
+}
+
+function encodeEnvelope(seqId: number, cmd: string, payload: Uint8Array): Uint8Array {
+  const writer = new ProtoWriter();
+  writer.uint32(1, seqId);
+  writer.string(2, cmd);
+  writer.message(3, payload);
+  return writer.finish();
+}
+
+function decodeEnvelope(data: BytesLike): { seqId: number; cmd: string; payload: Uint8Array } {
+  const reader = new ProtoReader(data);
+  const envelope: { seqId: number; cmd: string; payload: Uint8Array } = {
+    seqId: 0,
+    cmd: "",
+    payload: new Uint8Array(),
+  };
+
+  while (!reader.done) {
+    const { field, wireType } = reader.tag();
+    switch (field) {
+      case 1:
+        envelope.seqId = reader.uint32();
+        break;
+      case 2:
+        envelope.cmd = reader.string();
+        break;
+      case 3:
+        envelope.payload = reader.bytes();
+        break;
+      default:
+        reader.skip(wireType);
+        break;
+    }
+  }
+
+  return envelope;
+}
+
+function encodeKickRequestPayload(req: KickRequest): Uint8Array {
+  const writer = new ProtoWriter();
+  writer.string(1, req.cmd);
+  writer.int32(2, req.hammerType);
+  writer.bool(3, req.bKickShrew !== 0);
+  writer.int32(4, req.numOfShrew);
+  for (const shrew of req.shrews) {
+    writer.message(5, encodeKickShrew(shrew.shrewindex, shrew.protectType));
+  }
+  writer.int32(6, req.comboID);
+  return writer.finish();
+}
+
+function decodeKickRequestPayload(data: BytesLike, seqId: number, cmd: KickRequest["cmd"]): KickRequest {
   const reader = new ProtoReader(data);
   const req: KickRequest = {
-    seqId: 0,
-    cmd: "kick",
+    seqId,
+    cmd,
     hammerType: 0,
     bKickShrew: 0,
     numOfShrew: 0,
@@ -169,24 +223,21 @@ export function decodeKickRequest(data: BytesLike): KickRequest {
     const { field, wireType } = reader.tag();
     switch (field) {
       case 1:
-        req.seqId = reader.uint32();
-        break;
-      case 2:
         req.cmd = reader.string() as KickRequest["cmd"];
         break;
-      case 3:
+      case 2:
         req.hammerType = reader.int32();
         break;
-      case 4:
+      case 3:
         req.bKickShrew = reader.bool() ? 1 : 0;
         break;
-      case 5:
+      case 4:
         req.numOfShrew = reader.int32();
         break;
-      case 6:
+      case 5:
         req.shrews.push(decodeKickShrew(reader.bytes()));
         break;
-      case 7:
+      case 6:
         req.comboID = reader.int32();
         break;
       default:
@@ -197,30 +248,29 @@ export function decodeKickRequest(data: BytesLike): KickRequest {
   return req;
 }
 
-export function encodeKickResponse(resp: KickResponse): Uint8Array {
+function encodeKickResponsePayload(resp: KickResponse): Uint8Array {
   const writer = new ProtoWriter();
-  writer.uint32(1, resp.seqId);
-  writer.string(2, resp.cmd);
-  writer.int32(3, resp.ret);
-  writer.int32(4, resp.money);
-  writer.int32(5, resp.angry);
-  writer.int32(6, resp.power);
-  writer.int32(7, resp.levelScore);
-  writer.int32(8, resp.hammerId);
-  writer.int32(9, resp.numOfShrew);
+  writer.string(1, resp.cmd);
+  writer.int32(2, resp.ret);
+  writer.int32(3, resp.money);
+  writer.int32(4, resp.angry);
+  writer.int32(5, resp.power);
+  writer.int32(6, resp.levelScore);
+  writer.int32(7, resp.hammerId);
+  writer.int32(8, resp.numOfShrew);
   for (const shrew of resp.shrewResp) {
-    writer.message(10, encodeShrewReward(shrew.shrewIndex, shrew.reward));
+    writer.message(9, encodeShrewReward(shrew.shrewIndex, shrew.reward));
   }
-  writer.int32(11, resp.combo);
-  writer.int32(12, resp.comboId);
+  writer.int32(10, resp.combo);
+  writer.int32(11, resp.comboId);
   return writer.finish();
 }
 
-export function decodeKickResponse(data: BytesLike): KickResponse {
+function decodeKickResponsePayload(data: BytesLike, seqId: number, cmd: KickResponse["cmd"]): KickResponse {
   const reader = new ProtoReader(data);
   const resp: KickResponse = {
-    seqId: 0,
-    cmd: "kickResult",
+    seqId,
+    cmd,
     ret: 0,
     money: 0,
     angry: 0,
@@ -237,39 +287,36 @@ export function decodeKickResponse(data: BytesLike): KickResponse {
     const { field, wireType } = reader.tag();
     switch (field) {
       case 1:
-        resp.seqId = reader.uint32();
-        break;
-      case 2:
         resp.cmd = reader.string() as KickResponse["cmd"];
         break;
-      case 3:
+      case 2:
         resp.ret = reader.int32();
         break;
-      case 4:
+      case 3:
         resp.money = reader.int32();
         break;
-      case 5:
+      case 4:
         resp.angry = reader.int32();
         break;
-      case 6:
+      case 5:
         resp.power = reader.int32();
         break;
-      case 7:
+      case 6:
         resp.levelScore = reader.int32();
         break;
-      case 8:
+      case 7:
         resp.hammerId = reader.int32();
         break;
-      case 9:
+      case 8:
         resp.numOfShrew = reader.int32();
         break;
-      case 10:
+      case 9:
         resp.shrewResp.push(decodeShrewReward(reader.bytes()));
         break;
-      case 11:
+      case 10:
         resp.combo = reader.int32();
         break;
-      case 12:
+      case 11:
         resp.comboId = reader.int32();
         break;
       default:

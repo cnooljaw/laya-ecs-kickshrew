@@ -11,13 +11,12 @@ message Envelope {
 }
 
 message KickRequest {
-  uint32 seq_id = 1;
-  string cmd = 2;
-  int32 hammer_type = 3;
-  bool kick_shrew = 4;
-  int32 num_of_shrew = 5;
-  repeated KickShrew shrews = 6;
-  int32 combo_id = 7;
+  string cmd = 1;
+  int32 hammer_type = 2;
+  bool kick_shrew = 3;
+  int32 num_of_shrew = 4;
+  repeated KickShrew shrews = 5;
+  int32 combo_id = 6;
 }
 
 message KickShrew {
@@ -26,18 +25,17 @@ message KickShrew {
 }
 
 message KickResponse {
-  uint32 seq_id = 1;
-  string cmd = 2;
-  int32 ret = 3;
-  int32 money = 4;
-  int32 angry = 5;
-  int32 power = 6;
-  int32 level_score = 7;
-  int32 hammer_id = 8;
-  int32 num_of_shrew = 9;
-  repeated ShrewReward shrew_resp = 10;
-  int32 combo = 11;
-  int32 combo_id = 12;
+  string cmd = 1;
+  int32 ret = 2;
+  int32 money = 3;
+  int32 angry = 4;
+  int32 power = 5;
+  int32 level_score = 6;
+  int32 hammer_id = 7;
+  int32 num_of_shrew = 8;
+  repeated ShrewReward shrew_resp = 9;
+  int32 combo = 10;
+  int32 combo_id = 11;
 }
 
 message ShrewReward {
@@ -46,18 +44,15 @@ message ShrewReward {
 }
 
 message ErrorResponse {
-  uint32 seq_id = 1;
-  string cmd = 2;
-  int32 code = 3;
-  string message = 4;
+  string cmd = 1;
+  int32 code = 2;
+  string message = 3;
 }
 
 message Ping {
-  uint32 seq_id = 1;
-  string cmd = 2;
+  string cmd = 1;
 }
 
 message Pong {
-  uint32 seq_id = 1;
-  string cmd = 2;
+  string cmd = 1;
 }

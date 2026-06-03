@@ -2,12 +2,12 @@
  * ProtocolTypes — 网络协议接口定义
  *
  * 使用 api/proto/kick.proto 对应的 protobuf 二进制格式，
- * seqId 保证请求-回包一一对应。
+ * seqId 位于 Envelope.seq_id，业务 payload 不再包含 seq_id。
  */
 
 /** 客户端 → 服务器: 击打请求 */
 export interface KickRequest {
-  seqId: number;            // 递增序列号，用于请求-回包匹配
+  seqId: number;            // Envelope.seq_id: 递增序列号，用于请求-回包匹配
   cmd: "kick";              // 命令字
   hammerType: number;       // 锤子类型 1-6 或 99
   bKickShrew: number;       // 1=击中, 0=未中
@@ -21,7 +21,7 @@ export interface KickRequest {
 
 /** 服务器 → 客户端: 击打结果回包 */
 export interface KickResponse {
-  seqId: number;            // 原样返回请求的 seqId
+  seqId: number;            // Envelope.seq_id: 原样返回请求的 seqId
   cmd: "kickResult";        // 命令字
   ret: number;              // 0=成功, -1=错误
   money: number;            // 获得金币
