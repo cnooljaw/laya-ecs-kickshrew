@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGameWorld, createHoleEntities, createShrewEntity, createSingletonEntities } from "../../ecs/world";
 import { HammerComponent, HoleComponent, ShrewComponent } from "../../ecs/components";
-import { MapType, ShrewType } from "../../ecs/types";
+import { MapType, ShrewAction, ShrewType } from "../../ecs/types";
 import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../config/GameTuning";
 import { KickInputAdapter, KICK_INPUT_SOUNDS } from "../../view/KickInputAdapter";
 
@@ -26,6 +26,7 @@ describe("KickInputAdapter", () => {
     const shrewEid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
     const sentRequests: any[] = [];
     const playedSounds: string[] = [];
+    const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
     const hammer = createHammerSpy();
 
     HoleComponent.shrewEid[holeEid] = shrewEid;
@@ -38,6 +39,9 @@ describe("KickInputAdapter", () => {
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
       getHammerNode: () => hammer,
       playSound: url => playedSounds.push(url),
+      traceLogger: {
+        log: (event: string, payload: Record<string, unknown>) => traceEvents.push({ event, payload }),
+      },
     });
 
     const x = HoleComponent.posXRatio[holeEid] * DESIGN_RESOLUTION.width;
@@ -54,6 +58,17 @@ describe("KickInputAdapter", () => {
         + Math.round(HoleComponent.gridCol[holeEid])
         + HOLE_PROTOCOL.clientIndexOffset,
     );
+    expect(traceEvents.map(entry => entry.event)).toEqual([
+      "input.touch",
+      "hit.detected",
+      "network.requestQueued",
+    ]);
+    expect(traceEvents[1].payload).toMatchObject({
+      hitHoleIndex: 0,
+      hitShrewEid: shrewEid,
+      actionState: ShrewAction.Dizzy,
+      dizzyTriggered: true,
+    });
   });
 
   it("点空时只播放未命中音效", () => {

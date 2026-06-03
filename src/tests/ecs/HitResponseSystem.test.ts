@@ -106,4 +106,31 @@ describe('HitResponseSystem', () => {
     expect(result[0].reward).toBe(50);
     expect(result[1].reward).toBe(100);
   });
+
+  it('记录服务器回包应用后的分数增量', () => {
+    const events: Array<{ event: string; payload: Record<string, unknown> }> = [];
+    const resp = makeResponse({ money: 120, power: 3, levelScore: 450 });
+
+    (hitResponseSystem as any)(world, resp, {
+      log: (event: string, payload: Record<string, unknown>) => events.push({ event, payload }),
+    });
+
+    expect(events).toEqual([
+      {
+        event: "score.applied",
+        payload: expect.objectContaining({
+          seqId: 1,
+          ret: 0,
+          moneyBefore: 0,
+          moneyDelta: 120,
+          moneyAfter: 120,
+          powerBefore: 0,
+          powerDelta: 3,
+          powerAfter: 3,
+          levelBefore: 0,
+          levelAfter: 450,
+        }),
+      },
+    ]);
+  });
 });

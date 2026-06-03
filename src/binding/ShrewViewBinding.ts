@@ -16,6 +16,8 @@ import {
   BIT_ANIM_TYPE, BIT_ANIM_PROGRESS, BIT_ANIM_DURATION,
 } from "./DirtyFlags";
 import type { BindingFn } from "./SyncView";
+import { AnimType, ShrewAction } from "../ecs/types";
+import { animTypeName, consoleHitTraceLogger } from "../debug/HitTraceLogger";
 
 /** 地鼠视图节点接口 (由 Laya ShrewNode 实现) */
 export interface IShrewNode {
@@ -49,6 +51,17 @@ export const shrewViewBinding: BindingFn = (eid: number, dirtyBits: number, forc
   }
 
   if (forceFull || (dirtyBits & BIT_SHREW_ACTION)) {
+    if (ShrewComponent.actionState[eid] === ShrewAction.Dizzy) {
+      consoleHitTraceLogger.log("binding.dizzyAnimation", {
+        eid,
+        source: "shrewDirty",
+        actionState: ShrewComponent.actionState[eid],
+        animType: AnimationComponent.animType[eid],
+        animTypeName: animTypeName(AnimationComponent.animType[eid]),
+        progress: AnimationComponent.progress[eid],
+        isDizzyAnim: AnimationComponent.animType[eid] === AnimType.Dizzy,
+      });
+    }
     node.setAnimation(ShrewComponent.actionState[eid], AnimationComponent.animType[eid], AnimationComponent.progress[eid]);
   }
 
@@ -72,6 +85,17 @@ export const shrewAnimationViewBinding: BindingFn = (eid: number, dirtyBits: num
 
   const animationDirty = BIT_ANIM_TYPE | BIT_ANIM_PROGRESS | BIT_ANIM_DURATION;
   if (forceFull || (dirtyBits & animationDirty)) {
+    if (ShrewComponent.actionState[eid] === ShrewAction.Dizzy) {
+      consoleHitTraceLogger.log("binding.dizzyAnimation", {
+        eid,
+        source: "animDirty",
+        actionState: ShrewComponent.actionState[eid],
+        animType: AnimationComponent.animType[eid],
+        animTypeName: animTypeName(AnimationComponent.animType[eid]),
+        progress: AnimationComponent.progress[eid],
+        isDizzyAnim: AnimationComponent.animType[eid] === AnimType.Dizzy,
+      });
+    }
     node.setAnimation(ShrewComponent.actionState[eid], AnimationComponent.animType[eid], AnimationComponent.progress[eid]);
   }
 };

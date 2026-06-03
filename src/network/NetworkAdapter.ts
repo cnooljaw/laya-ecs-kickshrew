@@ -15,29 +15,38 @@ import { WebSocketTransport, WebSocketCtorLike } from "./WebSocketTransport";
 import type { KickRequest, KickResponse } from "./ProtocolTypes";
 import { decodeKickRequest, encodeKickResponse } from "./KickProtoCodec";
 import { getNetworkConfig, NetworkRuntimeConfig } from "../config/NetworkConfig";
+import { consoleHitTraceLogger, HitTraceLogger } from "../debug/HitTraceLogger";
 
 export interface NetworkAdapterOptions {
   transport?: ISocketTransport;
   config?: Partial<NetworkRuntimeConfig>;
   WebSocketCtor?: WebSocketCtorLike;
+  traceLogger?: HitTraceLogger;
 }
 
 export class NetworkAdapter {
   private _socket!: KickSocket;
   private _mockServer: MockServer | null = null;
   private _onResponse: ((resp: KickResponse) => void) | null = null;
+  private _traceLogger: HitTraceLogger;
 
   constructor(transportOrOptions?: ISocketTransport | NetworkAdapterOptions) {
     const options = normalizeOptions(transportOrOptions);
     const config = getNetworkConfig(options.config);
+    this._traceLogger = options.traceLogger ?? consoleHitTraceLogger;
+    this._traceLogger.log("network.config", {
+      mode: config.mode,
+      serverUrl: config.serverUrl,
+      timeoutMs: config.timeoutMs,
+    });
 
     if (options.transport) {
-      this._socket = new KickSocket(options.transport, config.timeoutMs);
+      this._socket = new KickSocket(options.transport, config.timeoutMs, undefined, this._traceLogger);
       return;
     }
 
     if (config.mode === "mock") {
-      this._socket = new KickSocket(this._createMockTransport(), config.timeoutMs);
+      this._socket = new KickSocket(this._createMockTransport(), config.timeoutMs, undefined, this._traceLogger);
       return;
     }
 
@@ -45,8 +54,9 @@ export class NetworkAdapter {
       url: config.serverUrl,
       onMessage: (data) => this._socket.onMessage(data),
       WebSocketCtor: options.WebSocketCtor,
+      traceLogger: this._traceLogger,
     });
-    this._socket = new KickSocket(transport, config.timeoutMs);
+    this._socket = new KickSocket(transport, config.timeoutMs, undefined, this._traceLogger);
     transport.connect();
   }
 
@@ -87,7 +97,15 @@ export class NetworkAdapter {
 
   /** 发送击打请求 */
   async sendKick(req: Omit<KickRequest, 'seqId'>): Promise<KickResponse> {
+    this._traceLogger.log("network.send", {
+      request: req,
+    });
     const result = await this._socket.sendKick(req);
+    this._traceLogger.log("network.response", {
+      seqId: result.seqId,
+      ret: result.ret,
+      response: result,
+    });
     this._onResponse?.(result);
     return result;
   }

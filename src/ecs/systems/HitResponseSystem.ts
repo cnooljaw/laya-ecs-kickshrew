@@ -13,6 +13,7 @@ import { defineQuery } from "bitecs";
 import { PlayerComponent, HammerComponent, ComboComponent } from "../components";
 import { HammerType } from "../types";
 import { HAMMER_RULES } from "../../config/GameTuning";
+import { consoleHitTraceLogger, HitTraceLogger } from "../../debug/HitTraceLogger";
 
 export interface KickShrewResponse {
   shrewIndex: number;
@@ -44,18 +45,49 @@ const comboQuery = defineQuery([ComboComponent]);
  * @param resp 服务器回包
  * @returns 击中奖励列表，供视图层使用
  */
-export function hitResponseSystem(world: any, resp: KickResponse): KickShrewResponse[] {
+export function hitResponseSystem(
+  world: any,
+  resp: KickResponse,
+  traceLogger: HitTraceLogger = consoleHitTraceLogger,
+): KickShrewResponse[] {
   // ret != 0 时不更新
-  if (resp.ret !== 0) return [];
+  if (resp.ret !== 0) {
+    traceLogger.log("score.rejected", {
+      seqId: resp.seqId,
+      ret: resp.ret,
+      resp,
+    });
+    return [];
+  }
 
   // 更新玩家数据
   const playerEntities = playerQuery(world);
   if (playerEntities.length > 0) {
     const eid = playerEntities[0];
+    const moneyBefore = PlayerComponent.money[eid];
+    const powerBefore = PlayerComponent.power[eid];
+    const levelBefore = PlayerComponent.level[eid];
     PlayerComponent.money[eid] += resp.money;
     PlayerComponent.angry[eid] = resp.angry;
     PlayerComponent.power[eid] += resp.power;
     PlayerComponent.level[eid] = resp.levelScore;
+    traceLogger.log("score.applied", {
+      seqId: resp.seqId,
+      ret: resp.ret,
+      moneyBefore,
+      moneyDelta: resp.money,
+      moneyAfter: PlayerComponent.money[eid],
+      angryAfter: PlayerComponent.angry[eid],
+      powerBefore,
+      powerDelta: resp.power,
+      powerAfter: PlayerComponent.power[eid],
+      levelBefore,
+      levelAfter: PlayerComponent.level[eid],
+      numOfShrew: resp.numOfShrew,
+      shrewResp: resp.shrewResp,
+      combo: resp.combo,
+      comboId: resp.comboId,
+    });
   }
 
   // 更新锤子数据

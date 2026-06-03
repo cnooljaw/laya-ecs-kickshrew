@@ -12,6 +12,7 @@
  */
 import type { KickRequest, KickResponse } from "./ProtocolTypes";
 import { decodeKickResponse, encodeKickRequest } from "./KickProtoCodec";
+import { consoleHitTraceLogger, HitTraceLogger } from "../debug/HitTraceLogger";
 
 export type SocketMessageData = Uint8Array | ArrayBuffer | number[];
 
@@ -38,11 +39,18 @@ export class KickSocket {
   private _timeoutMs: number;
   private _nowFn: () => number;
   private _onTimeout: ((seqId: number) => void) | null = null;
+  private _traceLogger: HitTraceLogger;
 
-  constructor(transport: ISocketTransport, timeoutMs: number = DEFAULT_TIMEOUT_MS, nowFn?: () => number) {
+  constructor(
+    transport: ISocketTransport,
+    timeoutMs: number = DEFAULT_TIMEOUT_MS,
+    nowFn?: () => number,
+    traceLogger: HitTraceLogger = consoleHitTraceLogger,
+  ) {
     this._transport = transport;
     this._timeoutMs = timeoutMs;
     this._nowFn = nowFn || (() => Date.now());
+    this._traceLogger = traceLogger;
   }
 
   /** 设置超时回调，超时后不再 reject Promise */
@@ -66,7 +74,14 @@ export class KickSocket {
         resolve,
         reject,
       });
-      this._transport.send(encodeKickRequest(fullReq));
+      const encoded = encodeKickRequest(fullReq);
+      this._traceLogger.log("socket.send", {
+        seqId,
+        byteLength: encoded.byteLength,
+        request: fullReq,
+        pendingCount: this._pendingRequests.size,
+      });
+      this._transport.send(encoded);
     });
   }
 
@@ -80,10 +95,26 @@ export class KickSocket {
       const pending = this._pendingRequests.get(resp.seqId);
       if (pending) {
         this._pendingRequests.delete(resp.seqId);
+        this._traceLogger.log("socket.response", {
+          seqId: resp.seqId,
+          matched: true,
+          pendingCount: this._pendingRequests.size,
+          response: resp,
+        });
         pending.resolve(resp);
+        return;
       }
+      this._traceLogger.log("socket.response", {
+        seqId: resp.seqId,
+        matched: false,
+        pendingCount: this._pendingRequests.size,
+        response: resp,
+      });
       // 无匹配 seqId 则丢弃（可能是超时后的迟到回包）
     } catch (e) {
+      this._traceLogger.log("socket.decodeFailed", {
+        error: String(e),
+      });
       console.error('KickSocket: failed to decode protobuf message', e);
     }
   }
@@ -98,6 +129,12 @@ export class KickSocket {
       if (now - pending.timestamp > this._timeoutMs) {
         this._pendingRequests.delete(seqId);
         // 通过回调通知超时，而不是 reject（避免 unhandled rejection）
+        this._traceLogger.log("socket.timeout", {
+          seqId,
+          elapsedMs: now - pending.timestamp,
+          request: pending.req,
+          pendingCount: this._pendingRequests.size,
+        });
         this._onTimeout?.(seqId);
       }
     }

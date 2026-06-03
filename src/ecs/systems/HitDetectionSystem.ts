@@ -22,6 +22,8 @@ const hammerQuery = defineQuery([HammerComponent]);
 export interface HitResult {
   bKickShrew: number;     // 1=击中, 0=未中
   hitHoleIndex: number;   // 击中的洞位索引 (0~8), -1=无
+  hitHoleEid: number;     // 击中的洞位 eid, -1=无
+  hitShrewEid: number;    // 击中的地鼠 eid, -1=无
   hitShrewType: number;   // 被击地鼠类型
   numOfShrew: number;     // 击中地鼠数量
 }
@@ -40,6 +42,8 @@ export function hitDetectionSystem(world: any, touchXRatio: number, touchYRatio:
   const emptyResult: HitResult = {
     bKickShrew: 0,
     hitHoleIndex: -1,
+    hitHoleEid: -1,
+    hitShrewEid: -1,
     hitShrewType: 0,
     numOfShrew: 0,
   };
@@ -95,6 +99,8 @@ export function hitDetectionSystem(world: any, touchXRatio: number, touchYRatio:
   return {
     bKickShrew: 1,
     hitHoleIndex: closestHoleIndex,
+    hitHoleEid: closestHoleEid,
+    hitShrewEid: shrewEid,
     hitShrewType: shrewType,
     numOfShrew: 1,
   };
