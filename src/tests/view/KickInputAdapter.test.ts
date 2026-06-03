@@ -91,4 +91,34 @@ describe("KickInputAdapter", () => {
     expect(playedSounds).toEqual([KICK_INPUT_SOUNDS.hitNull]);
     expect(sentRequests).toHaveLength(0);
   });
+
+  it("锤子冷却中时记录 blocked 而不是 miss", () => {
+    const world = createGameWorld();
+    const singletons = createSingletonEntities(world);
+    createHoleEntities(world, MapType.Meadow);
+    const sentRequests: any[] = [];
+    const playedSounds: string[] = [];
+    const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
+
+    HammerComponent.hitTable[singletons.hammer] = 0;
+    HammerComponent.hitCooldownSec[singletons.hammer] = 0.12;
+
+    const adapter = new KickInputAdapter({
+      world,
+      singletons,
+      network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
+      getHammerNode: () => null,
+      playSound: url => playedSounds.push(url),
+      traceLogger: {
+        log: (event: string, payload: Record<string, unknown>) => traceEvents.push({ event, payload }),
+      },
+    });
+
+    adapter.handleTouch(100, 100);
+
+    expect(traceEvents.map(entry => entry.event)).toEqual(["input.touch", "hit.blocked"]);
+    expect(traceEvents[1].payload.hitCooldownSec).toBeCloseTo(0.12, 3);
+    expect(playedSounds).toEqual([KICK_INPUT_SOUNDS.hitNull]);
+    expect(sentRequests).toHaveLength(0);
+  });
 });

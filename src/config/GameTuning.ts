@@ -15,7 +15,7 @@ export const SHREW_TIMING = {
   upDurationSec: 0.31,
   downDurationSec: 0.31,
   standSec: 2.0,
-  dizzyHoldSec: 0.3,
+  dizzyHoldSec: 0.55,
 } as const;
 
 export const HIT_DETECTION = {
@@ -24,6 +24,7 @@ export const HIT_DETECTION = {
 
 export const HAMMER_RULES = {
   thunderAngryThreshold: 1000,
+  hitCooldownSec: 0.24,
 } as const;
 
 export const HOLE_PROTOCOL = {

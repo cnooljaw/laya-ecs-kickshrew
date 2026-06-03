@@ -27,6 +27,7 @@ export function hammerSystem(
   switchTo?: number,
   thunderAnimDone: boolean = false,
   hitAnimDone: boolean = false,
+  deltaSec: number = 0,
 ): void {
   const hammerEntities = hammerQuery(world);
   if (hammerEntities.length === 0) return;
@@ -41,6 +42,15 @@ export function hammerSystem(
   // 锤子击打动画完成 → 恢复 hitTable
   if (hitAnimDone && HammerComponent.hitTable[hammerEid] === 0) {
     HammerComponent.hitTable[hammerEid] = 1;
+    HammerComponent.hitCooldownSec[hammerEid] = 0;
+  }
+
+  // 普通击打冷却结束 → 恢复 hitTable。不要恢复雷神锤锁定态。
+  if (deltaSec > 0 && HammerComponent.hitCooldownSec[hammerEid] > 0) {
+    HammerComponent.hitCooldownSec[hammerEid] = Math.max(0, HammerComponent.hitCooldownSec[hammerEid] - deltaSec);
+    if (HammerComponent.hitCooldownSec[hammerEid] === 0 && HammerComponent.isThunderActive[hammerEid] !== 1) {
+      HammerComponent.hitTable[hammerEid] = 1;
+    }
   }
 
   // 检查雷神锤触发
@@ -51,6 +61,7 @@ export function hammerSystem(
       HammerComponent.isThunderActive[hammerEid] = 1;
       HammerComponent.selectedType[hammerEid] = HammerType.Thunder;
       HammerComponent.hitTable[hammerEid] = 0;
+      HammerComponent.hitCooldownSec[hammerEid] = 0;
     }
   }
 
@@ -62,5 +73,6 @@ export function hammerSystem(
       HammerComponent.selectedType[hammerEid] = HammerType.Gold;
     }
     HammerComponent.hitTable[hammerEid] = 1;
+    HammerComponent.hitCooldownSec[hammerEid] = 0;
   }
 }

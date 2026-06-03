@@ -112,10 +112,12 @@ export class ShrewNode implements IShrewNode {
   private _container: any = null;   // 洞位容器的子容器
   private _clipLayer: any = null;   // 本地裁剪层，限制地鼠只在洞口上方显示
   private _mainLayer: any = null;   // 部件层，做出洞/入洞动画
+  private _dizzyLayer: any = null;  // 眩晕星星层
   private _bodyW: number = 94;
   private _bodyH: number = 110;
   private _currentShrewType: number = -1;
   private _currentMapType: number = -1;
+  private _isDizzyVisible: boolean = false;
 
   create(parent: any): void {
     const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
@@ -135,6 +137,12 @@ export class ShrewNode implements IShrewNode {
     this._mainLayer = new Laya.Sprite();
     this._mainLayer.name = "ShrewMainLayer";
     this._clipLayer.addChild(this._mainLayer);
+
+    this._dizzyLayer = new Laya.Sprite();
+    this._dizzyLayer.name = "ShrewDizzyLayer";
+    this._dizzyLayer.visible = false;
+    this._dizzyLayer.zOrder = SHREW_VIEW_LAYOUT.dizzyStarZOrder;
+    this._container.addChild(this._dizzyLayer);
 
     // 初始藏在洞中心下方（HIDDEN_Y = bh * hiddenOffsetRatio）
     this._configureClip(Laya, this._bodyW, this._bodyH);
@@ -181,6 +189,7 @@ export class ShrewNode implements IShrewNode {
         this._container.y = 0;
       }
       this._configureClip(Laya, bw, bh);
+      this._layoutDizzyLayer();
 
       // 更新 mainLayer 初始隐藏位置
       // Laya Y-down: HIDDEN_Y=+bh*hiddenOffsetRatio，向下藏入 cover。
@@ -279,33 +288,39 @@ export class ShrewNode implements IShrewNode {
     switch (actionState) {
       case ShrewAction.Wait:
         this._container.visible = false;
+        this._setDizzyVisible(Laya, false);
         if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Up:
         // 出洞：progress 0→1，mainLayer.y 从下方隐藏点 → 洞中心点
         this._container.visible = true;
+        this._setDizzyVisible(Laya, false);
         if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Stand:
         this._container.visible = true;
+        this._setDizzyVisible(Laya, false);
         if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Down:
         // 入洞：progress 0→1，mainLayer.y 从洞中心点 → 下方隐藏点
         this._container.visible = true;
+        this._setDizzyVisible(Laya, false);
         if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Dizzy:
         this._container.visible = true;
         if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
+        this._setDizzyVisible(Laya, true);
         break;
 
       default:
         this._container.visible = false;
+        this._setDizzyVisible(Laya, false);
     }
   }
 
@@ -334,12 +349,83 @@ export class ShrewNode implements IShrewNode {
     }
   }
 
+  private _layoutDizzyLayer(): void {
+    if (!this._dizzyLayer) return;
+    this._dizzyLayer.x = 0;
+    this._dizzyLayer.y = -this._bodyH * SHREW_VIEW_LAYOUT.dizzyStarYOffsetRatio;
+    this._dizzyLayer.zOrder = SHREW_VIEW_LAYOUT.dizzyStarZOrder;
+  }
+
+  private _setDizzyVisible(Laya: any, visible: boolean): void {
+    if (!this._dizzyLayer) return;
+    if (this._isDizzyVisible === visible) return;
+    this._isDizzyVisible = visible;
+
+    this._dizzyLayer.visible = visible;
+    if (!visible) {
+      Laya.Tween?.clearAll?.(this._dizzyLayer);
+      if (this._mainLayer) {
+        Laya.Tween?.clearAll?.(this._mainLayer);
+        this._mainLayer.rotation = 0;
+      }
+      return;
+    }
+
+    this._layoutDizzyLayer();
+    this._drawDizzyStars();
+    this._playDizzyLoop(Laya);
+  }
+
+  private _drawDizzyStars(): void {
+    if (!this._dizzyLayer) return;
+    this._dizzyLayer.graphics.clear();
+    const radius = SHREW_VIEW_LAYOUT.dizzyStarRadius;
+    const points = [
+      { x: -radius, y: 0, size: 7 },
+      { x: 0, y: -8, size: 9 },
+      { x: radius, y: 0, size: 7 },
+    ];
+    for (const point of points) {
+      this._dizzyLayer.graphics.drawCircle(point.x, point.y, point.size, "#FFD84D");
+      this._dizzyLayer.graphics.drawLine(point.x - point.size * 1.5, point.y, point.x + point.size * 1.5, point.y, "#FFFFFF", 2);
+      this._dizzyLayer.graphics.drawLine(point.x, point.y - point.size * 1.5, point.x, point.y + point.size * 1.5, "#FFFFFF", 2);
+    }
+  }
+
+  private _playDizzyLoop(Laya: any): void {
+    if (!this._dizzyLayer) return;
+    const swing = SHREW_VIEW_LAYOUT.dizzySwingDeg;
+    const duration = SHREW_VIEW_LAYOUT.dizzyTweenMs;
+    const loop = () => {
+      if (!this._dizzyLayer || !this._isDizzyVisible) return;
+      Laya.Tween.to(this._dizzyLayer, { rotation: 18 }, duration).then(() => {
+        if (!this._dizzyLayer || !this._isDizzyVisible) return;
+        Laya.Tween.to(this._dizzyLayer, { rotation: -18 }, duration).then(loop);
+      });
+    };
+    loop();
+
+    if (!this._mainLayer) return;
+    Laya.Tween.to(this._mainLayer, { rotation: swing }, duration).then(() => {
+      if (!this._mainLayer || !this._isDizzyVisible) return;
+      Laya.Tween.to(this._mainLayer, { rotation: -swing }, duration).then(() => {
+        if (this._mainLayer) this._mainLayer.rotation = 0;
+      });
+    });
+  }
+
   destroy(): void {
     if (this._container) {
+      const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+      if (Laya) {
+        if (this._dizzyLayer) Laya.Tween?.clearAll?.(this._dizzyLayer);
+        if (this._mainLayer) Laya.Tween?.clearAll?.(this._mainLayer);
+      }
       this._container.destroy();
       this._container = null;
     }
     this._clipLayer = null;
     this._mainLayer = null;
+    this._dizzyLayer = null;
   }
 }

@@ -2,6 +2,7 @@
  * HitEffectNode — 击中特效节点（金币/宝箱/未命中）
  */
 import type { IHitEffectNode } from "../binding/HitViewBinding";
+import { HIT_EFFECT_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 
 export class HitEffectNode implements IHitEffectNode {
   private _container: any = null;
@@ -11,8 +12,10 @@ export class HitEffectNode implements IHitEffectNode {
     if (Laya) {
       this._container = new Laya.Sprite();
       this._container.name = "HitEffectNode";
+      this._container.zOrder = HIT_EFFECT_VIEW_LAYOUT.zOrder;
       if (parent) {
         parent.addChild(this._container);
+        parent.setChildIndex?.(this._container, parent.numChildren - 1);
       }
     }
   }

@@ -13,7 +13,7 @@ import { defineQuery } from "bitecs";
 import { ShrewComponent, HoleComponent, HammerComponent } from "../components";
 import { ShrewType, HOLE_COUNT } from "../types";
 import { startShrewDizzyHold } from "../ShrewLifecycle";
-import { HIT_DETECTION } from "../../config/GameTuning";
+import { HAMMER_RULES, HIT_DETECTION } from "../../config/GameTuning";
 
 const holeQuery = defineQuery([HoleComponent]);
 const hammerQuery = defineQuery([HammerComponent]);
@@ -95,6 +95,7 @@ export function hitDetectionSystem(world: any, touchXRatio: number, touchYRatio:
 
   // 设 hitTable=0 防止连点
   HammerComponent.hitTable[hammerEid] = 0;
+  HammerComponent.hitCooldownSec[hammerEid] = HAMMER_RULES.hitCooldownSec;
 
   return {
     bKickShrew: 1,

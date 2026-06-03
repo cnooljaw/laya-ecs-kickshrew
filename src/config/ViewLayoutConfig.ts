@@ -33,9 +33,15 @@ export const HAMMER_VIEW_LAYOUT = {
 
 export const SHREW_VIEW_LAYOUT = {
   hiddenOffsetRatio: 0.52,
+  dizzyStarZOrder: 200,
+  dizzyStarRadius: 22,
+  dizzyStarYOffsetRatio: 0.92,
+  dizzySwingDeg: 4,
+  dizzyTweenMs: 80,
 } as const;
 
 export const COMBO_VIEW_LAYOUT = {
+  zOrder: 2000,
   color: "#FFD700",
   fontSize: 48,
   x: 375,
@@ -43,4 +49,8 @@ export const COMBO_VIEW_LAYOUT = {
   anchorX: 0.5,
   anchorY: 0.5,
   visibleMs: 1500,
+} as const;
+
+export const HIT_EFFECT_VIEW_LAYOUT = {
+  zOrder: 2100,
 } as const;

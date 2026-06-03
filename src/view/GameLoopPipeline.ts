@@ -21,7 +21,7 @@ export class GameLoopPipeline {
     animationTimerSystem(world, deltaSec);
     shrewStateSystem(world, deltaSec);
     sceneCycleSystem(world);
-    hammerSystem(world);
+    hammerSystem(world, undefined, false, false, deltaSec);
     network.update();
     dirtyMarkSystem(world);
     syncView.sync(world);

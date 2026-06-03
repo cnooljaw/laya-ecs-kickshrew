@@ -3,6 +3,7 @@ import { createGameWorld, createShrewEntity, createHoleEntities, createSingleton
 import { ShrewComponent, HoleComponent, HammerComponent } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType, HammerType, HOLE_COUNT } from '../../ecs/types';
 import { hitDetectionSystem, HitResult } from '../../ecs/systems/HitDetectionSystem';
+import { HAMMER_RULES, SHREW_TIMING } from '../../config/GameTuning';
 
 describe('HitDetectionSystem', () => {
   let world: ReturnType<typeof createGameWorld>;
@@ -73,7 +74,7 @@ describe('HitDetectionSystem', () => {
 
     expect(ShrewComponent.hp[shrewEid]).toBe(0);
     expect(ShrewComponent.actionState[shrewEid]).toBe(ShrewAction.Dizzy);
-    expect(ShrewComponent.animTimer[shrewEid]).toBeCloseTo(0.3, 3);
+    expect(ShrewComponent.animTimer[shrewEid]).toBeCloseTo(SHREW_TIMING.dizzyHoldSec, 3);
     expect(ShrewComponent.isClickable[shrewEid]).toBe(0);
   });
 
@@ -105,5 +106,6 @@ describe('HitDetectionSystem', () => {
     hitDetectionSystem(world, ...touchAtHole(1));
 
     expect(HammerComponent.hitTable[singletons.hammer]).toBe(0);
+    expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBeCloseTo(HAMMER_RULES.hitCooldownSec, 3);
   });
 });

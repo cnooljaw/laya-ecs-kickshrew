@@ -63,9 +63,24 @@ describe('HammerSystem', () => {
 
   it('hitTable 恢复: 锤子动画结束后 hitTable=1', () => {
     HammerComponent.hitTable[singletons.hammer] = 0;
+    HammerComponent.hitCooldownSec[singletons.hammer] = 0.24;
 
     hammerSystem(world, undefined, false, true);
 
     expect(HammerComponent.hitTable[singletons.hammer]).toBe(1);
+    expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBe(0);
+  });
+
+  it('普通击打冷却结束后自动恢复 hitTable=1', () => {
+    HammerComponent.hitTable[singletons.hammer] = 0;
+    HammerComponent.hitCooldownSec[singletons.hammer] = 0.24;
+
+    hammerSystem(world, undefined, false, false, 0.12);
+    expect(HammerComponent.hitTable[singletons.hammer]).toBe(0);
+    expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBeCloseTo(0.12, 3);
+
+    hammerSystem(world, undefined, false, false, 0.12);
+    expect(HammerComponent.hitTable[singletons.hammer]).toBe(1);
+    expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBe(0);
   });
 });

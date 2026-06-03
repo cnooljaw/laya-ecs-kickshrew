@@ -13,8 +13,10 @@ export class ComboNode implements IComboNode {
     if (Laya) {
       this._container = new Laya.Sprite();
       this._container.name = "ComboNode";
+      this._container.zOrder = COMBO_VIEW_LAYOUT.zOrder;
       if (parent) {
         parent.addChild(this._container);
+        parent.setChildIndex?.(this._container, parent.numChildren - 1);
       }
     }
   }
@@ -22,6 +24,8 @@ export class ComboNode implements IComboNode {
   showCombo(count: number, targets: number[]): void {
     if (!this._container) return;
     this._container.visible = true;
+    this._container.zOrder = COMBO_VIEW_LAYOUT.zOrder;
+    this._container.parent?.setChildIndex?.(this._container, this._container.parent.numChildren - 1);
 
     // 清除旧的闪电
     for (const sp of this._lightningSprites) {

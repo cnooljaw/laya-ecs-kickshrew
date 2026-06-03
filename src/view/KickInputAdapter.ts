@@ -40,14 +40,28 @@ export class KickInputAdapter {
     const traceLogger = this._deps.traceLogger ?? consoleHitTraceLogger;
     const xRatio = x / DESIGN_RESOLUTION.width;
     const yRatio = y / DESIGN_RESOLUTION.height;
+    const hitTable = HammerComponent.hitTable[singletons.hammer];
     traceLogger.log("input.touch", {
       x,
       y,
       xRatio,
       yRatio,
       hammerType: HammerComponent.selectedType[singletons.hammer],
-      hitTable: HammerComponent.hitTable[singletons.hammer],
+      hitTable,
     });
+
+    if (hitTable !== 1) {
+      traceLogger.log("hit.blocked", {
+        x,
+        y,
+        xRatio,
+        yRatio,
+        hitTable,
+        hitCooldownSec: HammerComponent.hitCooldownSec[singletons.hammer],
+      });
+      playSound(KICK_INPUT_SOUNDS.hitNull);
+      return;
+    }
 
     const result = hitDetectionSystem(world, xRatio, yRatio);
 

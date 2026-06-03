@@ -65,9 +65,11 @@ describe("ECS Components & World", () => {
       HammerComponent.selectedType[entity] = HammerType.Wood;
       HammerComponent.isThunderActive[entity] = 0;
       HammerComponent.hitTable[entity] = 1;
+      HammerComponent.hitCooldownSec[entity] = 0;
 
       expect(HammerComponent.selectedType[entity]).toBe(HammerType.Wood);
       expect(HammerComponent.hitTable[entity]).toBe(1);
+      expect(HammerComponent.hitCooldownSec[entity]).toBe(0);
     });
 
     it("DirtyComponent should have correct fields", () => {
@@ -172,6 +174,7 @@ describe("ECS Components & World", () => {
       expect(HammerComponent.selectedType[singletons.hammer]).toBe(HammerType.Wood);
       expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(0);
       expect(HammerComponent.hitTable[singletons.hammer]).toBe(1);
+      expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBe(0);
     });
 
     it("should create scene singleton with Meadow map", () => {
