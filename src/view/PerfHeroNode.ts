@@ -63,6 +63,7 @@ export class PerfHeroNode implements IPerfHeroNode {
     this._container = new Laya.Sprite();
     this._container.name = "PerfHeroNode";
     this._container.zOrder = PERF_HERO_VIEW_LAYOUT.zOrder;
+    this._container.visible = false;
     if (parent) parent.addChild(this._container);
   }
 
@@ -73,13 +74,14 @@ export class PerfHeroNode implements IPerfHeroNode {
     this._container.y = y;
     this._container.scaleX = scale;
     this._container.scaleY = scale;
-    this._container.visible = true;
+    this._container.visible = false;
 
     const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
     if (!Laya) return;
 
     if (this._activeHeroNode?.skUrl === skUrl) {
       this._activeHeroNode.play(Laya, this, this._hide);
+      this._container.visible = true;
       return;
     }
 
@@ -94,6 +96,7 @@ export class PerfHeroNode implements IPerfHeroNode {
         this._activeHeroNode = heroNode;
         heroNode.attachTo(this._container);
         heroNode.play(Laya, this, this._hide);
+        this._container.visible = true;
       })
       .catch(() => {
         if (this._container && spawnSeq === this._lastSpawnSeq) {
@@ -192,14 +195,16 @@ class PooledPerfHeroNode {
     if (this._skeleton.parent !== parent) {
       parent.addChild(this._skeleton);
     }
-    this._skeleton.visible = true;
+    this._resetLocalTransform();
+    this._skeleton.visible = false;
   }
 
   play(Laya: any, caller: any, stoppedHandler: () => void): void {
     this._skeleton.offAll?.();
-    this._skeleton.visible = true;
+    this._skeleton.visible = false;
     this._skeleton.on?.(Laya.Event.STOPPED, caller, stoppedHandler);
     this._skeleton.play(0, false);
+    this._skeleton.visible = true;
   }
 
   release(): void {
@@ -216,5 +221,14 @@ class PooledPerfHeroNode {
   destroy(): void {
     this._skeleton.offAll?.();
     this._skeleton.destroy();
+  }
+
+  private _resetLocalTransform(): void {
+    this._skeleton.x = 0;
+    this._skeleton.y = 0;
+    this._skeleton.scaleX = 1;
+    this._skeleton.scaleY = 1;
+    this._skeleton.rotation = 0;
+    this._skeleton.alpha = 1;
   }
 }

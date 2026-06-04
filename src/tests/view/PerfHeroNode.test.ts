@@ -36,19 +36,26 @@ class FakeSprite {
 
 class FakeSkeleton extends FakeSprite {
   readonly playCalls: Array<{ index: number; loop: boolean }> = [];
+  readonly parentVisibleWhenPlay: boolean[] = [];
   destroyCalls = 0;
   offAllCalls = 0;
   stopCalls = 0;
+  private _stoppedCaller: unknown = null;
+  private _stoppedHandler: (() => void) | null = null;
 
   play(index: number, loop: boolean): void {
     this.playCalls.push({ index, loop });
+    this.parentVisibleWhenPlay.push(this.parent?.visible ?? false);
   }
 
   stop(): void {
     this.stopCalls++;
   }
 
-  on(): void {}
+  on(_event: string, caller: unknown, handler: () => void): void {
+    this._stoppedCaller = caller;
+    this._stoppedHandler = handler;
+  }
 
   offAll(): void {
     this.offAllCalls++;
@@ -56,6 +63,10 @@ class FakeSkeleton extends FakeSprite {
 
   removeSelf(): void {
     this.parent?.removeChild(this);
+  }
+
+  emitStopped(): void {
+    this._stoppedHandler?.call(this._stoppedCaller);
   }
 
   override destroy(): void {
@@ -105,12 +116,14 @@ describe("PerfHeroNode", () => {
     expect(warlock).toBeTruthy();
     expect(created.get(warlockUrl)).toHaveLength(1);
     expect(warlock?.playCalls).toHaveLength(1);
+    expect(warlock?.parentVisibleWhenPlay).toEqual([false]);
 
     node.playHero(0, warlockUrl, 30, 40, 0.4, 2);
     await flushPromises();
 
     expect(created.get(warlockUrl)).toHaveLength(1);
     expect(warlock?.playCalls).toHaveLength(2);
+    expect(warlock?.parentVisibleWhenPlay).toEqual([false, false]);
     expect(warlock?.destroyCalls).toBe(0);
 
     node.playHero(1, rangerUrl, 50, 60, 0.5, 3);
@@ -136,6 +149,49 @@ describe("PerfHeroNode", () => {
 
     expect(warlock?.destroyCalls).toBe(1);
     expect(ranger?.destroyCalls).toBe(1);
+  });
+
+  it("准备复用 Spine 时先保持隐藏，避免进场瞬间显示上一帧状态", async () => {
+    const created: FakeSkeleton[] = [];
+    const skUrl = PERF_HERO_RESOURCES[2].skUrl;
+    const Laya = {
+      Sprite: FakeSprite,
+      Event: { STOPPED: "stopped" },
+      loader: {
+        load: () => Promise.resolve({
+          buildArmature: () => {
+            const skeleton = new FakeSkeleton();
+            created.push(skeleton);
+            return skeleton;
+          },
+        }),
+      },
+    };
+    vi.stubGlobal("window", { Laya });
+
+    const node = new PerfHeroNode();
+    const parent = new FakeSprite();
+    node.create(parent);
+    const container = parent.children[0] as FakeSprite;
+
+    expect(container.visible).toBe(false);
+
+    node.playHero(0, skUrl, 10, 20, 0.3, 1);
+    expect(container.visible).toBe(false);
+    await flushPromises();
+
+    const skeleton = created[0];
+    expect(container.visible).toBe(true);
+    expect(skeleton.parentVisibleWhenPlay).toEqual([false]);
+
+    skeleton.emitStopped();
+    expect(container.visible).toBe(false);
+
+    node.playHero(0, skUrl, 30, 40, 0.4, 2);
+    await flushPromises();
+
+    expect(container.visible).toBe(true);
+    expect(skeleton.parentVisibleWhenPlay).toEqual([false, false]);
   });
 });
 
