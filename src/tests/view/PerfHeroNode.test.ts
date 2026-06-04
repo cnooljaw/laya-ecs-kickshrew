@@ -118,6 +118,7 @@ describe("PerfHeroNode", () => {
     expect(warlock?.playCalls).toHaveLength(1);
     expect(warlock?.parentVisibleWhenPlay).toEqual([false]);
 
+    warlock?.emitStopped();
     node.playHero(0, warlockUrl, 30, 40, 0.4, 2);
     await flushPromises();
 
@@ -126,6 +127,7 @@ describe("PerfHeroNode", () => {
     expect(warlock?.parentVisibleWhenPlay).toEqual([false, false]);
     expect(warlock?.destroyCalls).toBe(0);
 
+    warlock?.emitStopped();
     node.playHero(1, rangerUrl, 50, 60, 0.5, 3);
     await flushPromises();
 
@@ -136,6 +138,7 @@ describe("PerfHeroNode", () => {
     expect(warlock?.destroyCalls).toBe(0);
     expect(ranger?.playCalls).toHaveLength(1);
 
+    ranger?.emitStopped();
     node.playHero(0, warlockUrl, 70, 80, 0.35, 4);
     await flushPromises();
 
@@ -191,6 +194,53 @@ describe("PerfHeroNode", () => {
     await flushPromises();
 
     expect(container.visible).toBe(true);
+    expect(skeleton.parentVisibleWhenPlay).toEqual([false, false]);
+  });
+
+  it("当前动画仍可见时延后应用下一次重生，避免容器坐标瞬移", async () => {
+    const created: FakeSkeleton[] = [];
+    const skUrl = "resources/heros/test-no-teleport.sk";
+    const Laya = {
+      Sprite: FakeSprite,
+      Event: { STOPPED: "stopped" },
+      loader: {
+        load: () => Promise.resolve({
+          buildArmature: () => {
+            const skeleton = new FakeSkeleton();
+            created.push(skeleton);
+            return skeleton;
+          },
+        }),
+      },
+    };
+    vi.stubGlobal("window", { Laya });
+
+    const node = new PerfHeroNode();
+    const parent = new FakeSprite();
+    node.create(parent);
+    const container = parent.children[0] as FakeSprite;
+
+    node.playHero(0, skUrl, 10, 20, 0.3, 1);
+    await flushPromises();
+
+    const skeleton = created[0];
+    expect(container.visible).toBe(true);
+    expect(container.x).toBe(10);
+    expect(container.y).toBe(20);
+
+    node.playHero(0, skUrl, 300, 400, 0.5, 2);
+
+    expect(container.visible).toBe(true);
+    expect(container.x).toBe(10);
+    expect(container.y).toBe(20);
+    expect(skeleton.playCalls).toHaveLength(1);
+
+    skeleton.emitStopped();
+
+    expect(container.visible).toBe(true);
+    expect(container.x).toBe(300);
+    expect(container.y).toBe(400);
+    expect(skeleton.playCalls).toHaveLength(2);
     expect(skeleton.parentVisibleWhenPlay).toEqual([false, false]);
   });
 });

@@ -6,6 +6,15 @@ interface PerfHeroResource {
   skUrl: string;
 }
 
+interface PerfHeroPlayRequest {
+  heroType: number;
+  skUrl: string;
+  x: number;
+  y: number;
+  scale: number;
+  spawnSeq: number;
+}
+
 export class PerfHeroSpinePoolGroup {
   private readonly _pools = new Map<string, PerfHeroSpinePool>();
 
@@ -45,7 +54,9 @@ export class PerfHeroNode implements IPerfHeroNode {
   private readonly _ownsPoolGroup: boolean;
   private _container: any = null;
   private _activeHeroNode: PooledPerfHeroNode | null = null;
+  private _pendingPlay: PerfHeroPlayRequest | null = null;
   private _destroyed = false;
+  private _isPlaying = false;
   private _lastSpawnSeq = -1;
 
   constructor(poolGroup?: PerfHeroSpinePoolGroup) {
@@ -68,45 +79,19 @@ export class PerfHeroNode implements IPerfHeroNode {
   }
 
   playHero(heroType: number, skUrl: string, x: number, y: number, scale: number, spawnSeq: number): void {
-    if (!this._container || spawnSeq === this._lastSpawnSeq) return;
-    this._lastSpawnSeq = spawnSeq;
-    this._container.x = x;
-    this._container.y = y;
-    this._container.scaleX = scale;
-    this._container.scaleY = scale;
-    this._container.visible = false;
-
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
-    if (!Laya) return;
-
-    if (this._activeHeroNode?.skUrl === skUrl) {
-      this._activeHeroNode.play(Laya, this, this._hide);
-      this._container.visible = true;
+    if (!this._container || spawnSeq === this._lastSpawnSeq || spawnSeq === this._pendingPlay?.spawnSeq) return;
+    const request = { heroType, skUrl, x, y, scale, spawnSeq };
+    if (this._isPlaying && this._container.visible) {
+      this._pendingPlay = request;
       return;
     }
 
-    this._releaseActiveHeroNode();
-    this._poolGroup.acquire(Laya, heroType, skUrl)
-      .then((heroNode) => {
-        if (this._destroyed || !this._container || spawnSeq !== this._lastSpawnSeq) {
-          this._poolGroup.release(heroNode);
-          return;
-        }
-
-        this._activeHeroNode = heroNode;
-        heroNode.attachTo(this._container);
-        heroNode.play(Laya, this, this._hide);
-        this._container.visible = true;
-      })
-      .catch(() => {
-        if (this._container && spawnSeq === this._lastSpawnSeq) {
-          this._container.visible = false;
-        }
-      });
+    this._applyPlay(request);
   }
 
   destroy(): void {
     this._destroyed = true;
+    this._pendingPlay = null;
     this._releaseActiveHeroNode();
     if (this._container) {
       this._container.destroy();
@@ -117,8 +102,53 @@ export class PerfHeroNode implements IPerfHeroNode {
     }
   }
 
-  private _hide(): void {
+  private _applyPlay(request: PerfHeroPlayRequest): void {
+    if (!this._container) return;
+    this._lastSpawnSeq = request.spawnSeq;
+    this._container.x = request.x;
+    this._container.y = request.y;
+    this._container.scaleX = request.scale;
+    this._container.scaleY = request.scale;
+    this._container.visible = false;
+
+    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    if (!Laya) return;
+
+    if (this._activeHeroNode?.skUrl === request.skUrl) {
+      this._activeHeroNode.play(Laya, this, this._handleStopped);
+      this._isPlaying = true;
+      this._container.visible = true;
+      return;
+    }
+
+    this._releaseActiveHeroNode();
+    this._poolGroup.acquire(Laya, request.heroType, request.skUrl)
+      .then((heroNode) => {
+        if (this._destroyed || !this._container || request.spawnSeq !== this._lastSpawnSeq) {
+          this._poolGroup.release(heroNode);
+          return;
+        }
+
+        this._activeHeroNode = heroNode;
+        heroNode.attachTo(this._container);
+        heroNode.play(Laya, this, this._handleStopped);
+        this._isPlaying = true;
+        this._container.visible = true;
+      })
+      .catch(() => {
+        if (this._container && request.spawnSeq === this._lastSpawnSeq) {
+          this._container.visible = false;
+        }
+      });
+  }
+
+  private _handleStopped(): void {
+    this._isPlaying = false;
     if (this._container) this._container.visible = false;
+    const pending = this._pendingPlay;
+    if (!pending) return;
+    this._pendingPlay = null;
+    this._applyPlay(pending);
   }
 
   private _releaseActiveHeroNode(): void {
