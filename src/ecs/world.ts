@@ -10,11 +10,11 @@ import {
   AnimationComponent,
   DirtyComponent,
   NetworkComponent,
-  PerfLadybirdComponent,
+  PerfHeroComponent,
 } from "./components";
 import { HolePositions, getHoleGrid, getHoleZOrder } from "../config/HolePositions";
 import { DESIGN_RESOLUTION } from "../config/GameTuning";
-import { PERF_LADYBIRD_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
+import { PERF_HERO_RESOURCES, PERF_HERO_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 import { SCENE_CYCLE_INTERVAL } from "../config/SceneConfig";
 import { resetShrewForNextCycle } from "./ShrewLifecycle";
 
@@ -69,35 +69,38 @@ export function createHoleEntities(world: ReturnType<typeof createWorld>, mapTyp
   return holes;
 }
 
-/** 创建调试压测小瓢虫实体 */
-export function createPerfLadybirdEntities(world: ReturnType<typeof createWorld>, count: number): number[] {
+/** 创建调试压测英雄 Spine 实体 */
+export function createPerfHeroEntities(world: ReturnType<typeof createWorld>, count: number): number[] {
   const safeCount = Math.max(0, Math.floor(count));
   const entities: number[] = [];
 
   for (let i = 0; i < safeCount; i++) {
     const entity = addEntity(world);
-    addComponent(world, PerfLadybirdComponent, entity);
+    addComponent(world, PerfHeroComponent, entity);
     addComponent(world, DirtyComponent, entity);
 
-    const corner = i % 4;
-    const base = randomCornerBase(corner);
-    PerfLadybirdComponent.corner[entity] = corner;
-    PerfLadybirdComponent.baseX[entity] = base.x;
-    PerfLadybirdComponent.baseY[entity] = base.y;
-    PerfLadybirdComponent.posX[entity] = base.x;
-    PerfLadybirdComponent.posY[entity] = base.y;
-    PerfLadybirdComponent.phase[entity] = Math.random() * Math.PI * 2;
-    PerfLadybirdComponent.speed[entity] = randomRange(PERF_LADYBIRD_VIEW_LAYOUT.minSpeed, PERF_LADYBIRD_VIEW_LAYOUT.maxSpeed);
-    PerfLadybirdComponent.radiusX[entity] = randomRange(PERF_LADYBIRD_VIEW_LAYOUT.jitterRadiusX * 0.4, PERF_LADYBIRD_VIEW_LAYOUT.jitterRadiusX);
-    PerfLadybirdComponent.radiusY[entity] = randomRange(PERF_LADYBIRD_VIEW_LAYOUT.jitterRadiusY * 0.4, PERF_LADYBIRD_VIEW_LAYOUT.jitterRadiusY);
-    PerfLadybirdComponent.scale[entity] = randomRange(PERF_LADYBIRD_VIEW_LAYOUT.minScale, PERF_LADYBIRD_VIEW_LAYOUT.maxScale);
-    DirtyComponent.perfLadybirdDirty[entity] = 0;
+    PerfHeroComponent.edge[entity] = i % 4;
+    PerfHeroComponent.spawnSeq[entity] = 0;
+    respawnPerfHero(entity);
+    DirtyComponent.perfHeroDirty[entity] = 0;
     DirtyComponent.forceFullSync[entity] = 0;
 
     entities.push(entity);
   }
 
   return entities;
+}
+
+export function respawnPerfHero(eid: number): void {
+  const edge = PerfHeroComponent.edge[eid];
+  const pos = randomEdgePosition(edge);
+  PerfHeroComponent.heroType[eid] = Math.floor(Math.random() * PERF_HERO_RESOURCES.length);
+  PerfHeroComponent.posX[eid] = pos.x;
+  PerfHeroComponent.posY[eid] = pos.y;
+  PerfHeroComponent.scale[eid] = randomRange(PERF_HERO_VIEW_LAYOUT.minScale, PERF_HERO_VIEW_LAYOUT.maxScale);
+  PerfHeroComponent.ageSec[eid] = 0;
+  PerfHeroComponent.durationSec[eid] = randomRange(PERF_HERO_VIEW_LAYOUT.minDurationSec, PERF_HERO_VIEW_LAYOUT.maxDurationSec);
+  PerfHeroComponent.spawnSeq[eid] += 1;
 }
 
 /** 单例实体集合 */
@@ -166,20 +169,23 @@ export function createSingletonEntities(world: ReturnType<typeof createWorld>): 
   return { hammer, combo, scene, player, network };
 }
 
-function randomCornerBase(corner: number): { x: number; y: number } {
-  const layout = PERF_LADYBIRD_VIEW_LAYOUT;
-  const localX = Math.random() * layout.clusterWidth;
-  const localY = Math.random() * layout.clusterHeight;
-  const left = layout.marginX + localX;
-  const right = DESIGN_RESOLUTION.width - layout.marginX - localX;
-  const top = layout.marginY + localY;
-  const bottom = DESIGN_RESOLUTION.height - layout.marginY - localY;
+function randomEdgePosition(edge: number): { x: number; y: number } {
+  const layout = PERF_HERO_VIEW_LAYOUT;
+  const minX = layout.marginX;
+  const maxX = DESIGN_RESOLUTION.width - layout.marginX;
+  const minY = layout.marginY;
+  const maxY = DESIGN_RESOLUTION.height - layout.marginY;
+  const band = layout.edgeBandSize;
 
-  switch (corner) {
-    case 0: return { x: left, y: top };
-    case 1: return { x: right, y: top };
-    case 2: return { x: left, y: bottom };
-    default: return { x: right, y: bottom };
+  switch (edge) {
+    case 0:
+      return { x: randomRange(minX, maxX), y: randomRange(minY, Math.min(minY + band, maxY)) };
+    case 1:
+      return { x: randomRange(Math.max(minX, maxX - band), maxX), y: randomRange(minY, maxY) };
+    case 2:
+      return { x: randomRange(minX, maxX), y: randomRange(Math.max(minY, maxY - band), maxY) };
+    default:
+      return { x: randomRange(minX, Math.min(minX + band, maxX)), y: randomRange(minY, maxY) };
   }
 }
 

@@ -5,7 +5,7 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "build:debug": "npx tsc -p tsconfig.debug.json && node scripts/fix-esm-extensions.js && node scripts/copy-vendor.js",
+    "build:debug": "npx tsc -p tsconfig.debug.json && node scripts/fix-esm-extensions.js && node scripts/copy-vendor.js && node scripts/copy-hero-resources.js",
     "debug:serve": "node scripts/start-debug-server.js",
     "debug:ready": "npm run build:debug && npm run debug:serve"
   },

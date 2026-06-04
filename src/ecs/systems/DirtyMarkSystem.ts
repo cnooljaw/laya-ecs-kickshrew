@@ -18,7 +18,7 @@ import {
   SceneComponent,
   PlayerComponent,
   HitComponent,
-  PerfLadybirdComponent,
+  PerfHeroComponent,
 } from "../components";
 import {
   BIT_SHREW_TYPE,
@@ -59,10 +59,10 @@ import {
   BIT_HIT_REWARD,
   BIT_HIT_WASHIT,
   BIT_HIT_ALL,
-  BIT_PERF_LADYBIRD_POS,
-  BIT_PERF_LADYBIRD_PHASE,
-  BIT_PERF_LADYBIRD_SCALE,
-  BIT_PERF_LADYBIRD_ALL,
+  BIT_PERF_HERO_POS,
+  BIT_PERF_HERO_SPAWN,
+  BIT_PERF_HERO_SCALE,
+  BIT_PERF_HERO_ALL,
 } from "../../binding/DirtyFlags";
 
 const shrewQuery = defineQuery([ShrewComponent, AnimationComponent, DirtyComponent]);
@@ -72,7 +72,7 @@ const comboQuery = defineQuery([ComboComponent, DirtyComponent]);
 const sceneQuery = defineQuery([SceneComponent, DirtyComponent]);
 const playerQuery = defineQuery([PlayerComponent, DirtyComponent]);
 const hitQuery = defineQuery([HitComponent, DirtyComponent]);
-const perfLadybirdQuery = defineQuery([PerfLadybirdComponent, DirtyComponent]);
+const perfHeroQuery = defineQuery([PerfHeroComponent, DirtyComponent]);
 
 type Snapshot = Record<string, number>;
 type DirtyTarget =
@@ -84,7 +84,7 @@ type DirtyTarget =
   | "sceneDirty"
   | "playerDirty"
   | "hitDirty"
-  | "perfLadybirdDirty";
+  | "perfHeroDirty";
 
 type DirtyStoreKey = keyof DirtySnapshotStore;
 type FieldReader = { name: string; read: (eid: number) => number };
@@ -107,7 +107,7 @@ interface DirtySnapshotStore {
   scene: Map<number, Snapshot>;
   player: Map<number, Snapshot>;
   hit: Map<number, Snapshot>;
-  perfLadybird: Map<number, Snapshot>;
+  perfHero: Map<number, Snapshot>;
 }
 
 const stores = new WeakMap<object, DirtySnapshotStore>();
@@ -124,7 +124,7 @@ function getStore(world: object): DirtySnapshotStore {
       scene: new Map(),
       player: new Map(),
       hit: new Map(),
-      perfLadybird: new Map(),
+      perfHero: new Map(),
     };
     stores.set(world, store);
   }
@@ -294,20 +294,26 @@ const DIRTY_SCHEMAS: DirtySchema[] = [
     ],
   },
   {
-    query: perfLadybirdQuery,
-    storeKey: "perfLadybird",
-    dirtyTarget: "perfLadybirdDirty",
-    allBits: BIT_PERF_LADYBIRD_ALL,
+    query: perfHeroQuery,
+    storeKey: "perfHero",
+    dirtyTarget: "perfHeroDirty",
+    allBits: BIT_PERF_HERO_ALL,
     groups: [
       {
-        bit: BIT_PERF_LADYBIRD_POS,
+        bit: BIT_PERF_HERO_POS,
         fields: [
-          { name: "posX", read: eid => PerfLadybirdComponent.posX[eid] },
-          { name: "posY", read: eid => PerfLadybirdComponent.posY[eid] },
+          { name: "posX", read: eid => PerfHeroComponent.posX[eid] },
+          { name: "posY", read: eid => PerfHeroComponent.posY[eid] },
         ],
       },
-      { bit: BIT_PERF_LADYBIRD_PHASE, fields: [{ name: "phase", read: eid => PerfLadybirdComponent.phase[eid] }] },
-      { bit: BIT_PERF_LADYBIRD_SCALE, fields: [{ name: "scale", read: eid => PerfLadybirdComponent.scale[eid] }] },
+      {
+        bit: BIT_PERF_HERO_SPAWN,
+        fields: [
+          { name: "heroType", read: eid => PerfHeroComponent.heroType[eid] },
+          { name: "spawnSeq", read: eid => PerfHeroComponent.spawnSeq[eid] },
+        ],
+      },
+      { bit: BIT_PERF_HERO_SCALE, fields: [{ name: "scale", read: eid => PerfHeroComponent.scale[eid] }] },
     ],
   },
 ];

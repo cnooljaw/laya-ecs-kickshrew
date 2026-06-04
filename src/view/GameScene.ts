@@ -8,7 +8,7 @@
  * 4. 处理触摸事件
  * 5. 启动网络层
  */
-import { createGameWorld, createShrewEntity, createHoleEntities, createSingletonEntities, createPerfLadybirdEntities, SingletonEntities } from "../ecs/world";
+import { createGameWorld, createShrewEntity, createHoleEntities, createSingletonEntities, createPerfHeroEntities, SingletonEntities } from "../ecs/world";
 import { hitResponseSystem } from "../ecs/systems/HitResponseSystem";
 import { SyncView } from "../binding/SyncView";
 import { shrewViewBinding, shrewAnimationViewBinding } from "../binding/ShrewViewBinding";
@@ -18,7 +18,7 @@ import { comboViewBinding } from "../binding/ComboViewBinding";
 import { sceneViewBinding } from "../binding/SceneViewBinding";
 import { playerViewBinding } from "../binding/PlayerViewBinding";
 import { hitViewBinding } from "../binding/HitViewBinding";
-import { perfLadybirdViewBinding } from "../binding/PerfLadybirdViewBinding";
+import { perfHeroViewBinding } from "../binding/PerfHeroViewBinding";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";
 import { ShrewType, MapType, HOLE_COUNT, HammerType } from "../ecs/types";
@@ -33,7 +33,7 @@ import { HitEffectNode } from "./HitEffectNode";
 import { GameLoopPipeline } from "./GameLoopPipeline";
 import { KickInputAdapter } from "./KickInputAdapter";
 import { ViewRegistry } from "./ViewRegistry";
-import { PerfLadybirdNode } from "./PerfLadybirdNode";
+import { PerfHeroNode } from "./PerfHeroNode";
 import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../config/PerfTestConfig";
 import { resetShrewTimingOverride, setShrewTimingOverride } from "../config/GameTuning";
 
@@ -47,7 +47,7 @@ export class GameScene {
   private _singletons!: SingletonEntities;
   private _holes: number[] = [];
   private _shrews: number[] = [];
-  private _perfLadybirds: number[] = [];
+  private _perfHeroes: number[] = [];
   private _syncView: SyncView;
   private _network: NetworkAdapter;
   private _viewRegistry: ViewRegistry;
@@ -138,8 +138,8 @@ export class GameScene {
     // HitEffectNode 使用单例 player 实体注册（简化）
     this._viewRegistry.registerHitEffectNode(this._singletons.player, this._hitEffectNode);
 
-    if (this._perfConfig.ladybirdCount > 0) {
-      this._createPerfLadybirds(this._perfConfig.ladybirdCount);
+    if (this._perfConfig.heroCount > 0) {
+      this._createPerfHeroes(this._perfConfig.heroCount);
     }
 
     // 9. 注册视图绑定
@@ -151,7 +151,7 @@ export class GameScene {
     this._syncView.registerSceneBinding(sceneViewBinding);
     this._syncView.registerPlayerBinding(playerViewBinding);
     this._syncView.registerHitBinding(hitViewBinding);
-    this._syncView.registerPerfLadybirdBinding(perfLadybirdViewBinding);
+    this._syncView.registerPerfHeroBinding(perfHeroViewBinding);
 
     // 10. 设置网络回调
     this._network.onResponse((resp: KickResponse) => {
@@ -183,7 +183,7 @@ export class GameScene {
       this._singletons.combo,
       ...this._holes,
       ...this._shrews,
-      ...this._perfLadybirds,
+      ...this._perfHeroes,
     ];
     for (const eid of allEntities) {
       DirtyComponent.forceFullSync[eid] = 1;
@@ -235,12 +235,12 @@ export class GameScene {
     return types[Math.floor(Math.random() * types.length)];
   }
 
-  private _createPerfLadybirds(count: number): void {
-    this._perfLadybirds = createPerfLadybirdEntities(this._world, count);
-    for (const eid of this._perfLadybirds) {
-      const node = new PerfLadybirdNode();
+  private _createPerfHeroes(count: number): void {
+    this._perfHeroes = createPerfHeroEntities(this._world, count);
+    for (const eid of this._perfHeroes) {
+      const node = new PerfHeroNode();
       node.create(this._root);
-      this._viewRegistry.registerPerfLadybirdNode(eid, node);
+      this._viewRegistry.registerPerfHeroNode(eid, node);
     }
   }
 }

@@ -70,18 +70,16 @@ export const HitComponent = defineComponent({
   wasHit: Types.f32,
 });
 
-/** 调试压测小瓢虫组件 */
-export const PerfLadybirdComponent = defineComponent({
-  corner: Types.f32,
-  baseX: Types.f32,
-  baseY: Types.f32,
+/** 调试压测英雄 Spine 组件 */
+export const PerfHeroComponent = defineComponent({
+  edge: Types.f32,
+  heroType: Types.f32,
   posX: Types.f32,
   posY: Types.f32,
-  phase: Types.f32,
-  speed: Types.f32,
-  radiusX: Types.f32,
-  radiusY: Types.f32,
   scale: Types.f32,
+  ageSec: Types.f32,
+  durationSec: Types.f32,
+  spawnSeq: Types.f32,
 });
 
 /** 网络组件(单例) */
@@ -100,6 +98,6 @@ export const DirtyComponent = defineComponent({
   playerDirty: Types.f32,
   animDirty: Types.f32,
   hitDirty: Types.f32,
-  perfLadybirdDirty: Types.f32,
+  perfHeroDirty: Types.f32,
   forceFullSync: Types.f32,
 });

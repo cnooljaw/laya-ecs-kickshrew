@@ -59,8 +59,8 @@ export const BIT_HIT_REWARD = 0x0002;
 export const BIT_HIT_WASHIT = 0x0004;
 export const BIT_HIT_ALL = 0x0007;
 
-// ---- PerfLadybirdComponent 脏标记 ----
-export const BIT_PERF_LADYBIRD_POS = 0x0001;
-export const BIT_PERF_LADYBIRD_PHASE = 0x0002;
-export const BIT_PERF_LADYBIRD_SCALE = 0x0004;
-export const BIT_PERF_LADYBIRD_ALL = 0x0007;
+// ---- PerfHeroComponent 脏标记 ----
+export const BIT_PERF_HERO_POS = 0x0001;
+export const BIT_PERF_HERO_SPAWN = 0x0002;
+export const BIT_PERF_HERO_SCALE = 0x0004;
+export const BIT_PERF_HERO_ALL = 0x0007;
