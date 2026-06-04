@@ -17,6 +17,7 @@
    - 架构边界和运行流：`docs/architecture.md`
    - ECS、dirty、binding：`docs/ecs-binding.md`
    - Laya 生命周期、资源、坐标：`docs/laya-rules.md`
+   - 性能压测、Spine 池化和调教经验：`docs/performance-tuning.md`
    - 协议同步和 protobuf 网络边界：`docs/protocol.md`
    - 测试、调试、提交：`docs/test-guide.md`
    - 完整新人教程：`docs/LayaAir3-Project-Onboarding.md`
@@ -43,6 +44,7 @@ shrewStateSystem
 sceneCycleSystem
 hammerSystem
 network.update
+perfHeroSystem（仅 perf 压测实体）
 dirtyMarkSystem
 syncView.sync
 ```
@@ -87,6 +89,7 @@ input/network/resource callback
 - 改命中规则：`src/ecs/systems/HitDetectionSystem.ts`、`src/view/KickInputAdapter.ts`、`src/tests/ecs/HitDetectionSystem.test.ts`
 - 改 dirty 同步：`src/binding/DirtyFlags.ts`、`src/ecs/systems/DirtyMarkSystem.ts`、`src/binding/*ViewBinding.ts`
 - 改 Laya 表现：`src/view/*Node.ts`、`src/config/ViewLayoutConfig.ts`、`docs/laya-rules.md`
+- 改性能压测/Spine 池化：`src/config/PerfTestConfig.ts`、`src/config/ViewLayoutConfig.ts`、`src/ecs/systems/PerfHeroSystem.ts`、`src/view/PerfHeroNode.ts`、`docs/performance-tuning.md`
 - 改网络：`src/network/KickSocket.ts`、`src/network/NetworkAdapter.ts`、`src/ecs/systems/HitResponseSystem.ts`
 - 改协议：`api/proto/kick.proto`、`src/network/KickProtoCodec.ts`、`src/network/ProtocolTypes.ts`、`src/tests/network/*`
 - 改测试/调试流程：`docs/test-guide.md`

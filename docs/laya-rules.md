@@ -24,6 +24,7 @@ GoldParticleNode    金币粒子
 DizzyStarNode       眩晕星星
 TreasureBoxNode     宝箱
 NodePool            简单节点对象池
+PerfHeroNode        压测英雄 Spine 槽位，使用共享 Spine 资源池
 ```
 
 如果 view node 里出现命中合法性、奖励、状态机、协议字段解析等逻辑，通常说明边界穿透了。
@@ -39,6 +40,8 @@ NodePool            简单节点对象池
 - 是否把已销毁节点留在闭包、静态 map、registry 或数组里。
 - 是否需要 `ViewRegistry` 统一 unregister/destroy。
 - 场景切换或 `destroy()` 是否能重复调用而不报错。
+- 对象池复用节点是否先隐藏、重置本地 transform，再播放和显示。
+- 当前动画仍可见时，新的重生/切换请求是否会导致容器坐标瞬移。
 
 当前 owner：
 
@@ -46,6 +49,17 @@ NodePool            简单节点对象池
 - `GameScene`：world、network callback、runtime adapter、ViewRegistry。
 - `ViewRegistry`：binding 注册表和 view node 销毁。
 - view node：自己创建的 Laya 子节点、局部 timer/tween/异步回调保护。
+
+## Spine 和对象池
+
+Spine/Skeleton 压测见 `docs/performance-tuning.md`。运行时规则：
+
+- `.sk` templet 可以缓存，但 Skeleton 实例也应按资源池化，避免每轮 `destroy + buildArmature`。
+- 共享池由场景或更高层 owner 持有，单个 view node 只持有当前 active 实例。
+- pooled Skeleton attach 到容器前先隐藏，并重置本地 `x/y/scale/rotation/alpha`。
+- 父容器应在设置新坐标和调用 `play()` 期间保持隐藏，播放状态重置完成后再显示。
+- 如果旧动画仍可见，下一次重生请求不要立刻改父容器坐标；应 pending 到 STOPPED/退场隐藏后再应用。
+- STOPPED 回调属于 view node 生命周期，销毁时必须 `offAll` 或等价清理。
 
 ## 配置和调参入口
 

@@ -114,11 +114,12 @@ shrewStateSystem(world, deltaSec)
 sceneCycleSystem(world)
 hammerSystem(world)
 network.update()
+perfHeroSystem(world, deltaSec)  // 仅 perf 压测实体
 dirtyMarkSystem(world)
 syncView.sync(world)
 ```
 
-这个顺序的含义是：先推进规则和状态，再标记 dirty，最后把变化投影到 Laya 节点。
+这个顺序的含义是：先推进规则和状态，再标记 dirty，最后把变化投影到 Laya 节点。`perfHeroSystem` 只处理 `?perf=1` 创建的压测英雄实体，用于测 Laya Spine/Skeleton、dirty binding 和节点池压力，不属于正式打地鼠规则主线。
 
 ## 点击流程
 
@@ -201,6 +202,8 @@ HitDetectionSystem
 - `ViewRegistry`：ECS eid 和 view node 的注册关系，集中 unregister 和 destroy。
 - `view/*Node.ts`：自己创建的 Laya 子节点、timer/tween/异步资源回调保护。
 
+性能压测中的 Spine 池是特殊共享表现资源：`GameScene` 持有 `PerfHeroSpinePoolGroup`，单个 `PerfHeroNode` 只持有当前 active 实例，`ViewRegistry` 仍负责节点销毁和 binding unregister。
+
 ## 扩展入口
 
 - 改状态机：`src/ecs/systems/ShrewStateSystem.ts`、`src/ecs/ShrewLifecycle.ts`
@@ -208,6 +211,7 @@ HitDetectionSystem
 - 改地图/洞位：`src/config/HolePositions.ts`、`src/config/SceneConfig.ts`、`src/ecs/systems/SceneCycleSystem.ts`
 - 改锤子/怒气：`src/ecs/systems/HammerSystem.ts`、`src/config/HammerConfig.ts`、`src/view/HammerNode.ts`
 - 接真实服务器：`src/network/KickSocket.ts`、`src/network/NetworkAdapter.ts`、`src/ecs/systems/HitResponseSystem.ts`
+- 做性能压测：`src/config/PerfTestConfig.ts`、`src/config/ViewLayoutConfig.ts`、`src/ecs/systems/PerfHeroSystem.ts`、`src/view/PerfHeroNode.ts`、`docs/performance-tuning.md`
 
 ## 架构原则
 

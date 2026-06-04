@@ -62,6 +62,12 @@ npm test -- --run src/tests/network/KickProtoCodec.test.ts src/tests/network/Kic
 npm test -- --run src/tests/resource/PlistConverter.test.ts
 ```
 
+性能压测英雄：
+
+```bash
+npm test -- --run src/tests/ecs/PerfHeroSystem.test.ts src/tests/binding/PerfHeroViewBinding.test.ts src/tests/view/PerfHeroNode.test.ts
+```
+
 当前测试覆盖重点：
 
 - ECS components/world。
@@ -188,6 +194,37 @@ git checkout -- <file>
 - `bin/js/debug/`
 
 `bin/js/libs/*.js` 是 Laya 运行库，不要因为 `game.js` 是生成物就粗暴忽略整个 `bin/js/`。
+
+## 性能压测和局域网发布
+
+详细方法见 `docs/performance-tuning.md`。
+
+压测构建：
+
+```bash
+npm run build:debug
+```
+
+本机调试：
+
+```text
+http://localhost:8080/debug-tsc.html?perf=1&heroes=200
+```
+
+局域网验证时从 `bin/` 启动静态服务，并绑定 `0.0.0.0`：
+
+```bash
+python3 -m http.server 8081 --bind 0.0.0.0
+```
+
+确认端口监听和页面可访问：
+
+```bash
+lsof -nP -iTCP:8081 -sTCP:LISTEN
+curl -I 'http://127.0.0.1:8081/debug-tsc.html?perf=1&heroes=200'
+```
+
+不要提交 `bin/js/debug/` 生成物。局域网设备看不到最新变化时，先确认是否重新 `npm run build:debug`，再强刷浏览器缓存。
 
 ## 排查测试失败
 

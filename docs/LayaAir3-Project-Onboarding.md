@@ -7,6 +7,7 @@
 - 架构边界和运行流：`docs/architecture.md`
 - ECS、dirty、binding：`docs/ecs-binding.md`
 - Laya 生命周期、资源、坐标：`docs/laya-rules.md`
+- 性能压测、Spine 池化和调教经验：`docs/performance-tuning.md`
 - 测试、调试、提交：`docs/test-guide.md`
 
 本文件保留为完整教程，不作为 Agent 每次必读上下文。
@@ -118,6 +119,7 @@ shrewStateSystem(world, deltaSec)
 sceneCycleSystem(world)
 hammerSystem(world)
 network.update()
+perfHeroSystem(world, deltaSec)  // perf=1 时处理压测英雄
 dirtyMarkSystem(world)
 syncView.sync(world)
 ```
