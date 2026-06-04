@@ -131,34 +131,26 @@ function getStore(world: object): DirtySnapshotStore {
   return store;
 }
 
-function dirtyBitsFromSnapshot(
-  prev: Snapshot | undefined,
-  cur: Snapshot,
-  groups: DirtyGroup[],
-  allBits: number,
-): number {
-  if (!prev) return allBits;
-
-  let dirty = 0;
-  for (const group of groups) {
-    for (const field of group.fields) {
-      if (cur[field.name] !== prev[field.name]) {
-        dirty |= group.bit;
-        break;
-      }
-    }
-  }
-  return dirty;
-}
-
-function buildSnapshot(eid: number, groups: DirtyGroup[]): Snapshot {
-  const snapshot: Snapshot = {};
+function fillSnapshot(snapshot: Snapshot, eid: number, groups: DirtyGroup[]): void {
   for (const group of groups) {
     for (const field of group.fields) {
       snapshot[field.name] = field.read(eid);
     }
   }
-  return snapshot;
+}
+
+function dirtyBitsAndUpdateSnapshot(snapshot: Snapshot, eid: number, groups: DirtyGroup[]): number {
+  let dirty = 0;
+  for (const group of groups) {
+    for (const field of group.fields) {
+      const nextValue = field.read(eid);
+      if (snapshot[field.name] !== nextValue) {
+        dirty |= group.bit;
+      }
+      snapshot[field.name] = nextValue;
+    }
+  }
+  return dirty;
 }
 
 function markSchemaDirty(world: any, store: DirtySnapshotStore, schema: DirtySchema): void {
@@ -168,14 +160,15 @@ function markSchemaDirty(world: any, store: DirtySnapshotStore, schema: DirtySch
 
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i];
-    const cur = buildSnapshot(eid, schema.groups);
-    dirtyArray[eid] = dirtyBitsFromSnapshot(
-      snapshotStore.get(eid),
-      cur,
-      schema.groups,
-      schema.allBits,
-    );
-    snapshotStore.set(eid, cur);
+    let snapshot = snapshotStore.get(eid);
+    if (!snapshot) {
+      snapshot = {};
+      fillSnapshot(snapshot, eid, schema.groups);
+      snapshotStore.set(eid, snapshot);
+      dirtyArray[eid] = schema.allBits;
+    } else {
+      dirtyArray[eid] = dirtyBitsAndUpdateSnapshot(snapshot, eid, schema.groups);
+    }
   }
 }
 
@@ -326,4 +319,12 @@ export function dirtyMarkSystem(world: any): void {
   for (const schema of DIRTY_SCHEMAS) {
     markSchemaDirty(world, store, schema);
   }
+}
+
+export function getDirtySnapshotForTest(
+  world: object,
+  storeKey: DirtyStoreKey,
+  eid: number,
+): Snapshot | undefined {
+  return stores.get(world)?.[storeKey].get(eid);
 }

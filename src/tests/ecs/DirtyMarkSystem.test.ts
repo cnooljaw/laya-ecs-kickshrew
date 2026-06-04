@@ -14,7 +14,7 @@ import {
   PerfHeroComponent,
 } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType } from '../../ecs/types';
-import { dirtyMarkSystem } from '../../ecs/systems/DirtyMarkSystem';
+import { dirtyMarkSystem, getDirtySnapshotForTest } from '../../ecs/systems/DirtyMarkSystem';
 import {
   BIT_HOLE_POS,
   BIT_HOLE_SHREW,
@@ -53,6 +53,24 @@ describe('DirtyMarkSystem', () => {
     dirtyMarkSystem(world);
 
     expect(DirtyComponent.shrewDirty[eid]).toBe(0);
+  });
+
+  it('快照对象跨帧复用，避免长期运行时每帧分配临时对象', () => {
+    const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
+
+    dirtyMarkSystem(world);
+    const firstSnapshot = getDirtySnapshotForTest(world, 'shrew', eid);
+
+    ShrewComponent.hp[eid] -= 1;
+    dirtyMarkSystem(world);
+    const secondSnapshot = getDirtySnapshotForTest(world, 'shrew', eid);
+
+    dirtyMarkSystem(world);
+    const thirdSnapshot = getDirtySnapshotForTest(world, 'shrew', eid);
+
+    expect(firstSnapshot).toBeTruthy();
+    expect(secondSnapshot).toBe(firstSnapshot);
+    expect(thirdSnapshot).toBe(firstSnapshot);
   });
 
   it('shrewType 变化: BIT_SHREW_TYPE 被设置', () => {

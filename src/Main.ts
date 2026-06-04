@@ -1,26 +1,27 @@
 import { GameScene } from "./view/GameScene";
+import { MemoryStatsPanel } from "./debug/MemoryStatsPanel";
 
 const { regClass } = Laya;
 
 @regClass()
 export class Main extends Laya.Script {
     private _gameScene: GameScene | null = null;
+    private _memoryStatsPanel: MemoryStatsPanel | null = null;
 
     onStart() {
         console.log("KickShrew Game starting...");
 
         // 0. 显示性能统计面板（FPS / DrawCall / 内存等）
         Laya.Stat.show(0, 0);
+        this._memoryStatsPanel = new MemoryStatsPanel();
+        this._memoryStatsPanel.show();
 
         // 1. 创建游戏场景
         this._gameScene = new GameScene();
         this._gameScene.init();
 
         // 2. 注册帧循环
-        Laya.timer.frameLoop(1, this, () => {
-            const delta = Laya.timer.delta / 1000; // ms → sec
-            this._gameScene?.update(delta);
-        });
+        Laya.timer.frameLoop(1, this, this._onFrameLoop);
 
         // 3. 注册触摸事件
         const stage = Laya.stage;
@@ -30,6 +31,11 @@ export class Main extends Laya.Script {
 
         // 4. 启动游戏
         this._gameScene.start();
+    }
+
+    private _onFrameLoop(): void {
+        const delta = Laya.timer.delta / 1000; // ms → sec
+        this._gameScene?.update(delta);
     }
 
     private _onTouch(): void {
@@ -43,6 +49,10 @@ export class Main extends Laya.Script {
     }
 
     onDestroy(): void {
+        Laya.timer.clear(this, this._onFrameLoop);
+        Laya.stage?.off(Laya.Event.MOUSE_DOWN, this, this._onTouch);
+        this._memoryStatsPanel?.destroy();
+        this._memoryStatsPanel = null;
         this._gameScene?.destroy();
         this._gameScene = null;
     }
