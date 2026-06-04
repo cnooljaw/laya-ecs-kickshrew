@@ -82,6 +82,7 @@ export function createPerfHeroEntities(world: ReturnType<typeof createWorld>, co
     PerfHeroComponent.edge[entity] = i % 4;
     PerfHeroComponent.spawnSeq[entity] = 0;
     respawnPerfHero(entity);
+    staggerInitialPerfHeroRespawn(entity);
     DirtyComponent.perfHeroDirty[entity] = 0;
     DirtyComponent.forceFullSync[entity] = 0;
 
@@ -191,4 +192,8 @@ function randomEdgePosition(edge: number): { x: number; y: number } {
 
 function randomRange(min: number, max: number): number {
   return min + Math.random() * (max - min);
+}
+
+function staggerInitialPerfHeroRespawn(eid: number): void {
+  PerfHeroComponent.ageSec[eid] = -randomRange(0, PerfHeroComponent.durationSec[eid]);
 }

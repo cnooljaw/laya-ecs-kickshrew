@@ -70,6 +70,6 @@ export const PERF_HERO_VIEW_LAYOUT = {
   marginY: 44,
   minScale: 0.28,
   maxScale: 0.46,
-  minDurationSec: 1.2,
-  maxDurationSec: 2.0,
+  minDurationSec: 3.0,
+  maxDurationSec: 6.0,
 } as const;

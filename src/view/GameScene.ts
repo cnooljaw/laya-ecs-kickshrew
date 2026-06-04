@@ -33,7 +33,7 @@ import { HitEffectNode } from "./HitEffectNode";
 import { GameLoopPipeline } from "./GameLoopPipeline";
 import { KickInputAdapter } from "./KickInputAdapter";
 import { ViewRegistry } from "./ViewRegistry";
-import { PerfHeroNode } from "./PerfHeroNode";
+import { PerfHeroNode, PerfHeroSpinePoolGroup } from "./PerfHeroNode";
 import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../config/PerfTestConfig";
 import { resetShrewTimingOverride, setShrewTimingOverride } from "../config/GameTuning";
 
@@ -58,6 +58,7 @@ export class GameScene {
   private _hitEffectNode!: HitEffectNode;
   private _loopPipeline: GameLoopPipeline | null = null;
   private _kickInput: KickInputAdapter | null = null;
+  private _perfHeroPool: PerfHeroSpinePoolGroup | null = null;
 
   constructor() {
     this._syncView = new SyncView();
@@ -209,6 +210,8 @@ export class GameScene {
     this._kickInput = null;
     this._loopPipeline = null;
     this._viewRegistry.clear();
+    this._perfHeroPool?.destroy();
+    this._perfHeroPool = null;
     if (this._root) {
       this._root.destroy();
       this._root = null;
@@ -237,8 +240,9 @@ export class GameScene {
 
   private _createPerfHeroes(count: number): void {
     this._perfHeroes = createPerfHeroEntities(this._world, count);
+    this._perfHeroPool = new PerfHeroSpinePoolGroup();
     for (const eid of this._perfHeroes) {
-      const node = new PerfHeroNode();
+      const node = new PerfHeroNode(this._perfHeroPool);
       node.create(this._root);
       this._viewRegistry.registerPerfHeroNode(eid, node);
     }

@@ -1,10 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createGameWorld, createPerfHeroEntities } from "../../ecs/world";
 import { PerfHeroComponent } from "../../ecs/components";
 import { perfHeroSystem } from "../../ecs/systems/PerfHeroSystem";
 import { PERF_HERO_VIEW_LAYOUT, PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
 
 describe("PerfHeroSystem", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("创建的英雄槽位均匀分布在屏幕四周", () => {
     const world = createGameWorld();
     const eids = createPerfHeroEntities(world, 8);
@@ -15,6 +19,17 @@ describe("PerfHeroSystem", () => {
     }
 
     expect(counts).toEqual([2, 2, 2, 2]);
+  });
+
+  it("创建时打散初始重生计时，避免首轮英雄集中 respawn", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    const world = createGameWorld();
+    const eids = createPerfHeroEntities(world, 3);
+
+    for (const eid of eids) {
+      expect(PerfHeroComponent.ageSec[eid]).toBeLessThan(0);
+      expect(PerfHeroComponent.ageSec[eid]).toBeGreaterThanOrEqual(-PerfHeroComponent.durationSec[eid]);
+    }
   });
 
   it("英雄槽位播完后会重生为随机英雄并刷新位置", () => {
