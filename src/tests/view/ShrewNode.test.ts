@@ -1,8 +1,76 @@
-import { describe, expect, it } from "vitest";
-import { ShrewAction } from "../../ecs/types";
-import { getShrewClipLayout, getShrewMainLayerLocalY, getShrewMainLayerY } from "../../view/ShrewNode";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { MapType, ShrewAction, ShrewType } from "../../ecs/types";
+import { getShrewClipLayout, getShrewMainLayerLocalY, getShrewMainLayerY, ShrewNode } from "../../view/ShrewNode";
+
+class FakeGraphics {
+  clear(): void {}
+  drawTexture(): void {}
+  drawCircle(): void {}
+  drawLine(): void {}
+}
+
+class FakeSprite {
+  static instances: FakeSprite[] = [];
+
+  name = "";
+  visible = true;
+  zOrder = 0;
+  x = 0;
+  y = 0;
+  rotation = 0;
+  scrollRect: unknown = null;
+  graphics = new FakeGraphics();
+  children: FakeSprite[] = [];
+  removeChildrenCalls: unknown[][] = [];
+
+  constructor() {
+    FakeSprite.instances.push(this);
+  }
+
+  addChild(child: FakeSprite): void {
+    this.children.push(child);
+  }
+
+  removeChildren(...args: unknown[]): void {
+    this.removeChildrenCalls.push(args);
+    this.children = [];
+  }
+
+  destroy(): void {
+    this.children = [];
+  }
+}
+
+class FakeRectangle {
+  constructor(
+    public x: number,
+    public y: number,
+    public width: number,
+    public height: number,
+  ) {}
+}
+
+function makeAtlas(frameNames: string[]): { frames: Array<{ url: string; width: number; height: number }> } {
+  return {
+    frames: frameNames.map((name) => ({
+      url: `resources/kickshrew/test/${name}`,
+      width: name.endsWith("body") ? 94 : 20,
+      height: name.endsWith("body") ? 110 : 20,
+    })),
+  };
+}
+
+async function flushPromises(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
 
 describe("ShrewNode animation positioning", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    FakeSprite.instances = [];
+  });
+
   const bodyH = 110;
   const standY = -bodyH * 0.5;
   const hiddenY = bodyH * 0.52;
@@ -33,5 +101,34 @@ describe("ShrewNode animation positioning", () => {
     expect(clip.height).toBe(bodyH);
     expect(standLocalY).toBe(0);
     expect(hiddenLocalY).toBeGreaterThan(clip.height);
+  });
+
+  it("重建地鼠部件时销毁旧子节点，避免长时间切图积累 graphics/GPU 资源", async () => {
+    vi.stubGlobal("window", {
+      Laya: {
+        Sprite: FakeSprite,
+        Rectangle: FakeRectangle,
+        Loader: { ATLAS: "atlas" },
+        loader: {
+          load: () => Promise.resolve(makeAtlas([
+            "red_body",
+            "red_face_smile",
+            "red_ear_left_up",
+            "red_ear_right_up",
+            "red_hand_left",
+            "red_hand_right",
+          ])),
+        },
+      },
+    });
+
+    const node = new ShrewNode();
+    node.create(new FakeSprite());
+
+    node.setSpriteFrame(ShrewType.Red, MapType.Meadow);
+    await flushPromises();
+
+    const mainLayer = FakeSprite.instances.find((sprite) => sprite.name === "ShrewMainLayer");
+    expect(mainLayer?.removeChildrenCalls[0]).toEqual([0, -1, true]);
   });
 });

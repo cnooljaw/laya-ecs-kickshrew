@@ -171,7 +171,7 @@ export class ShrewNode implements IShrewNode {
       }
 
       // 清除旧部件
-      this._mainLayer.removeChildren?.();
+      this._mainLayer.removeChildren?.(0, -1, true);
 
       const bodyTex = getFrameTexture(atlasRes, def.body);
       if (!bodyTex) {
