@@ -88,6 +88,7 @@ export class HammerNode implements IHammerNode {
     if (Laya) {
       const swing = HAMMER_VIEW_LAYOUT.hitSwingDeg;
       const duration = HAMMER_VIEW_LAYOUT.hitTweenMs;
+      Laya.Tween?.clearAll?.(this._sprite);
       // 锤子击打动画: 正向摆动 → 反向摆动 → 复位
       Laya.Tween.to(this._sprite, { rotation: this._baseRotation + swing }, duration);
       Laya.Tween.to(this._sprite, { rotation: this._baseRotation - swing }, duration, null, Laya.Handler.create(this, () => {
@@ -108,6 +109,8 @@ export class HammerNode implements IHammerNode {
 
   destroy(): void {
     if (this._sprite) {
+      const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+      Laya?.Tween?.clearAll?.(this._sprite);
       this._sprite.destroy();
       this._sprite = null;
     }

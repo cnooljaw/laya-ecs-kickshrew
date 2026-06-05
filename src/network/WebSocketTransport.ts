@@ -101,6 +101,12 @@ export class WebSocketTransport implements ISocketTransport {
     this._sendQueue.length = 0;
     const socket = this._socket;
     this._socket = null;
+    if (socket) {
+      socket.onopen = null;
+      socket.onmessage = null;
+      socket.onclose = null;
+      socket.onerror = null;
+    }
     socket?.close();
   }
 

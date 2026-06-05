@@ -50,9 +50,8 @@ export class ComboNode implements IComboNode {
     this._container.addChild(text);
     this._lightningSprites.push(text);
 
-    Laya.timer.once(COMBO_VIEW_LAYOUT.visibleMs, this, () => {
-      this.hideCombo();
-    });
+    Laya.timer.clear?.(this, this._hideComboTimer);
+    Laya.timer.once(COMBO_VIEW_LAYOUT.visibleMs, this, this._hideComboTimer);
   }
 
   hideCombo(): void {
@@ -66,10 +65,16 @@ export class ComboNode implements IComboNode {
   }
 
   destroy(): void {
+    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    Laya?.timer?.clear?.(this, this._hideComboTimer);
     this.hideCombo();
     if (this._container) {
       this._container.destroy();
       this._container = null;
     }
+  }
+
+  private _hideComboTimer(): void {
+    this.hideCombo();
   }
 }

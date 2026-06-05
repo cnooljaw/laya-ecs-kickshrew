@@ -78,6 +78,7 @@ export class SceneLayer implements ISceneLayer {
   private _parent: any = null;
   private _bgSprite: any = null;
   private _coverSprites: any[] = [];
+  private _transitionMasks: any[] = [];
   private _currentMap: number = -1;
 
   create(parent: any): void {
@@ -202,8 +203,10 @@ export class SceneLayer implements ISceneLayer {
         mask.alpha = 0;
         mask.zOrder = SCENE_LAYOUT.transitionMaskZOrder;
         this._parent.addChild(mask);
+        this._transitionMasks.push(mask);
         Laya.Tween.to(mask, { alpha: 1 }, SCENE_LAYOUT.transitionFadeInMs).then(() => {
           Laya.Tween.to(mask, { alpha: 0 }, SCENE_LAYOUT.transitionFadeOutMs).then(() => {
+            this._removeTransitionMask(mask);
             mask.destroy();
           });
         });
@@ -214,10 +217,26 @@ export class SceneLayer implements ISceneLayer {
   destroy(): void {
     const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
     if (Laya) this._clearCovers(Laya);
+    this._clearTransitionMasks(Laya);
     if (this._bgSprite) {
       this._bgSprite.destroy();
       this._bgSprite = null;
     }
     this._parent = null;
+  }
+
+  private _clearTransitionMasks(Laya: any): void {
+    for (const mask of this._transitionMasks) {
+      if (!mask) continue;
+      Laya?.timer?.clearAll?.(mask);
+      Laya?.Tween?.clearAll?.(mask);
+      mask.destroy();
+    }
+    this._transitionMasks = [];
+  }
+
+  private _removeTransitionMask(mask: any): void {
+    const index = this._transitionMasks.indexOf(mask);
+    if (index >= 0) this._transitionMasks.splice(index, 1);
   }
 }

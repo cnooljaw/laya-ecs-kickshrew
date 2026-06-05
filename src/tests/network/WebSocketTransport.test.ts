@@ -90,4 +90,22 @@ describe("WebSocketTransport", () => {
 
     expect(messages).toEqual([payload]);
   });
+
+  it("关闭时清空 socket 事件回调和待发送队列，避免关闭中的 socket 保留 transport", () => {
+    const transport = new WebSocketTransport({
+      url: DEFAULT_KICK_SERVER_URL,
+      onMessage: () => {},
+      WebSocketCtor: FakeWebSocket as any,
+    });
+
+    transport.send(new Uint8Array([1]));
+    const socket = FakeWebSocket.instances[0];
+
+    transport.close();
+
+    expect(socket.onopen).toBeNull();
+    expect(socket.onmessage).toBeNull();
+    expect(socket.onclose).toBeNull();
+    expect(socket.onerror).toBeNull();
+  });
 });
