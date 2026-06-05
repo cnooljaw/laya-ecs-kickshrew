@@ -2,18 +2,27 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const { execFileSync, spawn } = require("child_process");
+const {
+  DEBUG_SERVER_HOST,
+  DEBUG_SERVER_LOCAL_CHECK_HOST,
+  DEBUG_SERVER_PORT,
+  DEBUG_SERVER_PATH,
+  getLanDebugUrls,
+  isLanReadyListenAddress,
+} = require("./debug-server-config.cjs");
 
 const rootDir = path.resolve(__dirname, "..");
 const binDir = path.join(rootDir, "bin");
 const logDir = path.join(rootDir, "bin", "js", "debug");
 const logPath = path.join(logDir, "http-server.log");
-const host = "127.0.0.1";
-const port = 8080;
-const debugPath = "/debug-tsc.html";
+const host = DEBUG_SERVER_HOST;
+const localCheckHost = DEBUG_SERVER_LOCAL_CHECK_HOST;
+const port = DEBUG_SERVER_PORT;
+const debugPath = DEBUG_SERVER_PATH;
 
 function requestDebugPage() {
   return new Promise((resolve) => {
-    const req = http.get({ host, port, path: debugPath, timeout: 500 }, (res) => {
+    const req = http.get({ host: localCheckHost, port, path: debugPath, timeout: 500 }, (res) => {
       res.resume();
       resolve(res.statusCode === 200);
     });
@@ -27,13 +36,32 @@ function requestDebugPage() {
 }
 
 function isPortListening() {
+  return getPortListenAddresses().length > 0;
+}
+
+function getPortListenAddresses() {
   try {
-    execFileSync("lsof", ["-iTCP:8080", "-sTCP:LISTEN", "-n", "-P"], {
-      stdio: "ignore",
+    const output = execFileSync("lsof", [`-iTCP:${port}`, "-sTCP:LISTEN", "-n", "-P"], {
+      encoding: "utf8",
     });
-    return true;
+    return output
+      .split("\n")
+      .slice(1)
+      .map((line) => line.match(/\sTCP\s+(\S+)\s+\(LISTEN\)/)?.[1])
+      .filter(Boolean);
   } catch {
-    return false;
+    return [];
+  }
+}
+
+function isPortLanReady() {
+  return getPortListenAddresses().some((address) => isLanReadyListenAddress(address));
+}
+
+function printReady(prefix) {
+  console.log(`${prefix}: http://localhost:${port}${debugPath}`);
+  for (const url of getLanDebugUrls(debugPath)) {
+    console.log(`LAN: ${url}`);
   }
 }
 
@@ -47,14 +75,18 @@ async function waitForServer(timeoutMs) {
 }
 
 async function main() {
-  if (await requestDebugPage()) {
-    console.log(`Debug server already ready: http://localhost:${port}${debugPath}`);
+  if ((await requestDebugPage()) && isPortLanReady()) {
+    printReady("Debug server already ready");
     return;
   }
 
   if (isPortListening()) {
-    console.log(`Port ${port} is already listening. Use http://localhost:${port}${debugPath}`);
-    return;
+    const addresses = getPortListenAddresses().join(", ") || "unknown address";
+    console.error(
+      `Port ${port} is already listening on ${addresses}, but it is not LAN-ready. ` +
+      `Stop that server and rerun npm run debug:ready.`,
+    );
+    process.exit(1);
   }
 
   fs.mkdirSync(logDir, { recursive: true });
@@ -67,12 +99,12 @@ async function main() {
 
   child.unref();
 
-  if (!(await waitForServer(5000)) && !isPortListening()) {
+  if (!(await waitForServer(5000)) || !isPortLanReady()) {
     console.error(`Failed to start debug server. Check ${logPath}`);
     process.exit(1);
   }
 
-  console.log(`Debug server ready: http://localhost:${port}${debugPath}`);
+  printReady("Debug server ready");
 }
 
 main().catch((error) => {

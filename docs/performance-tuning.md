@@ -10,23 +10,19 @@
 npm run build:debug
 ```
 
-本机调试服务：
+本机和局域网调试服务：
 
 ```bash
 npm run debug:ready
 ```
 
-局域网临时发布可在 `bin/` 目录启动静态服务，必须绑定 `0.0.0.0`，只绑定 `127.0.0.1` 时其他设备访问不到：
-
-```bash
-python3 -m http.server 8081 --bind 0.0.0.0
-```
+该命令会重新构建 debug 输出，并把静态服务固定绑定到 `0.0.0.0:8080`。只绑定 `127.0.0.1` 时其他设备访问不到；脚本会拒绝这种旧服务状态，要求停掉后重跑。
 
 性能压测 URL：
 
 ```text
 http://localhost:8080/debug-tsc.html?perf=1&heroes=200
-http://<局域网IP>:8081/debug-tsc.html?perf=1&heroes=200
+http://<局域网IP>:8080/debug-tsc.html?perf=1&heroes=200
 ```
 
 参数：

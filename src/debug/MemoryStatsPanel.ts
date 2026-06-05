@@ -11,6 +11,7 @@ const BYTES_PER_MB = 1024 * 1024;
 
 export class MemoryStatsPanel {
   private _text: any = null;
+  private _peakUsedBytes = 0;
 
   show(x: number = DEFAULT_X, y: number = DEFAULT_Y): void {
     const Laya = getLaya();
@@ -40,8 +41,10 @@ export class MemoryStatsPanel {
       return;
     }
 
+    this._peakUsedBytes = Math.max(this._peakUsedBytes, memory.usedJSHeapSize);
     this._text.text =
-      `JS Heap ${toMB(memory.usedJSHeapSize)} / ${toMB(memory.totalJSHeapSize)} MB\n` +
+      `JS Heap Used ${toMB(memory.usedJSHeapSize)} MB\n` +
+      `Peak ${toMB(this._peakUsedBytes)} MB\n` +
       `Limit ${toMB(memory.jsHeapSizeLimit)} MB`;
   }
 

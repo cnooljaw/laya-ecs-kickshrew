@@ -32,7 +32,10 @@ npm run debug:ready
 
 ```text
 http://localhost:8080/debug-tsc.html
+http://<局域网IP>:8080/debug-tsc.html
 ```
+
+`npm run debug:ready` 会将调试服务绑定到 `0.0.0.0:8080`，本机和局域网设备使用同一个端口。每次改完运行它，会重新构建 debug 输出并确认 8080 服务可用。
 
 VS Code 推荐使用 `tsc Debug` 配置，sourceMap 可以直接命中 TS 源码断点。
 

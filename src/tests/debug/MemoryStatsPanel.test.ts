@@ -30,20 +30,19 @@ describe("MemoryStatsPanel", () => {
     vi.unstubAllGlobals();
   });
 
-  it("显示浏览器 JS heap 使用量和上限", () => {
+  it("显示浏览器 JS heap 使用量、峰值和上限，不显示会随 V8 扩容增长的 total heap", () => {
     const stage = new FakeStage();
+    const memory = {
+      usedJSHeapSize: 64 * 1024 * 1024,
+      totalJSHeapSize: 96 * 1024 * 1024,
+      jsHeapSizeLimit: 512 * 1024 * 1024,
+    };
     vi.stubGlobal("window", {
       Laya: {
         Text: FakeText,
         stage,
       },
-      performance: {
-        memory: {
-          usedJSHeapSize: 64 * 1024 * 1024,
-          totalJSHeapSize: 96 * 1024 * 1024,
-          jsHeapSizeLimit: 512 * 1024 * 1024,
-        },
-      },
+      performance: { memory },
     });
 
     const panel = new MemoryStatsPanel();
@@ -52,8 +51,16 @@ describe("MemoryStatsPanel", () => {
     panel.update();
 
     const text = stage.children[0] as FakeText;
-    expect(text.text).toContain("JS Heap 64.0 / 96.0 MB");
+    expect(text.text).toContain("JS Heap Used 64.0 MB");
+    expect(text.text).toContain("Peak 64.0 MB");
     expect(text.text).toContain("Limit 512.0 MB");
+    expect(text.text).not.toContain("96.0");
+
+    memory.usedJSHeapSize = 48 * 1024 * 1024;
+    panel.update();
+
+    expect(text.text).toContain("JS Heap Used 48.0 MB");
+    expect(text.text).toContain("Peak 64.0 MB");
   });
 
   it("销毁时清理 Laya timer 和文本节点", () => {

@@ -113,6 +113,7 @@ npm run debug:ready
 ```
 
 这个命令会先构建 debug 输出，再检查或启动 `bin/` 下的 HTTP 服务。日志写到 `bin/js/debug/http-server.log`，属于生成物，不提交。
+调试服务固定绑定 `0.0.0.0:8080`，本机和局域网设备共用同一个端口。
 
 VS Code 推荐：
 
@@ -211,17 +212,13 @@ npm run build:debug
 http://localhost:8080/debug-tsc.html?perf=1&heroes=200
 ```
 
-局域网验证时从 `bin/` 启动静态服务，并绑定 `0.0.0.0`：
-
-```bash
-python3 -m http.server 8081 --bind 0.0.0.0
-```
+局域网验证同样使用 `npm run debug:ready`，不要另开 8081。该命令会重新构建 debug 输出，并确保服务监听所有网卡的 8080。
 
 确认端口监听和页面可访问：
 
 ```bash
-lsof -nP -iTCP:8081 -sTCP:LISTEN
-curl -I 'http://127.0.0.1:8081/debug-tsc.html?perf=1&heroes=200'
+lsof -nP -iTCP:8080 -sTCP:LISTEN
+curl -I 'http://127.0.0.1:8080/debug-tsc.html?perf=1&heroes=200'
 ```
 
 不要提交 `bin/js/debug/` 生成物。局域网设备看不到最新变化时，先确认是否重新 `npm run build:debug`，再强刷浏览器缓存。
