@@ -91,6 +91,65 @@ ECS 侧只承载权威状态和随机重生，不直接操作 Laya。Spine/Skele
 - JS heap / GC：判断是否有频繁创建销毁。
 - 首轮加载和周期性卡顿：区分资源加载、池化缺失、respawn 峰值。
 
+## 长时间内存监测
+
+调试构建里 `MemoryStatsPanel` 每秒显示：
+
+```text
+JS Heap Used <used> MB
+Peak <peak> MB
+Limit <limit> MB
+```
+
+含义：
+
+- `Used`：当前 `performance.memory.usedJSHeapSize`，GC 后可能下降。
+- `Peak`：本页面启动后观察到的 used 峰值，是单调不降的本地统计。它一直涨不等于强引用泄漏。
+- `Limit`：浏览器 JS heap 上限。
+
+如果旧面板显示的是 `used / totalJSHeapSize`，后一个数字也可能随 V8 扩容增长，不代表对象仍被引用。现在面板故意不显示 `totalJSHeapSize`，避免把 V8 已提交容量误判成泄漏。
+
+长时间压测时不要只看 JS heap。至少同时记录：
+
+```text
+FPS / FrameTime
+Sprite2DCount
+DrawCall / Triangle
+GPUMemory / AllTexture / RenderTexture / GPUBuffer
+JS Heap Used / Peak / Limit
+```
+
+判断规则：
+
+- `Used` 会下降，`Peak` 缓慢上升：通常是运行过程出现过更高分配峰值，先继续看 `Used` 是否阶梯式抬高。
+- `Sprite2DCount` 稳定，但 `GPUMemory`、`AllTexture`、`GPUBuffer` 增长：优先怀疑资源、贴图、Graphics、Skeleton 或被移除但未 destroy 的节点。
+- `Sprite2DCount` 持续增长：优先怀疑 view registry、对象池 release、场景切换、timer/tween/event 没清。
+- `DrawCall`、`Triangle` 基本稳定但 FPS 下降：优先查 GC、GPU memory 增长、动画对象重建和浏览器长期运行压力。
+
+本项目一次 2 小时 20 分钟样本：
+
+```text
+FPS: 60 -> 34
+FrameTime: 16ms -> 29ms
+Sprite2DCount: 1118 -> 1118
+GPUMemory: 62.886M -> 109.882M
+AllTexture: 21.792M -> 53.792M
+GPUBuffer: 41.094M -> 56.09M
+JS Heap Used: 303.3MB -> 418.0MB
+Peak: 311.5MB -> 684.9MB
+```
+
+这个组合说明不是简单节点数量泄漏。`Sprite2DCount` 没变，但 GPU memory 增长明显，应先查“节点从父容器移除了，但内部贴图/graphics/buffer 没释放”的路径。已确认过的典型问题是 `ShrewNode` 重建部件时调用 `removeChildren()` 没传 `destroy=true`，旧部件被移出显示树但没有销毁；修法是 `removeChildren(0, -1, true)` 并补回归测试。
+
+长时间内存排查清单：
+
+- `removeChildren()` 是否需要第三个参数 `destroy=true`。
+- view node 的 `destroy()` 是否清理自己创建的子节点、timer、tween、event、STOPPED 回调。
+- `SceneLayer` 这类场景 owner 是否销毁过渡遮罩、背景、cover。
+- WebSocket/loader 回调是否在 close/destroy 后解除引用或有 stale guard。
+- Spine/Skeleton 池是否 release 当前实例，场景销毁时是否 dispose 共享池。
+- scene cycle 或 map rebuild 后，`GPUMemory` 是否阶梯式增长。
+
 建议用矩阵记录：
 
 ```text

@@ -23,6 +23,12 @@ Use this project skill for verification and commits.
 7. Run `npm run debug:ready` when the change affects runtime visuals, input, resources, lifecycle, network, or debugging.
 8. Stage only related files and commit with TDD notes.
 
+## Debug Server And CodeGraph
+
+- `npm run debug:ready` is the single local/LAN debug entry. It must use port `8080` and bind all interfaces; do not introduce a second LAN port such as 8081.
+- If LAN devices cannot see the page, check `lsof -nP -iTCP:8080 -sTCP:LISTEN`. `*:8080` or `0.0.0.0:8080` is expected; `127.0.0.1:8080` is local-only.
+- If codegraph MCP returns `Transport closed`, check `codegraph status .`, `codegraph sync .`, and `.codegraph/daemon.log`. CLI success means the index is healthy; restart the Codex session/app to rebuild the stdio MCP connection, then verify with a real `codegraph_context` call.
+
 ## Commit Template
 
 ```text

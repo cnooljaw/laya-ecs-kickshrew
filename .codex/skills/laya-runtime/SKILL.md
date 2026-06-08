@@ -31,12 +31,15 @@ Use this project skill for changes that touch Laya presentation or runtime owner
 - Input logs with `hitTable=0` mean hammer cooldown/lock, not hole coordinate miss. Keep this distinct in logs (`hit.blocked` vs `hit.miss`).
 - If ECS/binding logs show Dizzy but the player cannot see it, fix the view node state (`setAnimation`) with an explicit visual cue and clear tweens on state exit/destroy.
 - Floating UI or hit effects must set an explicit zOrder above hole/cover layers; adding later is not enough across scene rebuilds.
+- For long-run memory growth, compare `JS Heap Used`, `Peak`, `Sprite2DCount`, `GPUMemory`, `AllTexture`, and `GPUBuffer`. `Peak` is monotonic by design; stable sprite count with growing GPU memory points to resource/node destruction, not ECS entity growth.
+- Laya `removeChildren()` only removes by default. When rebuilding owned child sprites, pass `removeChildren(0, -1, true)` or explicitly destroy old children.
 
 ## Common Test Commands
 
 ```bash
 npm test -- --run src/tests/view/KickInputAdapter.test.ts
 npm test -- --run src/tests/view/ViewRegistry.test.ts
+npm test -- --run src/tests/view/ShrewNode.test.ts
 npx tsc --noEmit
 npm run debug:ready
 ```
@@ -45,6 +48,7 @@ npm run debug:ready
 
 - No Laya object becomes the authoritative game state.
 - Repeated `destroy()` or scene switch does not retain dead nodes.
+- Rebuild paths destroy old owned children instead of only detaching them.
 - Async load callbacks are idempotent.
 - Resource path changes match `src/resource/AtlasConfig.ts`.
 - Cocos Y-up to Laya Y-down conversions remain documented near the code.

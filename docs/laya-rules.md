@@ -37,6 +37,7 @@ PerfHeroNode        压测英雄 Spine 槽位，使用共享 Spine 资源池
 - `Laya.timer` 用哪个 caller/method 注册，销毁时是否用同一对清理。
 - `Laya.Tween` 是否可能在节点销毁后继续跑。
 - 异步 `Laya.loader.load()` 回调回来时节点是否还存在。
+- `removeChildren()` 是否只是移出显示树；需要释放子节点时显式传 `destroy=true`。
 - 是否把已销毁节点留在闭包、静态 map、registry 或数组里。
 - 是否需要 `ViewRegistry` 统一 unregister/destroy。
 - 场景切换或 `destroy()` 是否能重复调用而不报错。
@@ -106,6 +107,7 @@ touchYRatio = stage.mouseY / DESIGN_RESOLUTION.height
 - 出洞/入洞通过移动 `_mainLayer.y` 实现。
 - `HolePositions` 表示地鼠出洞视觉锚点；地鼠 `Stand` 时 body 中心对齐该点，`Up/Down` 在该点与本地裁剪窗口下方之间插值。
 - `hiddenOffsetRatio` 在 `ViewLayoutConfig`。
+- 重建地鼠部件时必须销毁旧子节点，不能只 `removeChildren()`。否则 `Sprite2DCount` 可能稳定，但旧部件相关的贴图/GPU buffer 仍会在长时间运行中累积。
 
 调地鼠表现前先读 `ShrewNode.ts` 注释和 `SHREW_FRAMES`，不要直接改状态机来修视觉问题。
 

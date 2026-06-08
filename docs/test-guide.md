@@ -134,6 +134,29 @@ VS Code 推荐：
 
 纯 ECS 规则且已有单测覆盖时，可以先不跑浏览器调试，但最终交付时要说明未跑原因。
 
+## CodeGraph 检查
+
+代码结构、调用链、bug 或“怎么工作”类问题优先用 codegraph。正常情况下可以直接调用 MCP 工具；如果工具返回 `Transport closed`，按下面顺序判断：
+
+```bash
+codegraph status .
+codegraph sync .
+tail -30 .codegraph/daemon.log
+```
+
+健康状态应看到：
+
+- `Index is up to date`
+- `.codegraph/daemon.log` 里有 `Listening on .../.codegraph/daemon.sock`
+- `File watcher active`
+
+如果 CLI 正常但 Codex 的 `mcp__codegraph.*` 仍是 `Transport closed`，通常坏的是 Codex 托管的 stdio MCP 连接，不是项目索引。此时：
+
+- 不要删除 `.codegraph/`。
+- 可以临时用 `codegraph context "<task>" --path .` 辅助排查。
+- 重启当前 Codex 会话或 Codex App，让它重新按 `~/.codex/config.toml` 的 `codegraph serve --mcp` 拉起 MCP。
+- 重启后用一次 `codegraph_context` 验证，不要只看 CLI status。
+
 ## Git 规范
 
 默认每次有效改动都提交。提交信息格式：
@@ -220,6 +243,8 @@ http://localhost:8080/debug-tsc.html?perf=1&heroes=200
 lsof -nP -iTCP:8080 -sTCP:LISTEN
 curl -I 'http://127.0.0.1:8080/debug-tsc.html?perf=1&heroes=200'
 ```
+
+`lsof` 里健康监听通常是 `*:8080` 或 `0.0.0.0:8080`。如果只有 `127.0.0.1:8080`，局域网设备访问不到；停掉旧服务后重跑 `npm run debug:ready`。本机和局域网始终共用 8080，不要再开 8081。
 
 不要提交 `bin/js/debug/` 生成物。局域网设备看不到最新变化时，先确认是否重新 `npm run build:debug`，再强刷浏览器缓存。
 
