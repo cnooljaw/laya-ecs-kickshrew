@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LayaAir + bitecs ECS 框架分享</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --ink: #1f2933;
+      --muted: #5f6b7a;
+      --line: #d6dde8;
+      --panel: #ffffff;
+      --panel-soft: #eef4fb;
+      --blue: #2364aa;
+      --cyan: #188a9b;
+      --green: #2d7d46;
+      --amber: #b7791f;
+      --red: #b34343;
+      --violet: #6c4ab6;
+      --shadow: 0 16px 40px rgba(26, 39, 66, 0.12);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      background:
+        linear-gradient(90deg, rgba(35, 100, 170, 0.08), transparent 34%),
+        linear-gradient(180deg, rgba(45, 125, 70, 0.06), transparent 42%),
+        var(--bg);
+    }
+
+    .rail {
+      border-right: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.74);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      align-items: center;
+      justify-items: center;
+      padding: 18px 10px;
+    }
+
+    .rail-title {
+      writing-mode: vertical-rl;
+      letter-spacing: 0;
+      font-weight: 760;
+      color: var(--blue);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .progress {
+      width: 8px;
+      height: min(58vh, 430px);
+      border-radius: 999px;
+      background: #dfe6ef;
+      overflow: hidden;
+      align-self: center;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 7.6%;
+      background: linear-gradient(180deg, var(--blue), var(--green));
+      border-radius: inherit;
+      transition: height 180ms ease;
+    }
+
+    .counter {
+      color: var(--muted);
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .viewport {
+      position: relative;
+      height: 100vh;
+      padding: 28px;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 28px;
+      display: none;
+      grid-template-rows: auto 1fr auto;
+      gap: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(214, 221, 232, 0.9);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 34px 40px 24px;
+      overflow: hidden;
+    }
+
+    .slide.active {
+      display: grid;
+    }
+
+    .kicker {
+      color: var(--blue);
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      margin-bottom: 9px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 920px;
+      font-size: 52px;
+      line-height: 1.08;
+      letter-spacing: 0;
+      color: #172231;
+    }
+
+    h2 {
+      font-size: 34px;
+      line-height: 1.16;
+      letter-spacing: 0;
+      color: #172231;
+    }
+
+    h3 {
+      font-size: 18px;
+      line-height: 1.3;
+      letter-spacing: 0;
+      color: #172231;
+    }
+
+    .lead {
+      max-width: 960px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.62;
+      margin-top: 14px;
+    }
+
+    .content {
+      min-height: 0;
+      display: grid;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .split {
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.95fr);
+    }
+
+    .split-wide {
+      grid-template-columns: minmax(0, 1.08fr) minmax(380px, 0.82fr);
+    }
+
+    .rows {
+      display: grid;
+      gap: 14px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .four {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .panel,
+    .mini,
+    .quote {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .panel {
+      padding: 18px 20px;
+    }
+
+    .mini {
+      padding: 14px;
+      min-height: 106px;
+    }
+
+    .mini strong,
+    .panel strong {
+      display: block;
+      color: #172231;
+      font-size: 16px;
+      margin-bottom: 7px;
+    }
+
+    .mini p,
+    .panel p,
+    .quote p,
+    li {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .quote {
+      border-left: 5px solid var(--green);
+      padding: 16px 18px;
+      background: #f7fbf6;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #eef4fb;
+      border: 1px solid #d4e4f6;
+      color: #204b78;
+      font-size: 13px;
+      font-weight: 660;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 19px;
+    }
+
+    .code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #283442;
+      background: #f1f4f8;
+      border: 1px solid #dbe3ee;
+      border-radius: var(--radius);
+      padding: 13px 14px;
+      white-space: pre-wrap;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--panel);
+      font-size: 14px;
+    }
+
+    .table th,
+    .table td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .table th {
+      background: #edf3fa;
+      color: #1f3d5c;
+      font-weight: 760;
+    }
+
+    .table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .diagram {
+      width: 100%;
+      min-height: 260px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfe;
+      overflow: hidden;
+    }
+
+    .diagram svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .nav button {
+      width: 34px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      color: #213047;
+      cursor: pointer;
+    }
+
+    .nav button:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .accent-blue { border-top: 4px solid var(--blue); }
+    .accent-cyan { border-top: 4px solid var(--cyan); }
+    .accent-green { border-top: 4px solid var(--green); }
+    .accent-amber { border-top: 4px solid var(--amber); }
+    .accent-red { border-top: 4px solid var(--red); }
+    .accent-violet { border-top: 4px solid var(--violet); }
+
+    .route {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .route-step {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 8px;
+      background: #ffffff;
+      min-height: 82px;
+      display: grid;
+      align-content: center;
+      text-align: center;
+      color: #233147;
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 680;
+    }
+
+    .route-step small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 520;
+      margin-top: 5px;
+    }
+
+    .source-list {
+      columns: 2;
+      column-gap: 28px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        overflow: auto;
+      }
+
+      .deck {
+        width: 100%;
+        min-height: 100vh;
+        height: auto;
+        grid-template-columns: 1fr;
+      }
+
+      .rail {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        grid-template-columns: auto 1fr auto;
+        grid-template-rows: 1fr;
+        height: 54px;
+        width: 100%;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .rail-title {
+        writing-mode: horizontal-tb;
+      }
+
+      .progress {
+        width: 100%;
+        height: 8px;
+      }
+
+      .progress-bar {
+        height: 100%;
+        width: 7.6%;
+      }
+
+      .viewport {
+        width: 100%;
+        height: auto;
+        min-height: calc(100vh - 54px);
+        padding: 14px;
+      }
+
+      .slide {
+        position: relative;
+        inset: auto;
+        min-height: calc(100vh - 82px);
+        padding: 24px 18px 18px;
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+
+      h2 {
+        font-size: 28px;
+      }
+
+      .split,
+      .split-wide,
+      .cards,
+      .two,
+      .four {
+        grid-template-columns: 1fr;
+      }
+
+      .route {
+        grid-template-columns: 1fr;
+      }
+
+      .source-list {
+        columns: 1;
+      }
+    }
+
+    @media print {
+      body {
+        overflow: visible;
+        background: #ffffff;
+      }
+
+      .deck {
+        display: block;
+        background: #ffffff;
+      }
+
+      .rail,
+      .nav {
+        display: none;
+      }
+
+      .viewport {
+        height: auto;
+        padding: 0;
+      }
+
+      .slide,
+      .slide.active {
+        position: relative;
+        inset: auto;
+        display: grid;
+        height: 100vh;
+        page-break-after: always;
+        box-shadow: none;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-label="LayaAir + bitecs ECS 框架分享">
+    <aside class="rail" aria-label="页面进度">
+      <div class="rail-title">ECS FRAMEWORK</div>
+      <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">13</span></div>
+    </aside>
+
+    <section class="viewport">
+      <article class="slide active" data-title="Title">
+        <header>
+          <div class="kicker">LayaAir3 + TypeScript + bitecs</div>
+          <h1>从打地鼠原型看一个可测试的 ECS 客户端框架</h1>
+          <p class="lead">这份分享把项目里的权威状态、状态机、protobuf 网络、dirty binding、TDD 和压测调试串成一条完整工程链路。</p>
+          <div class="tag-row">
+            <span class="tag">protobuf</span>
+            <span class="tag">FSM</span>
+            <span class="tag">bitecs</span>
+            <span class="tag">Unity DOTS 对照</span>
+            <span class="tag">Dirty Mark / Binding</span>
+            <span class="tag">TDD</span>
+            <span class="tag">Laya 调试</span>
+          </div>
+        </header>
+        <div class="content split-wide">
+          <div class="quote">
+            <p>核心目标：ECS 承载权威状态和规则，Laya 节点只做表现，dirty binding 负责把变化差量同步到画面。</p>
+          </div>
+          <div class="diagram">
+            <svg viewBox="0 0 720 360" role="img" aria-label="框架总览图">
+              <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="38" y="44" width="150" height="70" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="113" y="75" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">输入 / 网络</text>
+              <text x="113" y="98" text-anchor="middle" font-size="13" fill="#5f6b7a">touch, socket, resource</text>
+              <rect x="282" y="44" width="156" height="70" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="360" y="75" text-anchor="middle" font-size="18" font-weight="700" fill="#1f5f36">ECS 规则层</text>
+              <text x="360" y="98" text-anchor="middle" font-size="13" fill="#5f6b7a">world, component, system</text>
+              <rect x="532" y="44" width="150" height="70" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="607" y="75" text-anchor="middle" font-size="18" font-weight="700" fill="#80530f">Dirty Binding</text>
+              <text x="607" y="98" text-anchor="middle" font-size="13" fill="#5f6b7a">bitmask, projection</text>
+              <rect x="282" y="218" width="156" height="70" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="360" y="249" text-anchor="middle" font-size="18" font-weight="700" fill="#46317d">Laya 表现层</text>
+              <text x="360" y="272" text-anchor="middle" font-size="13" fill="#5f6b7a">Scene, Node, Spine</text>
+              <path d="M188 79 H274" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+              <path d="M438 79 H524" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+              <path d="M607 114 C607 182 520 253 446 253" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+              <path d="M282 253 C196 253 120 175 120 123" stroke="#b34343" stroke-width="2.5" stroke-dasharray="7 7" fill="none"></path>
+              <text x="148" y="222" font-size="13" fill="#b34343">禁止反向改权威状态</text>
+            </svg>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>材料来源：docs/architecture.md, docs/ecs-binding.md, docs/protocol.md, docs/test-guide.md, docs/performance-tuning.md</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="Agenda">
+        <header>
+          <div class="kicker">Agenda</div>
+          <h2>分享目标：讲清楚“框架为什么这样拆”</h2>
+          <p class="lead">不是单独介绍 ECS 名词，而是用项目运行链路说明边界、测试、调试和性能取舍。</p>
+        </header>
+        <div class="content">
+          <div class="cards">
+            <div class="mini accent-blue"><strong>概念层</strong><p>Entity、Component、System、Query，以及 bitecs 和 Unity DOTS 的对应关系。</p></div>
+            <div class="mini accent-green"><strong>规则层</strong><p>地鼠状态机如何在 ECS 中推进，点击与网络回包如何进入系统。</p></div>
+            <div class="mini accent-amber"><strong>同步层</strong><p>dirty mark 如何找出变化，binding 如何把数据投影到 Laya 节点。</p></div>
+            <div class="mini accent-cyan"><strong>工程化</strong><p>protobuf 边界、seqId 匹配、TDD 测试矩阵、调试页面和日志。</p></div>
+            <div class="mini accent-violet"><strong>性能层</strong><p>用 perf 英雄链路区分 ECS 成本、dirty 同步成本和 Laya Spine 渲染成本。</p></div>
+            <div class="mini accent-red"><strong>落地层</strong><p>新增状态、字段、协议、表现时按固定清单走，避免边界穿透。</p></div>
+          </div>
+          <div class="route" aria-label="分享路线">
+            <div class="route-step">Why<small>为什么用 ECS</small></div>
+            <div class="route-step">Model<small>数据建模</small></div>
+            <div class="route-step">Loop<small>每帧系统</small></div>
+            <div class="route-step">Network<small>protobuf</small></div>
+            <div class="route-step">FSM<small>状态机</small></div>
+            <div class="route-step">Binding<small>差量表现</small></div>
+            <div class="route-step">Debug<small>测试压测</small></div>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>讲法建议：先给整体图，再逐层展开，不从库 API 开始。</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="ECS Basics">
+        <header>
+          <div class="kicker">ECS Basics</div>
+          <h2>ECS 的核心：身份、数据、规则分离</h2>
+          <p class="lead">本项目把游戏权威状态放在 bitecs component 数组里，Laya 节点只消费同步后的表现命令。</p>
+        </header>
+        <div class="content split">
+          <div class="rows">
+            <div class="panel accent-blue"><strong>Entity</strong><p>只是一个数字 eid。它代表“这个地鼠”“这个洞位”“这个玩家单例”，不保存行为。</p></div>
+            <div class="panel accent-green"><strong>Component</strong><p>纯数据切片。例：ShrewComponent 记录 actionState、hp、isClickable；AnimationComponent 记录 animType、progress、duration。</p></div>
+            <div class="panel accent-amber"><strong>System</strong><p>按 Query 找到拥有某组 Component 的实体，批量推进规则。例：shrewStateSystem 只处理 ShrewComponent + AnimationComponent。</p></div>
+          </div>
+          <div class="diagram">
+            <svg viewBox="0 0 720 420" role="img" aria-label="ECS 三要素关系图">
+              <defs>
+                <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="42" y="54" width="150" height="70" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="117" y="86" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">eid 42</text>
+              <text x="117" y="109" text-anchor="middle" font-size="13" fill="#5f6b7a">地鼠实体</text>
+              <rect x="286" y="34" width="170" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="371" y="67" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">ShrewComponent</text>
+              <rect x="286" y="103" width="170" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="371" y="136" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">AnimationComponent</text>
+              <rect x="286" y="172" width="170" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="371" y="205" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">DirtyComponent</text>
+              <rect x="516" y="108" width="156" height="82" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="594" y="140" text-anchor="middle" font-size="17" font-weight="700" fill="#80530f">shrewStateSystem</text>
+              <text x="594" y="164" text-anchor="middle" font-size="13" fill="#5f6b7a">Query + batch update</text>
+              <path d="M192 89 H278" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow2)"></path>
+              <path d="M456 130 H508" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow2)"></path>
+              <rect x="82" y="286" width="560" height="70" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="362" y="316" text-anchor="middle" font-size="18" font-weight="700" fill="#172231">数据连续存储，系统按组件组合遍历</text>
+              <text x="362" y="340" text-anchor="middle" font-size="14" fill="#5f6b7a">更利于测试、批处理和将规则从表现层剥离</text>
+            </svg>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应代码：src/ecs/components/index.ts, src/ecs/world.ts, src/ecs/systems/*</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="bitecs vs DOTS">
+        <header>
+          <div class="kicker">bitecs vs Unity DOTS</div>
+          <h2>可以用 DOTS 的心智模型理解 bitecs，但实现重量不同</h2>
+          <p class="lead">bitecs 更像轻量 SoA ECS：组件是 typed array，查询是 defineQuery，调度顺序由项目代码显式安排。</p>
+        </header>
+        <div class="content">
+          <table class="table" aria-label="bitecs 和 Unity DOTS 对照表">
+            <thead>
+              <tr>
+                <th>概念</th>
+                <th>bitecs 项目写法</th>
+                <th>Unity DOTS 心智对应</th>
+                <th>差异重点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Entity</td>
+                <td>number eid</td>
+                <td>Entity</td>
+                <td>bitecs 实体就是数字，生命周期由 world 和 add/remove component 管。</td>
+              </tr>
+              <tr>
+                <td>Component</td>
+                <td>defineComponent({ field: Types.f32 })</td>
+                <td>IComponentData</td>
+                <td>bitecs 使用 SoA typed array，字段通过 Component.field[eid] 读写。</td>
+              </tr>
+              <tr>
+                <td>Query</td>
+                <td>defineQuery([A, B, C])</td>
+                <td>EntityQuery / SystemAPI.Query</td>
+                <td>只表达“拥有哪些组件”，不内置复杂 Job 调度。</td>
+              </tr>
+              <tr>
+                <td>System</td>
+                <td>普通 TS 函数</td>
+                <td>ISystem / SystemBase</td>
+                <td>项目用 GameLoopPipeline 固定顺序，比引擎调度更直观。</td>
+              </tr>
+              <tr>
+                <td>Presentation</td>
+                <td>binding + ViewNode</td>
+                <td>Hybrid Renderer / Authoring</td>
+                <td>Laya 节点不是权威状态，只是 dirty 后的投影对象。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="quote">
+            <p>讲解时可以强调：DOTS 更完整，包含 Job、Burst、SubScene、Baking 等生产体系；本项目使用 bitecs 是为了在 Web/Laya 客户端里获得清晰边界、可测试系统和低成本数据遍历。</p>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>项目关键词：defineComponent, defineQuery, GameLoopPipeline, SyncView</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="Architecture">
+        <header>
+          <div class="kicker">Architecture Boundary</div>
+          <h2>分层边界：规则不能依赖 Laya，回包不能直接改 View</h2>
+          <p class="lead">项目依赖方向固定为 input/network/resource callback -> adapter -> ECS systems -> dirty -> binding -> Laya view nodes。</p>
+        </header>
+        <div class="content split">
+          <div class="diagram">
+            <svg viewBox="0 0 760 470" role="img" aria-label="项目分层架构图">
+              <defs>
+                <marker id="arrow3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="72" y="32" width="616" height="54" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="380" y="66" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">Main.ts / Laya 入口层</text>
+              <rect x="72" y="112" width="616" height="54" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="380" y="146" text-anchor="middle" font-size="18" font-weight="700" fill="#172231">GameScene / GameLoopPipeline / KickInputAdapter</text>
+              <rect x="72" y="192" width="284" height="70" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="214" y="224" text-anchor="middle" font-size="18" font-weight="700" fill="#1f5f36">src/ecs</text>
+              <text x="214" y="247" text-anchor="middle" font-size="13" fill="#5f6b7a">components, systems, lifecycle</text>
+              <rect x="404" y="192" width="284" height="70" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="546" y="224" text-anchor="middle" font-size="18" font-weight="700" fill="#80530f">src/network</text>
+              <text x="546" y="247" text-anchor="middle" font-size="13" fill="#5f6b7a">protobuf, socket, mock</text>
+              <rect x="72" y="298" width="284" height="70" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="214" y="330" text-anchor="middle" font-size="18" font-weight="700" fill="#80530f">src/binding</text>
+              <text x="214" y="353" text-anchor="middle" font-size="13" fill="#5f6b7a">SyncView, ViewBinding</text>
+              <rect x="404" y="298" width="284" height="70" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="546" y="330" text-anchor="middle" font-size="18" font-weight="700" fill="#46317d">src/view</text>
+              <text x="546" y="353" text-anchor="middle" font-size="13" fill="#5f6b7a">Laya nodes, registry, scene</text>
+              <path d="M380 86 V104" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
+              <path d="M380 166 C312 176 250 180 214 190" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow3)"></path>
+              <path d="M380 166 C448 176 510 180 546 190" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow3)"></path>
+              <path d="M214 262 V290" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
+              <path d="M356 333 H396" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
+              <path d="M546 262 C530 276 522 284 520 294" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow3)"></path>
+              <text x="380" y="430" text-anchor="middle" font-size="14" fill="#b34343">禁止：src/ecs 直接 Laya.*，socket 回包直接操作 view node</text>
+            </svg>
+          </div>
+          <div class="rows">
+            <div class="panel accent-green"><strong>权威状态</strong><p>Shrew/Hole/Hammer/Combo/Scene/Player/Network 等 Component 是规则和同步的事实来源。</p></div>
+            <div class="panel accent-cyan"><strong>运行装配</strong><p>GameScene 创建 world、实体、节点、ViewRegistry、SyncView、NetworkAdapter 和输入适配器。</p></div>
+            <div class="panel accent-red"><strong>边界警戒</strong><p>如果 view node 里出现命中合法性、协议字段解析、奖励计算，说明职责已经穿透。</p></div>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应文档：docs/architecture.md, docs/laya-rules.md</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="Runtime Loop">
+        <header>
+          <div class="kicker">Runtime Loop</div>
+          <h2>每帧系统顺序决定了“先规则，后表现”</h2>
+          <p class="lead">GameLoopPipeline.update(deltaSec) 显式安排系统顺序，避免隐式事件链让调试变困难。</p>
+        </header>
+        <div class="content">
+          <div class="route">
+            <div class="route-step">animationTimerSystem<small>动画进度</small></div>
+            <div class="route-step">shrewStateSystem<small>地鼠 FSM</small></div>
+            <div class="route-step">sceneCycleSystem<small>地图轮换</small></div>
+            <div class="route-step">hammerSystem<small>锤子冷却</small></div>
+            <div class="route-step">network.update<small>超时检查</small></div>
+            <div class="route-step">dirtyMarkSystem<small>字段 diff</small></div>
+            <div class="route-step">syncView.sync<small>投影到 Laya</small></div>
+          </div>
+          <div class="two">
+            <div class="panel accent-blue">
+              <strong>deltaSec 是事实时间</strong>
+              <p>状态机和动画计时都使用 GameScene.update(deltaSec) 传入的真实帧间隔，不把规则绑死在固定 60fps 上。</p>
+            </div>
+            <div class="panel accent-amber">
+              <strong>dirty 在系统之后统一计算</strong>
+              <p>系统只改 component。DirtyMarkSystem 比较本帧和上一帧快照，再让 SyncView 决定哪些节点需要更新。</p>
+            </div>
+          </div>
+          <pre class="code">GameScene.update(delta)
+  -> GameLoopPipeline.update(delta)
+  -> animationTimerSystem
+  -> shrewStateSystem
+  -> sceneCycleSystem
+  -> hammerSystem
+  -> network.update
+  -> perfHeroSystem
+  -> dirtyMarkSystem
+  -> syncView.sync</pre>
+        </div>
+        <footer class="footer">
+          <span>对应代码：src/view/GameLoopPipeline.ts</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="Protobuf">
+        <header>
+          <div class="kicker">Protocol Boundary</div>
+          <h2>protobuf 网络边界：二进制收发，不让协议细节扩散到 View</h2>
+          <p class="lead">KickSocket 管 seqId、pending、超时和 protobuf 编解码；NetworkAdapter 把 mock 和真实 transport 隔离起来。</p>
+        </header>
+        <div class="content split-wide">
+          <div class="diagram">
+            <svg viewBox="0 0 820 420" role="img" aria-label="protobuf 网络流程图">
+              <defs>
+                <marker id="arrow4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="38" y="60" width="140" height="70" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="108" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">KickInputAdapter</text>
+              <text x="108" y="114" text-anchor="middle" font-size="12" fill="#5f6b7a">hit + combo</text>
+              <rect x="230" y="60" width="130" height="70" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="295" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">NetworkAdapter</text>
+              <text x="295" y="114" text-anchor="middle" font-size="12" fill="#5f6b7a">runtime bridge</text>
+              <rect x="412" y="60" width="140" height="70" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="482" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">KickSocket</text>
+              <text x="482" y="114" text-anchor="middle" font-size="12" fill="#5f6b7a">seqId pending</text>
+              <rect x="604" y="60" width="150" height="70" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="679" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">MockServer</text>
+              <text x="679" y="114" text-anchor="middle" font-size="12" fill="#5f6b7a">protobuf decode/encode</text>
+              <path d="M178 95 H222" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
+              <path d="M360 95 H404" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
+              <path d="M552 95 H596" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
+              <path d="M679 130 C679 224 566 270 482 270 C390 270 306 238 230 188" stroke="#2d7d46" stroke-width="3" fill="none" marker-end="url(#arrow4)"></path>
+              <rect x="230" y="294" width="314" height="58" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="387" y="327" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">hitResponseSystem(world, resp)</text>
+              <path d="M294 130 C300 205 335 246 382 292" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow4)"></path>
+              <text x="410" y="384" text-anchor="middle" font-size="14" fill="#5f6b7a">Envelope: seq_id + msg_id + payload，业务侧类型留在 ProtocolTypes</text>
+            </svg>
+          </div>
+          <div class="rows">
+            <div class="panel accent-blue"><strong>请求匹配</strong><p>每次 sendKick 递增 seqId，pendingRequests 记录 resolve/reject；回包按 seqId 匹配，乱序也能处理。</p></div>
+            <div class="panel accent-green"><strong>协议隔离</strong><p>api/proto/kick.proto 是客户端协议副本；KickProtoCodec 负责 snake_case 与业务 camelCase/旧字段名映射。</p></div>
+            <div class="panel accent-red"><strong>防回退</strong><p>MockServer 链路也走 protobuf 编解码，避免测试环境偷偷回到 JSON。</p></div>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应代码：src/network/KickSocket.ts, src/network/KickProtoCodec.ts, docs/protocol.md</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="FSM">
+        <header>
+          <div class="kicker">State Machine</div>
+          <h2>状态机：少状态、明语义、统一重置入口</h2>
+          <p class="lead">地鼠状态已经收敛到 Wait / Up / Stand / Down / Dizzy。自然离场和命中离场语义分开，避免 Down 期间再次被击中的歧义。</p>
+        </header>
+        <div class="content split">
+          <div class="diagram">
+            <svg viewBox="0 0 720 470" role="img" aria-label="地鼠状态机图">
+              <defs>
+                <marker id="arrow5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <circle cx="120" cy="220" r="54" fill="#eef4fb" stroke="#2364aa" stroke-width="2"></circle>
+              <text x="120" y="226" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">Wait</text>
+              <circle cx="292" cy="116" r="54" fill="#f0f8f3" stroke="#2d7d46" stroke-width="2"></circle>
+              <text x="292" y="122" text-anchor="middle" font-size="18" font-weight="700" fill="#1f5f36">Up</text>
+              <circle cx="500" cy="116" r="54" fill="#fff6e8" stroke="#b7791f" stroke-width="2"></circle>
+              <text x="500" y="122" text-anchor="middle" font-size="18" font-weight="700" fill="#80530f">Stand</text>
+              <circle cx="500" cy="320" r="54" fill="#eef4fb" stroke="#2364aa" stroke-width="2"></circle>
+              <text x="500" y="326" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">Down</text>
+              <circle cx="292" cy="320" r="54" fill="#fbeeee" stroke="#b34343" stroke-width="2"></circle>
+              <text x="292" y="326" text-anchor="middle" font-size="18" font-weight="700" fill="#8a2828">Dizzy</text>
+              <path d="M166 192 C196 160 219 140 239 129" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow5)"></path>
+              <path d="M346 116 H438" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow5)"></path>
+              <path d="M500 170 V258" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow5)"></path>
+              <path d="M448 337 C332 392 188 342 134 273" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow5)"></path>
+              <path d="M455 145 C390 206 353 251 322 276" stroke="#b34343" stroke-width="3" stroke-dasharray="8 6" fill="none" marker-end="url(#arrow5)"></path>
+              <path d="M238 320 C185 306 147 280 131 272" stroke="#b34343" stroke-width="3" fill="none" marker-end="url(#arrow5)"></path>
+              <text x="352" y="214" text-anchor="middle" font-size="13" fill="#b34343">hit -> startShrewDizzyHold</text>
+              <text x="282" y="424" text-anchor="middle" font-size="14" fill="#5f6b7a">resetShrewForNextCycle 是下一轮唯一入口</text>
+            </svg>
+          </div>
+          <div class="rows">
+            <div class="panel accent-green"><strong>自然循环</strong><p>Wait 随机等待，Up 播出洞动画，Stand 开启可点击，Down 播入洞动画，最后重置回 Wait。</p></div>
+            <div class="panel accent-red"><strong>命中循环</strong><p>HitDetectionSystem 判断命中后调用 startShrewDizzyHold，Dizzy 短暂停留结束后直接重置到 Wait。</p></div>
+            <div class="panel accent-blue"><strong>测试重点</strong><p>每条状态边都能用单测重放，尤其是 deltaSec 计时、蓝鼠双击、Dizzy 重置等边界。</p></div>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应代码：src/ecs/systems/ShrewStateSystem.ts, src/ecs/ShrewLifecycle.ts</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="Dirty Binding">
+        <header>
+          <div class="kicker">Dirty Mark / Binding</div>
+          <h2>dirty binding 是 ECS 和 Laya 的契约层</h2>
+          <p class="lead">System 修改 Component 后不直接碰节点。DirtyMarkSystem 比较字段变化，SyncView 按 bit 调用 binding，binding 再调用 ViewNode 方法。</p>
+        </header>
+        <div class="content">
+          <div class="diagram">
+            <svg viewBox="0 0 980 310" role="img" aria-label="Dirty Binding 数据流图">
+              <defs>
+                <marker id="arrow6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="26" y="82" width="126" height="82" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="89" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">System</text>
+              <text x="89" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">改 Component</text>
+              <rect x="194" y="82" width="150" height="82" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="269" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">DirtyAspect</text>
+              <text x="269" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">字段映射</text>
+              <rect x="386" y="82" width="150" height="82" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="461" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">DirtyComponent</text>
+              <text x="461" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">写 bitmask</text>
+              <rect x="578" y="82" width="126" height="82" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="641" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">SyncView</text>
+              <text x="641" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">遍历脏实体</text>
+              <rect x="746" y="82" width="126" height="82" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="809" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">Binding</text>
+              <text x="809" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">读数据投影</text>
+              <rect x="894" y="82" width="70" height="82" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="929" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">Node</text>
+              <text x="929" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">表现</text>
+              <path d="M152 123 H186" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
+              <path d="M344 123 H378" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
+              <path d="M536 123 H570" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
+              <path d="M704 123 H738" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
+              <path d="M872 123 H886" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
+              <rect x="164" y="218" width="660" height="54" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="494" y="251" text-anchor="middle" font-size="16" fill="#283442">Component.field -> BIT_xxx -> DirtyComponent.xxxDirty -> XxxViewBinding -> XxxNode.setXxx</text>
+            </svg>
+          </div>
+          <div class="two">
+            <div class="panel accent-cyan"><strong>新增可视字段清单</strong><p>先写出字段到节点方法的完整链路，再改 components、DirtyFlags、DirtyAspect、ViewBinding、ViewNode 和测试。</p></div>
+            <div class="panel accent-red"><strong>排查顺序</strong><p>数据变了但画面没变时，按 Component、DirtyAspect、DirtyComponent、SyncView、binding、ViewRegistry、node 方法逐层检查。</p></div>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应代码：src/ecs/dirty/aspects/*, src/ecs/systems/DirtyMarkSystem.ts, src/binding/SyncView.ts</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="TDD">
+        <header>
+          <div class="kicker">TDD Workflow</div>
+          <h2>TDD 不是仪式，是把复杂运行时切成可重放事实</h2>
+          <p class="lead">项目把规则、协议、binding、输入 adapter 和资源转换都尽量放到不依赖 Laya 的测试里。</p>
+        </header>
+        <div class="content split">
+          <div class="rows">
+            <div class="panel accent-blue"><strong>Red</strong><p>先跑相关测试确认基线，或者补最小测试复现规则边界。文档变更不强行补无意义测试。</p></div>
+            <div class="panel accent-green"><strong>Green</strong><p>做最小改动，让系统行为通过测试。复杂场景优先测试 ECS、协议、binding，而不是测试 Laya 节点细节。</p></div>
+            <div class="panel accent-violet"><strong>Refactor</strong><p>确认边界没有穿透，清理命名和重复逻辑；提交信息写清楚 Red/Green/Refactor。</p></div>
+          </div>
+          <div class="panel">
+            <strong>常用验证矩阵</strong>
+            <pre class="code">状态机:
+npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts
+
+dirty + binding:
+npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/binding/ShrewViewBinding.test.ts
+
+网络 protobuf:
+npm test -- --run src/tests/network/KickProtoCodec.test.ts src/tests/network/KickSocket.test.ts src/tests/network/MockServer.test.ts
+
+压测英雄:
+npm test -- --run src/tests/ecs/PerfHeroSystem.test.ts src/tests/binding/PerfHeroViewBinding.test.ts src/tests/view/PerfHeroNode.test.ts
+
+类型检查:
+npx tsc --noEmit</pre>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应文档：docs/test-guide.md</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="UI Debug">
+        <header>
+          <div class="kicker">UI Debug Tips</div>
+          <h2>界面调试技巧：把视觉问题拆成坐标、层级、资源、生命周期</h2>
+          <p class="lead">Laya 表现层允许使用 Laya.*，但它只应该表现 ECS 状态。界面 bug 要沿着 owner 和投影链路定位。</p>
+        </header>
+        <div class="content">
+          <div class="four">
+            <div class="mini accent-blue"><strong>坐标</strong><p>输入用设计分辨率比例，洞位配置用 posXRatio/posYRatio，ShrewNode 处理 Cocos Y-up 到 Laya Y-down。</p></div>
+            <div class="mini accent-amber"><strong>层级</strong><p>SceneLayer 管背景、cover 和过渡遮罩；洞位 zOrder 与地图行、cover 资源一起调。</p></div>
+            <div class="mini accent-green"><strong>资源</strong><p>Atlas 逻辑名集中在 AtlasConfig，getFrameTexture 按 url 后缀找子帧，rotated=true 需要手动补偿。</p></div>
+            <div class="mini accent-red"><strong>生命周期</strong><p>timer、tween、event、loader callback、registry 引用都要有 owner 和 teardown。</p></div>
+          </div>
+          <div class="diagram">
+            <svg viewBox="0 0 920 300" role="img" aria-label="界面调试路线图">
+              <defs>
+                <marker id="arrow7" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="34" y="76" width="140" height="70" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="104" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">页面复现</text>
+              <text x="104" y="128" text-anchor="middle" font-size="12" fill="#5f6b7a">debug-tsc.html</text>
+              <rect x="218" y="76" width="140" height="70" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="288" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">查看 ECS</text>
+              <text x="288" y="128" text-anchor="middle" font-size="12" fill="#5f6b7a">state, dirty bits</text>
+              <rect x="402" y="76" width="140" height="70" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="472" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">看 Binding</text>
+              <text x="472" y="128" text-anchor="middle" font-size="12" fill="#5f6b7a">node method</text>
+              <rect x="586" y="76" width="140" height="70" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="656" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">看 Laya</text>
+              <text x="656" y="128" text-anchor="middle" font-size="12" fill="#5f6b7a">zOrder, texture</text>
+              <rect x="770" y="76" width="116" height="70" rx="8" fill="#fbeeee" stroke="#b34343"></rect>
+              <text x="828" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#8a2828">回归测试</text>
+              <text x="828" y="128" text-anchor="middle" font-size="12" fill="#5f6b7a">adapter / registry</text>
+              <path d="M174 111 H210" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow7)"></path>
+              <path d="M358 111 H394" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow7)"></path>
+              <path d="M542 111 H578" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow7)"></path>
+              <path d="M726 111 H762" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow7)"></path>
+              <text x="460" y="218" text-anchor="middle" font-size="15" fill="#5f6b7a">命令：npm run debug:ready，访问 http://localhost:8080/debug-tsc.html</text>
+            </svg>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应文档：docs/laya-rules.md</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="Stress">
+        <header>
+          <div class="kicker">Performance Stress</div>
+          <h2>压测调试：先分清 ECS 压力和 Laya 渲染压力</h2>
+          <p class="lead">perf 英雄链路专门用来测 Spine/Skeleton、dirty binding、节点池和长时间运行压力。</p>
+        </header>
+        <div class="content split">
+          <div class="rows">
+            <div class="panel accent-blue"><strong>压测入口</strong><p>http://localhost:8080/debug-tsc.html?perf=1&heroes=200，可用 heroes/heroCount 控制数量，shrewFast=0 可关闭地鼠加速。</p></div>
+            <div class="panel accent-green"><strong>观察指标</strong><p>FPS、FrameTime、DrawCall、Triangle、Sprite2DCount、JS Heap、GPUMemory、AllTexture、GPUBuffer 一起记录。</p></div>
+            <div class="panel accent-red"><strong>常见结论</strong><p>200 个 Spine 的主要压力通常不在 bitecs，而在 Laya Skeleton 每帧骨骼、slot、mesh 更新和渲染。</p></div>
+          </div>
+          <div class="diagram">
+            <svg viewBox="0 0 760 470" role="img" aria-label="压测链路图">
+              <defs>
+                <marker id="arrow8" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="52" y="38" width="180" height="58" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="142" y="73" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">URL query perf=1</text>
+              <rect x="292" y="38" width="180" height="58" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="382" y="73" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">createPerfHeroEntities</text>
+              <rect x="532" y="38" width="180" height="58" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="622" y="73" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">perfHeroSystem</text>
+              <rect x="292" y="154" width="180" height="58" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="382" y="189" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">DirtyMarkSystem</text>
+              <rect x="52" y="154" width="180" height="58" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="142" y="189" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">PerfHeroBinding</text>
+              <rect x="52" y="270" width="180" height="58" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="142" y="305" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">PerfHeroNode</text>
+              <rect x="292" y="270" width="180" height="58" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="382" y="305" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">Spine Pool Group</text>
+              <rect x="532" y="270" width="180" height="58" rx="8" fill="#fbeeee" stroke="#b34343"></rect>
+              <text x="622" y="305" text-anchor="middle" font-size="15" font-weight="700" fill="#8a2828">Laya Skeleton</text>
+              <path d="M232 67 H284" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow8)"></path>
+              <path d="M472 67 H524" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow8)"></path>
+              <path d="M622 96 C610 142 534 180 480 183" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow8)"></path>
+              <path d="M292 183 H240" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow8)"></path>
+              <path d="M142 212 V262" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow8)"></path>
+              <path d="M232 299 H284" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow8)"></path>
+              <path d="M472 299 H524" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow8)"></path>
+              <text x="382" y="410" text-anchor="middle" font-size="14" fill="#5f6b7a">池化、隐藏顺序、pending respawn、防瞬移，是压测稳定性的关键</text>
+            </svg>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应文档：docs/performance-tuning.md</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="Checklist">
+        <header>
+          <div class="kicker">Implementation Checklist</div>
+          <h2>落地清单：每次扩展都沿着边界走</h2>
+          <p class="lead">把新增需求翻译成“数据、规则、同步、表现、测试、调试入口”，就不会让 GameScene 或 ViewNode 重新膨胀。</p>
+        </header>
+        <div class="content">
+          <div class="cards">
+            <div class="mini accent-green"><strong>新增规则</strong><p>先判断需要哪些 Component 字段，再写 system 或 lifecycle helper，避免 view 里编码规则。</p></div>
+            <div class="mini accent-blue"><strong>新增表现</strong><p>写出 Component.field -> BIT -> DirtyComponent -> Binding -> Node 方法链路。</p></div>
+            <div class="mini accent-amber"><strong>新增协议</strong><p>同步 api/proto/kick.proto，更新 ProtocolTypes、KickProtoCodec、KickSocket 和网络测试。</p></div>
+            <div class="mini accent-violet"><strong>新增调试</strong><p>优先做 debug-tsc 页面可复现入口，坐标/层级/资源问题配合截图和日志。</p></div>
+            <div class="mini accent-red"><strong>新增压测</strong><p>明确测的是 ECS、dirty、节点数、Spine，还是长时间资源释放，不混在一个结论里。</p></div>
+            <div class="mini accent-cyan"><strong>新增测试</strong><p>纯规则、协议、binding、adapter 优先单测；纯视觉 tween 通常做运行时冒烟。</p></div>
+          </div>
+          <div class="quote">
+            <p>一句话总结：ECS 让“规则和状态”可测试，dirty binding 让“状态到画面”可控，protobuf 和压测链路让项目能接近真实客户端工程。</p>
+          </div>
+          <div class="source-list">
+            <div>docs/architecture.md</div>
+            <div>docs/ecs-binding.md</div>
+            <div>docs/protocol.md</div>
+            <div>docs/laya-rules.md</div>
+            <div>docs/performance-tuning.md</div>
+            <div>docs/test-guide.md</div>
+            <div>src/view/GameLoopPipeline.ts</div>
+            <div>src/ecs/systems/ShrewStateSystem.ts</div>
+            <div>src/network/KickSocket.ts</div>
+            <div>src/binding/SyncView.ts</div>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>键盘：← / → 翻页，Home / End 跳转，打印可导出 PDF。</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const progressBar = document.getElementById("progressBar");
+    const currentPage = document.getElementById("currentPage");
+    const totalPage = document.getElementById("totalPage");
+    let index = Number(new URLSearchParams(location.search).get("slide") || 1) - 1;
+
+    function clamp(value) {
+      return Math.max(0, Math.min(slides.length - 1, value));
+    }
+
+    function formatPage(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function render(nextIndex) {
+      index = clamp(nextIndex);
+      slides.forEach((slide, slideIndex) => {
+        slide.classList.toggle("active", slideIndex === index);
+      });
+      const percent = ((index + 1) / slides.length) * 100;
+      if (matchMedia("(max-width: 980px)").matches) {
+        progressBar.style.width = percent + "%";
+        progressBar.style.height = "100%";
+      } else {
+        progressBar.style.height = percent + "%";
+        progressBar.style.width = "100%";
+      }
+      currentPage.textContent = formatPage(index + 1);
+      totalPage.textContent = formatPage(slides.length);
+      const url = new URL(location.href);
+      url.searchParams.set("slide", String(index + 1));
+      history.replaceState(null, "", url);
+    }
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (target.matches("[data-prev]")) render(index - 1);
+      if (target.matches("[data-next]")) render(index + 1);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
+        event.preventDefault();
+        render(index + 1);
+      }
+      if (event.key === "ArrowLeft" || event.key === "PageUp") {
+        event.preventDefault();
+        render(index - 1);
+      }
+      if (event.key === "Home") {
+        event.preventDefault();
+        render(0);
+      }
+      if (event.key === "End") {
+        event.preventDefault();
+        render(slides.length - 1);
+      }
+    });
+
+    addEventListener("resize", () => render(index));
+    render(index);
+  </script>
+</body>
+</html>
