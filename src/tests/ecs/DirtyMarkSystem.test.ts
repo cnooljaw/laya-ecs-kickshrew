@@ -15,9 +15,12 @@ import {
 } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType } from '../../ecs/types';
 import { dirtyMarkSystem, getDirtySnapshotForTest } from '../../ecs/systems/DirtyMarkSystem';
+import { ShrewDirtyAspect } from '../../ecs/dirty/aspects/ShrewDirtyAspect';
 import {
   BIT_HOLE_POS,
   BIT_HOLE_SHREW,
+  BIT_SHREW_ACTION,
+  BIT_ANIM_PROGRESS,
   BIT_HAMMER_TYPE,
   BIT_HAMMER_THUNDER,
   BIT_HAMMER_HITTABLE,
@@ -43,6 +46,24 @@ describe('DirtyMarkSystem', () => {
 
   beforeEach(() => {
     world = createGameWorld();
+  });
+
+  it('ShrewDirtyAspect 直观声明 entity 组件组合、字段、dirty bit 和目标节点方法', () => {
+    expect(ShrewDirtyAspect.requires).toEqual([
+      'ShrewComponent',
+      'AnimationComponent',
+      'DirtyComponent',
+    ]);
+
+    const shrewChannel = ShrewDirtyAspect.channels.find(channel => channel.dirtyTarget === 'shrewDirty');
+    const animChannel = ShrewDirtyAspect.channels.find(channel => channel.dirtyTarget === 'animDirty');
+    const actionMark = shrewChannel?.marks.find(mark => mark.bit === BIT_SHREW_ACTION);
+    const progressMark = animChannel?.marks.find(mark => mark.bit === BIT_ANIM_PROGRESS);
+
+    expect(actionMark?.fields.map(field => field.path)).toEqual(['ShrewComponent.actionState']);
+    expect(actionMark?.viewTarget).toBe('ShrewNode.setAnimation');
+    expect(progressMark?.fields.map(field => field.path)).toEqual(['AnimationComponent.progress']);
+    expect(progressMark?.viewTarget).toBe('ShrewNode.setAnimation');
   });
 
   it('组件值未变化: 对应 dirty bit 为 0', () => {

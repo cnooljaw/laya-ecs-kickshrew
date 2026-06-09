@@ -63,24 +63,37 @@ BIT_ANIM_PROGRESS -> AnimationComponent.progress -> shrewAnimationViewBinding
 BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding
 ```
 
-## DirtyMarkSystem schema
+## DirtyAspect
 
-`src/ecs/systems/DirtyMarkSystem.ts` 使用 `DIRTY_SCHEMAS` 声明：
+`src/ecs/dirty/aspects/*DirtyAspect.ts` 声明每类实体的 dirty 映射。`DirtyMarkSystem` 只负责遍历这些 aspect，通用比较逻辑在 `src/ecs/dirty/DirtySchemaRunner.ts`。
 
-- 用哪个 query 找实体。
-- 用哪个快照仓库。
-- 写哪个 `DirtyComponent.xxxDirty`。
-- 首次同步的 `allBits`。
-- 每个 dirty bit 读取哪些 component 字段。
+核心角色：
 
-新增字段时优先改 schema，而不是手写一段新的比较逻辑。
+```text
+Entity = 权威数据身份，一个数字 eid
+Component = 挂到 eid 上的数据切片
+System = 修改/计算 ECS 数据的规则
+DirtyComponent = ECS 到 View 的变化信号
+ShrewNode = Laya 画面对象，只负责表现
+Binding = 把 ECS 数据翻译成 ShrewNode 方法调用
+```
+
+DirtyAspect 分四层：
+
+```text
+DirtyAspect   某类实体的组件组合，例如 ShrewComponent + AnimationComponent + DirtyComponent
+DirtyChannel  写到 DirtyComponent 的哪一列，例如 shrewDirty 或 animDirty
+DirtyMark     某个 dirty bit，对应一组 ECS 字段和目标 view 方法
+DirtyField    一个可比较的 component 字段，例如 ShrewComponent.actionState
+```
 
 记忆顺序：
 
 ```text
 Component 字段
   -> DirtyFlags bit
-  -> DIRTY_SCHEMAS group
+  -> DirtyAspect DirtyMark
+  -> DirtyComponent.xxxDirty
   -> ViewBinding 处理 bit
   -> ViewNode 方法
 ```
@@ -88,24 +101,29 @@ Component 字段
 新增可视字段时，先写出这一行再改代码：
 
 ```text
-BIT_组件_字段 -> Component.field -> DIRTY_SCHEMAS -> xxxViewBinding -> XxxNode.setXxx(...)
+Component.field -> BIT_组件_字段 -> DirtyComponent.xxxDirty -> xxxViewBinding -> XxxNode.setXxx(...)
 ```
 
 示意：
 
 ```text
-{
-  query: shrewQuery,
-  storeKey: "shrew",
-  dirtyTarget: "shrewDirty",
-  allBits: BIT_SHREW_ALL,
-  groups: [
-    { bit: BIT_SHREW_ACTION, fields: [actionState reader] }
-  ]
-}
+ShrewComponent.actionState
+  -> BIT_SHREW_ACTION
+  -> DirtyComponent.shrewDirty
+  -> shrewViewBinding
+  -> ShrewNode.setAnimation(...)
 ```
 
-多字段共用一个表现更新时，把多个 reader 放进同一个 group。例如洞位位置：
+`requires` 是给人看的组件组合说明，真正决定 bitecs 遍历范围的仍然是 `defineQuery([...])`。例如：
+
+```text
+requires: ["ShrewComponent", "AnimationComponent", "DirtyComponent"]
+query: defineQuery([ShrewComponent, AnimationComponent, DirtyComponent])
+```
+
+这表示同时拥有这三个 component 的 eid 会被视为地鼠 dirty aspect 的实体。
+
+多字段共用一个表现更新时，把多个 `DirtyField` 放进同一个 `DirtyMark`。例如洞位位置：
 
 ```text
 BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding -> HoleNode.setPosition(...)
@@ -145,7 +163,7 @@ ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 vi
 2. `src/ecs/world.ts` 初始化字段。
 3. 对应 system 或 helper 修改字段。
 4. `src/binding/DirtyFlags.ts` 增加 bit。
-5. `DirtyMarkSystem.ts` 的 `DIRTY_SCHEMAS` 增加字段读取和 dirty bit 映射。
+5. 对应 `src/ecs/dirty/aspects/*DirtyAspect.ts` 增加字段读取、dirty bit 和目标 view 方法映射。
 6. 对应 `src/binding/*ViewBinding.ts` 读取字段并调用 node 方法。
 7. 对应 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/**/*.test.ts`。
@@ -156,7 +174,7 @@ ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 vi
 
 ```text
 Component 是否真的变了
-DirtyMarkSystem schema 是否比较了这个字段
+DirtyAspect 是否比较了这个字段
 DirtyComponent.xxxDirty 是否有对应 bit
 SyncView 是否注册了对应 binding
 binding 是否处理了对应 bit
@@ -167,7 +185,7 @@ view node 方法是否真的更新了 Laya 节点
 常见坑：
 
 - 字段写进 component，但 `DirtyFlags` 没有 bit。
-- `DIRTY_SCHEMAS` 漏了字段。
+- 对应 `DirtyAspect` 漏了字段。
 - binding 没处理这个 bit。
 - `shrewAnimationViewBinding` 没注册，导致 Up/Down 只有状态没有中间位移。
 - 节点已销毁但旧引用仍留在注册表。
