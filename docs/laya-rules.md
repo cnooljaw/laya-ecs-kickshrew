@@ -153,6 +153,15 @@ resources/${atlasPath}.atlas
 
 修改 plist、rotated、trimmed 相关逻辑时必须看现有资源测试和实际 atlas 格式。
 
+## LayaIDE .meta 策略
+
+`.meta` 文件主要服务 LayaIDE 资源库索引和 uuid 映射。当前项目不依赖 LayaIDE 做日常开发，运行时代码按路径加载资源，LayaIDE 只作为打包入口时：
+
+- 已经被 git 跟踪的 `.meta` 保持不动，避免影响历史资源、场景或打包兼容性。
+- 新生成但未跟踪的 `.meta` 视为 IDE 噪声，可以清理。
+- `.gitignore` 使用 `*.meta` 阻止后续新 `.meta` 反复污染工作区。
+- 如果以后新增必须由 LayaIDE 管理的场景、预制体或资源配置，再用 `git add -f path/to/file.meta` 单独纳入版本控制。
+
 ## 表现代码测试策略
 
 通常不单测：

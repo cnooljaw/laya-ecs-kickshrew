@@ -273,7 +273,7 @@ Meadow -> Ship -> Space -> Meadow
 
 #### DirtyMarkSystem
 
-`DirtyMarkSystem.ts` 按 world 保存上一帧快照，比较当前帧组件字段，把差异写入 `DirtyComponent` 的各类 bitmask。字段读取、dirty bit、快照仓库和目标 dirty 数组集中在 `DIRTY_SCHEMAS`，新增同步字段时优先改这张 schema：
+`DirtyMarkSystem.ts` 按 world 保存上一帧快照，比较当前帧组件字段，把差异写入 `DirtyComponent` 的各类 bitmask。字段读取、dirty bit、快照仓库和目标 dirty 数组由 `src/ecs/dirty/aspects/*DirtyAspect.ts` 声明，通用比较逻辑在 `src/ecs/dirty/DirtySchemaRunner.ts`：
 
 - `shrewDirty` / `animDirty`：地鼠状态和动画进度。
 - `holeDirty`：洞位坐标、绑定地鼠、zIndex。
@@ -284,6 +284,15 @@ Meadow -> Ship -> Space -> Meadow
 - `hitDirty`：击中特效的地鼠索引、奖励、是否命中。
 
 第一次看到某个实体时会把对应组件标成全脏，后续帧只标记变化字段。`forceFullSync` 独立于这些 bit，通常用于首次同步或场景切换时要求 binding 全量刷新。
+
+DirtyAspect 的阅读顺序：
+
+```text
+Entity eid
+  -> requires / defineQuery 声明 component 组合
+  -> DirtyChannel 写 DirtyComponent.xxxDirty
+  -> DirtyMark 映射 dirty bit、component 字段、目标 view 方法
+```
 
 ### 第 40-50 分钟：dirty binding 怎么把 ECS 显示出来
 
@@ -601,7 +610,7 @@ GameScene.onTouch(x, y)
 2. 在 `src/ecs/world.ts` 初始化字段。
 3. 在 system 中修改字段。
 4. 在 `src/binding/DirtyFlags.ts` 增加 bit。
-5. 在 `DirtyMarkSystem.ts` 的 `DIRTY_SCHEMAS` 增加字段读取和 dirty bit 映射。
+5. 在对应 `src/ecs/dirty/aspects/*DirtyAspect.ts` 增加字段读取、dirty bit 和目标 view 方法映射。
 6. 在对应 `*ViewBinding.ts` 读取字段并调用 node 方法。
 7. 在 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/ecs/*.test.ts`。
@@ -685,7 +694,7 @@ A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 
 
 - 代码入口：`src/ecs/systems/DirtyMarkSystem.ts`、`src/binding/SyncView.ts`、对应 `src/binding/*ViewBinding.ts`。
 - 数据流：system 修改 component，`dirtyMarkSystem` 对比快照写 `DirtyComponent.xxxDirty`，`SyncView.sync()` 调 binding，binding 读取 component 更新 view node。
-- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；`DIRTY_SCHEMAS` 没比较这个字段；binding 没处理这个 bit；节点没有注册或已销毁但注册表还留着旧引用。
+- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `DirtyAspect` 没比较这个字段；binding 没处理这个 bit；节点没有注册或已销毁但注册表还留着旧引用。
 - 验证方式：先跑 `npx vitest run src/tests/ecs/DirtyMarkSystem.test.ts`，再在相关 system 后打印 component 和 dirty bit。
 
 ### Q: 地鼠 Up/Down 状态有了，为什么 0.31 秒内没有真正上下移动？

@@ -212,12 +212,14 @@ git checkout -- <file>
 - `temp/`
 - `release/`
 - `.DS_Store`
+- 未跟踪的 LayaIDE `*.meta`
 - `bin/js/bundles/`
 - `bin/js/game.js`
 - `bin/js/game.js.map`
 - `bin/js/debug/`
 
 `bin/js/libs/*.js` 是 Laya 运行库，不要因为 `game.js` 是生成物就粗暴忽略整个 `bin/js/`。
+已有历史跟踪的 `.meta` 不要批量删除；新生成的 `.meta` 默认由 `.gitignore` 忽略。确实需要提交 LayaIDE 管理的新增资源元数据时，用 `git add -f path/to/file.meta` 单独处理。
 
 ## 性能压测和局域网发布
 
