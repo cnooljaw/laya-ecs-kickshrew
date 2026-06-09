@@ -134,6 +134,7 @@
     h3,
     p {
       margin: 0;
+      overflow-wrap: anywhere;
     }
 
     h1 {
@@ -279,6 +280,8 @@
       border-radius: var(--radius);
       padding: 13px 14px;
       white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      overflow-x: auto;
     }
 
     .table {
@@ -297,6 +300,7 @@
       border-bottom: 1px solid var(--line);
       text-align: left;
       vertical-align: top;
+      overflow-wrap: anywhere;
     }
 
     .table th {
@@ -402,8 +406,10 @@
     }
 
     @media (max-width: 980px) {
+      html,
       body {
         overflow: auto;
+        overflow-x: hidden;
       }
 
       .deck {
@@ -449,6 +455,7 @@
       .slide {
         position: relative;
         inset: auto;
+        max-width: 100%;
         min-height: calc(100vh - 82px);
         padding: 24px 18px 18px;
       }
@@ -471,6 +478,12 @@
 
       .route {
         grid-template-columns: 1fr;
+      }
+
+      .table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
       }
 
       .source-list {
@@ -517,7 +530,7 @@
     <aside class="rail" aria-label="页面进度">
       <div class="rail-title">ECS FRAMEWORK</div>
       <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
-      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">13</span></div>
+      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">14</span></div>
     </aside>
 
     <section class="viewport">
@@ -607,14 +620,14 @@
       <article class="slide" data-title="ECS Basics">
         <header>
           <div class="kicker">ECS Basics</div>
-          <h2>ECS 的核心：身份、数据、规则分离</h2>
-          <p class="lead">本项目把游戏权威状态放在 bitecs component 数组里，Laya 节点只消费同步后的表现命令。</p>
+          <h2>用 SceneComponent 看懂 bitecs 的数据模型</h2>
+          <p class="lead">bitecs 不是把数据挂在对象实例上，而是把每个字段拆成数组；实体 eid 是数组下标，System 通过 Query 找到要处理的 eid。</p>
         </header>
         <div class="content split">
           <div class="rows">
-            <div class="panel accent-blue"><strong>Entity</strong><p>只是一个数字 eid。它代表“这个地鼠”“这个洞位”“这个玩家单例”，不保存行为。</p></div>
-            <div class="panel accent-green"><strong>Component</strong><p>纯数据切片。例：ShrewComponent 记录 actionState、hp、isClickable；AnimationComponent 记录 animType、progress、duration。</p></div>
-            <div class="panel accent-amber"><strong>System</strong><p>按 Query 找到拥有某组 Component 的实体，批量推进规则。例：shrewStateSystem 只处理 ShrewComponent + AnimationComponent。</p></div>
+            <div class="panel accent-blue"><strong>Entity：sceneEid</strong><p>`createSingletonEntities()` 创建一个场景单例实体。它没有 class，也没有方法，只是一个数字 id。</p></div>
+            <div class="panel accent-green"><strong>Component：字段数组</strong><p>`SceneComponent.currentMap[sceneEid] = MapType.Meadow`。这里的 `currentMap` 是 typed array，eid 是索引。</p></div>
+            <div class="panel accent-amber"><strong>System：按组件查询</strong><p>`defineQuery([SceneComponent])` 找到所有拥有 SceneComponent 的实体，`sceneCycleSystem()` 再读写它们的字段。</p></div>
           </div>
           <div class="diagram">
             <svg viewBox="0 0 720 420" role="img" aria-label="ECS 三要素关系图">
@@ -623,28 +636,28 @@
                   <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
                 </marker>
               </defs>
-              <rect x="42" y="54" width="150" height="70" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="117" y="86" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">eid 42</text>
-              <text x="117" y="109" text-anchor="middle" font-size="13" fill="#5f6b7a">地鼠实体</text>
-              <rect x="286" y="34" width="170" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="371" y="67" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">ShrewComponent</text>
-              <rect x="286" y="103" width="170" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="371" y="136" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">AnimationComponent</text>
-              <rect x="286" y="172" width="170" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="371" y="205" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">DirtyComponent</text>
-              <rect x="516" y="108" width="156" height="82" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="594" y="140" text-anchor="middle" font-size="17" font-weight="700" fill="#80530f">shrewStateSystem</text>
-              <text x="594" y="164" text-anchor="middle" font-size="13" fill="#5f6b7a">Query + batch update</text>
-              <path d="M192 89 H278" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow2)"></path>
-              <path d="M456 130 H508" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow2)"></path>
-              <rect x="82" y="286" width="560" height="70" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="362" y="316" text-anchor="middle" font-size="18" font-weight="700" fill="#172231">数据连续存储，系统按组件组合遍历</text>
-              <text x="362" y="340" text-anchor="middle" font-size="14" fill="#5f6b7a">更利于测试、批处理和将规则从表现层剥离</text>
+              <rect x="38" y="42" width="150" height="74" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="113" y="73" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">sceneEid</text>
+              <text x="113" y="98" text-anchor="middle" font-size="13" fill="#5f6b7a">一个数字实体</text>
+              <rect x="274" y="24" width="196" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="372" y="57" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">currentMap[eid]</text>
+              <rect x="274" y="94" width="196" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="372" y="127" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">sceneTimer[eid]</text>
+              <rect x="274" y="164" width="196" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="372" y="197" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">transitioning[eid]</text>
+              <rect x="528" y="84" width="150" height="82" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="603" y="116" text-anchor="middle" font-size="17" font-weight="700" fill="#80530f">sceneCycleSystem</text>
+              <text x="603" y="140" text-anchor="middle" font-size="13" fill="#5f6b7a">Query + 写数组</text>
+              <path d="M188 79 H266" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow2)"></path>
+              <path d="M470 121 H520" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow2)"></path>
+              <rect x="70" y="268" width="580" height="92" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="360" y="300" text-anchor="middle" font-size="17" font-weight="700" fill="#172231">SceneComponent.currentMap[sceneEid] = nextMap</text>
+              <text x="360" y="328" text-anchor="middle" font-size="14" fill="#5f6b7a">这就是 bitecs 的核心读写方式：Component.field[eid]</text>
             </svg>
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/components/index.ts, src/ecs/world.ts, src/ecs/systems/*</span>
+          <span>对应代码：src/ecs/components/index.ts, src/ecs/world.ts, src/ecs/systems/SceneCycleSystem.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -698,8 +711,22 @@
               </tr>
             </tbody>
           </table>
-          <div class="quote">
-            <p>讲解时可以强调：DOTS 更完整，包含 Job、Burst、SubScene、Baking 等生产体系；本项目使用 bitecs 是为了在 Web/Laya 客户端里获得清晰边界、可测试系统和低成本数据遍历。</p>
+          <div class="two">
+            <div class="panel accent-green">
+              <strong>项目里的 bitecs 四步</strong>
+              <pre class="code">const scene = addEntity(world);
+addComponent(world, SceneComponent, scene);
+SceneComponent.currentMap[scene] = MapType.Meadow;
+
+const sceneQuery = defineQuery([SceneComponent]);
+const entities = sceneQuery(world);
+const sceneEid = entities[0];</pre>
+            </div>
+            <div class="panel accent-amber">
+              <strong>和传统对象写法的区别</strong>
+              <p>不是 `scene.currentMap = Meadow`，而是 `SceneComponent.currentMap[sceneEid] = Meadow`。System 拿到的是一批 eid，再用 eid 去读写各个 Component 字段数组。</p>
+              <p>DOTS 更完整，包含 Job、Burst、Baking 等生产体系；本项目使用 bitecs 是为了在 Web/Laya 客户端里获得清晰边界、可测试系统和低成本数据遍历。</p>
+            </div>
           </div>
         </div>
         <footer class="footer">
@@ -899,51 +926,118 @@
       <article class="slide" data-title="Dirty Binding">
         <header>
           <div class="kicker">Dirty Mark / Binding</div>
-          <h2>dirty binding 是 ECS 和 Laya 的契约层</h2>
-          <p class="lead">System 修改 Component 后不直接碰节点。DirtyMarkSystem 比较字段变化，SyncView 按 bit 调用 binding，binding 再调用 ViewNode 方法。</p>
+          <h2>dirty mark 的本质：把字段变化翻译成 view 更新 bit</h2>
+          <p class="lead">System 只改 Component。DirtyMarkSystem 用上一帧快照做 diff，把变化写进 DirtyComponent；SyncView 再按 bit 调用对应 binding。</p>
         </header>
         <div class="content">
           <div class="diagram">
-            <svg viewBox="0 0 980 310" role="img" aria-label="Dirty Binding 数据流图">
+            <svg viewBox="0 0 980 330" role="img" aria-label="Dirty Binding 数据流图">
               <defs>
                 <marker id="arrow6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
                   <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
                 </marker>
               </defs>
-              <rect x="26" y="82" width="126" height="82" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="89" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">System</text>
-              <text x="89" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">改 Component</text>
-              <rect x="194" y="82" width="150" height="82" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="269" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">DirtyAspect</text>
-              <text x="269" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">字段映射</text>
-              <rect x="386" y="82" width="150" height="82" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="461" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">DirtyComponent</text>
-              <text x="461" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">写 bitmask</text>
-              <rect x="578" y="82" width="126" height="82" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="641" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">SyncView</text>
-              <text x="641" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">遍历脏实体</text>
-              <rect x="746" y="82" width="126" height="82" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="809" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">Binding</text>
-              <text x="809" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">读数据投影</text>
-              <rect x="894" y="82" width="70" height="82" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
-              <text x="929" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">Node</text>
-              <text x="929" y="138" text-anchor="middle" font-size="12" fill="#5f6b7a">表现</text>
-              <path d="M152 123 H186" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
-              <path d="M344 123 H378" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
-              <path d="M536 123 H570" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
-              <path d="M704 123 H738" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
-              <path d="M872 123 H886" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
-              <rect x="164" y="218" width="660" height="54" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="494" y="251" text-anchor="middle" font-size="16" fill="#283442">Component.field -> BIT_xxx -> DirtyComponent.xxxDirty -> XxxViewBinding -> XxxNode.setXxx</text>
+              <rect x="24" y="70" width="136" height="82" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="92" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">System</text>
+              <text x="92" y="126" text-anchor="middle" font-size="12" fill="#5f6b7a">写 Component</text>
+              <rect x="204" y="70" width="146" height="82" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="277" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">Snapshot</text>
+              <text x="277" y="126" text-anchor="middle" font-size="12" fill="#5f6b7a">上一帧字段值</text>
+              <rect x="394" y="70" width="154" height="82" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="471" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">DirtyMark</text>
+              <text x="471" y="126" text-anchor="middle" font-size="12" fill="#5f6b7a">字段变了就 OR bit</text>
+              <rect x="592" y="70" width="154" height="82" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="669" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">DirtyComponent</text>
+              <text x="669" y="126" text-anchor="middle" font-size="12" fill="#5f6b7a">sceneDirty = 0x0001</text>
+              <rect x="790" y="70" width="150" height="82" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="865" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">Binding / Node</text>
+              <text x="865" y="126" text-anchor="middle" font-size="12" fill="#5f6b7a">只更新相关表现</text>
+              <path d="M160 111 H196" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
+              <path d="M350 111 H386" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
+              <path d="M548 111 H584" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
+              <path d="M746 111 H782" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
+              <rect x="74" y="214" width="832" height="72" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="490" y="244" text-anchor="middle" font-size="16" fill="#283442">SceneComponent.currentMap -> BIT_SCENE_MAP -> DirtyComponent.sceneDirty -> sceneViewBinding -> SceneLayer.switchScene</text>
+              <text x="490" y="268" text-anchor="middle" font-size="13" fill="#5f6b7a">dirty 不是“有变化就全量刷新”，而是“哪个字段变了，就打开哪个表现 bit”</text>
             </svg>
           </div>
           <div class="two">
-            <div class="panel accent-cyan"><strong>新增可视字段清单</strong><p>先写出字段到节点方法的完整链路，再改 components、DirtyFlags、DirtyAspect、ViewBinding、ViewNode 和测试。</p></div>
-            <div class="panel accent-red"><strong>排查顺序</strong><p>数据变了但画面没变时，按 Component、DirtyAspect、DirtyComponent、SyncView、binding、ViewRegistry、node 方法逐层检查。</p></div>
+            <div class="panel accent-cyan"><strong>第一次同步为什么全量？</strong><p>`DirtySchemaRunner` 第一次看到 eid 时没有 snapshot，会填充快照并写 `channel.allBits`，让 view 拿到初始状态。</p></div>
+            <div class="panel accent-red"><strong>之后为什么差量？</strong><p>后续每帧只比较 DirtyAspect 声明的字段；字段值不同才 OR 对应 bit，并更新 snapshot，SyncView 同步后清空 bit。</p></div>
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/dirty/aspects/*, src/ecs/systems/DirtyMarkSystem.ts, src/binding/SyncView.ts</span>
+          <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/ecs/dirty/aspects/SceneDirtyAspect.ts, src/binding/SyncView.ts</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="Scene Dirty Example">
+        <header>
+          <div class="kicker">Scene Dirty Example</div>
+          <h2>例子：SceneComponent 场景从 Meadow 切到 Ship</h2>
+          <p class="lead">这页用一个场景单例讲透 dirty 链路：谁写数据、谁发现变化、dirty bit 写到哪里、最后哪个 Laya 方法被调用。</p>
+        </header>
+        <div class="content split-wide">
+          <div class="rows">
+            <div class="panel accent-green">
+              <strong>1. System 写权威状态</strong>
+              <pre class="code">SceneComponent.currentMap[sceneEid] = nextMap;
+SceneComponent.sceneTimer[sceneEid] = 0;
+SceneComponent.transitioning[sceneEid] = 1;
+DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
+            </div>
+            <div class="panel accent-blue">
+              <strong>2. DirtyAspect 声明字段到 bit</strong>
+              <pre class="code">mark(BIT_SCENE_MAP, "当前地图", [
+  field("SceneComponent.currentMap", SceneComponent.currentMap),
+], "SceneLayer.setMap")</pre>
+            </div>
+            <div class="panel accent-amber">
+              <strong>3. Binding 消费 bit</strong>
+              <pre class="code">if (forceFull || (dirtyBits & BIT_SCENE_MAP)) {
+  node.switchScene(SceneComponent.currentMap[eid]);
+}</pre>
+            </div>
+          </div>
+          <div class="diagram">
+            <svg viewBox="0 0 760 520" role="img" aria-label="SceneComponent dirty 标记例子">
+              <defs>
+                <marker id="arrow9" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="46" y="34" width="300" height="74" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="196" y="65" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">sceneCycleSystem</text>
+              <text x="196" y="89" text-anchor="middle" font-size="13" fill="#5f6b7a">currentMap: Meadow -> Ship</text>
+              <rect x="414" y="34" width="300" height="74" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="564" y="65" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">SceneDirtyAspect</text>
+              <text x="564" y="89" text-anchor="middle" font-size="13" fill="#5f6b7a">query([SceneComponent, DirtyComponent])</text>
+              <rect x="414" y="156" width="300" height="74" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="564" y="187" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">DirtySchemaRunner</text>
+              <text x="564" y="211" text-anchor="middle" font-size="13" fill="#5f6b7a">snapshot 不同 -> sceneDirty |= 0x0001</text>
+              <rect x="46" y="156" width="300" height="74" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="196" y="187" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">SyncView.sync</text>
+              <text x="196" y="211" text-anchor="middle" font-size="13" fill="#5f6b7a">检测 sceneDirty 或 forceFull</text>
+              <rect x="46" y="278" width="300" height="74" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="196" y="309" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">sceneViewBinding</text>
+              <text x="196" y="333" text-anchor="middle" font-size="13" fill="#5f6b7a">读取 currentMap[eid]</text>
+              <rect x="414" y="278" width="300" height="74" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="564" y="309" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">SceneLayer.switchScene</text>
+              <text x="564" y="333" text-anchor="middle" font-size="13" fill="#5f6b7a">Laya 背景和 cover 切换</text>
+              <rect x="196" y="420" width="368" height="54" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="380" y="453" text-anchor="middle" font-size="15" fill="#283442">SyncView 最后清空 sceneDirty 和 forceFullSync</text>
+              <path d="M346 71 H406" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow9)"></path>
+              <path d="M564 108 V148" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow9)"></path>
+              <path d="M414 193 H354" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow9)"></path>
+              <path d="M196 230 V270" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow9)"></path>
+              <path d="M346 315 H406" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow9)"></path>
+              <path d="M564 352 C548 395 468 420 430 420" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow9)"></path>
+            </svg>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应代码：src/ecs/systems/SceneCycleSystem.ts, src/ecs/dirty/aspects/SceneDirtyAspect.ts, src/binding/SceneViewBinding.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -966,7 +1060,7 @@
 npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts
 
 dirty + binding:
-npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/binding/ShrewViewBinding.test.ts
+npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/ecs/SceneCycleSystem.test.ts
 
 网络 protobuf:
 npm test -- --run src/tests/network/KickProtoCodec.test.ts src/tests/network/KickSocket.test.ts src/tests/network/MockServer.test.ts
