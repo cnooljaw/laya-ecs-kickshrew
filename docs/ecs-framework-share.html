@@ -530,7 +530,7 @@
     <aside class="rail" aria-label="页面进度">
       <div class="rail-title">ECS FRAMEWORK</div>
       <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
-      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">14</span></div>
+      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">15</span></div>
     </aside>
 
     <section class="viewport">
@@ -620,14 +620,14 @@
       <article class="slide" data-title="ECS Basics">
         <header>
           <div class="kicker">ECS Basics</div>
-          <h2>用 SceneComponent 看懂 bitecs 的数据模型</h2>
-          <p class="lead">bitecs 不是把数据挂在对象实例上，而是把每个字段拆成数组；实体 eid 是数组下标，System 通过 Query 找到要处理的 eid。</p>
+          <h2>用 ShrewComponent 看懂 bitecs 的数据模型</h2>
+          <p class="lead">bitecs 里没有“地鼠对象”。地鼠只是一个 eid，状态、血量、能不能点这些值，都放在 Component 的数组里。</p>
         </header>
         <div class="content split">
           <div class="rows">
-            <div class="panel accent-blue"><strong>Entity：sceneEid</strong><p>`createSingletonEntities()` 创建一个场景单例实体。它没有 class，也没有方法，只是一个数字 id。</p></div>
-            <div class="panel accent-green"><strong>Component：字段数组</strong><p>`SceneComponent.currentMap[sceneEid] = MapType.Meadow`。这里的 `currentMap` 是 typed array，eid 是索引。</p></div>
-            <div class="panel accent-amber"><strong>System：按组件查询</strong><p>`defineQuery([SceneComponent])` 找到所有拥有 SceneComponent 的实体，`sceneCycleSystem()` 再读写它们的字段。</p></div>
+            <div class="panel accent-blue"><strong>Entity：shrewEid</strong><p>创建一只地鼠时，`addEntity(world)` 返回一个数字。后面说“这只地鼠”，其实就是拿这个数字去查数据。</p></div>
+            <div class="panel accent-green"><strong>Component：一组字段数组</strong><p>`ShrewComponent.actionState[shrewEid]` 是动作状态，`hp[shrewEid]` 是血量，`isClickable[shrewEid]` 是能不能点。</p></div>
+            <div class="panel accent-amber"><strong>System：批量处理地鼠</strong><p>`defineQuery([ShrewComponent, AnimationComponent])` 找到所有地鼠，再逐个 eid 推进 Wait、Up、Stand、Down、Dizzy。</p></div>
           </div>
           <div class="diagram">
             <svg viewBox="0 0 720 420" role="img" aria-label="ECS 三要素关系图">
@@ -637,27 +637,27 @@
                 </marker>
               </defs>
               <rect x="38" y="42" width="150" height="74" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="113" y="73" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">sceneEid</text>
-              <text x="113" y="98" text-anchor="middle" font-size="13" fill="#5f6b7a">一个数字实体</text>
+              <text x="113" y="73" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">shrewEid</text>
+              <text x="113" y="98" text-anchor="middle" font-size="13" fill="#5f6b7a">一只地鼠的编号</text>
               <rect x="274" y="24" width="196" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="372" y="57" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">currentMap[eid]</text>
+              <text x="372" y="57" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">actionState[eid]</text>
               <rect x="274" y="94" width="196" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="372" y="127" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">sceneTimer[eid]</text>
+              <text x="372" y="127" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">hp[eid]</text>
               <rect x="274" y="164" width="196" height="54" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="372" y="197" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">transitioning[eid]</text>
+              <text x="372" y="197" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">isClickable[eid]</text>
               <rect x="528" y="84" width="150" height="82" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="603" y="116" text-anchor="middle" font-size="17" font-weight="700" fill="#80530f">sceneCycleSystem</text>
-              <text x="603" y="140" text-anchor="middle" font-size="13" fill="#5f6b7a">Query + 写数组</text>
+              <text x="603" y="116" text-anchor="middle" font-size="17" font-weight="700" fill="#80530f">shrewStateSystem</text>
+              <text x="603" y="140" text-anchor="middle" font-size="13" fill="#5f6b7a">按状态改数组</text>
               <path d="M188 79 H266" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow2)"></path>
               <path d="M470 121 H520" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow2)"></path>
               <rect x="70" y="268" width="580" height="92" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="360" y="300" text-anchor="middle" font-size="17" font-weight="700" fill="#172231">SceneComponent.currentMap[sceneEid] = nextMap</text>
-              <text x="360" y="328" text-anchor="middle" font-size="14" fill="#5f6b7a">这就是 bitecs 的核心读写方式：Component.field[eid]</text>
+              <text x="360" y="300" text-anchor="middle" font-size="17" font-weight="700" fill="#172231">ShrewComponent.actionState[shrewEid] = ShrewAction.Up</text>
+              <text x="360" y="328" text-anchor="middle" font-size="14" fill="#5f6b7a">简单说：eid 是下标，Component 字段是数组，System 负责改这些数组</text>
             </svg>
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/components/index.ts, src/ecs/world.ts, src/ecs/systems/SceneCycleSystem.ts</span>
+          <span>对应代码：src/ecs/components/index.ts, src/ecs/world.ts, src/ecs/systems/ShrewStateSystem.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -714,17 +714,18 @@
           <div class="two">
             <div class="panel accent-green">
               <strong>项目里的 bitecs 四步</strong>
-              <pre class="code">const scene = addEntity(world);
-addComponent(world, SceneComponent, scene);
-SceneComponent.currentMap[scene] = MapType.Meadow;
+              <pre class="code">const shrew = addEntity(world);
+addComponent(world, ShrewComponent, shrew);
+addComponent(world, AnimationComponent, shrew);
 
-const sceneQuery = defineQuery([SceneComponent]);
-const entities = sceneQuery(world);
-const sceneEid = entities[0];</pre>
+ShrewComponent.actionState[shrew] = ShrewAction.Wait;
+
+const shrewQuery = defineQuery([ShrewComponent, AnimationComponent]);
+const entities = shrewQuery(world);</pre>
             </div>
             <div class="panel accent-amber">
               <strong>和传统对象写法的区别</strong>
-              <p>不是 `scene.currentMap = Meadow`，而是 `SceneComponent.currentMap[sceneEid] = Meadow`。System 拿到的是一批 eid，再用 eid 去读写各个 Component 字段数组。</p>
+              <p>不是 `shrew.actionState = Wait`，而是 `ShrewComponent.actionState[shrewEid] = Wait`。System 拿到的是一批 eid，再用 eid 去读写各个 Component 字段数组。</p>
               <p>DOTS 更完整，包含 Job、Burst、Baking 等生产体系；本项目使用 bitecs 是为了在 Web/Laya 客户端里获得清晰边界、可测试系统和低成本数据遍历。</p>
             </div>
           </div>
@@ -739,7 +740,7 @@ const sceneEid = entities[0];</pre>
         <header>
           <div class="kicker">Architecture Boundary</div>
           <h2>分层边界：规则不能依赖 Laya，回包不能直接改 View</h2>
-          <p class="lead">项目依赖方向固定为 input/network/resource callback -> adapter -> ECS systems -> dirty -> binding -> Laya view nodes。</p>
+          <p class="lead">这句话说白了就是：外部事件先进适配器，适配器改 ECS 数据；画面只从 dirty binding 读数据，不反过来改规则。</p>
         </header>
         <div class="content split">
           <div class="diagram">
@@ -749,35 +750,45 @@ const sceneEid = entities[0];</pre>
                   <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
                 </marker>
               </defs>
-              <rect x="72" y="32" width="616" height="54" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="380" y="66" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">Main.ts / Laya 入口层</text>
-              <rect x="72" y="112" width="616" height="54" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="380" y="146" text-anchor="middle" font-size="18" font-weight="700" fill="#172231">GameScene / GameLoopPipeline / KickInputAdapter</text>
-              <rect x="72" y="192" width="284" height="70" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="214" y="224" text-anchor="middle" font-size="18" font-weight="700" fill="#1f5f36">src/ecs</text>
-              <text x="214" y="247" text-anchor="middle" font-size="13" fill="#5f6b7a">components, systems, lifecycle</text>
-              <rect x="404" y="192" width="284" height="70" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="546" y="224" text-anchor="middle" font-size="18" font-weight="700" fill="#80530f">src/network</text>
-              <text x="546" y="247" text-anchor="middle" font-size="13" fill="#5f6b7a">protobuf, socket, mock</text>
-              <rect x="72" y="298" width="284" height="70" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="214" y="330" text-anchor="middle" font-size="18" font-weight="700" fill="#80530f">src/binding</text>
-              <text x="214" y="353" text-anchor="middle" font-size="13" fill="#5f6b7a">SyncView, ViewBinding</text>
-              <rect x="404" y="298" width="284" height="70" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
-              <text x="546" y="330" text-anchor="middle" font-size="18" font-weight="700" fill="#46317d">src/view</text>
-              <text x="546" y="353" text-anchor="middle" font-size="13" fill="#5f6b7a">Laya nodes, registry, scene</text>
-              <path d="M380 86 V104" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
-              <path d="M380 166 C312 176 250 180 214 190" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow3)"></path>
-              <path d="M380 166 C448 176 510 180 546 190" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow3)"></path>
-              <path d="M214 262 V290" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
-              <path d="M356 333 H396" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
-              <path d="M546 262 C530 276 522 284 520 294" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow3)"></path>
-              <text x="380" y="430" text-anchor="middle" font-size="14" fill="#b34343">禁止：src/ecs 直接 Laya.*，socket 回包直接操作 view node</text>
+              <rect x="42" y="32" width="190" height="58" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="137" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">Laya 输入</text>
+              <text x="137" y="78" text-anchor="middle" font-size="12" fill="#5f6b7a">stage MOUSE_DOWN</text>
+              <rect x="285" y="32" width="190" height="58" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="380" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">网络回包</text>
+              <text x="380" y="78" text-anchor="middle" font-size="12" fill="#5f6b7a">KickSocket / GoServer</text>
+              <rect x="528" y="32" width="190" height="58" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="623" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">资源回调</text>
+              <text x="623" y="78" text-anchor="middle" font-size="12" fill="#5f6b7a">loader / atlas</text>
+
+              <rect x="72" y="128" width="616" height="60" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="380" y="154" text-anchor="middle" font-size="17" font-weight="700" fill="#80530f">Adapter 层</text>
+              <text x="380" y="176" text-anchor="middle" font-size="13" fill="#5f6b7a">KickInputAdapter / NetworkAdapter / resource helper，把外部事件翻译成命令或数据</text>
+
+              <rect x="72" y="226" width="616" height="64" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="380" y="253" text-anchor="middle" font-size="17" font-weight="700" fill="#1f5f36">ECS 权威状态和规则</text>
+              <text x="380" y="276" text-anchor="middle" font-size="13" fill="#5f6b7a">components / systems / ShrewLifecycle，默认不写 Laya.*</text>
+
+              <rect x="72" y="330" width="276" height="60" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="210" y="356" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">DirtyMarkSystem + SyncView</text>
+              <text x="210" y="378" text-anchor="middle" font-size="12" fill="#5f6b7a">找变化，分发 binding</text>
+              <rect x="412" y="330" width="276" height="60" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="550" y="356" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">Laya ViewNode</text>
+              <text x="550" y="378" text-anchor="middle" font-size="12" fill="#5f6b7a">ShrewNode / SceneLayer / HUD</text>
+
+              <path d="M137 90 V120" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
+              <path d="M380 90 V120" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
+              <path d="M623 90 V120" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
+              <path d="M380 188 V218" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
+              <path d="M380 290 C348 315 286 326 228 330" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow3)"></path>
+              <path d="M348 360 H404" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
+              <path d="M542 330 C505 300 457 291 410 291" stroke="#b34343" stroke-width="2.5" stroke-dasharray="8 7" fill="none"></path>
+              <text x="380" y="430" text-anchor="middle" font-size="14" fill="#b34343">禁止反向：ViewNode 不改规则，socket 回包不直接操作 View，ECS 不依赖 Laya.*</text>
             </svg>
           </div>
           <div class="rows">
-            <div class="panel accent-green"><strong>权威状态</strong><p>Shrew/Hole/Hammer/Combo/Scene/Player/Network 等 Component 是规则和同步的事实来源。</p></div>
-            <div class="panel accent-cyan"><strong>运行装配</strong><p>GameScene 创建 world、实体、节点、ViewRegistry、SyncView、NetworkAdapter 和输入适配器。</p></div>
-            <div class="panel accent-red"><strong>边界警戒</strong><p>如果 view node 里出现命中合法性、协议字段解析、奖励计算，说明职责已经穿透。</p></div>
+            <div class="panel accent-green"><strong>谁能改规则？</strong><p>ECS system 或 lifecycle helper。比如点击命中后，`hitDetectionSystem` 改 `ShrewComponent.hp/actionState/isClickable`。</p></div>
+            <div class="panel accent-cyan"><strong>View 做什么？</strong><p>View 只接收 binding 投影过来的结果，比如 `ShrewNode.setAnimation(...)`。它不知道 protobuf，也不决定能不能命中。</p></div>
+            <div class="panel accent-red"><strong>为什么这么麻烦？</strong><p>因为这样才好测试。规则不用启动 Laya，协议不用碰节点，画面问题也能沿着 dirty 链路查。</p></div>
           </div>
         </div>
         <footer class="footer">
@@ -833,42 +844,60 @@ const sceneEid = entities[0];</pre>
         <header>
           <div class="kicker">Protocol Boundary</div>
           <h2>protobuf 网络边界：二进制收发，不让协议细节扩散到 View</h2>
-          <p class="lead">KickSocket 管 seqId、pending、超时和 protobuf 编解码；NetworkAdapter 把 mock 和真实 transport 隔离起来。</p>
+          <p class="lead">客户端只认业务类型和 Uint8Array。真正的 proto 文件和协议号来自兄弟 Go 服务，View 层不需要知道 wire 格式。</p>
         </header>
         <div class="content split-wide">
           <div class="diagram">
-            <svg viewBox="0 0 820 420" role="img" aria-label="protobuf 网络流程图">
+            <svg viewBox="0 0 860 470" role="img" aria-label="protobuf 网络流程图">
               <defs>
                 <marker id="arrow4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
                   <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
                 </marker>
               </defs>
-              <rect x="38" y="60" width="140" height="70" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="108" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">KickInputAdapter</text>
-              <text x="108" y="114" text-anchor="middle" font-size="12" fill="#5f6b7a">hit + combo</text>
-              <rect x="230" y="60" width="130" height="70" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="295" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">NetworkAdapter</text>
-              <text x="295" y="114" text-anchor="middle" font-size="12" fill="#5f6b7a">runtime bridge</text>
-              <rect x="412" y="60" width="140" height="70" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="482" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">KickSocket</text>
-              <text x="482" y="114" text-anchor="middle" font-size="12" fill="#5f6b7a">seqId pending</text>
-              <rect x="604" y="60" width="150" height="70" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
-              <text x="679" y="91" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">MockServer</text>
-              <text x="679" y="114" text-anchor="middle" font-size="12" fill="#5f6b7a">protobuf decode/encode</text>
-              <path d="M178 95 H222" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
-              <path d="M360 95 H404" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
-              <path d="M552 95 H596" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
-              <path d="M679 130 C679 224 566 270 482 270 C390 270 306 238 230 188" stroke="#2d7d46" stroke-width="3" fill="none" marker-end="url(#arrow4)"></path>
-              <rect x="230" y="294" width="314" height="58" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="387" y="327" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">hitResponseSystem(world, resp)</text>
-              <path d="M294 130 C300 205 335 246 382 292" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow4)"></path>
-              <text x="410" y="384" text-anchor="middle" font-size="14" fill="#5f6b7a">Envelope: seq_id + msg_id + payload，业务侧类型留在 ProtocolTypes</text>
+              <rect x="30" y="48" width="148" height="64" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="104" y="76" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">KickInputAdapter</text>
+              <text x="104" y="96" text-anchor="middle" font-size="12" fill="#5f6b7a">组 KickRequest</text>
+
+              <rect x="230" y="48" width="148" height="64" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="304" y="76" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">NetworkAdapter</text>
+              <text x="304" y="96" text-anchor="middle" font-size="12" fill="#5f6b7a">选择 mock / real</text>
+
+              <rect x="430" y="48" width="148" height="64" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="504" y="76" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">KickSocket</text>
+              <text x="504" y="96" text-anchor="middle" font-size="12" fill="#5f6b7a">seqId + pending</text>
+
+              <rect x="630" y="26" width="190" height="52" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="725" y="57" text-anchor="middle" font-size="14" font-weight="700" fill="#46317d">MockServer</text>
+              <rect x="630" y="102" width="190" height="64" rx="8" fill="#fbeeee" stroke="#b34343"></rect>
+              <text x="725" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#8a2828">GoServerActorFsm</text>
+              <text x="725" y="149" text-anchor="middle" font-size="12" fill="#5f6b7a">真实 WebSocket 服务</text>
+
+              <rect x="430" y="214" width="300" height="62" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="580" y="239" text-anchor="middle" font-size="15" font-weight="700" fill="#172231">Envelope(seq_id, msg_id, payload)</text>
+              <text x="580" y="260" text-anchor="middle" font-size="12" fill="#5f6b7a">KickProtoCodec 编码/解码 Uint8Array</text>
+
+              <rect x="70" y="214" width="260" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="200" y="239" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">NetworkAdapter.onResponse</text>
+              <text x="200" y="260" text-anchor="middle" font-size="12" fill="#5f6b7a">回包交给 hitResponseSystem</text>
+
+              <rect x="220" y="352" width="420" height="56" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="430" y="374" text-anchor="middle" font-size="14" font-weight="700" fill="#80530f">proto 权威来源：../GoServerActorFsm/api/proto/kick.proto</text>
+              <text x="430" y="394" text-anchor="middle" font-size="12" fill="#5f6b7a">MsgID 对齐 codec.go，客户端只保留 api/proto/kick.proto 副本</text>
+
+              <path d="M178 80 H222" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
+              <path d="M378 80 H422" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
+              <path d="M578 70 H622" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
+              <path d="M578 92 C604 102 612 121 622 130" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow4)"></path>
+              <path d="M725 166 C724 204 672 219 626 214" stroke="#2d7d46" stroke-width="3" fill="none" marker-end="url(#arrow4)"></path>
+              <path d="M504 112 V206" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
+              <path d="M430 245 H338" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow4)"></path>
+              <text x="430" y="442" text-anchor="middle" font-size="13" fill="#5f6b7a">View 不读 proto；ECS 只收到业务回包类型 KickResponse</text>
             </svg>
           </div>
           <div class="rows">
-            <div class="panel accent-blue"><strong>请求匹配</strong><p>每次 sendKick 递增 seqId，pendingRequests 记录 resolve/reject；回包按 seqId 匹配，乱序也能处理。</p></div>
-            <div class="panel accent-green"><strong>协议隔离</strong><p>api/proto/kick.proto 是客户端协议副本；KickProtoCodec 负责 snake_case 与业务 camelCase/旧字段名映射。</p></div>
-            <div class="panel accent-red"><strong>防回退</strong><p>MockServer 链路也走 protobuf 编解码，避免测试环境偷偷回到 JSON。</p></div>
+            <div class="panel accent-blue"><strong>请求怎么出去</strong><p>`KickInputAdapter` 只组业务请求；`KickSocket.sendKick()` 加 seqId，`KickProtoCodec` 包成 protobuf 二进制。</p></div>
+            <div class="panel accent-green"><strong>真实服务器在哪里</strong><p>真实模式走 `WebSocketTransport` 到 `../GoServerActorFsm`。本地 mock 只是替身，也必须走 protobuf 编解码。</p></div>
+            <div class="panel accent-red"><strong>回包怎么回来</strong><p>回包按 seqId 匹配 pending，再由 `NetworkAdapter.onResponse` 交给 `hitResponseSystem`，不是直接改 View。</p></div>
           </div>
         </div>
         <footer class="footer">
@@ -1042,34 +1071,114 @@ DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
         </footer>
       </article>
 
+      <article class="slide" data-title="Shrew Dirty Example">
+        <header>
+          <div class="kicker">Shrew Dirty Example</div>
+          <h2>例子：地鼠从 Wait 变成 Up，画面为什么会动</h2>
+          <p class="lead">状态机只改 ECS 数据。dirty 系统发现 `ShrewComponent` 和 `AnimationComponent` 变了，binding 才去叫 `ShrewNode` 播出洞表现。</p>
+        </header>
+        <div class="content split-wide">
+          <div class="diagram">
+            <svg viewBox="0 0 780 520" role="img" aria-label="ShrewComponent dirty binding 例子">
+              <defs>
+                <marker id="arrow10" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="34" y="42" width="210" height="72" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="139" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">shrewStateSystem</text>
+              <text x="139" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">Wait 计时到 0</text>
+              <rect x="296" y="42" width="210" height="72" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="401" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">改 ECS 数据</text>
+              <text x="401" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">actionState=Up, animType=Up</text>
+              <rect x="558" y="42" width="180" height="72" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="648" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">ShrewDirtyAspect</text>
+              <text x="648" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">字段 -> bit</text>
+              <rect x="34" y="190" width="210" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="139" y="220" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">DirtyComponent</text>
+              <text x="139" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">shrewDirty / animDirty</text>
+              <rect x="296" y="190" width="210" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="401" y="220" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">SyncView</text>
+              <text x="401" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">分发两个 binding</text>
+              <rect x="558" y="190" width="180" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="648" y="220" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">ShrewViewBinding</text>
+              <text x="648" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">读数组，调节点</text>
+              <rect x="296" y="338" width="210" height="72" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="401" y="368" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">ShrewNode.setAnimation</text>
+              <text x="401" y="390" text-anchor="middle" font-size="12" fill="#5f6b7a">mainLayer.y 插值出洞</text>
+              <path d="M244 78 H288" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow10)"></path>
+              <path d="M506 78 H550" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow10)"></path>
+              <path d="M648 114 C640 154 247 168 160 190" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow10)"></path>
+              <path d="M244 226 H288" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow10)"></path>
+              <path d="M506 226 H550" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow10)"></path>
+              <path d="M648 262 C625 318 505 343 445 338" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow10)"></path>
+              <text x="390" y="476" text-anchor="middle" font-size="13" fill="#5f6b7a">重点：状态机不直接调动画，动画节点也不改状态机</text>
+            </svg>
+          </div>
+          <div class="rows">
+            <div class="panel accent-green">
+              <strong>1. 状态机写数据</strong>
+              <pre class="code">ShrewComponent.actionState[eid] = ShrewAction.Up;
+AnimationComponent.animType[eid] = AnimType.Up;
+AnimationComponent.progress[eid] = 0;
+AnimationComponent.duration[eid] = timing.upDurationSec;</pre>
+            </div>
+            <div class="panel accent-blue">
+              <strong>2. DirtyAspect 找到变化</strong>
+              <pre class="code">BIT_SHREW_ACTION -> ShrewComponent.actionState
+BIT_ANIM_TYPE    -> AnimationComponent.animType
+BIT_ANIM_PROGRESS -> AnimationComponent.progress</pre>
+            </div>
+            <div class="panel accent-amber">
+              <strong>3. Binding 更新画面</strong>
+              <pre class="code">node.setAnimation(
+  ShrewComponent.actionState[eid],
+  AnimationComponent.animType[eid],
+  AnimationComponent.progress[eid],
+);</pre>
+            </div>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应代码：src/ecs/systems/ShrewStateSystem.ts, src/ecs/dirty/aspects/ShrewDirtyAspect.ts, src/binding/ShrewViewBinding.ts</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
       <article class="slide" data-title="TDD">
         <header>
           <div class="kicker">TDD Workflow</div>
-          <h2>TDD 不是仪式，是把复杂运行时切成可重放事实</h2>
-          <p class="lead">项目把规则、协议、binding、输入 adapter 和资源转换都尽量放到不依赖 Laya 的测试里。</p>
+          <h2>TDD：先证明问题，再改代码，最后整理和提交</h2>
+          <p class="lead">这里的 TDD 不只是写测试。它还包括改前确认、改后验证、Refactor 检查，以及用 git 把这次工作讲清楚。</p>
         </header>
-        <div class="content split">
+        <div class="content split-wide">
           <div class="rows">
-            <div class="panel accent-blue"><strong>Red</strong><p>先跑相关测试确认基线，或者补最小测试复现规则边界。文档变更不强行补无意义测试。</p></div>
-            <div class="panel accent-green"><strong>Green</strong><p>做最小改动，让系统行为通过测试。复杂场景优先测试 ECS、协议、binding，而不是测试 Laya 节点细节。</p></div>
-            <div class="panel accent-violet"><strong>Refactor</strong><p>确认边界没有穿透，清理命名和重复逻辑；提交信息写清楚 Red/Green/Refactor。</p></div>
+            <div class="panel accent-blue"><strong>Red：先让问题可见</strong><p>先跑最小相关测试。如果没有测试，就补一个能复现行为的测试。比如状态机改动先看 `ShrewStateSystem.test.ts`，dirty 改动先看 `DirtyMarkSystem.test.ts`。</p></div>
+            <div class="panel accent-green"><strong>Green：只做够用的改动</strong><p>改到测试刚好通过，不顺手重构一大片。比如新增字段，先让 Component、System、DirtyAspect、Binding 这条链路通。</p></div>
+            <div class="panel accent-violet"><strong>Refactor：整理边界和命名</strong><p>测试绿了以后再检查：规则有没有跑进 View？View 有没有改 ECS？dirty bit 名字和字段是否对齐？重复逻辑能不能收进 helper？这一步是让代码下次还能改。</p></div>
           </div>
           <div class="panel">
-            <strong>常用验证矩阵</strong>
-            <pre class="code">状态机:
+            <strong>一次完整 git 流程</strong>
+            <pre class="code"># 1. 改前看工作区，别碰用户无关改动
+git status --short
+
+# 2. Red / Green 验证
 npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts
+npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/binding/ShrewViewBinding.test.ts
 
-dirty + binding:
-npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/ecs/SceneCycleSystem.test.ts
+# 3. 类型检查，运行时改动再跑 debug
+npx tsc --noEmit
+npm run debug:ready
 
-网络 protobuf:
-npm test -- --run src/tests/network/KickProtoCodec.test.ts src/tests/network/KickSocket.test.ts src/tests/network/MockServer.test.ts
+# 4. 只暂存本次相关文件
+git diff
+git add src/ecs/... src/binding/... src/view/... src/tests/...
 
-压测英雄:
-npm test -- --run src/tests/ecs/PerfHeroSystem.test.ts src/tests/binding/PerfHeroViewBinding.test.ts src/tests/view/PerfHeroNode.test.ts
-
-类型检查:
-npx tsc --noEmit</pre>
+# 5. commit 写清楚三段
+git commit -m "feat: add score milestone celebration" \
+  -m "TDD Red: ..." \
+  -m "TDD Green: ..." \
+  -m "TDD Refactor: ..."</pre>
           </div>
         </div>
         <footer class="footer">
@@ -1182,36 +1291,51 @@ npx tsc --noEmit</pre>
       <article class="slide" data-title="Checklist">
         <header>
           <div class="kicker">Implementation Checklist</div>
-          <h2>落地清单：每次扩展都沿着边界走</h2>
-          <p class="lead">把新增需求翻译成“数据、规则、同步、表现、测试、调试入口”，就不会让 GameScene 或 ViewNode 重新膨胀。</p>
+          <h2>落地清单：用“每 1000 分祝贺动画”举例</h2>
+          <p class="lead">需求听起来是表现需求，但不要直接在 View 里判断分数。先定谁是权威状态，再让 dirty binding 把结果推到动画节点。</p>
         </header>
-        <div class="content">
-          <div class="cards">
-            <div class="mini accent-green"><strong>新增规则</strong><p>先判断需要哪些 Component 字段，再写 system 或 lifecycle helper，避免 view 里编码规则。</p></div>
-            <div class="mini accent-blue"><strong>新增表现</strong><p>写出 Component.field -> BIT -> DirtyComponent -> Binding -> Node 方法链路。</p></div>
-            <div class="mini accent-amber"><strong>新增协议</strong><p>同步 api/proto/kick.proto，更新 ProtocolTypes、KickProtoCodec、KickSocket 和网络测试。</p></div>
-            <div class="mini accent-violet"><strong>新增调试</strong><p>优先做 debug-tsc 页面可复现入口，坐标/层级/资源问题配合截图和日志。</p></div>
-            <div class="mini accent-red"><strong>新增压测</strong><p>明确测的是 ECS、dirty、节点数、Spine，还是长时间资源释放，不混在一个结论里。</p></div>
-            <div class="mini accent-cyan"><strong>新增测试</strong><p>纯规则、协议、binding、adapter 优先单测；纯视觉 tween 通常做运行时冒烟。</p></div>
+        <div class="content split-wide">
+          <div class="rows">
+            <div class="panel accent-green"><strong>1. 规则层先定清楚</strong><p>假设分数来自 `PlayerComponent.score`。新增 `lastCelebratedK`、`celebrationVisible`、`celebrationTimerSec`。当分数从 1900 到 2050，系统只触发 2000 这一档。</p></div>
+            <div class="panel accent-blue"><strong>2. dirty 链路写完整</strong><p>`PlayerComponent.celebrationVisible -> BIT_PLAYER_CELEBRATION -> DirtyComponent.playerDirty -> playerViewBinding -> PlayerHUD.showCelebration()`。</p></div>
+            <div class="panel accent-violet"><strong>3. 表现层只播动画</strong><p>`PlayerHUD` 或新的 `CelebrationNode` 放在屏幕正下方，显示 3 秒。动画怎么 tween 是 View 的事，什么时候出现由 ECS 字段决定。</p></div>
+            <div class="panel accent-red"><strong>4. 测试先覆盖边界</strong><p>测 999 不弹、1000 弹、1999 不重复弹、2000 再弹、3 秒后隐藏。binding 测 visible 变化会调用节点方法。</p></div>
           </div>
-          <div class="quote">
-            <p>一句话总结：ECS 让“规则和状态”可测试，dirty binding 让“状态到画面”可控，protobuf 和压测链路让项目能接近真实客户端工程。</p>
-          </div>
-          <div class="source-list">
-            <div>docs/architecture.md</div>
-            <div>docs/ecs-binding.md</div>
-            <div>docs/protocol.md</div>
-            <div>docs/laya-rules.md</div>
-            <div>docs/performance-tuning.md</div>
-            <div>docs/test-guide.md</div>
-            <div>src/view/GameLoopPipeline.ts</div>
-            <div>src/ecs/systems/ShrewStateSystem.ts</div>
-            <div>src/network/KickSocket.ts</div>
-            <div>src/binding/SyncView.ts</div>
+          <div class="diagram">
+            <svg viewBox="0 0 820 430" role="img" aria-label="1000 分祝贺动画落地流程">
+              <defs>
+                <marker id="arrow11" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="52" y="46" width="180" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="142" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">PlayerComponent.score</text>
+              <text x="142" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">1990 -> 2050</text>
+              <rect x="310" y="46" width="200" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="410" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">scoreMilestoneSystem</text>
+              <text x="410" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">发现跨过 2000</text>
+              <rect x="588" y="46" width="180" height="62" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="678" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">DirtyMarkSystem</text>
+              <text x="678" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">打开庆祝 bit</text>
+              <rect x="180" y="186" width="200" height="62" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="280" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">playerViewBinding</text>
+              <text x="280" y="234" text-anchor="middle" font-size="12" fill="#5f6b7a">读 visible 和档位</text>
+              <rect x="460" y="186" width="200" height="62" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="560" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">CelebrationNode</text>
+              <text x="560" y="234" text-anchor="middle" font-size="12" fill="#5f6b7a">正下方播放 3 秒</text>
+              <rect x="230" y="326" width="360" height="54" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="410" y="349" text-anchor="middle" font-size="14" font-weight="700" fill="#172231">不要在 View 里写 if (score % 1000 === 0)</text>
+              <text x="410" y="370" text-anchor="middle" font-size="12" fill="#5f6b7a">View 只负责“收到显示命令后怎么好看”</text>
+              <path d="M232 77 H302" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow11)"></path>
+              <path d="M510 77 H580" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow11)"></path>
+              <path d="M678 108 C660 160 384 182 306 186" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow11)"></path>
+              <path d="M380 217 H452" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow11)"></path>
+              <path d="M560 248 C540 296 465 322 430 326" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow11)"></path>
+            </svg>
           </div>
         </div>
         <footer class="footer">
-          <span>键盘：← / → 翻页，Home / End 跳转，打印可导出 PDF。</span>
+          <span>对应清单：Component 字段 -> System 规则 -> DirtyFlags/DirtyAspect -> Binding -> ViewNode -> 测试 -> debug:ready。</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
