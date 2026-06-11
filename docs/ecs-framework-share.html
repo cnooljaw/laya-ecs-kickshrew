@@ -169,6 +169,7 @@
 
     .content {
       min-height: 0;
+      min-width: 0;
       display: grid;
       align-items: center;
       gap: 22px;
@@ -185,6 +186,7 @@
     .rows {
       display: grid;
       gap: 14px;
+      min-width: 0;
     }
 
     .cards {
@@ -208,6 +210,7 @@
     .panel,
     .mini,
     .quote {
+      min-width: 0;
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: var(--panel);
@@ -271,6 +274,9 @@
     }
 
     .code {
+      display: block;
+      max-width: 100%;
+      min-width: 0;
       font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
       font-size: 13px;
       line-height: 1.55;
@@ -315,6 +321,7 @@
 
     .diagram {
       width: 100%;
+      min-width: 0;
       min-height: 260px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -337,6 +344,11 @@
       font-size: 13px;
       border-top: 1px solid var(--line);
       padding-top: 14px;
+    }
+
+    .footer span {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .nav {
@@ -486,6 +498,11 @@
         overflow-x: auto;
       }
 
+      .code {
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
       .source-list {
         columns: 1;
       }
@@ -530,7 +547,7 @@
     <aside class="rail" aria-label="页面进度">
       <div class="rail-title">ECS FRAMEWORK</div>
       <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
-      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">15</span></div>
+      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">14</span></div>
     </aside>
 
     <section class="viewport">
@@ -543,7 +560,7 @@
             <span class="tag">protobuf</span>
             <span class="tag">FSM</span>
             <span class="tag">bitecs</span>
-            <span class="tag">Unity DOTS 对照</span>
+            <span class="tag">bitecs 数据模型</span>
             <span class="tag">Dirty Mark / Binding</span>
             <span class="tag">TDD</span>
             <span class="tag">Laya 调试</span>
@@ -594,7 +611,7 @@
         </header>
         <div class="content">
           <div class="cards">
-            <div class="mini accent-blue"><strong>概念层</strong><p>Entity、Component、System、Query，以及 bitecs 和 Unity DOTS 的对应关系。</p></div>
+            <div class="mini accent-blue"><strong>概念层</strong><p>Entity、Component、System、Query，以及 bitecs 里“eid 是下标、字段是数组”的写法。</p></div>
             <div class="mini accent-green"><strong>规则层</strong><p>地鼠状态机如何在 ECS 中推进，点击与网络回包如何进入系统。</p></div>
             <div class="mini accent-amber"><strong>同步层</strong><p>dirty mark 如何找出变化，binding 如何把数据投影到 Laya 节点。</p></div>
             <div class="mini accent-cyan"><strong>工程化</strong><p>protobuf 边界、seqId 匹配、TDD 测试矩阵、调试页面和日志。</p></div>
@@ -662,80 +679,6 @@
         </footer>
       </article>
 
-      <article class="slide" data-title="bitecs vs DOTS">
-        <header>
-          <div class="kicker">bitecs vs Unity DOTS</div>
-          <h2>可以用 DOTS 的心智模型理解 bitecs，但实现重量不同</h2>
-          <p class="lead">bitecs 更像轻量 SoA ECS：组件是 typed array，查询是 defineQuery，调度顺序由项目代码显式安排。</p>
-        </header>
-        <div class="content">
-          <table class="table" aria-label="bitecs 和 Unity DOTS 对照表">
-            <thead>
-              <tr>
-                <th>概念</th>
-                <th>bitecs 项目写法</th>
-                <th>Unity DOTS 心智对应</th>
-                <th>差异重点</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Entity</td>
-                <td>number eid</td>
-                <td>Entity</td>
-                <td>bitecs 实体就是数字，生命周期由 world 和 add/remove component 管。</td>
-              </tr>
-              <tr>
-                <td>Component</td>
-                <td>defineComponent({ field: Types.f32 })</td>
-                <td>IComponentData</td>
-                <td>bitecs 使用 SoA typed array，字段通过 Component.field[eid] 读写。</td>
-              </tr>
-              <tr>
-                <td>Query</td>
-                <td>defineQuery([A, B, C])</td>
-                <td>EntityQuery / SystemAPI.Query</td>
-                <td>只表达“拥有哪些组件”，不内置复杂 Job 调度。</td>
-              </tr>
-              <tr>
-                <td>System</td>
-                <td>普通 TS 函数</td>
-                <td>ISystem / SystemBase</td>
-                <td>项目用 GameLoopPipeline 固定顺序，比引擎调度更直观。</td>
-              </tr>
-              <tr>
-                <td>Presentation</td>
-                <td>binding + ViewNode</td>
-                <td>Hybrid Renderer / Authoring</td>
-                <td>Laya 节点不是权威状态，只是 dirty 后的投影对象。</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="two">
-            <div class="panel accent-green">
-              <strong>项目里的 bitecs 四步</strong>
-              <pre class="code">const shrew = addEntity(world);
-addComponent(world, ShrewComponent, shrew);
-addComponent(world, AnimationComponent, shrew);
-
-ShrewComponent.actionState[shrew] = ShrewAction.Wait;
-
-const shrewQuery = defineQuery([ShrewComponent, AnimationComponent]);
-const entities = shrewQuery(world);</pre>
-            </div>
-            <div class="panel accent-amber">
-              <strong>和传统对象写法的区别</strong>
-              <p>不是 `shrew.actionState = Wait`，而是 `ShrewComponent.actionState[shrewEid] = Wait`。System 拿到的是一批 eid，再用 eid 去读写各个 Component 字段数组。</p>
-              <p>DOTS 更完整，包含 Job、Burst、Baking 等生产体系；本项目使用 bitecs 是为了在 Web/Laya 客户端里获得清晰边界、可测试系统和低成本数据遍历。</p>
-            </div>
-          </div>
-        </div>
-        <footer class="footer">
-          <span>项目关键词：defineComponent, defineQuery, GameLoopPipeline, SyncView</span>
-          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
-        </footer>
-      </article>
-
       <article class="slide" data-title="Architecture">
         <header>
           <div class="kicker">Architecture Boundary</div>
@@ -781,13 +724,14 @@ const entities = shrewQuery(world);</pre>
               <path d="M380 188 V218" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
               <path d="M380 290 C348 315 286 326 228 330" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow3)"></path>
               <path d="M348 360 H404" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow3)"></path>
-              <path d="M542 330 C505 300 457 291 410 291" stroke="#b34343" stroke-width="2.5" stroke-dasharray="8 7" fill="none"></path>
+              <path d="M550 330 V298" stroke="#b34343" stroke-width="2.5" stroke-dasharray="8 7" fill="none"></path>
+              <text x="612" y="315" text-anchor="middle" font-size="12" fill="#b34343">这里不能反向改 ECS</text>
               <text x="380" y="430" text-anchor="middle" font-size="14" fill="#b34343">禁止反向：ViewNode 不改规则，socket 回包不直接操作 View，ECS 不依赖 Laya.*</text>
             </svg>
           </div>
           <div class="rows">
-            <div class="panel accent-green"><strong>谁能改规则？</strong><p>ECS system 或 lifecycle helper。比如点击命中后，`hitDetectionSystem` 改 `ShrewComponent.hp/actionState/isClickable`。</p></div>
-            <div class="panel accent-cyan"><strong>View 做什么？</strong><p>View 只接收 binding 投影过来的结果，比如 `ShrewNode.setAnimation(...)`。它不知道 protobuf，也不决定能不能命中。</p></div>
+            <div class="panel accent-green"><strong>Adapter 是翻译员</strong><p>比如 `KickInputAdapter` 把 Laya 坐标转成比例坐标，调用 `hitDetectionSystem`，再把命中结果组装成 `KickRequest`。它不负责动画细节。</p></div>
+            <div class="panel accent-cyan"><strong>Entity 删除怎么做</strong><p>先通过 `ViewRegistry`/binding unregister 掉节点引用并销毁节点，再 `removeEntity(world, eid)`。如果以后有动态删除，还要清理 dirty snapshot，避免旧 eid 快照干扰。</p></div>
             <div class="panel accent-red"><strong>为什么这么麻烦？</strong><p>因为这样才好测试。规则不用启动 Laya，协议不用碰节点，画面问题也能沿着 dirty 链路查。</p></div>
           </div>
         </div>
@@ -921,15 +865,20 @@ const entities = shrewQuery(world);</pre>
                 </marker>
               </defs>
               <circle cx="120" cy="220" r="54" fill="#eef4fb" stroke="#2364aa" stroke-width="2"></circle>
-              <text x="120" y="226" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">Wait</text>
+              <text x="120" y="218" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">等待</text>
+              <text x="120" y="240" text-anchor="middle" font-size="14" fill="#17385d">Wait</text>
               <circle cx="292" cy="116" r="54" fill="#f0f8f3" stroke="#2d7d46" stroke-width="2"></circle>
-              <text x="292" y="122" text-anchor="middle" font-size="18" font-weight="700" fill="#1f5f36">Up</text>
+              <text x="292" y="114" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">出洞</text>
+              <text x="292" y="136" text-anchor="middle" font-size="14" fill="#1f5f36">Up</text>
               <circle cx="500" cy="116" r="54" fill="#fff6e8" stroke="#b7791f" stroke-width="2"></circle>
-              <text x="500" y="122" text-anchor="middle" font-size="18" font-weight="700" fill="#80530f">Stand</text>
+              <text x="500" y="114" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">停留</text>
+              <text x="500" y="136" text-anchor="middle" font-size="14" fill="#80530f">Stand</text>
               <circle cx="500" cy="320" r="54" fill="#eef4fb" stroke="#2364aa" stroke-width="2"></circle>
-              <text x="500" y="326" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">Down</text>
+              <text x="500" y="318" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">回洞</text>
+              <text x="500" y="340" text-anchor="middle" font-size="14" fill="#17385d">Down</text>
               <circle cx="292" cy="320" r="54" fill="#fbeeee" stroke="#b34343" stroke-width="2"></circle>
-              <text x="292" y="326" text-anchor="middle" font-size="18" font-weight="700" fill="#8a2828">Dizzy</text>
+              <text x="292" y="318" text-anchor="middle" font-size="16" font-weight="700" fill="#8a2828">眩晕</text>
+              <text x="292" y="340" text-anchor="middle" font-size="14" fill="#8a2828">Dizz</text>
               <path d="M166 192 C196 160 219 140 239 129" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow5)"></path>
               <path d="M346 116 H438" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow5)"></path>
               <path d="M500 170 V258" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow5)"></path>
@@ -997,6 +946,88 @@ const entities = shrewQuery(world);</pre>
         </div>
         <footer class="footer">
           <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/ecs/dirty/aspects/SceneDirtyAspect.ts, src/binding/SyncView.ts</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="Snapshot Diff Example">
+        <header>
+          <div class="kicker">Snapshot Diff</div>
+          <h2>Snapshot 前后对比：dirty 是怎么被算出来的</h2>
+          <p class="lead">DirtyMarkSystem 不是凭感觉标脏。它给每个 eid 留一份上一帧快照，这一帧再读一次 Component 字段，哪个字段不同就打开哪个 bit。</p>
+        </header>
+        <div class="content split-wide">
+          <div class="rows">
+            <div class="panel accent-blue">
+              <strong>上一帧 snapshot</strong>
+              <pre class="code">eid = 17
+{
+  "ShrewComponent.actionState": Wait,
+  "AnimationComponent.animType": Idle,
+  "AnimationComponent.progress": 0,
+  "AnimationComponent.duration": 0
+}</pre>
+            </div>
+            <div class="panel accent-green">
+              <strong>这一帧 Component 数组</strong>
+              <pre class="code">ShrewComponent.actionState[17] = Up
+AnimationComponent.animType[17] = Up
+AnimationComponent.progress[17] = 0
+AnimationComponent.duration[17] = 0.31</pre>
+            </div>
+            <div class="panel accent-amber">
+              <strong>比较结果</strong>
+              <pre class="code">actionState: Wait -> Up       => BIT_SHREW_ACTION
+animType:    Idle -> Up       => BIT_ANIM_TYPE
+duration:    0 -> 0.31        => BIT_ANIM_DURATION
+progress:    0 -> 0           => 不标</pre>
+            </div>
+          </div>
+          <div class="diagram">
+            <svg viewBox="0 0 820 470" role="img" aria-label="Snapshot 前后对比 dirty 例子">
+              <defs>
+                <marker id="arrow12" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="42" y="48" width="210" height="72" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="147" y="78" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">Snapshot Store</text>
+              <text x="147" y="100" text-anchor="middle" font-size="12" fill="#5f6b7a">上一帧 Wait / Idle</text>
+              <rect x="306" y="48" width="210" height="72" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="411" y="78" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">Component Arrays</text>
+              <text x="411" y="100" text-anchor="middle" font-size="12" fill="#5f6b7a">这一帧 Up / Up</text>
+              <rect x="570" y="48" width="210" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="675" y="78" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">Dirty Bits</text>
+              <text x="675" y="100" text-anchor="middle" font-size="12" fill="#5f6b7a">只标变化字段</text>
+
+              <rect x="92" y="190" width="640" height="168" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="150" y="226" font-size="14" font-weight="700" fill="#17385d">字段</text>
+              <text x="354" y="226" font-size="14" font-weight="700" fill="#17385d">上一帧</text>
+              <text x="500" y="226" font-size="14" font-weight="700" fill="#17385d">这一帧</text>
+              <text x="628" y="226" font-size="14" font-weight="700" fill="#17385d">结果</text>
+              <line x1="112" y1="242" x2="712" y2="242" stroke="#d6dde8"></line>
+              <text x="150" y="268" font-size="13" fill="#283442">actionState</text>
+              <text x="354" y="268" font-size="13" fill="#5f6b7a">Wait</text>
+              <text x="500" y="268" font-size="13" fill="#1f5f36">Up</text>
+              <text x="628" y="268" font-size="13" fill="#80530f">BIT_SHREW_ACTION</text>
+              <text x="150" y="302" font-size="13" fill="#283442">animType</text>
+              <text x="354" y="302" font-size="13" fill="#5f6b7a">Idle</text>
+              <text x="500" y="302" font-size="13" fill="#1f5f36">Up</text>
+              <text x="628" y="302" font-size="13" fill="#80530f">BIT_ANIM_TYPE</text>
+              <text x="150" y="336" font-size="13" fill="#283442">duration</text>
+              <text x="354" y="336" font-size="13" fill="#5f6b7a">0</text>
+              <text x="500" y="336" font-size="13" fill="#1f5f36">0.31</text>
+              <text x="628" y="336" font-size="13" fill="#80530f">BIT_ANIM_DURATION</text>
+
+              <path d="M252 84 H298" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow12)"></path>
+              <path d="M516 84 H562" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow12)"></path>
+              <path d="M675 120 C662 158 610 176 560 190" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow12)"></path>
+              <text x="410" y="422" text-anchor="middle" font-size="13" fill="#5f6b7a">比较完成后，snapshot 会更新成这一帧的值，下一帧继续拿它做对比</text>
+            </svg>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/ecs/dirty/aspects/ShrewDirtyAspect.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1183,55 +1214,6 @@ git commit -m "feat: add score milestone celebration" \
         </div>
         <footer class="footer">
           <span>对应文档：docs/test-guide.md</span>
-          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
-        </footer>
-      </article>
-
-      <article class="slide" data-title="UI Debug">
-        <header>
-          <div class="kicker">UI Debug Tips</div>
-          <h2>界面调试技巧：把视觉问题拆成坐标、层级、资源、生命周期</h2>
-          <p class="lead">Laya 表现层允许使用 Laya.*，但它只应该表现 ECS 状态。界面 bug 要沿着 owner 和投影链路定位。</p>
-        </header>
-        <div class="content">
-          <div class="four">
-            <div class="mini accent-blue"><strong>坐标</strong><p>输入用设计分辨率比例，洞位配置用 posXRatio/posYRatio，ShrewNode 处理 Cocos Y-up 到 Laya Y-down。</p></div>
-            <div class="mini accent-amber"><strong>层级</strong><p>SceneLayer 管背景、cover 和过渡遮罩；洞位 zOrder 与地图行、cover 资源一起调。</p></div>
-            <div class="mini accent-green"><strong>资源</strong><p>Atlas 逻辑名集中在 AtlasConfig，getFrameTexture 按 url 后缀找子帧，rotated=true 需要手动补偿。</p></div>
-            <div class="mini accent-red"><strong>生命周期</strong><p>timer、tween、event、loader callback、registry 引用都要有 owner 和 teardown。</p></div>
-          </div>
-          <div class="diagram">
-            <svg viewBox="0 0 920 300" role="img" aria-label="界面调试路线图">
-              <defs>
-                <marker id="arrow7" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
-                </marker>
-              </defs>
-              <rect x="34" y="76" width="140" height="70" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="104" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">页面复现</text>
-              <text x="104" y="128" text-anchor="middle" font-size="12" fill="#5f6b7a">debug-tsc.html</text>
-              <rect x="218" y="76" width="140" height="70" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="288" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">查看 ECS</text>
-              <text x="288" y="128" text-anchor="middle" font-size="12" fill="#5f6b7a">state, dirty bits</text>
-              <rect x="402" y="76" width="140" height="70" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="472" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">看 Binding</text>
-              <text x="472" y="128" text-anchor="middle" font-size="12" fill="#5f6b7a">node method</text>
-              <rect x="586" y="76" width="140" height="70" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
-              <text x="656" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">看 Laya</text>
-              <text x="656" y="128" text-anchor="middle" font-size="12" fill="#5f6b7a">zOrder, texture</text>
-              <rect x="770" y="76" width="116" height="70" rx="8" fill="#fbeeee" stroke="#b34343"></rect>
-              <text x="828" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#8a2828">回归测试</text>
-              <text x="828" y="128" text-anchor="middle" font-size="12" fill="#5f6b7a">adapter / registry</text>
-              <path d="M174 111 H210" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow7)"></path>
-              <path d="M358 111 H394" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow7)"></path>
-              <path d="M542 111 H578" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow7)"></path>
-              <path d="M726 111 H762" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow7)"></path>
-              <text x="460" y="218" text-anchor="middle" font-size="15" fill="#5f6b7a">命令：npm run debug:ready，访问 http://localhost:8080/debug-tsc.html</text>
-            </svg>
-          </div>
-        </div>
-        <footer class="footer">
-          <span>对应文档：docs/laya-rules.md</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
