@@ -547,7 +547,7 @@
     <aside class="rail" aria-label="页面进度">
       <div class="rail-title">ECS FRAMEWORK</div>
       <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
-      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">14</span></div>
+      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">16</span></div>
     </aside>
 
     <section class="viewport">
@@ -592,8 +592,6 @@
               <path d="M188 79 H274" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
               <path d="M438 79 H524" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
               <path d="M607 114 C607 182 520 253 446 253" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
-              <path d="M282 253 C196 253 120 175 120 123" stroke="#b34343" stroke-width="2.5" stroke-dasharray="7 7" fill="none"></path>
-              <text x="148" y="222" font-size="13" fill="#b34343">禁止反向改权威状态</text>
             </svg>
           </div>
         </div>
@@ -603,33 +601,161 @@
         </footer>
       </article>
 
-      <article class="slide" data-title="Agenda">
+      <article class="slide" data-title="ECS Intro">
         <header>
-          <div class="kicker">Agenda</div>
-          <h2>分享目标：讲清楚“框架为什么这样拆”</h2>
-          <p class="lead">不是单独介绍 ECS 名词，而是用项目运行链路说明边界、测试、调试和性能取舍。</p>
+          <div class="kicker">ECS Intro</div>
+          <h2>ECS 是什么：把“对象”拆成数据和规则</h2>
+          <p class="lead">ECS 不是为了把代码写复杂。它的目的很朴素：状态统一放在 Component，规则统一放在 System，画面只是状态的投影。</p>
         </header>
-        <div class="content">
-          <div class="cards">
-            <div class="mini accent-blue"><strong>概念层</strong><p>Entity、Component、System、Query，以及 bitecs 里“eid 是下标、字段是数组”的写法。</p></div>
-            <div class="mini accent-green"><strong>规则层</strong><p>地鼠状态机如何在 ECS 中推进，点击与网络回包如何进入系统。</p></div>
-            <div class="mini accent-amber"><strong>同步层</strong><p>dirty mark 如何找出变化，binding 如何把数据投影到 Laya 节点。</p></div>
-            <div class="mini accent-cyan"><strong>工程化</strong><p>protobuf 边界、seqId 匹配、TDD 测试矩阵、调试页面和日志。</p></div>
-            <div class="mini accent-violet"><strong>性能层</strong><p>用 perf 英雄链路区分 ECS 成本、dirty 同步成本和 Laya Spine 渲染成本。</p></div>
-            <div class="mini accent-red"><strong>落地层</strong><p>新增状态、字段、协议、表现时按固定清单走，避免边界穿透。</p></div>
+        <div class="content split-wide">
+          <div class="rows">
+            <div class="panel accent-blue"><strong>Entity 是编号</strong><p>`eid` 只是一个数字。比如一只地鼠、一个洞位、玩家 HUD、场景单例，都是 world 里的 entity。</p></div>
+            <div class="panel accent-green"><strong>Component 是数据表</strong><p>`ShrewComponent.hp[eid]`、`SceneComponent.currentMap[eid]` 这种写法，本质就是用 eid 去数组里取字段。</p></div>
+            <div class="panel accent-amber"><strong>System 是规则</strong><p>状态机、命中、场景轮换、锤子冷却都在 system 里跑。System 改数据，不直接改 Laya 节点。</p></div>
+            <div class="panel accent-red"><strong>好处是边界清楚</strong><p>规则可以单测，View 不决定玩法，网络回包不直接碰画面，dirty binding 只同步发生变化的字段。</p></div>
           </div>
-          <div class="route" aria-label="分享路线">
-            <div class="route-step">Why<small>为什么用 ECS</small></div>
-            <div class="route-step">Model<small>数据建模</small></div>
-            <div class="route-step">Loop<small>每帧系统</small></div>
-            <div class="route-step">Network<small>protobuf</small></div>
-            <div class="route-step">FSM<small>状态机</small></div>
-            <div class="route-step">Binding<small>差量表现</small></div>
-            <div class="route-step">Debug<small>测试压测</small></div>
+          <div class="diagram">
+            <svg viewBox="0 0 780 470" role="img" aria-label="ECS 概念和好处">
+              <defs>
+                <marker id="arrow13" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="42" y="48" width="170" height="74" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="127" y="79" text-anchor="middle" font-size="18" font-weight="700" fill="#17385d">Entity</text>
+              <text x="127" y="103" text-anchor="middle" font-size="13" fill="#5f6b7a">编号 eid</text>
+              <rect x="306" y="48" width="170" height="74" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="391" y="79" text-anchor="middle" font-size="18" font-weight="700" fill="#1f5f36">Component</text>
+              <text x="391" y="103" text-anchor="middle" font-size="13" fill="#5f6b7a">纯数据字段</text>
+              <rect x="570" y="48" width="170" height="74" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="655" y="79" text-anchor="middle" font-size="18" font-weight="700" fill="#80530f">System</text>
+              <text x="655" y="103" text-anchor="middle" font-size="13" fill="#5f6b7a">批量跑规则</text>
+              <path d="M212 85 H298" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow13)"></path>
+              <path d="M476 85 H562" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow13)"></path>
+
+              <rect x="80" y="210" width="620" height="66" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="390" y="238" text-anchor="middle" font-size="17" font-weight="700" fill="#172231">一只地鼠不是一个对象，而是一组组件字段共用同一个 eid</text>
+              <text x="390" y="260" text-anchor="middle" font-size="13" fill="#5f6b7a">ShrewComponent + AnimationComponent + DirtyComponent</text>
+
+              <rect x="124" y="338" width="156" height="58" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="202" y="373" text-anchor="middle" font-size="14" font-weight="700" fill="#1f5f36">规则好测</text>
+              <rect x="312" y="338" width="156" height="58" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="390" y="373" text-anchor="middle" font-size="14" font-weight="700" fill="#17385d">数据好查</text>
+              <rect x="500" y="338" width="156" height="58" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="578" y="373" text-anchor="middle" font-size="14" font-weight="700" fill="#46317d">表现可替换</text>
+            </svg>
           </div>
         </div>
         <footer class="footer">
-          <span>讲法建议：先给整体图，再逐层展开，不从库 API 开始。</span>
+          <span>一句话：Entity 定位一份数据，Component 保存字段，System 按规则改字段。</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="World Build">
+        <header>
+          <div class="kicker">world.ts</div>
+          <h2>用 world.ts 看我们怎么搭出地鼠 world</h2>
+          <p class="lead">`createGameWorld()` 只创建空世界。真正的游戏状态，是后面把单例、洞位、地鼠这些 entity 一个个加进去。</p>
+        </header>
+        <div class="content split-wide">
+          <div class="rows">
+            <div class="panel accent-green"><strong>1. 单例 entity</strong><p>`createSingletonEntities(world)` 创建 hammer、combo、scene、player、network。它们不是全局变量，而是 world 里的固定 entity。</p></div>
+            <div class="panel accent-blue"><strong>2. 洞位 entity</strong><p>`createHoleEntities(world, MapType.Meadow)` 创建 9 个洞，记录行列、比例坐标、zIndex，以及 `shrewEid` 关联。</p></div>
+            <div class="panel accent-amber"><strong>3. 地鼠 entity</strong><p>`createShrewEntity(world, shrewType, mapType)` 给地鼠挂 `ShrewComponent`、`AnimationComponent`、`DirtyComponent`，然后用 `resetShrewForNextCycle` 初始化下一轮等待。</p></div>
+          </div>
+          <div class="diagram">
+            <svg viewBox="0 0 860 500" role="img" aria-label="world.ts 构建地鼠 world">
+              <defs>
+                <marker id="arrow14" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="330" y="34" width="200" height="64" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="430" y="62" text-anchor="middle" font-size="17" font-weight="700" fill="#17385d">createGameWorld()</text>
+              <text x="430" y="84" text-anchor="middle" font-size="12" fill="#5f6b7a">bitecs createWorld</text>
+
+              <rect x="58" y="164" width="210" height="78" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="163" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">SingletonEntities</text>
+              <text x="163" y="216" text-anchor="middle" font-size="12" fill="#5f6b7a">scene / player / hammer...</text>
+
+              <rect x="326" y="164" width="210" height="78" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="431" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">9 Hole Entities</text>
+              <text x="431" y="216" text-anchor="middle" font-size="12" fill="#5f6b7a">grid / posRatio / zIndex</text>
+
+              <rect x="594" y="164" width="210" height="78" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="699" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">9 Shrew Entities</text>
+              <text x="699" y="216" text-anchor="middle" font-size="12" fill="#5f6b7a">state / animation / dirty</text>
+
+              <rect x="326" y="312" width="210" height="78" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="431" y="342" text-anchor="middle" font-size="15" font-weight="700" fill="#172231">HoleComponent.shrewEid</text>
+              <text x="431" y="364" text-anchor="middle" font-size="12" fill="#5f6b7a">洞位知道自己挂哪只地鼠</text>
+
+              <path d="M430 98 V154" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow14)"></path>
+              <path d="M360 113 C260 126 188 142 164 156" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow14)"></path>
+              <path d="M500 113 C604 126 674 142 698 156" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow14)"></path>
+              <path d="M536 203 H586" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow14)"></path>
+              <path d="M431 242 V304" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow14)"></path>
+              <text x="431" y="454" text-anchor="middle" font-size="13" fill="#5f6b7a">GameScene.init 负责把这些 eid 注册到 ViewRegistry，之后 SyncView 才能找到对应 Laya 节点</text>
+            </svg>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应代码：src/ecs/world.ts, src/view/GameScene.ts</span>
+          <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
+        </footer>
+      </article>
+
+      <article class="slide" data-title="World Lifecycle">
+        <header>
+          <div class="kicker">World Lifecycle</div>
+          <h2>world 的生命周期：一局游戏一个 world，不让 eid 一直涨</h2>
+          <p class="lead">这套原型不是每次地鼠出洞都创建新 entity。9 个洞和 9 只地鼠会被反复复用，只重置 Component 字段。</p>
+        </header>
+        <div class="content split-wide">
+          <div class="diagram">
+            <svg viewBox="0 0 820 470" role="img" aria-label="world 生命周期">
+              <defs>
+                <marker id="arrow15" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
+                </marker>
+              </defs>
+              <rect x="52" y="46" width="180" height="66" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="142" y="74" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">GameScene.init</text>
+              <text x="142" y="95" text-anchor="middle" font-size="12" fill="#5f6b7a">创建 world 和 entity</text>
+              <rect x="320" y="46" width="180" height="66" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="410" y="74" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">GameLoopPipeline</text>
+              <text x="410" y="95" text-anchor="middle" font-size="12" fill="#5f6b7a">每帧推进系统</text>
+              <rect x="588" y="46" width="180" height="66" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="678" y="74" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">reset fields</text>
+              <text x="678" y="95" text-anchor="middle" font-size="12" fill="#5f6b7a">复用已有 entity</text>
+
+              <rect x="176" y="210" width="210" height="74" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="281" y="240" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">ViewRegistry.clear</text>
+              <text x="281" y="262" text-anchor="middle" font-size="12" fill="#5f6b7a">解绑 binding，销毁节点</text>
+              <rect x="436" y="210" width="210" height="74" rx="8" fill="#fbeeee" stroke="#b34343"></rect>
+              <text x="541" y="240" text-anchor="middle" font-size="15" font-weight="700" fill="#8a2828">drop world ref</text>
+              <text x="541" y="262" text-anchor="middle" font-size="12" fill="#5f6b7a">结束本局，下一局重建</text>
+
+              <rect x="138" y="356" width="544" height="58" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="410" y="379" text-anchor="middle" font-size="14" font-weight="700" fill="#172231">动态 entity 的规则：能复用就复用，必须删除就先解绑 View，再 removeEntity</text>
+              <text x="410" y="399" text-anchor="middle" font-size="12" fill="#5f6b7a">否则长时间运行会留下无意义 eid、旧 binding、旧 snapshot</text>
+
+              <path d="M232 79 H312" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow15)"></path>
+              <path d="M500 79 H580" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow15)"></path>
+              <path d="M678 112 C620 166 486 191 378 210" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow15)"></path>
+              <path d="M386 247 H428" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow15)"></path>
+              <path d="M541 284 C526 322 465 345 430 356" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow15)"></path>
+            </svg>
+          </div>
+          <div class="rows">
+            <div class="panel accent-green"><strong>地鼠为什么不一直 addEntity</strong><p>出洞、回洞、眩晕、下一轮，都只是改 `ShrewComponent` 和 `AnimationComponent` 字段。这样 eid 数量稳定，dirty snapshot 也稳定。</p></div>
+            <div class="panel accent-blue"><strong>一局结束怎么处理</strong><p>`GameScene.destroy()` 停止循环，销毁网络，`ViewRegistry.clear()` 解绑并销毁节点，最后让 scene/world 引用随对象释放。</p></div>
+            <div class="panel accent-red"><strong>如果真的要动态删除</strong><p>先 unregister binding 和销毁 ViewNode，再 `removeEntity(world, eid)`。同时清掉这类 entity 的 dirty snapshot，避免以后复用 eid 时读到旧快照。</p></div>
+          </div>
+        </div>
+        <footer class="footer">
+          <span>对应代码：src/view/GameScene.ts, src/view/ViewRegistry.ts, src/ecs/world.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1273,41 +1399,41 @@ git commit -m "feat: add score milestone celebration" \
       <article class="slide" data-title="Checklist">
         <header>
           <div class="kicker">Implementation Checklist</div>
-          <h2>落地清单：用“每 1000 分祝贺动画”举例</h2>
-          <p class="lead">需求听起来是表现需求，但不要直接在 View 里判断分数。先定谁是权威状态，再让 dirty binding 把结果推到动画节点。</p>
+          <h2>落地清单：新增一种非地鼠怪物，出现 10 秒后消失</h2>
+          <p class="lead">这个怪物不是地鼠皮肤，而是自己的 entity。它可以复用 ECS、dirty、binding、ViewRegistry 这条链路，但不要塞进 ShrewComponent 里硬凑。</p>
         </header>
         <div class="content split-wide">
           <div class="rows">
-            <div class="panel accent-green"><strong>1. 规则层先定清楚</strong><p>假设分数来自 `PlayerComponent.score`。新增 `lastCelebratedK`、`celebrationVisible`、`celebrationTimerSec`。当分数从 1900 到 2050，系统只触发 2000 这一档。</p></div>
-            <div class="panel accent-blue"><strong>2. dirty 链路写完整</strong><p>`PlayerComponent.celebrationVisible -> BIT_PLAYER_CELEBRATION -> DirtyComponent.playerDirty -> playerViewBinding -> PlayerHUD.showCelebration()`。</p></div>
-            <div class="panel accent-violet"><strong>3. 表现层只播动画</strong><p>`PlayerHUD` 或新的 `CelebrationNode` 放在屏幕正下方，显示 3 秒。动画怎么 tween 是 View 的事，什么时候出现由 ECS 字段决定。</p></div>
-            <div class="panel accent-red"><strong>4. 测试先覆盖边界</strong><p>测 999 不弹、1000 弹、1999 不重复弹、2000 再弹、3 秒后隐藏。binding 测 visible 变化会调用节点方法。</p></div>
+            <div class="panel accent-green"><strong>1. 先建自己的 Component</strong><p>比如 `BonusMonsterComponent`：`type`、`posXRatio`、`posYRatio`、`ageSec`、`durationSec=10`、`visible`、`spawnSeq`。它不是地鼠，就不要混进 `ShrewComponent`。</p></div>
+            <div class="panel accent-blue"><strong>2. world.ts 给它创建 entity</strong><p>新增 `createBonusMonsterEntity(world, mapType)`，挂 `BonusMonsterComponent` 和 `DirtyComponent`。如果同屏最多一个，就复用同一个 eid；如果多个，就建池或数组。</p></div>
+            <div class="panel accent-violet"><strong>3. System 管 10 秒生命周期</strong><p>`bonusMonsterSystem(deltaSec)` 只改 ECS 字段：出现时 `visible=1, ageSec=0`，每帧累加，超过 10 秒改成 `visible=0` 或进入待复用状态。</p></div>
+            <div class="panel accent-red"><strong>4. dirty / binding / view 补齐</strong><p>`BonusMonsterComponent.visible -> BIT_BONUS_MONSTER_VISIBLE -> DirtyComponent.bonusMonsterDirty -> BonusMonsterViewBinding -> BonusMonsterNode.setVisible()`。</p></div>
           </div>
           <div class="diagram">
-            <svg viewBox="0 0 820 430" role="img" aria-label="1000 分祝贺动画落地流程">
+            <svg viewBox="0 0 820 430" role="img" aria-label="新增非地鼠怪物落地流程">
               <defs>
                 <marker id="arrow11" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
                   <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
                 </marker>
               </defs>
               <rect x="52" y="46" width="180" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="142" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">PlayerComponent.score</text>
-              <text x="142" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">1990 -> 2050</text>
+              <text x="142" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">create entity</text>
+              <text x="142" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">BonusMonster + Dirty</text>
               <rect x="310" y="46" width="200" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="410" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">scoreMilestoneSystem</text>
-              <text x="410" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">发现跨过 2000</text>
+              <text x="410" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">bonusMonsterSystem</text>
+              <text x="410" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">ageSec += deltaSec</text>
               <rect x="588" y="46" width="180" height="62" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
               <text x="678" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">DirtyMarkSystem</text>
-              <text x="678" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">打开庆祝 bit</text>
+              <text x="678" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">visible / pos 改了</text>
               <rect x="180" y="186" width="200" height="62" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="280" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">playerViewBinding</text>
-              <text x="280" y="234" text-anchor="middle" font-size="12" fill="#5f6b7a">读 visible 和档位</text>
+              <text x="280" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">BonusMonsterBinding</text>
+              <text x="280" y="234" text-anchor="middle" font-size="12" fill="#5f6b7a">读 visible / pos</text>
               <rect x="460" y="186" width="200" height="62" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
-              <text x="560" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">CelebrationNode</text>
-              <text x="560" y="234" text-anchor="middle" font-size="12" fill="#5f6b7a">正下方播放 3 秒</text>
+              <text x="560" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">BonusMonsterNode</text>
+              <text x="560" y="234" text-anchor="middle" font-size="12" fill="#5f6b7a">播放出现 / 消失</text>
               <rect x="230" y="326" width="360" height="54" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="410" y="349" text-anchor="middle" font-size="14" font-weight="700" fill="#172231">不要在 View 里写 if (score % 1000 === 0)</text>
-              <text x="410" y="370" text-anchor="middle" font-size="12" fill="#5f6b7a">View 只负责“收到显示命令后怎么好看”</text>
+              <text x="410" y="349" text-anchor="middle" font-size="14" font-weight="700" fill="#172231">10 秒到了，由 System 改 visible，不由 View 自己销毁规则状态</text>
+              <text x="410" y="370" text-anchor="middle" font-size="12" fill="#5f6b7a">如果要真删除 entity：先解绑 ViewRegistry，再 removeEntity，并清 dirty snapshot</text>
               <path d="M232 77 H302" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow11)"></path>
               <path d="M510 77 H580" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow11)"></path>
               <path d="M678 108 C660 160 384 182 306 186" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow11)"></path>
@@ -1317,7 +1443,7 @@ git commit -m "feat: add score milestone celebration" \
           </div>
         </div>
         <footer class="footer">
-          <span>对应清单：Component 字段 -> System 规则 -> DirtyFlags/DirtyAspect -> Binding -> ViewNode -> 测试 -> debug:ready。</span>
+          <span>对应清单：world.ts 创建 entity -> System 生命周期 -> DirtyFlags/DirtyAspect -> Binding -> ViewNode -> ViewRegistry -> 测试。</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
