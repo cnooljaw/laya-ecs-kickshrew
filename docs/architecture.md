@@ -204,6 +204,42 @@ HitDetectionSystem
 
 性能压测中的 Spine 池是特殊共享表现资源：`GameScene` 持有 `PerfHeroSpinePoolGroup`，单个 `PerfHeroNode` 只持有当前 active 实例，`ViewRegistry` 仍负责节点销毁和 binding unregister。
 
+### world 和 entity 生命周期
+
+当前主线是一局游戏一个 bitecs world：
+
+```text
+GameScene.init()
+  -> createGameWorld()
+  -> createSingletonEntities(world)
+  -> createHoleEntities(world, MapType.Meadow)
+  -> createShrewEntity(world, shrewType, MapType.Meadow)
+  -> ViewRegistry.registerXxxNode(eid, node)
+```
+
+`createGameWorld()` 只创建空 world。真正的游戏状态来自 `world.ts` 里创建的几类 entity：
+
+- 单例 entity：`hammer`、`combo`、`scene`、`player`、`network`。
+- 洞位 entity：9 个 `HoleComponent`，保存行列、坐标比例、zIndex、`shrewEid`。
+- 地鼠 entity：挂 `ShrewComponent`、`AnimationComponent`、`DirtyComponent`。
+- 压测 entity：`PerfHeroComponent` 只服务 perf 调试链路。
+
+不要把“每次出洞”实现成不断 `addEntity`。地鼠的自然循环、命中、下一轮等待都通过重置 `ShrewComponent` / `AnimationComponent` 字段完成，例如 `resetShrewForNextCycle()`。这样 eid 数量稳定，dirty snapshot 也稳定。
+
+如果后续引入真正的动态 entity，例如一个区别于地鼠的新怪物，生命周期按下面顺序处理：
+
+```text
+createXxxEntity(world)
+  -> addComponent(... XxxComponent)
+  -> addComponent(... DirtyComponent)
+  -> registerXxxNode(eid, node)
+  -> system 用 ageSec / visible / state 管生命周期
+  -> dirty binding 同步表现
+  -> 结束时优先复用；必须删除时先 unregister/destroy view，再 removeEntity(world, eid)
+```
+
+动态删除时还要同步处理 dirty snapshot，避免旧 eid 快照影响后续复用。表现节点不能自己决定规则上的消失；10 秒后消失这类规则应由 ECS system 改 `visible/state` 字段，再由 dirty binding 通知 View。
+
 ## 扩展入口
 
 - 改状态机：`src/ecs/systems/ShrewStateSystem.ts`、`src/ecs/ShrewLifecycle.ts`

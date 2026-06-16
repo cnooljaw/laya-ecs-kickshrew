@@ -157,6 +157,59 @@ tail -30 .codegraph/daemon.log
 - 重启当前 Codex 会话或 Codex App，让它重新按 `~/.codex/config.toml` 的 `codegraph serve --mcp` 拉起 MCP。
 - 重启后用一次 `codegraph_context` 验证，不要只看 CLI status。
 
+## 本机网络和 npm 代理排查
+
+另一台电脑安装依赖或工具时，如果看到类似错误：
+
+```text
+request to https://registry.npmmirror.com/... failed
+connect ECONNREFUSED 127.0.0.1:7890
+```
+
+含义很直接：npm 或当前终端配置了本地代理 `127.0.0.1:7890`，但这个端口没有代理程序在监听。不要先怀疑包本身，先查本机代理。
+
+检查 npm 和终端代理：
+
+```bash
+npm config get proxy
+npm config get https-proxy
+npm config get registry
+echo $HTTP_PROXY
+echo $HTTPS_PROXY
+echo $ALL_PROXY
+lsof -nP -iTCP:7890 -sTCP:LISTEN
+```
+
+如果不需要代理，清掉 npm 和当前终端代理：
+
+```bash
+npm config delete proxy
+npm config delete https-proxy
+unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy
+npm config set registry https://registry.npmjs.org/
+```
+
+如果需要用自由猫这类本地代理，先确认代理软件已连接，并且 HTTP/Mixed 端口就是 `7890`：
+
+```bash
+lsof -nP -iTCP:7890 -sTCP:LISTEN
+curl -x http://127.0.0.1:7890 -I https://registry.npmjs.org/
+```
+
+npm 应配置 HTTP 代理端口，不要误填 SOCKS 端口：
+
+```bash
+npm config set proxy http://127.0.0.1:7890
+npm config set https-proxy http://127.0.0.1:7890
+npm config set registry https://registry.npmjs.org/
+```
+
+如果浏览器能访问但终端失败，通常是终端没有继承系统代理；如果终端能访问但桌面应用失败，通常是桌面应用没有走终端环境变量，需要开启代理软件的系统代理或 TUN 模式。`NO_PROXY` 建议保留本地回调地址：
+
+```bash
+export NO_PROXY=localhost,127.0.0.1,::1
+```
+
 ## Git 规范
 
 默认每次有效改动都提交。提交信息格式：
