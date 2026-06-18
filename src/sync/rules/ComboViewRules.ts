@@ -3,11 +3,12 @@ import {
   BIT_COMBO_COUNT,
   BIT_COMBO_ID,
   BIT_COMBO_TARGETS,
-} from "../DirtyFlags";
-import type { IComboNode } from "../ComboViewBinding";
-import { defineViewRules, noView, row } from "./ViewBindingRule";
+} from "../../binding/DirtyFlags";
+import type { IComboNode } from "../../binding/ComboViewBinding";
+import { createRule, defineViewRules, noView } from "./ViewBindingRule";
 
 type ComboField = Extract<keyof typeof ComboComponent, string>;
+const rule = createRule<IComboNode, ComboField>();
 
 function applyCombo({ eid, node }: { eid: number; node: IComboNode }): void {
   const count = ComboComponent.comboCount[eid];
@@ -28,8 +29,8 @@ export const COMBO_VIEW_RULES = defineViewRules<IComboNode, ComboField>(
   ComboComponent,
   [
     // bit                 label            fields                                  apply
-    row<IComboNode, ComboField>(BIT_COMBO_COUNT,   "连击次数",      ["comboCount"],                           applyCombo),
-    row<IComboNode, ComboField>(BIT_COMBO_ID,      "连击编号",      ["comboID"],                              noView),
-    row<IComboNode, ComboField>(BIT_COMBO_TARGETS, "连击目标洞位",  ["targetHole0", "targetHole1", "targetHole2"], applyCombo),
+    rule(BIT_COMBO_COUNT,   "连击次数",      ["comboCount"],                           applyCombo),
+    rule(BIT_COMBO_ID,      "连击编号",      ["comboID"],                              noView),
+    rule(BIT_COMBO_TARGETS, "连击目标洞位",  ["targetHole0", "targetHole1", "targetHole2"], applyCombo),
   ],
 );

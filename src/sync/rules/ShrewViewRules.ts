@@ -12,21 +12,23 @@ import {
   BIT_SHREW_PROP,
   BIT_SHREW_TIMER,
   BIT_SHREW_TYPE,
-} from "../DirtyFlags";
-import type { IShrewNode } from "../ShrewViewBinding";
+} from "../../binding/DirtyFlags";
+import type { IShrewNode } from "../../binding/ShrewViewBinding";
 import { animTypeName, consoleHitTraceLogger } from "../../debug/HitTraceLogger";
 import {
+  createRule,
   defineViewRules,
   noView,
-  row,
   type ViewBindingRule,
   type ViewRuleContext,
   type ViewRuleRow,
 } from "./ViewBindingRule";
-export { applyMatchedRules, noView, row, toDirtyMarks } from "./ViewBindingRule";
+export { applyMatchedRules, bitsOf, createRule, noView, row, toDirtyMarks } from "./ViewBindingRule";
 
 type ComponentField = Extract<keyof typeof ShrewComponent, string>;
 type AnimationField = Extract<keyof typeof AnimationComponent, string>;
+const shrewRule = createRule<IShrewNode, ComponentField>();
+const animationRule = createRule<IShrewNode, AnimationField>();
 
 interface ShrewRuleContext extends ViewRuleContext<IShrewNode> {
   source?: string;
@@ -75,14 +77,14 @@ function applyPropType({ eid, node }: ShrewRuleContext): void {
 
 export const SHREW_COMPONENT_RULES = defineShrewViewRules([
   // bit                   label          fields             apply
-  row<IShrewNode, ComponentField>(BIT_SHREW_TYPE,      "地鼠类型",    ["shrewType"],     applySpriteFrame),
-  row<IShrewNode, ComponentField>(BIT_SHREW_HP,        "地鼠生命值",  ["hp"],            noView),
-  row<IShrewNode, ComponentField>(BIT_SHREW_ACTION,    "动作状态",    ["actionState"],   applyAnimation),
-  row<IShrewNode, ComponentField>(BIT_SHREW_HAT,       "帽子显示",    ["hasHat"],        applyHatVisible),
-  row<IShrewNode, ComponentField>(BIT_SHREW_MAP,       "地图皮肤",    ["mapType"],       applySpriteFrame),
-  row<IShrewNode, ComponentField>(BIT_SHREW_CLICKABLE, "是否可点击",  ["isClickable"],   applyClickable),
-  row<IShrewNode, ComponentField>(BIT_SHREW_TIMER,     "状态计时器",  ["animTimer"],     noView),
-  row<IShrewNode, ComponentField>(BIT_SHREW_PROP,      "道具类型",    ["propType"],      applyPropType),
+  shrewRule(BIT_SHREW_TYPE,      "地鼠类型",    ["shrewType"],     applySpriteFrame),
+  shrewRule(BIT_SHREW_HP,        "地鼠生命值",  ["hp"],            noView),
+  shrewRule(BIT_SHREW_ACTION,    "动作状态",    ["actionState"],   applyAnimation),
+  shrewRule(BIT_SHREW_HAT,       "帽子显示",    ["hasHat"],        applyHatVisible),
+  shrewRule(BIT_SHREW_MAP,       "地图皮肤",    ["mapType"],       applySpriteFrame),
+  shrewRule(BIT_SHREW_CLICKABLE, "是否可点击",  ["isClickable"],   applyClickable),
+  shrewRule(BIT_SHREW_TIMER,     "状态计时器",  ["animTimer"],     noView),
+  shrewRule(BIT_SHREW_PROP,      "道具类型",    ["propType"],      applyPropType),
 ]);
 
 export const SHREW_ANIMATION_RULES = defineViewRules<IShrewNode, AnimationField>(
@@ -90,7 +92,7 @@ export const SHREW_ANIMATION_RULES = defineViewRules<IShrewNode, AnimationField>
   AnimationComponent,
 [
   // bit                 label       fields        apply
-  row<IShrewNode, AnimationField>(BIT_ANIM_TYPE,     "动画类型", ["animType"], applyAnimation),
-  row<IShrewNode, AnimationField>(BIT_ANIM_PROGRESS, "动画进度", ["progress"], applyAnimation),
-  row<IShrewNode, AnimationField>(BIT_ANIM_DURATION, "动画时长", ["duration"], applyAnimation),
+  animationRule(BIT_ANIM_TYPE,     "动画类型", ["animType"], applyAnimation),
+  animationRule(BIT_ANIM_PROGRESS, "动画进度", ["progress"], applyAnimation),
+  animationRule(BIT_ANIM_DURATION, "动画时长", ["duration"], applyAnimation),
 ]);

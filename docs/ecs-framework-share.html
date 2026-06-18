@@ -1071,7 +1071,7 @@
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/binding/rules/*ViewRules.ts, src/binding/SyncView.ts</span>
+          <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/sync/rules/*ViewRules.ts, src/binding/SyncView.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1175,9 +1175,9 @@ DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
             </div>
             <div class="panel accent-blue">
               <strong>2. ViewRules 声明字段到 bit</strong>
-              <pre class="code">row(BIT_SCENE_MAP, "当前地图",
+              <pre class="code">rule(BIT_SCENE_MAP, "当前地图",
     ["currentMap"], applySwitchScene)
-row(BIT_SCENE_TIMER, "场景计时器",
+rule(BIT_SCENE_TIMER, "场景计时器",
     ["sceneTimer"], noView)</pre>
             </div>
             <div class="panel accent-amber">
@@ -1251,7 +1251,7 @@ row(BIT_SCENE_TIMER, "场景计时器",
               <text x="401" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">actionState=Up, animType=Up</text>
               <rect x="558" y="42" width="180" height="72" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
               <text x="648" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">ViewRules</text>
-              <text x="648" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">row(bit, fields, apply)</text>
+              <text x="648" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">rule(bit, fields, apply)</text>
               <rect x="34" y="190" width="210" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
               <text x="139" y="220" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">DirtyComponent</text>
               <text x="139" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">shrewDirty / animDirty</text>
@@ -1283,9 +1283,9 @@ AnimationComponent.duration[eid] = timing.upDurationSec;</pre>
             </div>
             <div class="panel accent-blue">
               <strong>2. 表格式 rules 声明变化</strong>
-              <pre class="code">row(BIT_SHREW_ACTION, "动作状态",
+              <pre class="code">rule(BIT_SHREW_ACTION, "动作状态",
     ["actionState"], applyAnimation)
-row(BIT_ANIM_PROGRESS, "动画进度",
+rule(BIT_ANIM_PROGRESS, "动画进度",
     ["progress"], applyAnimation)</pre>
             </div>
             <div class="panel accent-amber">
@@ -1301,7 +1301,7 @@ row(BIT_ANIM_PROGRESS, "动画进度",
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/systems/ShrewStateSystem.ts, src/binding/rules/ShrewViewRules.ts, src/binding/rules/ViewBindingRule.ts</span>
+          <span>对应代码：src/ecs/systems/ShrewStateSystem.ts, src/sync/rules/ShrewViewRules.ts, src/sync/rules/ViewBindingRule.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>

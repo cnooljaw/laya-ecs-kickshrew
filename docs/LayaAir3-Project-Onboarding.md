@@ -294,22 +294,24 @@ Entity eid
   -> DirtyMark 映射 dirty bit、component 字段
 ```
 
-每条 dirty binding 链路都有一张更好读的表：`src/binding/rules/*ViewRules.ts`。它把 dirty 检测和 view 投影放在同一行配置里：
+每条 dirty binding 链路都有一张更好读的表：`src/sync/rules/*ViewRules.ts`。它把 dirty 检测和 view 投影放在同一行配置里：
 
 ```ts
+const rule = createRule<IComboNode, ComboField>();
+
 export const COMBO_VIEW_RULES = defineViewRules<IComboNode, ComboField>(
   "ComboComponent",
   ComboComponent,
   [
     // bit                 label            fields                                  apply
-    row(BIT_COMBO_COUNT,   "连击次数",      ["comboCount"],                         applyCombo),
-    row(BIT_COMBO_ID,      "连击编号",      ["comboID"],                            noView),
-    row(BIT_COMBO_TARGETS, "连击目标洞位",  ["targetHole0", "targetHole1", "targetHole2"], applyCombo),
+    rule(BIT_COMBO_COUNT,   "连击次数",      ["comboCount"],                         applyCombo),
+    rule(BIT_COMBO_ID,      "连击编号",      ["comboID"],                            noView),
+    rule(BIT_COMBO_TARGETS, "连击目标洞位",  ["targetHole0", "targetHole1", "targetHole2"], applyCombo),
   ],
 );
 ```
 
-`fields` 是 DirtyMarkSystem 要比较的 ECS 字段，`apply` 是对应 `*ViewBinding` 命中 dirty bit 后真正调用的函数。`noView` 表示字段只参与 dirty 记录，不直接调用 view。比如 `BIT_COMBO_COUNT` 和 `BIT_COMBO_TARGETS` 都复用 `applyCombo`，同一帧同时变化时 binding 会去重，只刷新一次连击 UI。
+`fields` 是 DirtyMarkSystem 要比较的 ECS 字段，`apply` 是对应 `*ViewBinding` 命中 dirty bit 后真正调用的函数，`allBits` 由 `bitsOf(rules)` 自动得到。`noView` 表示字段只参与 dirty 记录，不直接调用 view。比如 `BIT_COMBO_COUNT` 和 `BIT_COMBO_TARGETS` 都复用 `applyCombo`，同一帧同时变化时 binding 会去重，只刷新一次连击 UI。
 
 ### 第 40-50 分钟：dirty binding 怎么把 ECS 显示出来
 
@@ -627,7 +629,7 @@ GameScene.onTouch(x, y)
 2. 在 `src/ecs/world.ts` 初始化字段。
 3. 在 system 中修改字段。
 4. 在 `src/binding/DirtyFlags.ts` 增加 bit。
-5. 在对应 `src/binding/rules/*ViewRules.ts` 增加一行 `row(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
+5. 在对应 `src/sync/rules/*ViewRules.ts` 增加一行 `rule(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
 6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；对应 `*DirtyAspect` 和 `*ViewBinding` 会共用这张表。
 7. 在 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/ecs/*.test.ts`。

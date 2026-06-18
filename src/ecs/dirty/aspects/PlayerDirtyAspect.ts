@@ -1,10 +1,7 @@
 import { defineQuery } from "bitecs";
 import { DirtyComponent, PlayerComponent } from "../../components";
-import {
-  BIT_PLAYER_ALL,
-} from "../../../binding/DirtyFlags";
-import { PLAYER_VIEW_RULES } from "../../../binding/rules/PlayerViewRules";
-import { toDirtyMarks } from "../../../binding/rules/ViewBindingRule";
+import { PLAYER_VIEW_RULES } from "../../../sync/rules/PlayerViewRules";
+import { bitsOf, toDirtyMarks } from "../../../sync/rules/ViewBindingRule";
 import type { DirtyAspect } from "../DirtySchemaTypes";
 
 const playerQuery = defineQuery([PlayerComponent, DirtyComponent]);
@@ -19,7 +16,7 @@ export const PlayerDirtyAspect: DirtyAspect = {
       name: "playerDirty",
       storeKey: "player",
       dirtyTarget: "playerDirty",
-      allBits: BIT_PLAYER_ALL,
+      allBits: bitsOf(PLAYER_VIEW_RULES),
       marks: toDirtyMarks(PLAYER_VIEW_RULES),
     },
   ],

@@ -2,8 +2,8 @@
  * ComboViewBinding — ComboComponent → ComboNode 绑定
  */
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "./rules/ViewBindingRule";
-import { COMBO_VIEW_RULES } from "./rules/ComboViewRules";
+import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { COMBO_VIEW_RULES } from "../sync/rules/ComboViewRules";
 
 export interface IComboNode {
   showCombo(count: number, targets: number[]): void;

@@ -2,8 +2,8 @@
  * HammerViewBinding — HammerComponent → HammerNode 绑定
  */
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "./rules/ViewBindingRule";
-import { HAMMER_VIEW_RULES } from "./rules/HammerViewRules";
+import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { HAMMER_VIEW_RULES } from "../sync/rules/HammerViewRules";
 
 export interface IHammerNode {
   setHammerType(hammerType: number): void;

@@ -2,8 +2,8 @@
  * PlayerViewBinding — PlayerComponent → PlayerHUD 绑定
  */
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "./rules/ViewBindingRule";
-import { PLAYER_VIEW_RULES } from "./rules/PlayerViewRules";
+import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { PLAYER_VIEW_RULES } from "../sync/rules/PlayerViewRules";
 
 export interface IPlayerHUD {
   setMoney(value: number): void;

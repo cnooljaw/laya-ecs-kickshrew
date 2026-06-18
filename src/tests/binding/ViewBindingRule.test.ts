@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   applyMatchedRules,
+  bitsOf,
+  createRule,
   defineViewRules,
-  row,
   type ViewBindingRule,
   type ViewRuleApply,
-} from "../../binding/rules/ViewBindingRule";
+} from "../../sync/rules/ViewBindingRule";
 
 describe("ViewBindingRule", () => {
   it("applyMatchedRules 对共用 apply 的规则去重且不创建 Set 实例", () => {
@@ -26,6 +27,7 @@ describe("ViewBindingRule", () => {
     const applyOther: ViewRuleApply<{ value: number }> = ({ node }) => {
       calls.push(`other:${node.value}`);
     };
+    const rule = createRule<{ value: number }, keyof typeof component>();
 
     const component = {
       a: [0],
@@ -36,9 +38,9 @@ describe("ViewBindingRule", () => {
       "TestComponent",
       component,
       [
-        row(0x01, "字段 A", ["a"], applyShared),
-        row(0x02, "字段 B", ["b"], applyShared),
-        row(0x04, "字段 C", ["c"], applyOther),
+        rule(0x01, "字段 A", ["a"], applyShared),
+        rule(0x02, "字段 B", ["b"], applyShared),
+        rule(0x04, "字段 C", ["c"], applyOther),
       ],
     );
 
@@ -57,5 +59,6 @@ describe("ViewBindingRule", () => {
 
     expect(calls).toEqual(["shared:7"]);
     expect(createdSets).toEqual([]);
+    expect(bitsOf(rules)).toBe(0x07);
   });
 });

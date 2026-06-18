@@ -2,8 +2,8 @@
  * HoleViewBinding — HoleComponent → HoleNode 绑定
  */
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "./rules/ViewBindingRule";
-import { HOLE_VIEW_RULES } from "./rules/HoleViewRules";
+import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { HOLE_VIEW_RULES } from "../sync/rules/HoleViewRules";
 
 export interface IHoleNode {
   setPosition(xRatio: number, yRatio: number): void;

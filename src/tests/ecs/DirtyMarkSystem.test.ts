@@ -16,51 +16,43 @@ import {
 import { ShrewType, ShrewAction, MapType } from '../../ecs/types';
 import { dirtyMarkSystem, getDirtySnapshotForTest } from '../../ecs/systems/DirtyMarkSystem';
 import { ShrewDirtyAspect } from '../../ecs/dirty/aspects/ShrewDirtyAspect';
-import { SHREW_COMPONENT_RULES, SHREW_ANIMATION_RULES } from '../../binding/rules/ShrewViewRules';
+import { SHREW_COMPONENT_RULES, SHREW_ANIMATION_RULES } from '../../sync/rules/ShrewViewRules';
 import { HoleDirtyAspect } from '../../ecs/dirty/aspects/HoleDirtyAspect';
-import { HOLE_VIEW_RULES } from '../../binding/rules/HoleViewRules';
+import { HOLE_VIEW_RULES } from '../../sync/rules/HoleViewRules';
 import { HammerDirtyAspect } from '../../ecs/dirty/aspects/HammerDirtyAspect';
-import { HAMMER_VIEW_RULES } from '../../binding/rules/HammerViewRules';
+import { HAMMER_VIEW_RULES } from '../../sync/rules/HammerViewRules';
 import { ComboDirtyAspect } from '../../ecs/dirty/aspects/ComboDirtyAspect';
-import { COMBO_VIEW_RULES } from '../../binding/rules/ComboViewRules';
+import { COMBO_VIEW_RULES } from '../../sync/rules/ComboViewRules';
 import { SceneDirtyAspect } from '../../ecs/dirty/aspects/SceneDirtyAspect';
-import { SCENE_VIEW_RULES } from '../../binding/rules/SceneViewRules';
+import { SCENE_VIEW_RULES } from '../../sync/rules/SceneViewRules';
 import { PlayerDirtyAspect } from '../../ecs/dirty/aspects/PlayerDirtyAspect';
-import { PLAYER_VIEW_RULES } from '../../binding/rules/PlayerViewRules';
+import { PLAYER_VIEW_RULES } from '../../sync/rules/PlayerViewRules';
 import { HitDirtyAspect } from '../../ecs/dirty/aspects/HitDirtyAspect';
-import { HIT_VIEW_RULES } from '../../binding/rules/HitViewRules';
+import { HIT_VIEW_RULES } from '../../sync/rules/HitViewRules';
 import { PerfHeroDirtyAspect } from '../../ecs/dirty/aspects/PerfHeroDirtyAspect';
-import { PERF_HERO_VIEW_RULES } from '../../binding/rules/PerfHeroViewRules';
+import { PERF_HERO_VIEW_RULES } from '../../sync/rules/PerfHeroViewRules';
+import { bitsOf } from '../../sync/rules/ViewBindingRule';
 import {
-  BIT_ANIM_ALL,
   BIT_HOLE_POS,
   BIT_HOLE_SHREW,
-  BIT_HOLE_ALL,
-  BIT_SHREW_ALL,
   BIT_SHREW_ACTION,
   BIT_ANIM_PROGRESS,
-  BIT_HAMMER_ALL,
   BIT_HAMMER_TYPE,
   BIT_HAMMER_THUNDER,
   BIT_HAMMER_HITTABLE,
-  BIT_SCENE_ALL,
   BIT_SCENE_MAP,
   BIT_SCENE_TIMER,
   BIT_SCENE_TRANSITION,
-  BIT_PLAYER_ALL,
   BIT_PLAYER_MONEY,
   BIT_PLAYER_ANGRY,
   BIT_PLAYER_POWER,
   BIT_PLAYER_LEVEL,
-  BIT_HIT_ALL,
   BIT_HIT_INDEX,
   BIT_HIT_REWARD,
   BIT_HIT_WASHIT,
-  BIT_COMBO_ALL,
   BIT_COMBO_COUNT,
   BIT_COMBO_ID,
   BIT_COMBO_TARGETS,
-  BIT_PERF_HERO_ALL,
   BIT_PERF_HERO_POS,
   BIT_PERF_HERO_SPAWN,
 } from '../../binding/DirtyFlags';
@@ -119,23 +111,20 @@ describe('DirtyMarkSystem', () => {
 
   it('每个 DirtyChannel 的 allBits 必须覆盖对应 ViewRules 的全部 bit', () => {
     const cases = [
-      { aspect: ShrewDirtyAspect, dirtyTarget: 'shrewDirty', allBits: BIT_SHREW_ALL, rules: SHREW_COMPONENT_RULES },
-      { aspect: ShrewDirtyAspect, dirtyTarget: 'animDirty', allBits: BIT_ANIM_ALL, rules: SHREW_ANIMATION_RULES },
-      { aspect: HoleDirtyAspect, dirtyTarget: 'holeDirty', allBits: BIT_HOLE_ALL, rules: HOLE_VIEW_RULES },
-      { aspect: HammerDirtyAspect, dirtyTarget: 'hammerDirty', allBits: BIT_HAMMER_ALL, rules: HAMMER_VIEW_RULES },
-      { aspect: ComboDirtyAspect, dirtyTarget: 'comboDirty', allBits: BIT_COMBO_ALL, rules: COMBO_VIEW_RULES },
-      { aspect: SceneDirtyAspect, dirtyTarget: 'sceneDirty', allBits: BIT_SCENE_ALL, rules: SCENE_VIEW_RULES },
-      { aspect: PlayerDirtyAspect, dirtyTarget: 'playerDirty', allBits: BIT_PLAYER_ALL, rules: PLAYER_VIEW_RULES },
-      { aspect: HitDirtyAspect, dirtyTarget: 'hitDirty', allBits: BIT_HIT_ALL, rules: HIT_VIEW_RULES },
-      { aspect: PerfHeroDirtyAspect, dirtyTarget: 'perfHeroDirty', allBits: BIT_PERF_HERO_ALL, rules: PERF_HERO_VIEW_RULES },
+      { aspect: ShrewDirtyAspect, dirtyTarget: 'shrewDirty', rules: SHREW_COMPONENT_RULES },
+      { aspect: ShrewDirtyAspect, dirtyTarget: 'animDirty', rules: SHREW_ANIMATION_RULES },
+      { aspect: HoleDirtyAspect, dirtyTarget: 'holeDirty', rules: HOLE_VIEW_RULES },
+      { aspect: HammerDirtyAspect, dirtyTarget: 'hammerDirty', rules: HAMMER_VIEW_RULES },
+      { aspect: ComboDirtyAspect, dirtyTarget: 'comboDirty', rules: COMBO_VIEW_RULES },
+      { aspect: SceneDirtyAspect, dirtyTarget: 'sceneDirty', rules: SCENE_VIEW_RULES },
+      { aspect: PlayerDirtyAspect, dirtyTarget: 'playerDirty', rules: PLAYER_VIEW_RULES },
+      { aspect: HitDirtyAspect, dirtyTarget: 'hitDirty', rules: HIT_VIEW_RULES },
+      { aspect: PerfHeroDirtyAspect, dirtyTarget: 'perfHeroDirty', rules: PERF_HERO_VIEW_RULES },
     ];
 
-    for (const { aspect, dirtyTarget, allBits, rules } of cases) {
+    for (const { aspect, dirtyTarget, rules } of cases) {
       const channel = aspect.channels.find(channel => channel.dirtyTarget === dirtyTarget);
-      const ruleBits = rules.reduce((bits, rule) => bits | rule.bit, 0);
-
-      expect(channel?.allBits).toBe(allBits);
-      expect(channel?.allBits).toBe(ruleBits);
+      expect(channel?.allBits).toBe(bitsOf(rules));
     }
   });
 

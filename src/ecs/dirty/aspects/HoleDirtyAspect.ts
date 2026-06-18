@@ -1,10 +1,7 @@
 import { defineQuery } from "bitecs";
 import { DirtyComponent, HoleComponent } from "../../components";
-import {
-  BIT_HOLE_ALL,
-} from "../../../binding/DirtyFlags";
-import { HOLE_VIEW_RULES } from "../../../binding/rules/HoleViewRules";
-import { toDirtyMarks } from "../../../binding/rules/ViewBindingRule";
+import { HOLE_VIEW_RULES } from "../../../sync/rules/HoleViewRules";
+import { bitsOf, toDirtyMarks } from "../../../sync/rules/ViewBindingRule";
 import type { DirtyAspect } from "../DirtySchemaTypes";
 
 const holeQuery = defineQuery([HoleComponent, DirtyComponent]);
@@ -19,7 +16,7 @@ export const HoleDirtyAspect: DirtyAspect = {
       name: "holeDirty",
       storeKey: "hole",
       dirtyTarget: "holeDirty",
-      allBits: BIT_HOLE_ALL,
+      allBits: bitsOf(HOLE_VIEW_RULES),
       marks: toDirtyMarks(HOLE_VIEW_RULES),
     },
   ],

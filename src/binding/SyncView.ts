@@ -12,19 +12,26 @@
  */
 import { defineQuery } from "bitecs";
 import { DirtyComponent } from "../ecs/components";
-import {
-  BIT_SHREW_ALL,
-  BIT_HOLE_ALL,
-  BIT_HAMMER_ALL,
-  BIT_COMBO_ALL,
-  BIT_SCENE_ALL,
-  BIT_PLAYER_ALL,
-  BIT_ANIM_ALL,
-  BIT_HIT_ALL,
-  BIT_PERF_HERO_ALL,
-} from "./DirtyFlags";
+import { bitsOf } from "../sync/rules/ViewBindingRule";
+import { SHREW_ANIMATION_RULES, SHREW_COMPONENT_RULES } from "../sync/rules/ShrewViewRules";
+import { HOLE_VIEW_RULES } from "../sync/rules/HoleViewRules";
+import { HAMMER_VIEW_RULES } from "../sync/rules/HammerViewRules";
+import { COMBO_VIEW_RULES } from "../sync/rules/ComboViewRules";
+import { SCENE_VIEW_RULES } from "../sync/rules/SceneViewRules";
+import { PLAYER_VIEW_RULES } from "../sync/rules/PlayerViewRules";
+import { HIT_VIEW_RULES } from "../sync/rules/HitViewRules";
+import { PERF_HERO_VIEW_RULES } from "../sync/rules/PerfHeroViewRules";
 
 const dirtyQuery = defineQuery([DirtyComponent]);
+const SHREW_DIRTY_MASK = bitsOf(SHREW_COMPONENT_RULES);
+const ANIM_DIRTY_MASK = bitsOf(SHREW_ANIMATION_RULES);
+const HOLE_DIRTY_MASK = bitsOf(HOLE_VIEW_RULES);
+const HAMMER_DIRTY_MASK = bitsOf(HAMMER_VIEW_RULES);
+const COMBO_DIRTY_MASK = bitsOf(COMBO_VIEW_RULES);
+const SCENE_DIRTY_MASK = bitsOf(SCENE_VIEW_RULES);
+const PLAYER_DIRTY_MASK = bitsOf(PLAYER_VIEW_RULES);
+const HIT_DIRTY_MASK = bitsOf(HIT_VIEW_RULES);
+const PERF_HERO_DIRTY_MASK = bitsOf(PERF_HERO_VIEW_RULES);
 
 /** 视图绑定函数类型 */
 export type BindingFn = (eid: number, dirtyBits: number, forceFull: boolean) => void;
@@ -75,55 +82,55 @@ export class SyncView {
 
       // Shrew 绑定
       const shrewDirty = DirtyComponent.shrewDirty[eid];
-      if ((shrewDirty & BIT_SHREW_ALL) || forceFull) {
+      if ((shrewDirty & SHREW_DIRTY_MASK) || forceFull) {
         this.shrewBinding?.(eid, shrewDirty, forceFull);
       }
 
       // Hole 绑定
       const holeDirty = DirtyComponent.holeDirty[eid];
-      if ((holeDirty & BIT_HOLE_ALL) || forceFull) {
+      if ((holeDirty & HOLE_DIRTY_MASK) || forceFull) {
         this.holeBinding?.(eid, holeDirty, forceFull);
       }
 
       // Hammer 绑定
       const hammerDirty = DirtyComponent.hammerDirty[eid];
-      if ((hammerDirty & BIT_HAMMER_ALL) || forceFull) {
+      if ((hammerDirty & HAMMER_DIRTY_MASK) || forceFull) {
         this.hammerBinding?.(eid, hammerDirty, forceFull);
       }
 
       // Combo 绑定
       const comboDirty = DirtyComponent.comboDirty[eid];
-      if ((comboDirty & BIT_COMBO_ALL) || forceFull) {
+      if ((comboDirty & COMBO_DIRTY_MASK) || forceFull) {
         this.comboBinding?.(eid, comboDirty, forceFull);
       }
 
       // Scene 绑定
       const sceneDirty = DirtyComponent.sceneDirty[eid];
-      if ((sceneDirty & BIT_SCENE_ALL) || forceFull) {
+      if ((sceneDirty & SCENE_DIRTY_MASK) || forceFull) {
         this.sceneBinding?.(eid, sceneDirty, forceFull);
       }
 
       // Player 绑定
       const playerDirty = DirtyComponent.playerDirty[eid];
-      if ((playerDirty & BIT_PLAYER_ALL) || forceFull) {
+      if ((playerDirty & PLAYER_DIRTY_MASK) || forceFull) {
         this.playerBinding?.(eid, playerDirty, forceFull);
       }
 
       // Anim 绑定
       const animDirty = DirtyComponent.animDirty[eid];
-      if ((animDirty & BIT_ANIM_ALL) || forceFull) {
+      if ((animDirty & ANIM_DIRTY_MASK) || forceFull) {
         this.animBinding?.(eid, animDirty, forceFull);
       }
 
       // Hit 绑定
       const hitDirty = DirtyComponent.hitDirty[eid];
-      if ((hitDirty & BIT_HIT_ALL) || forceFull) {
+      if ((hitDirty & HIT_DIRTY_MASK) || forceFull) {
         this.hitBinding?.(eid, hitDirty, forceFull);
       }
 
       // 调试压测英雄 Spine 绑定
       const perfHeroDirty = DirtyComponent.perfHeroDirty[eid];
-      if ((perfHeroDirty & BIT_PERF_HERO_ALL) || forceFull) {
+      if ((perfHeroDirty & PERF_HERO_DIRTY_MASK) || forceFull) {
         this.perfHeroBinding?.(eid, perfHeroDirty, forceFull);
       }
 

@@ -5,7 +5,7 @@
  * SyncView 读取这些 bitmask 来决定哪些 Laya 节点属性需要更新。
  *
  * 具体的 entity 组件组合、字段和 dirty bit 声明在 ecs/dirty/aspects；
- * binding/rules/*ViewRules 同时派生 dirty mark 和 view apply。
+ * sync/rules/*ViewRules 同时派生 dirty mark 和 view apply。
  */
 import { DIRTY_ASPECTS } from "../dirty/aspects";
 import {

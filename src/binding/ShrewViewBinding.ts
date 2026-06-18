@@ -13,7 +13,7 @@ import {
   applyMatchedRules,
   SHREW_ANIMATION_RULES,
   SHREW_COMPONENT_RULES,
-} from "./rules/ShrewViewRules";
+} from "../sync/rules/ShrewViewRules";
 
 /** 地鼠视图节点接口 (由 Laya ShrewNode 实现) */
 export interface IShrewNode {

@@ -1,10 +1,7 @@
 import { defineQuery } from "bitecs";
 import { ComboComponent, DirtyComponent } from "../../components";
-import {
-  BIT_COMBO_ALL,
-} from "../../../binding/DirtyFlags";
-import { COMBO_VIEW_RULES } from "../../../binding/rules/ComboViewRules";
-import { toDirtyMarks } from "../../../binding/rules/ViewBindingRule";
+import { COMBO_VIEW_RULES } from "../../../sync/rules/ComboViewRules";
+import { bitsOf, toDirtyMarks } from "../../../sync/rules/ViewBindingRule";
 import type { DirtyAspect } from "../DirtySchemaTypes";
 
 const comboQuery = defineQuery([ComboComponent, DirtyComponent]);
@@ -19,7 +16,7 @@ export const ComboDirtyAspect: DirtyAspect = {
       name: "comboDirty",
       storeKey: "combo",
       dirtyTarget: "comboDirty",
-      allBits: BIT_COMBO_ALL,
+      allBits: bitsOf(COMBO_VIEW_RULES),
       marks: toDirtyMarks(COMBO_VIEW_RULES),
     },
   ],

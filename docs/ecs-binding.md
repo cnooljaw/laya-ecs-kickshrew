@@ -87,29 +87,31 @@ DirtyMark     某个 dirty bit，对应一组 ECS 字段
 DirtyField    一个可比较的 component 字段，例如 ShrewComponent.actionState
 ```
 
-每条 view 同步链路都有一张表格式规则，放在 `src/binding/rules/*ViewRules.ts`。规则表同时服务 dirty 和 binding：
+每条 view 同步链路都有一张表格式规则，放在 `src/sync/rules/*ViewRules.ts`。规则表同时服务 dirty 和 binding：
 
 ```ts
+const rule = createRule<IHoleNode, HoleField>();
+
 const HOLE_VIEW_RULES = defineViewRules<IHoleNode, HoleField>(
   "HoleComponent",
   HoleComponent,
   [
     // bit               label            fields                    apply
-    row(BIT_HOLE_POS,    "洞位坐标",      ["posXRatio", "posYRatio"], applyPosition),
-    row(BIT_HOLE_SHREW,  "洞位绑定地鼠",  ["shrewEid"],               applyShrewVisible),
-    row(BIT_HOLE_ZORDER, "洞位层级",      ["zIndex"],                 applyZOrder),
+    rule(BIT_HOLE_POS,    "洞位坐标",      ["posXRatio", "posYRatio"], applyPosition),
+    rule(BIT_HOLE_SHREW,  "洞位绑定地鼠",  ["shrewEid"],               applyShrewVisible),
+    rule(BIT_HOLE_ZORDER, "洞位层级",      ["zIndex"],                 applyZOrder),
   ],
 );
 ```
 
-这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。`*DirtyAspect` 从 rules 派生 `DirtyMark`，`*ViewBinding` 从同一份 rules 执行 `apply`。`noView` 表示这个字段只参与 dirty 记录，不直接调用 view，例如 `SceneComponent.sceneTimer`、`ComboComponent.comboID`。
+这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。`*DirtyAspect` 从 rules 派生 `DirtyMark`，`*ViewBinding` 从同一份 rules 执行 `apply`，`allBits` 也由 `bitsOf(rules)` 计算。`noView` 表示这个字段只参与 dirty 记录，不直接调用 view，例如 `SceneComponent.sceneTimer`、`ComboComponent.comboID`。
 
 记忆顺序：
 
 ```text
 Component 字段
   -> DirtyFlags bit
-  -> ViewRules row(bit, label, fields, apply/noView)
+  -> ViewRules rule(bit, label, fields, apply/noView)
   -> DirtyAspect DirtyMark（由 ViewRules 派生）
   -> DirtyComponent.xxxDirty
   -> ViewBinding 执行 rules.apply
@@ -183,7 +185,7 @@ ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 vi
 2. `src/ecs/world.ts` 初始化字段。
 3. 对应 system 或 helper 修改字段。
 4. `src/binding/DirtyFlags.ts` 增加 bit。
-5. 在对应 `src/binding/rules/*ViewRules.ts` 增加一行 `row(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
+5. 在对应 `src/sync/rules/*ViewRules.ts` 增加一行 `rule(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
 6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；`*DirtyAspect` 和 `*ViewBinding` 会共用这张表。
 7. 对应 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/**/*.test.ts`。

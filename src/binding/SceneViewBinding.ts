@@ -2,8 +2,8 @@
  * SceneViewBinding — SceneComponent → SceneLayer 绑定
  */
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "./rules/ViewBindingRule";
-import { SCENE_VIEW_RULES } from "./rules/SceneViewRules";
+import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { SCENE_VIEW_RULES } from "../sync/rules/SceneViewRules";
 
 export interface ISceneLayer {
   switchScene(mapType: number): void;

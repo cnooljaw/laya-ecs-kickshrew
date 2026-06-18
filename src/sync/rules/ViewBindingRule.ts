@@ -29,6 +29,15 @@ export function row<TNode, TField extends string>(
   return { bit, label, fields, apply };
 }
 
+export function createRule<TNode, TField extends string>() {
+  return (
+    bit: number,
+    label: string,
+    fields: readonly TField[],
+    apply: ViewRuleApply<TNode>,
+  ): ViewRuleRow<TNode, TField> => row(bit, label, fields, apply);
+}
+
 export function defineViewRules<TNode, TField extends string>(
   componentName: string,
   component: Record<TField, ArrayLike<number>>,
@@ -46,6 +55,14 @@ export function toDirtyMarks(rules: readonly ViewBindingRule<any>[]): DirtyMark[
     label: rule.label,
     fields: rule.dirtyFields,
   }));
+}
+
+export function bitsOf(rules: readonly ViewBindingRule<any>[]): number {
+  let bits = 0;
+  for (let i = 0; i < rules.length; i++) {
+    bits |= rules[i].bit;
+  }
+  return bits;
 }
 
 export function applyMatchedRules<TNode>(

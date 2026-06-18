@@ -5,14 +5,11 @@ import {
   ShrewComponent,
 } from "../../components";
 import {
-  BIT_ANIM_ALL,
-  BIT_SHREW_ALL,
-} from "../../../binding/DirtyFlags";
-import {
   SHREW_ANIMATION_RULES,
   SHREW_COMPONENT_RULES,
   toDirtyMarks,
-} from "../../../binding/rules/ShrewViewRules";
+  bitsOf,
+} from "../../../sync/rules/ShrewViewRules";
 import type { DirtyAspect } from "../DirtySchemaTypes";
 
 const shrewQuery = defineQuery([ShrewComponent, AnimationComponent, DirtyComponent]);
@@ -27,14 +24,14 @@ export const ShrewDirtyAspect: DirtyAspect = {
       name: "shrewDirty",
       storeKey: "shrew",
       dirtyTarget: "shrewDirty",
-      allBits: BIT_SHREW_ALL,
+      allBits: bitsOf(SHREW_COMPONENT_RULES),
       marks: toDirtyMarks(SHREW_COMPONENT_RULES),
     },
     {
       name: "animDirty",
       storeKey: "anim",
       dirtyTarget: "animDirty",
-      allBits: BIT_ANIM_ALL,
+      allBits: bitsOf(SHREW_ANIMATION_RULES),
       marks: toDirtyMarks(SHREW_ANIMATION_RULES),
     },
   ],

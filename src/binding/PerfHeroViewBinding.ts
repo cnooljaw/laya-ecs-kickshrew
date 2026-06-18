@@ -1,6 +1,6 @@
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "./rules/ViewBindingRule";
-import { PERF_HERO_VIEW_RULES } from "./rules/PerfHeroViewRules";
+import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { PERF_HERO_VIEW_RULES } from "../sync/rules/PerfHeroViewRules";
 
 export interface IPerfHeroNode {
   playHero(heroType: number, skUrl: string, x: number, y: number, scale: number, spawnSeq: number): void;

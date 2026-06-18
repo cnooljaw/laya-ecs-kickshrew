@@ -2,8 +2,8 @@
  * HitViewBinding — HitComponent → 金币/宝箱动画绑定
  */
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "./rules/ViewBindingRule";
-import { HIT_VIEW_RULES } from "./rules/HitViewRules";
+import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { HIT_VIEW_RULES } from "../sync/rules/HitViewRules";
 
 export interface IHitEffectNode {
   showReward(shrewIndex: number, reward: number): void;

@@ -1,10 +1,7 @@
 import { defineQuery } from "bitecs";
 import { DirtyComponent, PerfHeroComponent } from "../../components";
-import {
-  BIT_PERF_HERO_ALL,
-} from "../../../binding/DirtyFlags";
-import { PERF_HERO_VIEW_RULES } from "../../../binding/rules/PerfHeroViewRules";
-import { toDirtyMarks } from "../../../binding/rules/ViewBindingRule";
+import { PERF_HERO_VIEW_RULES } from "../../../sync/rules/PerfHeroViewRules";
+import { bitsOf, toDirtyMarks } from "../../../sync/rules/ViewBindingRule";
 import type { DirtyAspect } from "../DirtySchemaTypes";
 
 const perfHeroQuery = defineQuery([PerfHeroComponent, DirtyComponent]);
@@ -19,7 +16,7 @@ export const PerfHeroDirtyAspect: DirtyAspect = {
       name: "perfHeroDirty",
       storeKey: "perfHero",
       dirtyTarget: "perfHeroDirty",
-      allBits: BIT_PERF_HERO_ALL,
+      allBits: bitsOf(PERF_HERO_VIEW_RULES),
       marks: toDirtyMarks(PERF_HERO_VIEW_RULES),
     },
   ],
