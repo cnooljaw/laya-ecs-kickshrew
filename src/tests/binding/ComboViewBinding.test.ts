@@ -7,7 +7,7 @@ import {
   unregisterComboNode,
   type IComboNode,
 } from "../../binding/ComboViewBinding";
-import { BIT_COMBO_COUNT, BIT_COMBO_ID, BIT_COMBO_TARGETS } from "../../binding/DirtyFlags";
+import { BIT_COMBO_COUNT, BIT_COMBO_ID, BIT_COMBO_TARGETS } from "../../sync/DirtyFlags";
 
 describe("ComboViewBinding", () => {
   const registered: number[] = [];

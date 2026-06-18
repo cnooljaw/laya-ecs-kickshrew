@@ -16,7 +16,7 @@ import {
   BIT_SHREW_MAP,
   BIT_SHREW_TIMER,
   BIT_SHREW_TYPE,
-} from "../../binding/DirtyFlags";
+} from "../../sync/DirtyFlags";
 import { AnimType, MapType, ShrewAction, ShrewType } from "../../ecs/types";
 
 describe("ShrewViewBinding", () => {

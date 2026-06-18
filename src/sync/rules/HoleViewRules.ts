@@ -3,7 +3,7 @@ import {
   BIT_HOLE_POS,
   BIT_HOLE_SHREW,
   BIT_HOLE_ZORDER,
-} from "../../binding/DirtyFlags";
+} from "../DirtyFlags";
 import type { IHoleNode } from "../../binding/HoleViewBinding";
 import { createRule, defineViewRules } from "./ViewBindingRule";
 

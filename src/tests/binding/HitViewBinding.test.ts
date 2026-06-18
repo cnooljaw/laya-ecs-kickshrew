@@ -8,7 +8,7 @@ import {
   unregisterHitEffectNode,
   type IHitEffectNode,
 } from "../../binding/HitViewBinding";
-import { BIT_HIT_INDEX, BIT_HIT_REWARD, BIT_HIT_WASHIT } from "../../binding/DirtyFlags";
+import { BIT_HIT_INDEX, BIT_HIT_REWARD, BIT_HIT_WASHIT } from "../../sync/DirtyFlags";
 
 describe("HitViewBinding", () => {
   const registered: number[] = [];

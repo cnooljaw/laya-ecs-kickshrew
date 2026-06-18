@@ -3,7 +3,7 @@ import {
   BIT_SCENE_MAP,
   BIT_SCENE_TIMER,
   BIT_SCENE_TRANSITION,
-} from "../../binding/DirtyFlags";
+} from "../DirtyFlags";
 import type { ISceneLayer } from "../../binding/SceneViewBinding";
 import { createRule, defineViewRules, noView } from "./ViewBindingRule";
 

@@ -12,7 +12,7 @@ import {
   BIT_SHREW_PROP,
   BIT_SHREW_TIMER,
   BIT_SHREW_TYPE,
-} from "../../binding/DirtyFlags";
+} from "../DirtyFlags";
 import type { IShrewNode } from "../../binding/ShrewViewBinding";
 import { animTypeName, consoleHitTraceLogger } from "../../debug/HitTraceLogger";
 import {

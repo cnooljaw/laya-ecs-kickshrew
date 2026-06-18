@@ -628,7 +628,7 @@ GameScene.onTouch(x, y)
 1. 在 `src/ecs/components/index.ts` 的对应 component 加字段。
 2. 在 `src/ecs/world.ts` 初始化字段。
 3. 在 system 中修改字段。
-4. 在 `src/binding/DirtyFlags.ts` 增加 bit。
+4. 在 `src/sync/DirtyFlags.ts` 增加 bit。
 5. 在对应 `src/sync/rules/*ViewRules.ts` 增加一行 `rule(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
 6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；对应 `*DirtyAspect` 和 `*ViewBinding` 会共用这张表。
 7. 在 `src/view/*Node.ts` 实现表现。

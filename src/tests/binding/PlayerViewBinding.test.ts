@@ -7,7 +7,7 @@ import {
   unregisterPlayerHUD,
   type IPlayerHUD,
 } from "../../binding/PlayerViewBinding";
-import { BIT_PLAYER_ANGRY, BIT_PLAYER_LEVEL, BIT_PLAYER_MONEY, BIT_PLAYER_POWER } from "../../binding/DirtyFlags";
+import { BIT_PLAYER_ANGRY, BIT_PLAYER_LEVEL, BIT_PLAYER_MONEY, BIT_PLAYER_POWER } from "../../sync/DirtyFlags";
 
 describe("PlayerViewBinding", () => {
   const registered: number[] = [];

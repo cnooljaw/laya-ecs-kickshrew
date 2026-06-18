@@ -2,7 +2,7 @@
  * HammerViewBinding — HammerComponent → HammerNode 绑定
  */
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 import { HAMMER_VIEW_RULES } from "../sync/rules/HammerViewRules";
 
 export interface IHammerNode {
@@ -11,14 +11,8 @@ export interface IHammerNode {
   playHitAnimation(): void;
 }
 
-const hammerNodeMap = new Map<number, IHammerNode>();
+const hammerRegistry = createViewNodeRegistry<IHammerNode>();
 
-export function registerHammerNode(eid: number, node: IHammerNode): void { hammerNodeMap.set(eid, node); }
-export function unregisterHammerNode(eid: number): void { hammerNodeMap.delete(eid); }
-
-export const hammerViewBinding: BindingFn = (eid: number, dirtyBits: number, forceFull: boolean) => {
-  const node = hammerNodeMap.get(eid);
-  if (!node) return;
-
-  applyMatchedRules(HAMMER_VIEW_RULES, { eid, node, dirtyBits, forceFull });
-};
+export const registerHammerNode = hammerRegistry.register;
+export const unregisterHammerNode = hammerRegistry.unregister;
+export const hammerViewBinding: BindingFn = createRuleBinding(hammerRegistry, HAMMER_VIEW_RULES);

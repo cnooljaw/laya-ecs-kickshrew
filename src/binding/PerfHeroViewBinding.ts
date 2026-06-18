@@ -1,24 +1,13 @@
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 import { PERF_HERO_VIEW_RULES } from "../sync/rules/PerfHeroViewRules";
 
 export interface IPerfHeroNode {
   playHero(heroType: number, skUrl: string, x: number, y: number, scale: number, spawnSeq: number): void;
 }
 
-const perfHeroNodeMap = new Map<number, IPerfHeroNode>();
+const perfHeroRegistry = createViewNodeRegistry<IPerfHeroNode>();
 
-export function registerPerfHeroNode(eid: number, node: IPerfHeroNode): void {
-  perfHeroNodeMap.set(eid, node);
-}
-
-export function unregisterPerfHeroNode(eid: number): void {
-  perfHeroNodeMap.delete(eid);
-}
-
-export const perfHeroViewBinding: BindingFn = (eid: number, dirtyBits: number, forceFull: boolean) => {
-  const node = perfHeroNodeMap.get(eid);
-  if (!node) return;
-
-  applyMatchedRules(PERF_HERO_VIEW_RULES, { eid, node, dirtyBits, forceFull });
-};
+export const registerPerfHeroNode = perfHeroRegistry.register;
+export const unregisterPerfHeroNode = perfHeroRegistry.unregister;
+export const perfHeroViewBinding: BindingFn = createRuleBinding(perfHeroRegistry, PERF_HERO_VIEW_RULES);

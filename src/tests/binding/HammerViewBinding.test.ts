@@ -7,7 +7,7 @@ import {
   unregisterHammerNode,
   type IHammerNode,
 } from "../../binding/HammerViewBinding";
-import { BIT_HAMMER_HITTABLE, BIT_HAMMER_THUNDER, BIT_HAMMER_TYPE } from "../../binding/DirtyFlags";
+import { BIT_HAMMER_HITTABLE, BIT_HAMMER_THUNDER, BIT_HAMMER_TYPE } from "../../sync/DirtyFlags";
 
 describe("HammerViewBinding", () => {
   const registered: number[] = [];

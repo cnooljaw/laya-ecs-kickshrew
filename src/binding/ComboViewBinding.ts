@@ -2,7 +2,7 @@
  * ComboViewBinding — ComboComponent → ComboNode 绑定
  */
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 import { COMBO_VIEW_RULES } from "../sync/rules/ComboViewRules";
 
 export interface IComboNode {
@@ -10,14 +10,8 @@ export interface IComboNode {
   hideCombo(): void;
 }
 
-const comboNodeMap = new Map<number, IComboNode>();
+const comboRegistry = createViewNodeRegistry<IComboNode>();
 
-export function registerComboNode(eid: number, node: IComboNode): void { comboNodeMap.set(eid, node); }
-export function unregisterComboNode(eid: number): void { comboNodeMap.delete(eid); }
-
-export const comboViewBinding: BindingFn = (eid: number, dirtyBits: number, forceFull: boolean) => {
-  const node = comboNodeMap.get(eid);
-  if (!node) return;
-
-  applyMatchedRules(COMBO_VIEW_RULES, { eid, node, dirtyBits, forceFull });
-};
+export const registerComboNode = comboRegistry.register;
+export const unregisterComboNode = comboRegistry.unregister;
+export const comboViewBinding: BindingFn = createRuleBinding(comboRegistry, COMBO_VIEW_RULES);

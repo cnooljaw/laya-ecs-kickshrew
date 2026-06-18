@@ -53,7 +53,7 @@ System 修改 Component
 
 ## DirtyFlags
 
-`src/binding/DirtyFlags.ts` 是 DirtyMarkSystem 和 Binding 的共同协议。新增需要显示的字段时，先确认是否已经有合适 bit。
+`src/sync/DirtyFlags.ts` 是 DirtyMarkSystem 和 Binding 的共同协议。新增需要显示的字段时，先确认是否已经有合适 bit。
 
 命名保持一一对应：
 
@@ -184,7 +184,7 @@ ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 vi
 1. `src/ecs/components/index.ts` 增加字段。
 2. `src/ecs/world.ts` 初始化字段。
 3. 对应 system 或 helper 修改字段。
-4. `src/binding/DirtyFlags.ts` 增加 bit。
+4. `src/sync/DirtyFlags.ts` 增加 bit。
 5. 在对应 `src/sync/rules/*ViewRules.ts` 增加一行 `rule(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
 6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；`*DirtyAspect` 和 `*ViewBinding` 会共用这张表。
 7. 对应 `src/view/*Node.ts` 实现表现。

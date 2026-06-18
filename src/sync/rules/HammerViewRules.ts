@@ -3,7 +3,7 @@ import {
   BIT_HAMMER_HITTABLE,
   BIT_HAMMER_THUNDER,
   BIT_HAMMER_TYPE,
-} from "../../binding/DirtyFlags";
+} from "../DirtyFlags";
 import type { IHammerNode } from "../../binding/HammerViewBinding";
 import { createRule, defineViewRules, noView } from "./ViewBindingRule";
 

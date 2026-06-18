@@ -1,23 +1,16 @@
-import { defineQuery } from "bitecs";
 import { DirtyComponent, PlayerComponent } from "../../components";
 import { PLAYER_VIEW_RULES } from "../../../sync/rules/PlayerViewRules";
-import { bitsOf, toDirtyMarks } from "../../../sync/rules/ViewBindingRule";
-import type { DirtyAspect } from "../DirtySchemaTypes";
+import { createRuleDirtyAspect } from "../RuleDirtyAspect";
 
-const playerQuery = defineQuery([PlayerComponent, DirtyComponent]);
-
-export const PlayerDirtyAspect: DirtyAspect = {
+export const PlayerDirtyAspect = createRuleDirtyAspect({
   name: "PlayerDirtyAspect",
   description: "拥有 PlayerComponent + DirtyComponent 的玩家 HUD 单例 dirty 映射",
   requires: ["PlayerComponent", "DirtyComponent"],
-  query: playerQuery,
-  channels: [
-    {
-      name: "playerDirty",
-      storeKey: "player",
-      dirtyTarget: "playerDirty",
-      allBits: bitsOf(PLAYER_VIEW_RULES),
-      marks: toDirtyMarks(PLAYER_VIEW_RULES),
-    },
-  ],
-};
+  components: [PlayerComponent, DirtyComponent],
+  channel: {
+    name: "playerDirty",
+    storeKey: "player",
+    dirtyTarget: "playerDirty",
+    rules: PLAYER_VIEW_RULES,
+  },
+});

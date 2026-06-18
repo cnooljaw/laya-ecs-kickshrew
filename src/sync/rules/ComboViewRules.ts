@@ -3,7 +3,7 @@ import {
   BIT_COMBO_COUNT,
   BIT_COMBO_ID,
   BIT_COMBO_TARGETS,
-} from "../../binding/DirtyFlags";
+} from "../DirtyFlags";
 import type { IComboNode } from "../../binding/ComboViewBinding";
 import { createRule, defineViewRules, noView } from "./ViewBindingRule";
 

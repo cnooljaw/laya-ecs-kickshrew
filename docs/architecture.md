@@ -8,6 +8,7 @@
 src/
   Main.ts                 Laya 脚本入口
   ecs/                    bitecs world、components、systems
+  sync/                   dirty bit 协议和表格式同步规则
   binding/                ECS -> Laya 节点的 dirty binding
   view/                   Laya 节点封装、运行时装配和输入适配
   network/                协议、KickSocket、NetworkAdapter、MockServer
@@ -40,6 +41,8 @@ Laya 入口层
   ecs/ShrewLifecycle.ts
 
 表现同步层
+  sync/DirtyFlags.ts
+  sync/rules/*ViewRules.ts
   binding/SyncView.ts
   binding/*ViewBinding.ts
 

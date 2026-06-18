@@ -4,7 +4,7 @@ import {
   BIT_PLAYER_LEVEL,
   BIT_PLAYER_MONEY,
   BIT_PLAYER_POWER,
-} from "../../binding/DirtyFlags";
+} from "../DirtyFlags";
 import type { IPlayerHUD } from "../../binding/PlayerViewBinding";
 import { createRule, defineViewRules } from "./ViewBindingRule";
 

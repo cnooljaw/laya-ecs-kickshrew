@@ -10,10 +10,10 @@
  */
 import type { BindingFn } from "./SyncView";
 import {
-  applyMatchedRules,
   SHREW_ANIMATION_RULES,
   SHREW_COMPONENT_RULES,
 } from "../sync/rules/ShrewViewRules";
+import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 
 /** 地鼠视图节点接口 (由 Laya ShrewNode 实现) */
 export interface IShrewNode {
@@ -24,43 +24,16 @@ export interface IShrewNode {
   setPropType(propType: number): void;
 }
 
-/** 地鼠 eid → 视图节点 映射 */
-const shrewNodeMap = new Map<number, IShrewNode>();
+const shrewRegistry = createViewNodeRegistry<IShrewNode>();
 
 /** 注册地鼠视图节点 */
-export function registerShrewNode(eid: number, node: IShrewNode): void {
-  shrewNodeMap.set(eid, node);
-}
+export const registerShrewNode = shrewRegistry.register;
 
 /** 移除地鼠视图节点 */
-export function unregisterShrewNode(eid: number): void {
-  shrewNodeMap.delete(eid);
-}
+export const unregisterShrewNode = shrewRegistry.unregister;
 
 /** 地鼠视图绑定函数 */
-export const shrewViewBinding: BindingFn = (eid: number, dirtyBits: number, forceFull: boolean) => {
-  const node = shrewNodeMap.get(eid);
-  if (!node) return;
-
-  applyMatchedRules(SHREW_COMPONENT_RULES, {
-    eid,
-    node,
-    dirtyBits,
-    forceFull,
-    source: "shrewDirty",
-  });
-};
+export const shrewViewBinding: BindingFn = createRuleBinding(shrewRegistry, SHREW_COMPONENT_RULES, "shrewDirty");
 
 /** 地鼠动画绑定函数: AnimationComponent.progress 变化时驱动 0.31s 出洞/入洞位移 */
-export const shrewAnimationViewBinding: BindingFn = (eid: number, dirtyBits: number, forceFull: boolean) => {
-  const node = shrewNodeMap.get(eid);
-  if (!node) return;
-
-  applyMatchedRules(SHREW_ANIMATION_RULES, {
-    eid,
-    node,
-    dirtyBits,
-    forceFull,
-    source: "animDirty",
-  });
-};
+export const shrewAnimationViewBinding: BindingFn = createRuleBinding(shrewRegistry, SHREW_ANIMATION_RULES, "animDirty");

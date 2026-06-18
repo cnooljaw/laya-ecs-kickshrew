@@ -7,7 +7,7 @@ import {
   unregisterSceneLayer,
   type ISceneLayer,
 } from "../../binding/SceneViewBinding";
-import { BIT_SCENE_MAP, BIT_SCENE_TIMER, BIT_SCENE_TRANSITION } from "../../binding/DirtyFlags";
+import { BIT_SCENE_MAP, BIT_SCENE_TIMER, BIT_SCENE_TRANSITION } from "../../sync/DirtyFlags";
 import { MapType } from "../../ecs/types";
 
 describe("SceneViewBinding", () => {

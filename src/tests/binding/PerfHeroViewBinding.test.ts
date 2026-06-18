@@ -9,7 +9,7 @@ import {
   unregisterPerfHeroNode,
   type IPerfHeroNode,
 } from "../../binding/PerfHeroViewBinding";
-import { BIT_PERF_HERO_SPAWN } from "../../binding/DirtyFlags";
+import { BIT_PERF_HERO_SPAWN } from "../../sync/DirtyFlags";
 import { PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
 
 describe("PerfHeroViewBinding", () => {

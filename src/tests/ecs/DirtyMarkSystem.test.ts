@@ -55,7 +55,7 @@ import {
   BIT_COMBO_TARGETS,
   BIT_PERF_HERO_POS,
   BIT_PERF_HERO_SPAWN,
-} from '../../binding/DirtyFlags';
+} from '../../sync/DirtyFlags';
 
 describe('DirtyMarkSystem', () => {
   let world: ReturnType<typeof createGameWorld>;

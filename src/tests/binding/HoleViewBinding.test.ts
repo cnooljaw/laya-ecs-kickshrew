@@ -7,7 +7,7 @@ import {
   unregisterHoleNode,
   type IHoleNode,
 } from "../../binding/HoleViewBinding";
-import { BIT_HOLE_POS, BIT_HOLE_SHREW, BIT_HOLE_ZORDER } from "../../binding/DirtyFlags";
+import { BIT_HOLE_POS, BIT_HOLE_SHREW, BIT_HOLE_ZORDER } from "../../sync/DirtyFlags";
 import { MapType } from "../../ecs/types";
 
 describe("HoleViewBinding", () => {

@@ -1,23 +1,16 @@
-import { defineQuery } from "bitecs";
 import { DirtyComponent, HitComponent } from "../../components";
 import { HIT_VIEW_RULES } from "../../../sync/rules/HitViewRules";
-import { bitsOf, toDirtyMarks } from "../../../sync/rules/ViewBindingRule";
-import type { DirtyAspect } from "../DirtySchemaTypes";
+import { createRuleDirtyAspect } from "../RuleDirtyAspect";
 
-const hitQuery = defineQuery([HitComponent, DirtyComponent]);
-
-export const HitDirtyAspect: DirtyAspect = {
+export const HitDirtyAspect = createRuleDirtyAspect({
   name: "HitDirtyAspect",
   description: "拥有 HitComponent + DirtyComponent 的命中表现实体 dirty 映射",
   requires: ["HitComponent", "DirtyComponent"],
-  query: hitQuery,
-  channels: [
-    {
-      name: "hitDirty",
-      storeKey: "hit",
-      dirtyTarget: "hitDirty",
-      allBits: bitsOf(HIT_VIEW_RULES),
-      marks: toDirtyMarks(HIT_VIEW_RULES),
-    },
-  ],
-};
+  components: [HitComponent, DirtyComponent],
+  channel: {
+    name: "hitDirty",
+    storeKey: "hit",
+    dirtyTarget: "hitDirty",
+    rules: HIT_VIEW_RULES,
+  },
+});

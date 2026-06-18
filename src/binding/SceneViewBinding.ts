@@ -2,7 +2,7 @@
  * SceneViewBinding — SceneComponent → SceneLayer 绑定
  */
 import type { BindingFn } from "./SyncView";
-import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 import { SCENE_VIEW_RULES } from "../sync/rules/SceneViewRules";
 
 export interface ISceneLayer {
@@ -10,14 +10,8 @@ export interface ISceneLayer {
   setTransitioning(transitioning: boolean): void;
 }
 
-const sceneNodeMap = new Map<number, ISceneLayer>();
+const sceneRegistry = createViewNodeRegistry<ISceneLayer>();
 
-export function registerSceneLayer(eid: number, node: ISceneLayer): void { sceneNodeMap.set(eid, node); }
-export function unregisterSceneLayer(eid: number): void { sceneNodeMap.delete(eid); }
-
-export const sceneViewBinding: BindingFn = (eid: number, dirtyBits: number, forceFull: boolean) => {
-  const node = sceneNodeMap.get(eid);
-  if (!node) return;
-
-  applyMatchedRules(SCENE_VIEW_RULES, { eid, node, dirtyBits, forceFull });
-};
+export const registerSceneLayer = sceneRegistry.register;
+export const unregisterSceneLayer = sceneRegistry.unregister;
+export const sceneViewBinding: BindingFn = createRuleBinding(sceneRegistry, SCENE_VIEW_RULES);

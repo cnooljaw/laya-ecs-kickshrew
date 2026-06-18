@@ -1,23 +1,16 @@
-import { defineQuery } from "bitecs";
 import { DirtyComponent, SceneComponent } from "../../components";
 import { SCENE_VIEW_RULES } from "../../../sync/rules/SceneViewRules";
-import { bitsOf, toDirtyMarks } from "../../../sync/rules/ViewBindingRule";
-import type { DirtyAspect } from "../DirtySchemaTypes";
+import { createRuleDirtyAspect } from "../RuleDirtyAspect";
 
-const sceneQuery = defineQuery([SceneComponent, DirtyComponent]);
-
-export const SceneDirtyAspect: DirtyAspect = {
+export const SceneDirtyAspect = createRuleDirtyAspect({
   name: "SceneDirtyAspect",
   description: "拥有 SceneComponent + DirtyComponent 的场景单例 dirty 映射",
   requires: ["SceneComponent", "DirtyComponent"],
-  query: sceneQuery,
-  channels: [
-    {
-      name: "sceneDirty",
-      storeKey: "scene",
-      dirtyTarget: "sceneDirty",
-      allBits: bitsOf(SCENE_VIEW_RULES),
-      marks: toDirtyMarks(SCENE_VIEW_RULES),
-    },
-  ],
-};
+  components: [SceneComponent, DirtyComponent],
+  channel: {
+    name: "sceneDirty",
+    storeKey: "scene",
+    dirtyTarget: "sceneDirty",
+    rules: SCENE_VIEW_RULES,
+  },
+});

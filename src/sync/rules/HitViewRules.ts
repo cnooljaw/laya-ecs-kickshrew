@@ -3,7 +3,7 @@ import {
   BIT_HIT_INDEX,
   BIT_HIT_REWARD,
   BIT_HIT_WASHIT,
-} from "../../binding/DirtyFlags";
+} from "../DirtyFlags";
 import type { IHitEffectNode } from "../../binding/HitViewBinding";
 import { createRule, defineViewRules } from "./ViewBindingRule";
 

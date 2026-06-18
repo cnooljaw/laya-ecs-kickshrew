@@ -87,7 +87,7 @@ input/network/resource callback
 
 - 改状态机：`src/ecs/systems/ShrewStateSystem.ts`、`src/ecs/ShrewLifecycle.ts`、`src/tests/ecs/ShrewStateSystem.test.ts`
 - 改命中规则：`src/ecs/systems/HitDetectionSystem.ts`、`src/view/KickInputAdapter.ts`、`src/tests/ecs/HitDetectionSystem.test.ts`
-- 改 dirty 同步：`src/binding/DirtyFlags.ts`、`src/ecs/systems/DirtyMarkSystem.ts`、`src/binding/*ViewBinding.ts`
+- 改 dirty 同步：`src/sync/DirtyFlags.ts`、`src/sync/rules/*ViewRules.ts`、`src/ecs/systems/DirtyMarkSystem.ts`、`src/binding/*ViewBinding.ts`
 - 改 Laya 表现：`src/view/*Node.ts`、`src/config/ViewLayoutConfig.ts`、`docs/laya-rules.md`
 - 改性能压测/Spine 池化：`src/config/PerfTestConfig.ts`、`src/config/ViewLayoutConfig.ts`、`src/ecs/systems/PerfHeroSystem.ts`、`src/view/PerfHeroNode.ts`、`docs/performance-tuning.md`
 - 改网络：`src/network/KickSocket.ts`、`src/network/NetworkAdapter.ts`、`src/ecs/systems/HitResponseSystem.ts`
