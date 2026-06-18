@@ -52,13 +52,26 @@ export function applyMatchedRules<TNode>(
   rules: readonly ViewBindingRule<TNode>[],
   ctx: ViewRuleContext<TNode> & { dirtyBits: number; forceFull: boolean },
 ): void {
-  const applied = new Set<ViewRuleApply<TNode>>();
-  for (const rule of rules) {
+  for (let i = 0; i < rules.length; i++) {
+    const rule = rules[i];
     if (!ctx.forceFull && (ctx.dirtyBits & rule.bit) === 0) continue;
-    if (rule.apply === noView || applied.has(rule.apply)) continue;
-    applied.add(rule.apply);
+    if (rule.apply === noView || hasMatchedPreviousApply(rules, i, rule.apply, ctx)) continue;
     rule.apply(ctx);
   }
 }
 
 export const noView: ViewRuleApply<any> = () => {};
+
+function hasMatchedPreviousApply<TNode>(
+  rules: readonly ViewBindingRule<TNode>[],
+  currentIndex: number,
+  apply: ViewRuleApply<TNode>,
+  ctx: { dirtyBits: number; forceFull: boolean },
+): boolean {
+  for (let i = 0; i < currentIndex; i++) {
+    const previous = rules[i];
+    if (previous.apply !== apply) continue;
+    if (ctx.forceFull || (ctx.dirtyBits & previous.bit) !== 0) return true;
+  }
+  return false;
+}
