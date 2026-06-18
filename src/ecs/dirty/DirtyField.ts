@@ -7,7 +7,7 @@ export function field(path: string, values: ArrayLike<number>): DirtyField {
   };
 }
 
-export function mark(bit: number, label: string, fields: DirtyField[], viewTarget: string): DirtyMark {
+export function mark(bit: number, label: string, fields: DirtyField[], viewTarget?: string): DirtyMark {
   return {
     bit,
     label,

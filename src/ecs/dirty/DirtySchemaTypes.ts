@@ -34,7 +34,7 @@ export interface DirtyMark {
   bit: number;
   label: string;
   fields: DirtyField[];
-  viewTarget: string;
+  viewTarget?: string;
 }
 
 export interface DirtyChannel {

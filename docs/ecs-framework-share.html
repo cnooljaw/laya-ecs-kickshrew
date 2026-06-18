@@ -1031,7 +1031,7 @@
         <header>
           <div class="kicker">Dirty Mark / Binding</div>
           <h2>dirty mark 的本质：把字段变化翻译成 view 更新 bit</h2>
-          <p class="lead">System 只改 Component。DirtyMarkSystem 用上一帧快照做 diff，把变化写进 DirtyComponent；SyncView 再按 bit 调用对应 binding。</p>
+          <p class="lead">System 只改 Component。DirtyMarkSystem 用上一帧快照做 diff，把变化写进 DirtyComponent；Shrew 链路用同一张规则表继续执行 view apply。</p>
         </header>
         <div class="content">
           <div class="diagram">
@@ -1061,17 +1061,17 @@
               <path d="M548 111 H584" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
               <path d="M746 111 H782" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
               <rect x="74" y="214" width="832" height="72" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="490" y="244" text-anchor="middle" font-size="16" fill="#283442">SceneComponent.currentMap -> BIT_SCENE_MAP -> DirtyComponent.sceneDirty -> sceneViewBinding -> SceneLayer.switchScene</text>
+              <text x="490" y="244" text-anchor="middle" font-size="16" fill="#283442">ShrewComponent.actionState -> BIT_SHREW_ACTION -> DirtyComponent.shrewDirty -> rules.applyAnimation</text>
               <text x="490" y="268" text-anchor="middle" font-size="13" fill="#5f6b7a">dirty 不是“有变化就全量刷新”，而是“哪个字段变了，就打开哪个表现 bit”</text>
             </svg>
           </div>
           <div class="two">
             <div class="panel accent-cyan"><strong>第一次同步为什么全量？</strong><p>`DirtySchemaRunner` 第一次看到 eid 时没有 snapshot，会填充快照并写 `channel.allBits`，让 view 拿到初始状态。</p></div>
-            <div class="panel accent-red"><strong>之后为什么差量？</strong><p>后续每帧只比较 DirtyAspect 声明的字段；字段值不同才 OR 对应 bit，并更新 snapshot，SyncView 同步后清空 bit。</p></div>
+            <div class="panel accent-red"><strong>之后为什么差量？</strong><p>后续每帧只比较 DirtyAspect 或表格式 rules 声明的字段；字段值不同才 OR 对应 bit，并更新 snapshot，SyncView 同步后清空 bit。</p></div>
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/ecs/dirty/aspects/SceneDirtyAspect.ts, src/binding/SyncView.ts</span>
+          <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/binding/rules/ShrewViewRules.ts, src/binding/SyncView.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1162,7 +1162,7 @@ progress:    0 -> 0           => 不标</pre>
         <header>
           <div class="kicker">Scene Dirty Example</div>
           <h2>例子：SceneComponent 场景从 Meadow 切到 Ship</h2>
-          <p class="lead">这页用一个场景单例讲透 dirty 链路：谁写数据、谁发现变化、dirty bit 写到哪里、最后哪个 Laya 方法被调用。</p>
+          <p class="lead">这页用一个场景单例讲透传统 dirty 链路：谁写数据、谁发现变化、dirty bit 写到哪里、binding 如何消费 bit。</p>
         </header>
         <div class="content split-wide">
           <div class="rows">
@@ -1177,7 +1177,7 @@ DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
               <strong>2. DirtyAspect 声明字段到 bit</strong>
               <pre class="code">mark(BIT_SCENE_MAP, "当前地图", [
   field("SceneComponent.currentMap", SceneComponent.currentMap),
-], "SceneLayer.setMap")</pre>
+], "SceneLayer.setMap") // viewTarget 仅作说明</pre>
             </div>
             <div class="panel accent-amber">
               <strong>3. Binding 消费 bit</strong>
@@ -1232,7 +1232,7 @@ DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
         <header>
           <div class="kicker">Shrew Dirty Example</div>
           <h2>例子：地鼠从 Wait 变成 Up，画面为什么会动</h2>
-          <p class="lead">状态机只改 ECS 数据。dirty 系统发现 `ShrewComponent` 和 `AnimationComponent` 变了，binding 才去叫 `ShrewNode` 播出洞表现。</p>
+          <p class="lead">状态机只改 ECS 数据。地鼠 dirty 和 binding 共用 `ShrewViewRules` 表，字段变化负责开 bit，apply 函数负责更新节点。</p>
         </header>
         <div class="content split-wide">
           <div class="diagram">
@@ -1249,8 +1249,8 @@ DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
               <text x="401" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">改 ECS 数据</text>
               <text x="401" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">actionState=Up, animType=Up</text>
               <rect x="558" y="42" width="180" height="72" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="648" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">ShrewDirtyAspect</text>
-              <text x="648" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">字段 -> bit</text>
+              <text x="648" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">ShrewViewRules</text>
+              <text x="648" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">row(bit, fields, apply)</text>
               <rect x="34" y="190" width="210" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
               <text x="139" y="220" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">DirtyComponent</text>
               <text x="139" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">shrewDirty / animDirty</text>
@@ -1259,7 +1259,7 @@ DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
               <text x="401" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">分发两个 binding</text>
               <rect x="558" y="190" width="180" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
               <text x="648" y="220" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">ShrewViewBinding</text>
-              <text x="648" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">读数组，调节点</text>
+              <text x="648" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">执行 rules.apply</text>
               <rect x="296" y="338" width="210" height="72" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
               <text x="401" y="368" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">ShrewNode.setAnimation</text>
               <text x="401" y="390" text-anchor="middle" font-size="12" fill="#5f6b7a">mainLayer.y 插值出洞</text>
@@ -1281,23 +1281,26 @@ AnimationComponent.progress[eid] = 0;
 AnimationComponent.duration[eid] = timing.upDurationSec;</pre>
             </div>
             <div class="panel accent-blue">
-              <strong>2. DirtyAspect 找到变化</strong>
-              <pre class="code">BIT_SHREW_ACTION -> ShrewComponent.actionState
-BIT_ANIM_TYPE    -> AnimationComponent.animType
-BIT_ANIM_PROGRESS -> AnimationComponent.progress</pre>
+              <strong>2. 表格式 rules 声明变化</strong>
+              <pre class="code">row(BIT_SHREW_ACTION, "动作状态",
+    ["actionState"], applyAnimation)
+row(BIT_ANIM_PROGRESS, "动画进度",
+    ["progress"], applyAnimation)</pre>
             </div>
             <div class="panel accent-amber">
-              <strong>3. Binding 更新画面</strong>
-              <pre class="code">node.setAnimation(
+              <strong>3. apply 函数更新画面</strong>
+              <pre class="code">function applyAnimation({ eid, node }) {
+  node.setAnimation(
   ShrewComponent.actionState[eid],
   AnimationComponent.animType[eid],
   AnimationComponent.progress[eid],
-);</pre>
+  );
+}</pre>
             </div>
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/systems/ShrewStateSystem.ts, src/ecs/dirty/aspects/ShrewDirtyAspect.ts, src/binding/ShrewViewBinding.ts</span>
+          <span>对应代码：src/ecs/systems/ShrewStateSystem.ts, src/binding/rules/ShrewViewRules.ts, src/binding/ShrewViewBinding.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>

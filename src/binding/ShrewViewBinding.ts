@@ -8,16 +8,12 @@
  * - 帽子显示 (hasHat)
  * - 道具 (propType)
  */
-import { ShrewComponent, AnimationComponent } from "../ecs/components";
-import {
-  BIT_SHREW_TYPE, BIT_SHREW_ACTION,
-  BIT_SHREW_HAT, BIT_SHREW_MAP, BIT_SHREW_CLICKABLE,
-  BIT_SHREW_PROP,
-  BIT_ANIM_TYPE, BIT_ANIM_PROGRESS, BIT_ANIM_DURATION,
-} from "./DirtyFlags";
 import type { BindingFn } from "./SyncView";
-import { AnimType, ShrewAction } from "../ecs/types";
-import { animTypeName, consoleHitTraceLogger } from "../debug/HitTraceLogger";
+import {
+  applyMatchedRules,
+  SHREW_ANIMATION_RULES,
+  SHREW_COMPONENT_RULES,
+} from "./rules/ShrewViewRules";
 
 /** 地鼠视图节点接口 (由 Laya ShrewNode 实现) */
 export interface IShrewNode {
@@ -46,36 +42,13 @@ export const shrewViewBinding: BindingFn = (eid: number, dirtyBits: number, forc
   const node = shrewNodeMap.get(eid);
   if (!node) return;
 
-  if (forceFull || (dirtyBits & BIT_SHREW_TYPE) || (dirtyBits & BIT_SHREW_MAP)) {
-    node.setSpriteFrame(ShrewComponent.shrewType[eid], ShrewComponent.mapType[eid]);
-  }
-
-  if (forceFull || (dirtyBits & BIT_SHREW_ACTION)) {
-    if (ShrewComponent.actionState[eid] === ShrewAction.Dizzy) {
-      consoleHitTraceLogger.log("binding.dizzyAnimation", {
-        eid,
-        source: "shrewDirty",
-        actionState: ShrewComponent.actionState[eid],
-        animType: AnimationComponent.animType[eid],
-        animTypeName: animTypeName(AnimationComponent.animType[eid]),
-        progress: AnimationComponent.progress[eid],
-        isDizzyAnim: AnimationComponent.animType[eid] === AnimType.Dizzy,
-      });
-    }
-    node.setAnimation(ShrewComponent.actionState[eid], AnimationComponent.animType[eid], AnimationComponent.progress[eid]);
-  }
-
-  if (forceFull || (dirtyBits & BIT_SHREW_CLICKABLE)) {
-    node.setClickable(ShrewComponent.isClickable[eid] === 1);
-  }
-
-  if (forceFull || (dirtyBits & BIT_SHREW_HAT)) {
-    node.setHatVisible(ShrewComponent.hasHat[eid] === 1);
-  }
-
-  if (forceFull || (dirtyBits & BIT_SHREW_PROP)) {
-    node.setPropType(ShrewComponent.propType[eid]);
-  }
+  applyMatchedRules(SHREW_COMPONENT_RULES, {
+    eid,
+    node,
+    dirtyBits,
+    forceFull,
+    source: "shrewDirty",
+  });
 };
 
 /** 地鼠动画绑定函数: AnimationComponent.progress 变化时驱动 0.31s 出洞/入洞位移 */
@@ -83,19 +56,11 @@ export const shrewAnimationViewBinding: BindingFn = (eid: number, dirtyBits: num
   const node = shrewNodeMap.get(eid);
   if (!node) return;
 
-  const animationDirty = BIT_ANIM_TYPE | BIT_ANIM_PROGRESS | BIT_ANIM_DURATION;
-  if (forceFull || (dirtyBits & animationDirty)) {
-    if (ShrewComponent.actionState[eid] === ShrewAction.Dizzy) {
-      consoleHitTraceLogger.log("binding.dizzyAnimation", {
-        eid,
-        source: "animDirty",
-        actionState: ShrewComponent.actionState[eid],
-        animType: AnimationComponent.animType[eid],
-        animTypeName: animTypeName(AnimationComponent.animType[eid]),
-        progress: AnimationComponent.progress[eid],
-        isDizzyAnim: AnimationComponent.animType[eid] === AnimType.Dizzy,
-      });
-    }
-    node.setAnimation(ShrewComponent.actionState[eid], AnimationComponent.animType[eid], AnimationComponent.progress[eid]);
-  }
+  applyMatchedRules(SHREW_ANIMATION_RULES, {
+    eid,
+    node,
+    dirtyBits,
+    forceFull,
+    source: "animDirty",
+  });
 };

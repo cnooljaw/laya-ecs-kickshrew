@@ -83,18 +83,33 @@ DirtyAspect 分四层：
 ```text
 DirtyAspect   某类实体的组件组合，例如 ShrewComponent + AnimationComponent + DirtyComponent
 DirtyChannel  写到 DirtyComponent 的哪一列，例如 shrewDirty 或 animDirty
-DirtyMark     某个 dirty bit，对应一组 ECS 字段和目标 view 方法
+DirtyMark     某个 dirty bit，对应一组 ECS 字段
 DirtyField    一个可比较的 component 字段，例如 ShrewComponent.actionState
 ```
+
+地鼠链路额外有一张表格式规则：`src/binding/rules/ShrewViewRules.ts`。这张表同时服务 dirty 和 binding：
+
+```ts
+const SHREW_COMPONENT_RULES = defineShrewViewRules([
+  // bit                   label          fields             apply
+  row(BIT_SHREW_TYPE,      "地鼠类型",    ["shrewType"],     applySpriteFrame),
+  row(BIT_SHREW_HP,        "地鼠生命值",  ["hp"],            noView),
+  row(BIT_SHREW_ACTION,    "动作状态",    ["actionState"],   applyAnimation),
+  row(BIT_SHREW_MAP,       "地图皮肤",    ["mapType"],       applySpriteFrame),
+  row(BIT_SHREW_CLICKABLE, "是否可点击",  ["isClickable"],   applyClickable),
+]);
+```
+
+这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。`ShrewDirtyAspect` 从 rules 派生 `DirtyMark`，`ShrewViewBinding` 从同一份 rules 执行 `apply`，不再靠 `"ShrewNode.setXxx"` 这类字符串说明来同步。
 
 记忆顺序：
 
 ```text
 Component 字段
   -> DirtyFlags bit
-  -> DirtyAspect DirtyMark
+  -> DirtyAspect DirtyMark（Shrew 由 ShrewViewRules 派生）
   -> DirtyComponent.xxxDirty
-  -> ViewBinding 处理 bit
+  -> ViewBinding 处理 bit（Shrew 执行 rules.apply）
   -> ViewNode 方法
 ```
 
@@ -163,8 +178,8 @@ ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 vi
 2. `src/ecs/world.ts` 初始化字段。
 3. 对应 system 或 helper 修改字段。
 4. `src/binding/DirtyFlags.ts` 增加 bit。
-5. 对应 `src/ecs/dirty/aspects/*DirtyAspect.ts` 增加字段读取、dirty bit 和目标 view 方法映射。
-6. 对应 `src/binding/*ViewBinding.ts` 读取字段并调用 node 方法。
+5. 如果是地鼠表现，优先在 `src/binding/rules/ShrewViewRules.ts` 增加一行 `row(bit, label, fields, apply)`；其他实体仍在对应 `src/ecs/dirty/aspects/*DirtyAspect.ts` 增加字段读取和 dirty bit 映射。
+6. 如果是地鼠表现，在 `ShrewViewRules.ts` 增加或复用 `applyXxx` 函数；其他实体仍在对应 `src/binding/*ViewBinding.ts` 读取字段并调用 node 方法。
 7. 对应 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/**/*.test.ts`。
 

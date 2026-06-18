@@ -4,7 +4,8 @@
  * 职责: 比较当前帧与上一帧的组件数据差异，设置 DirtyComponent 的 bitmask。
  * SyncView 读取这些 bitmask 来决定哪些 Laya 节点属性需要更新。
  *
- * 具体的 entity 组件组合、字段、dirty bit 和目标节点方法声明在 ecs/dirty/aspects。
+ * 具体的 entity 组件组合、字段和 dirty bit 声明在 ecs/dirty/aspects；
+ * Shrew 链路由 binding/rules/ShrewViewRules 同时派生 dirty mark 和 view apply。
  */
 import { DIRTY_ASPECTS } from "../dirty/aspects";
 import {
