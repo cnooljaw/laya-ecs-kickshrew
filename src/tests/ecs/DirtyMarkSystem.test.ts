@@ -17,6 +17,20 @@ import { ShrewType, ShrewAction, MapType } from '../../ecs/types';
 import { dirtyMarkSystem, getDirtySnapshotForTest } from '../../ecs/systems/DirtyMarkSystem';
 import { ShrewDirtyAspect } from '../../ecs/dirty/aspects/ShrewDirtyAspect';
 import { SHREW_COMPONENT_RULES, SHREW_ANIMATION_RULES } from '../../binding/rules/ShrewViewRules';
+import { HoleDirtyAspect } from '../../ecs/dirty/aspects/HoleDirtyAspect';
+import { HOLE_VIEW_RULES } from '../../binding/rules/HoleViewRules';
+import { HammerDirtyAspect } from '../../ecs/dirty/aspects/HammerDirtyAspect';
+import { HAMMER_VIEW_RULES } from '../../binding/rules/HammerViewRules';
+import { ComboDirtyAspect } from '../../ecs/dirty/aspects/ComboDirtyAspect';
+import { COMBO_VIEW_RULES } from '../../binding/rules/ComboViewRules';
+import { SceneDirtyAspect } from '../../ecs/dirty/aspects/SceneDirtyAspect';
+import { SCENE_VIEW_RULES } from '../../binding/rules/SceneViewRules';
+import { PlayerDirtyAspect } from '../../ecs/dirty/aspects/PlayerDirtyAspect';
+import { PLAYER_VIEW_RULES } from '../../binding/rules/PlayerViewRules';
+import { HitDirtyAspect } from '../../ecs/dirty/aspects/HitDirtyAspect';
+import { HIT_VIEW_RULES } from '../../binding/rules/HitViewRules';
+import { PerfHeroDirtyAspect } from '../../ecs/dirty/aspects/PerfHeroDirtyAspect';
+import { PERF_HERO_VIEW_RULES } from '../../binding/rules/PerfHeroViewRules';
 import {
   BIT_HOLE_POS,
   BIT_HOLE_SHREW,
@@ -71,6 +85,27 @@ describe('DirtyMarkSystem', () => {
     expect(actionMark?.label).toBe('动作状态');
     expect(progressMark?.fields.map(field => field.path)).toEqual(['AnimationComponent.progress']);
     expect(progressMark?.label).toBe('动画进度');
+  });
+
+  it('所有 DirtyAspect 都由对应 ViewRules 派生，并且不再携带 viewTarget 字符串', () => {
+    const cases = [
+      { aspect: HoleDirtyAspect, dirtyTarget: 'holeDirty', rules: HOLE_VIEW_RULES },
+      { aspect: HammerDirtyAspect, dirtyTarget: 'hammerDirty', rules: HAMMER_VIEW_RULES },
+      { aspect: ComboDirtyAspect, dirtyTarget: 'comboDirty', rules: COMBO_VIEW_RULES },
+      { aspect: SceneDirtyAspect, dirtyTarget: 'sceneDirty', rules: SCENE_VIEW_RULES },
+      { aspect: PlayerDirtyAspect, dirtyTarget: 'playerDirty', rules: PLAYER_VIEW_RULES },
+      { aspect: HitDirtyAspect, dirtyTarget: 'hitDirty', rules: HIT_VIEW_RULES },
+      { aspect: PerfHeroDirtyAspect, dirtyTarget: 'perfHeroDirty', rules: PERF_HERO_VIEW_RULES },
+    ];
+
+    for (const { aspect, dirtyTarget, rules } of cases) {
+      const channel = aspect.channels.find(channel => channel.dirtyTarget === dirtyTarget);
+      expect(channel?.marks.map(mark => mark.bit)).toEqual(rules.map(rule => rule.bit));
+      expect(channel?.marks.map(mark => mark.fields.map(field => field.path))).toEqual(
+        rules.map(rule => rule.dirtyFields.map(field => field.path)),
+      );
+      expect(channel?.marks.every(mark => !('viewTarget' in mark))).toBe(true);
+    }
   });
 
   it('组件值未变化: 对应 dirty bit 为 0', () => {

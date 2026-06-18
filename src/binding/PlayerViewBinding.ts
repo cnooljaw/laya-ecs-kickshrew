@@ -1,9 +1,9 @@
 /**
  * PlayerViewBinding — PlayerComponent → PlayerHUD 绑定
  */
-import { PlayerComponent } from "../ecs/components";
-import { BIT_PLAYER_MONEY, BIT_PLAYER_ANGRY, BIT_PLAYER_POWER, BIT_PLAYER_LEVEL } from "./DirtyFlags";
 import type { BindingFn } from "./SyncView";
+import { applyMatchedRules } from "./rules/ViewBindingRule";
+import { PLAYER_VIEW_RULES } from "./rules/PlayerViewRules";
 
 export interface IPlayerHUD {
   setMoney(value: number): void;
@@ -21,16 +21,5 @@ export const playerViewBinding: BindingFn = (eid: number, dirtyBits: number, for
   const node = playerNodeMap.get(eid);
   if (!node) return;
 
-  if (forceFull || (dirtyBits & BIT_PLAYER_MONEY)) {
-    node.setMoney(PlayerComponent.money[eid]);
-  }
-  if (forceFull || (dirtyBits & BIT_PLAYER_ANGRY)) {
-    node.setAngry(PlayerComponent.angry[eid]);
-  }
-  if (forceFull || (dirtyBits & BIT_PLAYER_POWER)) {
-    node.setPower(PlayerComponent.power[eid], PlayerComponent.powerTop[eid]);
-  }
-  if (forceFull || (dirtyBits & BIT_PLAYER_LEVEL)) {
-    node.setLevel(PlayerComponent.level[eid]);
-  }
+  applyMatchedRules(PLAYER_VIEW_RULES, { eid, node, dirtyBits, forceFull });
 };

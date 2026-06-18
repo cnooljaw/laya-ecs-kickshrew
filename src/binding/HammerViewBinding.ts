@@ -1,9 +1,9 @@
 /**
  * HammerViewBinding — HammerComponent → HammerNode 绑定
  */
-import { HammerComponent } from "../ecs/components";
-import { BIT_HAMMER_TYPE, BIT_HAMMER_THUNDER, BIT_HAMMER_HITTABLE } from "./DirtyFlags";
 import type { BindingFn } from "./SyncView";
+import { applyMatchedRules } from "./rules/ViewBindingRule";
+import { HAMMER_VIEW_RULES } from "./rules/HammerViewRules";
 
 export interface IHammerNode {
   setHammerType(hammerType: number): void;
@@ -20,10 +20,5 @@ export const hammerViewBinding: BindingFn = (eid: number, dirtyBits: number, for
   const node = hammerNodeMap.get(eid);
   if (!node) return;
 
-  if (forceFull || (dirtyBits & BIT_HAMMER_TYPE)) {
-    node.setHammerType(HammerComponent.selectedType[eid]);
-  }
-  if (forceFull || (dirtyBits & BIT_HAMMER_THUNDER)) {
-    node.setThunderActive(HammerComponent.isThunderActive[eid] === 1);
-  }
+  applyMatchedRules(HAMMER_VIEW_RULES, { eid, node, dirtyBits, forceFull });
 };

@@ -294,19 +294,22 @@ Entity eid
   -> DirtyMark 映射 dirty bit、component 字段
 ```
 
-地鼠表现链路现在多了一张更好读的表：`src/binding/rules/ShrewViewRules.ts`。它把 dirty 检测和 view 投影放在同一行配置里：
+每条 dirty binding 链路都有一张更好读的表：`src/binding/rules/*ViewRules.ts`。它把 dirty 检测和 view 投影放在同一行配置里：
 
 ```ts
-const SHREW_COMPONENT_RULES = defineShrewViewRules([
-  // bit                   label          fields             apply
-  row(BIT_SHREW_TYPE,      "地鼠类型",    ["shrewType"],     applySpriteFrame),
-  row(BIT_SHREW_ACTION,    "动作状态",    ["actionState"],   applyAnimation),
-  row(BIT_SHREW_MAP,       "地图皮肤",    ["mapType"],       applySpriteFrame),
-  row(BIT_SHREW_CLICKABLE, "是否可点击",  ["isClickable"],   applyClickable),
-]);
+export const COMBO_VIEW_RULES = defineViewRules<IComboNode, ComboField>(
+  "ComboComponent",
+  ComboComponent,
+  [
+    // bit                 label            fields                                  apply
+    row(BIT_COMBO_COUNT,   "连击次数",      ["comboCount"],                         applyCombo),
+    row(BIT_COMBO_ID,      "连击编号",      ["comboID"],                            noView),
+    row(BIT_COMBO_TARGETS, "连击目标洞位",  ["targetHole0", "targetHole1", "targetHole2"], applyCombo),
+  ],
+);
 ```
 
-`fields` 是 DirtyMarkSystem 要比较的 ECS 字段，`apply` 是 `ShrewViewBinding` 命中 dirty bit 后真正调用的函数。比如 `BIT_SHREW_TYPE` 和 `BIT_SHREW_MAP` 都复用 `applySpriteFrame`，同一帧同时变化时 binding 会去重，只刷新一次贴图。
+`fields` 是 DirtyMarkSystem 要比较的 ECS 字段，`apply` 是对应 `*ViewBinding` 命中 dirty bit 后真正调用的函数。`noView` 表示字段只参与 dirty 记录，不直接调用 view。比如 `BIT_COMBO_COUNT` 和 `BIT_COMBO_TARGETS` 都复用 `applyCombo`，同一帧同时变化时 binding 会去重，只刷新一次连击 UI。
 
 ### 第 40-50 分钟：dirty binding 怎么把 ECS 显示出来
 
@@ -358,7 +361,7 @@ registerPlayerHUD(playerEid, playerHUD);
 
 这套结构的代价：
 
-- 新增字段时，要同时考虑组件、dirty bit、dirty mark、binding、node 方法；地鼠表现优先改 `ShrewViewRules.ts` 这张表，减少 DirtyAspect 和 Binding 两边漏改。
+- 新增字段时，要同时考虑组件、dirty bit、dirty mark、binding、node 方法；优先改对应 `*ViewRules.ts` 这张表，减少 DirtyAspect 和 Binding 两边漏改。
 - 忘记标 dirty 时，ECS 数据变了但画面不变。
 - 忘记 unregister 时，可能保留旧节点引用。
 
@@ -624,8 +627,8 @@ GameScene.onTouch(x, y)
 2. 在 `src/ecs/world.ts` 初始化字段。
 3. 在 system 中修改字段。
 4. 在 `src/binding/DirtyFlags.ts` 增加 bit。
-5. 如果是地鼠表现，在 `src/binding/rules/ShrewViewRules.ts` 增加一行 `row(bit, label, fields, apply)`；其他实体仍在对应 `src/ecs/dirty/aspects/*DirtyAspect.ts` 增加字段读取和 dirty bit 映射。
-6. 如果是地鼠表现，在 `ShrewViewRules.ts` 增加或复用 `applyXxx` 函数；其他实体仍在对应 `*ViewBinding.ts` 读取字段并调用 node 方法。
+5. 在对应 `src/binding/rules/*ViewRules.ts` 增加一行 `row(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
+6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；对应 `*DirtyAspect` 和 `*ViewBinding` 会共用这张表。
 7. 在 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/ecs/*.test.ts`。
 
@@ -708,7 +711,7 @@ A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 
 
 - 代码入口：`src/ecs/systems/DirtyMarkSystem.ts`、`src/binding/SyncView.ts`、对应 `src/binding/*ViewBinding.ts`。
 - 数据流：system 修改 component，`dirtyMarkSystem` 对比快照写 `DirtyComponent.xxxDirty`，`SyncView.sync()` 调 binding，binding 读取 component 更新 view node。
-- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `DirtyAspect` 或地鼠 `ShrewViewRules` 没比较这个字段；binding 没处理这个 bit；节点没有注册或已销毁但注册表还留着旧引用。
+- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `*ViewRules` 没比较这个字段；binding 没注册；节点没有注册或已销毁但注册表还留着旧引用。
 - 验证方式：先跑 `npx vitest run src/tests/ecs/DirtyMarkSystem.test.ts`，再在相关 system 后打印 component 和 dirty bit。
 
 ### Q: 地鼠 Up/Down 状态有了，为什么 0.31 秒内没有真正上下移动？

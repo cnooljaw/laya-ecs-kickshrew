@@ -1,7 +1,6 @@
-import { PerfHeroComponent } from "../ecs/components";
-import { PERF_HERO_RESOURCES } from "../config/ViewLayoutConfig";
-import { BIT_PERF_HERO_POS, BIT_PERF_HERO_SCALE, BIT_PERF_HERO_SPAWN } from "./DirtyFlags";
 import type { BindingFn } from "./SyncView";
+import { applyMatchedRules } from "./rules/ViewBindingRule";
+import { PERF_HERO_VIEW_RULES } from "./rules/PerfHeroViewRules";
 
 export interface IPerfHeroNode {
   playHero(heroType: number, skUrl: string, x: number, y: number, scale: number, spawnSeq: number): void;
@@ -21,21 +20,5 @@ export const perfHeroViewBinding: BindingFn = (eid: number, dirtyBits: number, f
   const node = perfHeroNodeMap.get(eid);
   if (!node) return;
 
-  if (
-    forceFull ||
-    (dirtyBits & BIT_PERF_HERO_SPAWN) ||
-    (dirtyBits & BIT_PERF_HERO_POS) ||
-    (dirtyBits & BIT_PERF_HERO_SCALE)
-  ) {
-    const heroType = PerfHeroComponent.heroType[eid];
-    const resource = PERF_HERO_RESOURCES[heroType] ?? PERF_HERO_RESOURCES[0];
-    node.playHero(
-      heroType,
-      resource.skUrl,
-      PerfHeroComponent.posX[eid],
-      PerfHeroComponent.posY[eid],
-      PerfHeroComponent.scale[eid],
-      PerfHeroComponent.spawnSeq[eid],
-    );
-  }
+  applyMatchedRules(PERF_HERO_VIEW_RULES, { eid, node, dirtyBits, forceFull });
 };

@@ -1,9 +1,9 @@
 /**
  * HoleViewBinding — HoleComponent → HoleNode 绑定
  */
-import { HoleComponent, DirtyComponent } from "../ecs/components";
-import { BIT_HOLE_POS, BIT_HOLE_SHREW, BIT_HOLE_ZORDER } from "./DirtyFlags";
 import type { BindingFn } from "./SyncView";
+import { applyMatchedRules } from "./rules/ViewBindingRule";
+import { HOLE_VIEW_RULES } from "./rules/HoleViewRules";
 
 export interface IHoleNode {
   setPosition(xRatio: number, yRatio: number): void;
@@ -20,13 +20,5 @@ export const holeViewBinding: BindingFn = (eid: number, dirtyBits: number, force
   const node = holeNodeMap.get(eid);
   if (!node) return;
 
-  if (forceFull || (dirtyBits & BIT_HOLE_POS)) {
-    node.setPosition(HoleComponent.posXRatio[eid], HoleComponent.posYRatio[eid]);
-  }
-  if (forceFull || (dirtyBits & BIT_HOLE_SHREW)) {
-    node.setShrewVisible(HoleComponent.shrewEid[eid]);
-  }
-  if (forceFull || (dirtyBits & BIT_HOLE_ZORDER)) {
-    node.setZOrder(HoleComponent.zIndex[eid]);
-  }
+  applyMatchedRules(HOLE_VIEW_RULES, { eid, node, dirtyBits, forceFull });
 };

@@ -1,9 +1,9 @@
 /**
  * SceneViewBinding — SceneComponent → SceneLayer 绑定
  */
-import { SceneComponent } from "../ecs/components";
-import { BIT_SCENE_MAP, BIT_SCENE_TRANSITION } from "./DirtyFlags";
 import type { BindingFn } from "./SyncView";
+import { applyMatchedRules } from "./rules/ViewBindingRule";
+import { SCENE_VIEW_RULES } from "./rules/SceneViewRules";
 
 export interface ISceneLayer {
   switchScene(mapType: number): void;
@@ -19,10 +19,5 @@ export const sceneViewBinding: BindingFn = (eid: number, dirtyBits: number, forc
   const node = sceneNodeMap.get(eid);
   if (!node) return;
 
-  if (forceFull || (dirtyBits & BIT_SCENE_MAP)) {
-    node.switchScene(SceneComponent.currentMap[eid]);
-  }
-  if (forceFull || (dirtyBits & BIT_SCENE_TRANSITION)) {
-    node.setTransitioning(SceneComponent.transitioning[eid] === 1);
-  }
+  applyMatchedRules(SCENE_VIEW_RULES, { eid, node, dirtyBits, forceFull });
 };

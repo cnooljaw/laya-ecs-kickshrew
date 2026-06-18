@@ -87,29 +87,32 @@ DirtyMark     某个 dirty bit，对应一组 ECS 字段
 DirtyField    一个可比较的 component 字段，例如 ShrewComponent.actionState
 ```
 
-地鼠链路额外有一张表格式规则：`src/binding/rules/ShrewViewRules.ts`。这张表同时服务 dirty 和 binding：
+每条 view 同步链路都有一张表格式规则，放在 `src/binding/rules/*ViewRules.ts`。规则表同时服务 dirty 和 binding：
 
 ```ts
-const SHREW_COMPONENT_RULES = defineShrewViewRules([
-  // bit                   label          fields             apply
-  row(BIT_SHREW_TYPE,      "地鼠类型",    ["shrewType"],     applySpriteFrame),
-  row(BIT_SHREW_HP,        "地鼠生命值",  ["hp"],            noView),
-  row(BIT_SHREW_ACTION,    "动作状态",    ["actionState"],   applyAnimation),
-  row(BIT_SHREW_MAP,       "地图皮肤",    ["mapType"],       applySpriteFrame),
-  row(BIT_SHREW_CLICKABLE, "是否可点击",  ["isClickable"],   applyClickable),
-]);
+const HOLE_VIEW_RULES = defineViewRules<IHoleNode, HoleField>(
+  "HoleComponent",
+  HoleComponent,
+  [
+    // bit               label            fields                    apply
+    row(BIT_HOLE_POS,    "洞位坐标",      ["posXRatio", "posYRatio"], applyPosition),
+    row(BIT_HOLE_SHREW,  "洞位绑定地鼠",  ["shrewEid"],               applyShrewVisible),
+    row(BIT_HOLE_ZORDER, "洞位层级",      ["zIndex"],                 applyZOrder),
+  ],
+);
 ```
 
-这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。`ShrewDirtyAspect` 从 rules 派生 `DirtyMark`，`ShrewViewBinding` 从同一份 rules 执行 `apply`，不再靠 `"ShrewNode.setXxx"` 这类字符串说明来同步。
+这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。`*DirtyAspect` 从 rules 派生 `DirtyMark`，`*ViewBinding` 从同一份 rules 执行 `apply`。`noView` 表示这个字段只参与 dirty 记录，不直接调用 view，例如 `SceneComponent.sceneTimer`、`ComboComponent.comboID`。
 
 记忆顺序：
 
 ```text
 Component 字段
   -> DirtyFlags bit
-  -> DirtyAspect DirtyMark（Shrew 由 ShrewViewRules 派生）
+  -> ViewRules row(bit, label, fields, apply/noView)
+  -> DirtyAspect DirtyMark（由 ViewRules 派生）
   -> DirtyComponent.xxxDirty
-  -> ViewBinding 处理 bit（Shrew 执行 rules.apply）
+  -> ViewBinding 执行 rules.apply
   -> ViewNode 方法
 ```
 
@@ -138,13 +141,15 @@ query: defineQuery([ShrewComponent, AnimationComponent, DirtyComponent])
 
 这表示同时拥有这三个 component 的 eid 会被视为地鼠 dirty aspect 的实体。
 
-多字段共用一个表现更新时，把多个 `DirtyField` 放进同一个 `DirtyMark`。例如洞位位置：
+多字段共用一个 dirty bit 时，把多个字段放进同一行 `fields`。例如洞位位置：
 
 ```text
 BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding -> HoleNode.setPosition(...)
 ```
 
 这表示 X 或 Y 任一变化都触发同一个位置更新 bit。
+
+多个 dirty bit 共用一个表现更新时，让多行指向同一个 `apply`。例如 `BIT_COMBO_COUNT` 和 `BIT_COMBO_TARGETS` 都指向 `applyCombo`。`applyMatchedRules` 会按函数引用去重，同一帧只调用一次。
 
 ## SyncView 和 Binding
 
@@ -178,8 +183,8 @@ ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 vi
 2. `src/ecs/world.ts` 初始化字段。
 3. 对应 system 或 helper 修改字段。
 4. `src/binding/DirtyFlags.ts` 增加 bit。
-5. 如果是地鼠表现，优先在 `src/binding/rules/ShrewViewRules.ts` 增加一行 `row(bit, label, fields, apply)`；其他实体仍在对应 `src/ecs/dirty/aspects/*DirtyAspect.ts` 增加字段读取和 dirty bit 映射。
-6. 如果是地鼠表现，在 `ShrewViewRules.ts` 增加或复用 `applyXxx` 函数；其他实体仍在对应 `src/binding/*ViewBinding.ts` 读取字段并调用 node 方法。
+5. 在对应 `src/binding/rules/*ViewRules.ts` 增加一行 `row(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
+6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；`*DirtyAspect` 和 `*ViewBinding` 会共用这张表。
 7. 对应 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/**/*.test.ts`。
 

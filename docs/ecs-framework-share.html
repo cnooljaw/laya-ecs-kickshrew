@@ -1031,7 +1031,7 @@
         <header>
           <div class="kicker">Dirty Mark / Binding</div>
           <h2>dirty mark 的本质：把字段变化翻译成 view 更新 bit</h2>
-          <p class="lead">System 只改 Component。DirtyMarkSystem 用上一帧快照做 diff，把变化写进 DirtyComponent；Shrew 链路用同一张规则表继续执行 view apply。</p>
+          <p class="lead">System 只改 Component。DirtyMarkSystem 用上一帧快照做 diff，把变化写进 DirtyComponent；binding 再用同一张 ViewRules 表执行 view apply。</p>
         </header>
         <div class="content">
           <div class="diagram">
@@ -1071,7 +1071,7 @@
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/binding/rules/ShrewViewRules.ts, src/binding/SyncView.ts</span>
+          <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/binding/rules/*ViewRules.ts, src/binding/SyncView.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1174,14 +1174,15 @@ SceneComponent.transitioning[sceneEid] = 1;
 DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
             </div>
             <div class="panel accent-blue">
-              <strong>2. DirtyAspect 声明字段到 bit</strong>
-              <pre class="code">mark(BIT_SCENE_MAP, "当前地图", [
-  field("SceneComponent.currentMap", SceneComponent.currentMap),
-], "SceneLayer.setMap") // viewTarget 仅作说明</pre>
+              <strong>2. ViewRules 声明字段到 bit</strong>
+              <pre class="code">row(BIT_SCENE_MAP, "当前地图",
+    ["currentMap"], applySwitchScene)
+row(BIT_SCENE_TIMER, "场景计时器",
+    ["sceneTimer"], noView)</pre>
             </div>
             <div class="panel accent-amber">
-              <strong>3. Binding 消费 bit</strong>
-              <pre class="code">if (forceFull || (dirtyBits & BIT_SCENE_MAP)) {
+              <strong>3. apply 函数消费 bit</strong>
+              <pre class="code">function applySwitchScene({ eid, node }) {
   node.switchScene(SceneComponent.currentMap[eid]);
 }</pre>
             </div>
@@ -1232,7 +1233,7 @@ DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
         <header>
           <div class="kicker">Shrew Dirty Example</div>
           <h2>例子：地鼠从 Wait 变成 Up，画面为什么会动</h2>
-          <p class="lead">状态机只改 ECS 数据。地鼠 dirty 和 binding 共用 `ShrewViewRules` 表，字段变化负责开 bit，apply 函数负责更新节点。</p>
+          <p class="lead">状态机只改 ECS 数据。dirty 和 binding 共用 `*ViewRules` 表，字段变化负责开 bit，apply 函数负责更新节点。</p>
         </header>
         <div class="content split-wide">
           <div class="diagram">
@@ -1249,7 +1250,7 @@ DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
               <text x="401" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">改 ECS 数据</text>
               <text x="401" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">actionState=Up, animType=Up</text>
               <rect x="558" y="42" width="180" height="72" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="648" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">ShrewViewRules</text>
+              <text x="648" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">ViewRules</text>
               <text x="648" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">row(bit, fields, apply)</text>
               <rect x="34" y="190" width="210" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
               <text x="139" y="220" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">DirtyComponent</text>
@@ -1300,7 +1301,7 @@ row(BIT_ANIM_PROGRESS, "动画进度",
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/systems/ShrewStateSystem.ts, src/binding/rules/ShrewViewRules.ts, src/binding/ShrewViewBinding.ts</span>
+          <span>对应代码：src/ecs/systems/ShrewStateSystem.ts, src/binding/rules/ShrewViewRules.ts, src/binding/rules/ViewBindingRule.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>

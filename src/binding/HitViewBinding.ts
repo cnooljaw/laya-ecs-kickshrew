@@ -1,9 +1,9 @@
 /**
  * HitViewBinding — HitComponent → 金币/宝箱动画绑定
  */
-import { HitComponent } from "../ecs/components";
-import { BIT_HIT_INDEX, BIT_HIT_REWARD, BIT_HIT_WASHIT } from "./DirtyFlags";
 import type { BindingFn } from "./SyncView";
+import { applyMatchedRules } from "./rules/ViewBindingRule";
+import { HIT_VIEW_RULES } from "./rules/HitViewRules";
 
 export interface IHitEffectNode {
   showReward(shrewIndex: number, reward: number): void;
@@ -19,11 +19,5 @@ export const hitViewBinding: BindingFn = (eid: number, dirtyBits: number, forceF
   const node = hitNodeMap.get(eid);
   if (!node) return;
 
-  if (forceFull || (dirtyBits & BIT_HIT_INDEX) || (dirtyBits & BIT_HIT_REWARD) || (dirtyBits & BIT_HIT_WASHIT)) {
-    if (HitComponent.wasHit[eid] === 1) {
-      node.showReward(HitComponent.shrewIndex[eid], HitComponent.reward[eid]);
-    } else {
-      node.showMiss();
-    }
-  }
+  applyMatchedRules(HIT_VIEW_RULES, { eid, node, dirtyBits, forceFull });
 };

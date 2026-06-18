@@ -2,11 +2,9 @@ import { defineQuery } from "bitecs";
 import { DirtyComponent, PerfHeroComponent } from "../../components";
 import {
   BIT_PERF_HERO_ALL,
-  BIT_PERF_HERO_POS,
-  BIT_PERF_HERO_SCALE,
-  BIT_PERF_HERO_SPAWN,
 } from "../../../binding/DirtyFlags";
-import { field, mark } from "../DirtyField";
+import { PERF_HERO_VIEW_RULES } from "../../../binding/rules/PerfHeroViewRules";
+import { toDirtyMarks } from "../../../binding/rules/ViewBindingRule";
 import type { DirtyAspect } from "../DirtySchemaTypes";
 
 const perfHeroQuery = defineQuery([PerfHeroComponent, DirtyComponent]);
@@ -22,19 +20,7 @@ export const PerfHeroDirtyAspect: DirtyAspect = {
       storeKey: "perfHero",
       dirtyTarget: "perfHeroDirty",
       allBits: BIT_PERF_HERO_ALL,
-      marks: [
-        mark(BIT_PERF_HERO_POS, "压测英雄坐标", [
-          field("PerfHeroComponent.posX", PerfHeroComponent.posX),
-          field("PerfHeroComponent.posY", PerfHeroComponent.posY),
-        ], "PerfHeroNode.applyState"),
-        mark(BIT_PERF_HERO_SPAWN, "压测英雄重生", [
-          field("PerfHeroComponent.heroType", PerfHeroComponent.heroType),
-          field("PerfHeroComponent.spawnSeq", PerfHeroComponent.spawnSeq),
-        ], "PerfHeroNode.applyState"),
-        mark(BIT_PERF_HERO_SCALE, "压测英雄缩放", [
-          field("PerfHeroComponent.scale", PerfHeroComponent.scale),
-        ], "PerfHeroNode.applyState"),
-      ],
+      marks: toDirtyMarks(PERF_HERO_VIEW_RULES),
     },
   ],
 };

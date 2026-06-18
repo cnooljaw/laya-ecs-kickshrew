@@ -41,7 +41,7 @@ npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts
 dirty 标记和 binding：
 
 ```bash
-npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/binding/ShrewViewBinding.test.ts
+npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/binding
 ```
 
 输入点击：
