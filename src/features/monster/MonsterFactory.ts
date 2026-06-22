@@ -1,6 +1,6 @@
 import { addComponent, addEntity, createWorld } from "bitecs";
 import { DirtyComponent } from "../../ecs/components";
-import { MONSTER_CONFIG } from "./MonsterConfig";
+import { MONSTER_CONFIG, type MonsterSpawnRule } from "./MonsterConfig";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponent";
 import { MonsterType } from "./MonsterTypes";
 
@@ -46,6 +46,25 @@ export function createMonsterEntities(world: World, options: CreateMonsterEntiti
     entities.push(entity);
   }
 
+  return entities;
+}
+
+export function createMonsterEntitiesForRules(
+  world: World,
+  rules: readonly MonsterSpawnRule[],
+): number[] {
+  const countByType = new Map<MonsterType, number>();
+  for (const rule of rules) {
+    countByType.set(
+      rule.monsterType,
+      (countByType.get(rule.monsterType) ?? 0) + Math.max(0, Math.floor(rule.maxActiveCount)),
+    );
+  }
+
+  const entities: number[] = [];
+  for (const [monsterType, count] of countByType) {
+    entities.push(...createMonsterEntities(world, { monsterType, count }));
+  }
   return entities;
 }
 

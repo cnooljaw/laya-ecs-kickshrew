@@ -228,6 +228,18 @@ MonsterType.Rhino -> resources/monster/rhino.sk
 
 默认触发规则是 `PlayerComponent.money` 跨过 100 的新倍数时出现一次，同屏最多 1 个，10 秒后只把 `MonsterComponent.visible` 设为 0，不删除 ECS entity。后续新增怪物优先改 `MonsterType`、`MONSTER_CONFIG`、`MONSTER_SPAWN_RULES` 和资源文件，不应再修改 `SyncView`、`DirtyMarkSystem` 或 `GameScene` 的固定分支。
 
+Monster 配置有护栏：
+
+```text
+validateMonsterConfig()
+  -> slot 不能重复
+  -> maxActiveCount 必须大于 0
+  -> trigger.interval 必须大于 0
+  -> 每个 monsterType 必须有 MONSTER_CONFIG 资源配置
+```
+
+Monster 槽位按规则合计创建，而不是取最大值。例如同一种怪物有两条规则 `maxActiveCount=1` 和 `maxActiveCount=2`，会创建 3 个槽位，避免后续多规则或多怪物互相抢池。
+
 ## 排查：ECS 数据变了但画面没变
 
 按顺序查：

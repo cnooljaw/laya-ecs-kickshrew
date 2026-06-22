@@ -1409,7 +1409,7 @@ git commit -m "feat: add score milestone celebration" \
         <div class="content split-wide">
           <div class="rows">
             <div class="panel accent-green"><strong>1. MonsterFeature 收口</strong><p>`src/features/monster` 放 Component、Config、Factory、System、Rules、Binding、Node、Feature。新增怪物优先改配置，不改底层分发。</p></div>
-            <div class="panel accent-blue"><strong>2. Rhino 配置化</strong><p>`MonsterType.Rhino` 指向 `resources/monster/rhino.sk`，默认同屏 1 个，`PlayerComponent.money` 跨过 100 的新倍数时出现一次。</p></div>
+            <div class="panel accent-blue"><strong>2. Rhino 配置化</strong><p>`MonsterType.Rhino` 指向 `resources/monster/rhino.sk`，默认同屏 1 个，`PlayerComponent.money` 跨过 100 的新倍数时出现一次；配置会校验 slot、数量、触发间隔和资源。</p></div>
             <div class="panel accent-violet"><strong>3. System 管 10 秒生命周期</strong><p>`monsterSpawnSystem` 负责触发出现，`monsterLifetimeSystem` 只改 ECS 字段：超过 10 秒设置 `visible=0`，不删除 entity。</p></div>
             <div class="panel accent-red"><strong>4. SyncView channel 接入</strong><p>`MonsterComponent.visible -> BIT_MONSTER_SHOW -> DirtyComponent.monsterDirty -> monsterViewBinding -> MonsterNode.setVisible()`。</p></div>
           </div>
@@ -1422,7 +1422,7 @@ git commit -m "feat: add score milestone celebration" \
               </defs>
               <rect x="52" y="46" width="180" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
               <text x="142" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">MonsterFeature</text>
-              <text x="142" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">Rhino pool + Dirty</text>
+              <text x="142" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">按规则合计建池</text>
               <rect x="310" y="46" width="200" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
               <text x="410" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">monster systems</text>
               <text x="410" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">money trigger / ageSec</text>
@@ -1447,7 +1447,7 @@ git commit -m "feat: add score milestone celebration" \
           </div>
         </div>
         <footer class="footer">
-          <span>对应清单：MonsterFeature -> MonsterConfig/Rules/System -> SyncView channel -> MonsterNode -> 测试。</span>
+          <span>对应清单：MonsterFeature -> MonsterConfig 校验 -> 按规则合计建池 -> SyncView channel -> MonsterNode -> 测试。</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>

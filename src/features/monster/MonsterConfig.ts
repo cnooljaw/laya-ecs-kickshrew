@@ -46,3 +46,49 @@ export const MONSTER_SPAWN_RULES: readonly MonsterSpawnRule[] = [
     },
   },
 ];
+
+export function validateMonsterConfig(
+  config: Partial<Record<MonsterType, MonsterResourceConfig>> = MONSTER_CONFIG,
+  rules: readonly MonsterSpawnRule[] = MONSTER_SPAWN_RULES,
+): string[] {
+  const issues: string[] = [];
+  const usedSlots = new Set<number>();
+
+  for (let i = 0; i < rules.length; i++) {
+    const rule = rules[i];
+    if (usedSlots.has(rule.slot)) {
+      issues.push(`MONSTER_SPAWN_RULES slot 重复: ${rule.slot}`);
+    }
+    usedSlots.add(rule.slot);
+
+    if (rule.maxActiveCount <= 0) {
+      issues.push(`MONSTER_SPAWN_RULES[${i}].maxActiveCount 必须大于 0`);
+    }
+
+    const resource = config[rule.monsterType];
+    if (!resource) {
+      issues.push(`MONSTER_CONFIG 缺少 monsterType=${rule.monsterType} 的资源配置`);
+    } else {
+      if (!resource.skUrl) issues.push(`MONSTER_CONFIG[${rule.monsterType}].skUrl 不能为空`);
+      if (!resource.pngUrl) issues.push(`MONSTER_CONFIG[${rule.monsterType}].pngUrl 不能为空`);
+      if (resource.durationSec <= 0) issues.push(`MONSTER_CONFIG[${rule.monsterType}].durationSec 必须大于 0`);
+      if (resource.scale <= 0) issues.push(`MONSTER_CONFIG[${rule.monsterType}].scale 必须大于 0`);
+    }
+
+    if (rule.trigger.interval <= 0) {
+      issues.push(`MONSTER_SPAWN_RULES[${i}].trigger.interval 必须大于 0`);
+    }
+  }
+
+  return issues;
+}
+
+export function assertValidMonsterConfig(
+  config: Partial<Record<MonsterType, MonsterResourceConfig>> = MONSTER_CONFIG,
+  rules: readonly MonsterSpawnRule[] = MONSTER_SPAWN_RULES,
+): void {
+  const issues = validateMonsterConfig(config, rules);
+  if (issues.length > 0) {
+    throw new Error(`Monster 配置无效:\n${issues.join("\n")}`);
+  }
+}

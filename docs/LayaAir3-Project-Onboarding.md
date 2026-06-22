@@ -660,6 +660,17 @@ PlayerComponent.money 跨过 100 的新倍数
 
 后续新增怪物优先改 `MonsterType`、`MONSTER_CONFIG`、`MONSTER_SPAWN_RULES` 和资源文件。不要再为每种怪物修改 `SyncView`、`DirtyMarkSystem`、`GameScene` 的固定注册分支。
 
+配置会在 `MonsterFeature.setup()` 校验：
+
+```text
+slot 不能重复
+maxActiveCount > 0
+trigger.interval > 0
+monsterType 必须有资源配置
+```
+
+Monster 槽位按规则合计创建，不再只取最大值。以后同一种怪物有多条触发规则，或者增加多种怪物时，池容量按配置总量预留。
+
 ## 4. 当前架构边界
 
 建议把代码按这几层理解：

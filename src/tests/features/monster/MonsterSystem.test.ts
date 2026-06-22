@@ -3,7 +3,11 @@ import { createGameWorld, createSingletonEntities } from "../../../ecs/world";
 import { PlayerComponent } from "../../../ecs/components";
 import { MonsterComponent, MonsterSpawnComponent } from "../../../features/monster/MonsterComponent";
 import { MonsterType } from "../../../features/monster/MonsterTypes";
-import { createMonsterEntities, createMonsterSpawnState } from "../../../features/monster/MonsterFactory";
+import {
+  createMonsterEntities,
+  createMonsterEntitiesForRules,
+  createMonsterSpawnState,
+} from "../../../features/monster/MonsterFactory";
 import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../features/monster/MonsterSystem";
 
 describe("MonsterSystem", () => {
@@ -64,5 +68,30 @@ describe("MonsterSystem", () => {
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterSpawnComponent.lastTriggeredMilestone0[spawnState]).toBe(3);
+  });
+
+  it("按规则合计创建怪物槽位，避免多个触发规则只拿到最大值数量", () => {
+    const world = createGameWorld();
+    const entities = createMonsterEntitiesForRules(world, [
+      {
+        slot: 0,
+        monsterType: MonsterType.Rhino,
+        maxActiveCount: 1,
+        trigger: { source: "money", mode: "multiple", interval: 100, catchUp: false },
+      },
+      {
+        slot: 1,
+        monsterType: MonsterType.Rhino,
+        maxActiveCount: 2,
+        trigger: { source: "money", mode: "multiple", interval: 500, catchUp: false },
+      },
+    ]);
+
+    expect(entities).toHaveLength(3);
+    expect(entities.map(eid => MonsterComponent.monsterType[eid])).toEqual([
+      MonsterType.Rhino,
+      MonsterType.Rhino,
+      MonsterType.Rhino,
+    ]);
   });
 });
