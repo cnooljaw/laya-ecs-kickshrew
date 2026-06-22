@@ -185,7 +185,7 @@ ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 vi
 createRuleSyncChannel({
   name: "monster",
   dirtyTarget: "monsterDirty",
-  rules: MONSTER_VIEW_RULES,
+  rules: MONSTER_SYNC_RULES,
   binding: monsterViewBinding,
 });
 ```
@@ -205,18 +205,28 @@ createRuleSyncChannel({
 
 ## 新增独立实体类型
 
-如果是“非地鼠怪物”这类独立玩法对象，不建议塞进 `ShrewComponent`。优先按 Feature 组织：
+如果是“非地鼠怪物”这类独立玩法对象，不建议塞进 `ShrewComponent`。采用“ECS gameplay + 薄 Feature”组织：
 
 ```text
-src/features/monster/
+src/ecs/gameplay/monster/
   MonsterComponent.ts
-  MonsterConfig.ts
   MonsterFactory.ts
   MonsterSystem.ts
-  MonsterViewRules.ts
   MonsterDirtyAspect.ts
+
+src/config/
+  MonsterConfig.ts
+
+src/sync/rules/
+  MonsterSyncRules.ts
+
+src/binding/
   MonsterViewBinding.ts
+
+src/view/
   MonsterNode.ts
+
+src/features/monster/
   MonsterFeature.ts
 ```
 
@@ -226,7 +236,7 @@ Rhino 是当前第一种怪物，资源配置在 `MonsterConfig.ts`：
 MonsterType.Rhino -> resources/monster/rhino.sk
 ```
 
-默认触发规则是 `PlayerComponent.money` 跨过 100 的新倍数时出现一次，同屏最多 1 个，10 秒后只把 `MonsterComponent.visible` 设为 0，不删除 ECS entity。后续新增怪物优先改 `MonsterType`、`MONSTER_CONFIG`、`MONSTER_SPAWN_RULES` 和资源文件，不应再修改 `SyncView`、`DirtyMarkSystem` 或 `GameScene` 的固定分支。
+默认触发规则是 `PlayerComponent.money` 跨过 100 的新倍数时出现一次，同屏最多 1 个，10 秒后只把 `MonsterComponent.visible` 设为 0，不删除 ECS entity。如果达到新的 100 倍数时 Rhino 仍在场，本次触发直接丢弃，不在隐藏后补发。后续新增同类怪物优先改 `MonsterType`、`MONSTER_CONFIG`、`MONSTER_SPAWN_RULES` 和资源文件，不应再修改 `SyncView`、`DirtyMarkSystem` 或 `GameScene` 的固定分支。
 
 Monster 配置有护栏：
 

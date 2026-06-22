@@ -51,4 +51,18 @@ describe("SyncView", () => {
     expect(calls).toEqual([{ eid, dirtyBits: 0, forceFull: true }]);
     expect(DirtyComponent.forceFullSync[eid]).toBe(0);
   });
+
+  it("重复 channel name 直接报错，避免静默覆盖 binding", () => {
+    const syncView = new SyncView();
+    const channel = {
+      name: "testScene",
+      dirtyTarget: "sceneDirty" as const,
+      mask: 0x04,
+      binding: () => {},
+    };
+
+    syncView.registerChannel(channel);
+
+    expect(() => syncView.registerChannel(channel)).toThrow("SyncChannel name 重复: testScene");
+  });
 });

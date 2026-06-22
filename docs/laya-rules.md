@@ -25,7 +25,7 @@ DizzyStarNode       眩晕星星
 TreasureBoxNode     宝箱
 NodePool            简单节点对象池
 PerfHeroNode        压测英雄 Spine 槽位，使用共享 Spine 资源池
-MonsterNode         MonsterFeature 的怪物 Spine 节点，例如 Rhino
+MonsterNode         独立怪物的 Laya Spine 节点，例如 Rhino
 ```
 
 如果 view node 里出现命中合法性、奖励、状态机、协议字段解析等逻辑，通常说明边界穿透了。
@@ -63,7 +63,7 @@ Spine/Skeleton 压测见 `docs/performance-tuning.md`。运行时规则：
 - 如果旧动画仍可见，下一次重生请求不要立刻改父容器坐标；应 pending 到 STOPPED/退场隐藏后再应用。
 - STOPPED 回调属于 view node 生命周期，销毁时必须 `offAll` 或等价清理。
 
-MonsterFeature 第一版同屏默认只有 1 个 Rhino，`MonsterNode` 负责 `.sk` 异步加载、播放和显隐保护。怪物 10 秒后消失由 ECS 的 `MonsterComponent.visible=0` 驱动，view node 不自己开 timer。
+MonsterFeature 第一版同屏默认只有 1 个 Rhino，`MonsterNode` 负责 `.sk` 异步加载、播放和显隐保护。怪物 10 秒后消失由 ECS 的 `MonsterComponent.visible=0` 驱动，view node 不自己开 timer。`.sk` 加载失败不会永久缓存失败 Promise，后续同 URL 生成会重试；异步回调必须校验节点未销毁且请求仍是最新。
 
 ## 配置和调参入口
 

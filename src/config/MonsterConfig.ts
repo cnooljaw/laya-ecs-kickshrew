@@ -1,5 +1,5 @@
-import { DESIGN_RESOLUTION } from "../../config/GameTuning";
-import { MonsterType } from "./MonsterTypes";
+import { DESIGN_RESOLUTION } from "./GameTuning";
+import { MonsterType } from "../ecs/gameplay/monster/MonsterTypes";
 
 export interface MonsterResourceConfig {
   skUrl: string;

@@ -1,6 +1,6 @@
 import { addComponent, addEntity, createWorld } from "bitecs";
-import { DirtyComponent } from "../../ecs/components";
-import { MONSTER_CONFIG, type MonsterSpawnRule } from "./MonsterConfig";
+import { DirtyComponent } from "../../components";
+import { MONSTER_CONFIG, type MonsterSpawnRule } from "../../../config/MonsterConfig";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponent";
 import { MonsterType } from "./MonsterTypes";
 

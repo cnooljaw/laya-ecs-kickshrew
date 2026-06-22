@@ -1,6 +1,6 @@
 import { defineQuery } from "bitecs";
-import { PlayerComponent } from "../../ecs/components";
-import { MONSTER_SPAWN_RULES, type MonsterSpawnRule } from "./MonsterConfig";
+import { PlayerComponent } from "../../components";
+import { MONSTER_SPAWN_RULES, type MonsterSpawnRule } from "../../../config/MonsterConfig";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponent";
 import { spawnMonster } from "./MonsterFactory";
 import { MonsterType } from "./MonsterTypes";

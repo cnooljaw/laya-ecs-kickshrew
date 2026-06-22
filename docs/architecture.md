@@ -37,13 +37,16 @@ Laya 入口层
 纯游戏状态/规则层
   ecs/components
   ecs/systems
+  ecs/gameplay/*/*
   ecs/types
   ecs/ShrewLifecycle.ts
 
 表现同步层
   sync/contracts/*ViewContract.ts
   sync/DirtyFlags.ts
+  sync/DirtyTargets.ts
   sync/rules/*ViewRules.ts
+  sync/rules/*SyncRules.ts
   binding/SyncView.ts
   binding/*ViewBinding.ts
 
@@ -87,7 +90,7 @@ input/network/resource callback
 
 不要让 ECS system 直接操作 Laya 节点。不要让 Laya 节点直接改权威游戏规则。socket 回包应先转成系统可消费的数据，再更新 ECS。
 
-新增独立玩法实体优先走 `features/*Feature.ts`。例如 `MonsterFeature` 把 Rhino 的 ECS component、生命周期 system、dirty aspect、SyncView channel、view binding 和 Laya node 收在 `src/features/monster/`，`GameScene` 只遍历 `GAME_FEATURES` 做装配。
+新增独立玩法实体采用“ECS gameplay + 薄 Feature”边界。玩法权威状态、系统、工厂和 dirty aspect 放 `src/ecs/gameplay/<domain>/`；配置放 `src/config/`；同步规则放 `src/sync/rules/`；binding 放 `src/binding/`；Laya 节点放 `src/view/`。`src/features/<domain>/*Feature.ts` 只负责把这些能力装配进游戏，`GameScene` 只通过 `GAME_FEATURE_REGISTRY` 接入。
 
 ## 启动和主循环
 

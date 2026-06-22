@@ -243,6 +243,40 @@ describe("PerfHeroNode", () => {
     expect(skeleton.playCalls).toHaveLength(2);
     expect(skeleton.parentVisibleWhenPlay).toEqual([false, false]);
   });
+
+  it("Spine 加载失败不会永久缓存 rejected promise，下一次重生会重试同 URL", async () => {
+    const created: FakeSkeleton[] = [];
+    const skUrl = "resources/heros/retry-after-failure.sk";
+    const load = vi.fn()
+      .mockRejectedValueOnce(new Error("temporary load failure"))
+      .mockResolvedValueOnce({
+        buildArmature: () => {
+          const skeleton = new FakeSkeleton();
+          created.push(skeleton);
+          return skeleton;
+        },
+      });
+    const Laya = {
+      Sprite: FakeSprite,
+      Event: { STOPPED: "stopped" },
+      loader: { load },
+    };
+    vi.stubGlobal("window", { Laya });
+
+    const node = new PerfHeroNode();
+    const parent = new FakeSprite();
+    node.create(parent);
+
+    node.playHero(0, skUrl, 10, 20, 0.3, 1);
+    await flushPromises();
+
+    node.playHero(0, skUrl, 10, 20, 0.3, 2);
+    await flushPromises();
+
+    expect(load).toHaveBeenCalledTimes(2);
+    expect(created).toHaveLength(1);
+    expect(created[0].playCalls).toHaveLength(1);
+  });
 });
 
 async function flushPromises(): Promise<void> {

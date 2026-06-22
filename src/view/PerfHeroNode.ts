@@ -203,7 +203,10 @@ class PerfHeroSpinePool {
   private _loadTemplet(Laya: any): Promise<any> {
     let promise = PerfHeroSpinePool._templetPromises.get(this._resource.skUrl);
     if (!promise) {
-      promise = Laya.loader.load(this._resource.skUrl);
+      promise = Laya.loader.load(this._resource.skUrl).catch((error: unknown) => {
+        PerfHeroSpinePool._templetPromises.delete(this._resource.skUrl);
+        throw error;
+      });
       PerfHeroSpinePool._templetPromises.set(this._resource.skUrl, promise);
     }
     return promise;

@@ -164,7 +164,7 @@ export class ShrewNode implements IShrewNode {
     const atlasUrl = `resources/${atlasPath}.atlas`;
 
     Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
-      if (!this._mainLayer) return;
+      if (!this._mainLayer || this._currentShrewType !== shrewType || this._currentMapType !== mapType) return;
       if (!atlasRes) {
         console.error(`[ShrewNode] atlas load failed: ${atlasUrl}`);
         return;

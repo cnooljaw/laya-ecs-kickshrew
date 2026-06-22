@@ -120,7 +120,7 @@ export class SceneLayer implements ISceneLayer {
     const atlasUrl = `resources/${atlasPath}.atlas`;
 
     Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
-      if (!this._bgSprite) return;
+      if (!this._bgSprite || this._currentMap !== mapType) return;
       if (!atlasRes) {
         console.error(`[SceneLayer] bg atlas load failed: ${atlasUrl}`);
         return;

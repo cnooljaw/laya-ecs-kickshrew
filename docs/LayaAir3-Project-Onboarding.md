@@ -641,7 +641,7 @@ GameScene.onTouch(x, y)
 
 ### 新增一种非地鼠怪物
 
-独立怪物走 `src/features/monster/MonsterFeature.ts` 这类 Feature 入口，不混进地鼠状态机。当前 Rhino 资源：
+独立怪物采用“ECS gameplay + 薄 Feature”边界，不混进地鼠状态机。Rhino 的 ECS 规则在 `src/ecs/gameplay/monster/`，配置在 `src/config/MonsterConfig.ts`，同步规则在 `src/sync/rules/MonsterSyncRules.ts`，装配入口在 `src/features/monster/MonsterFeature.ts`。当前 Rhino 资源：
 
 ```text
 assets/resources/monster/rhino.sk
@@ -658,7 +658,7 @@ PlayerComponent.money 跨过 100 的新倍数
   -> SyncView monster channel 投影到 MonsterNode
 ```
 
-后续新增怪物优先改 `MonsterType`、`MONSTER_CONFIG`、`MONSTER_SPAWN_RULES` 和资源文件。不要再为每种怪物修改 `SyncView`、`DirtyMarkSystem`、`GameScene` 的固定注册分支。
+如果达到新的 100 倍数时 Rhino 仍在场，本次触发会被直接丢弃，不会等隐藏后补发。后续新增同类怪物优先改 `MonsterType`、`MONSTER_CONFIG`、`MONSTER_SPAWN_RULES` 和资源文件。不要再为每种怪物修改 `SyncView`、`DirtyMarkSystem`、`GameScene` 的固定注册分支。
 
 配置会在 `MonsterFeature.setup()` 校验：
 

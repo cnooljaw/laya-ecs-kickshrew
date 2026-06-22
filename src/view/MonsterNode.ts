@@ -1,4 +1,4 @@
-import type { IMonsterNode } from "../../sync/contracts/MonsterViewContract";
+import type { IMonsterNode } from "../sync/contracts/MonsterViewContract";
 
 interface MonsterPlayRequest {
   monsterType: number;
@@ -92,7 +92,10 @@ function runtimeLaya(): any {
 function loadTemplet(Laya: any, skUrl: string): Promise<any> {
   let promise = templetPromises.get(skUrl);
   if (!promise) {
-    promise = Laya.loader.load(skUrl);
+    promise = Laya.loader.load(skUrl).catch((error: unknown) => {
+      templetPromises.delete(skUrl);
+      throw error;
+    });
     templetPromises.set(skUrl, promise);
   }
   return promise;

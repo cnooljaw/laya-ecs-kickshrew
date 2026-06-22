@@ -128,7 +128,6 @@ export class KickSocket {
     for (const [seqId, pending] of this._pendingRequests) {
       if (now - pending.timestamp > this._timeoutMs) {
         this._pendingRequests.delete(seqId);
-        // 通过回调通知超时，而不是 reject（避免 unhandled rejection）
         this._traceLogger.log("socket.timeout", {
           seqId,
           elapsedMs: now - pending.timestamp,
@@ -136,6 +135,7 @@ export class KickSocket {
           pendingCount: this._pendingRequests.size,
         });
         this._onTimeout?.(seqId);
+        pending.reject(`Kick request timeout: seqId=${seqId}`);
       }
     }
   }

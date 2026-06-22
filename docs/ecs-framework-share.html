@@ -1404,12 +1404,12 @@ git commit -m "feat: add score milestone celebration" \
         <header>
           <div class="kicker">Implementation Checklist</div>
           <h2>落地清单：新增一种非地鼠怪物，出现 10 秒后消失</h2>
-          <p class="lead">这个怪物不是地鼠皮肤，而是自己的 feature。Rhino 作为第一种 MonsterType，通过 MonsterFeature 接入 ECS、dirty、SyncView channel、binding 和 ViewRegistry。</p>
+          <p class="lead">这个怪物不是地鼠皮肤，而是自己的独立玩法对象。Rhino 作为第一种 MonsterType，ECS 规则放在 gameplay/monster，MonsterFeature 只负责装配 ECS、dirty、SyncView channel、binding 和 ViewRegistry。</p>
         </header>
         <div class="content split-wide">
           <div class="rows">
-            <div class="panel accent-green"><strong>1. MonsterFeature 收口</strong><p>`src/features/monster` 放 Component、Config、Factory、System、Rules、Binding、Node、Feature。新增怪物优先改配置，不改底层分发。</p></div>
-            <div class="panel accent-blue"><strong>2. Rhino 配置化</strong><p>`MonsterType.Rhino` 指向 `resources/monster/rhino.sk`，默认同屏 1 个，`PlayerComponent.money` 跨过 100 的新倍数时出现一次；配置会校验 slot、数量、触发间隔和资源。</p></div>
+            <div class="panel accent-green"><strong>1. 薄 Feature 装配</strong><p>`src/features/monster/MonsterFeature.ts` 只装配；Component、Factory、System、DirtyAspect 放 `src/ecs/gameplay/monster`，Config/SyncRules/Binding/Node 回到各自层。</p></div>
+            <div class="panel accent-blue"><strong>2. Rhino 配置化</strong><p>`MonsterType.Rhino` 指向 `resources/monster/rhino.sk`，默认同屏 1 个，`PlayerComponent.money` 跨过 100 的新倍数时出现一次；若 Rhino 仍在场，本次触发直接丢弃。</p></div>
             <div class="panel accent-violet"><strong>3. System 管 10 秒生命周期</strong><p>`monsterSpawnSystem` 负责触发出现，`monsterLifetimeSystem` 只改 ECS 字段：超过 10 秒设置 `visible=0`，不删除 entity。</p></div>
             <div class="panel accent-red"><strong>4. SyncView channel 接入</strong><p>`MonsterComponent.visible -> BIT_MONSTER_SHOW -> DirtyComponent.monsterDirty -> monsterViewBinding -> MonsterNode.setVisible()`。</p></div>
           </div>
@@ -1447,7 +1447,7 @@ git commit -m "feat: add score milestone celebration" \
           </div>
         </div>
         <footer class="footer">
-          <span>对应清单：MonsterFeature -> MonsterConfig 校验 -> 按规则合计建池 -> SyncView channel -> MonsterNode -> 测试。</span>
+          <span>对应清单：MonsterConfig 校验 -> ecs/gameplay/monster 建池和系统 -> MonsterFeature 装配 -> SyncView channel -> MonsterNode -> 测试。</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>

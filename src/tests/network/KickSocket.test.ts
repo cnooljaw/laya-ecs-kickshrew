@@ -76,39 +76,42 @@ describe('KickSocket', () => {
     expect(socket.getPendingCount()).toBe(1);
   });
 
-  it('超时移除: 请求超时后从pending中移除', () => {
+  it('超时移除并 reject: 请求超时后从 pending 中移除且调用方能收到失败', async () => {
     let currentTime = 0;
     const ts = new KickSocket({ send: () => {} }, 3000, () => currentTime);
-    ts.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0 });
+    const request = ts.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0 });
     expect(ts.getPendingCount()).toBe(1);
     currentTime = 3001;
     ts.checkTimeout();
     expect(ts.getPendingCount()).toBe(0);
+    await expect(request).rejects.toBe("Kick request timeout: seqId=1");
   });
 
   it('超时不影响后续: seqId=1超时后seqId=2仍正常', async () => {
     let currentTime = 0;
     const ts = new KickSocket({ send: () => {} }, 3000, () => currentTime);
-    ts.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0 });
+    const p1 = ts.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0 });
     currentTime = 2000;
     const p2 = ts.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0 });
     currentTime = 3001;
     ts.checkTimeout();
     expect(ts.getPendingCount()).toBe(1);
+    await expect(p1).rejects.toBe("Kick request timeout: seqId=1");
     ts.onMessage(encodeKickResponse({ seqId: 2, cmd: 'kickResult', ret: 0, money: 200, angry: 50, power: 10, levelScore: 200, hammerId: 1, numOfShrew: 0, shrewResp: [], combo: 0, comboId: 0 }));
     expect((await p2).money).toBe(200);
     expect(ts.getPendingCount()).toBe(0);
   });
 
-  it('超时回调: onTimeout 被调用并传入 seqId', () => {
+  it('超时回调: onTimeout 被调用并传入 seqId', async () => {
     let currentTime = 0;
     const ts = new KickSocket({ send: () => {} }, 3000, () => currentTime);
     const timeoutSeqIds: number[] = [];
     ts.setOnTimeout((seqId) => { timeoutSeqIds.push(seqId); });
-    ts.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0 });
-    ts.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0 });
+    const p1 = ts.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0 }).catch((): undefined => undefined);
+    const p2 = ts.sendKick({ cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0 }).catch((): undefined => undefined);
     currentTime = 3001;
     ts.checkTimeout();
+    await Promise.all([p1, p2]);
     expect(timeoutSeqIds).toEqual([1, 2]);
   });
 });

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { createGameWorld, createSingletonEntities } from "../../../ecs/world";
-import { PlayerComponent } from "../../../ecs/components";
-import { MonsterComponent, MonsterSpawnComponent } from "../../../features/monster/MonsterComponent";
-import { MonsterType } from "../../../features/monster/MonsterTypes";
+import { createGameWorld, createSingletonEntities } from "../../../../ecs/world";
+import { PlayerComponent } from "../../../../ecs/components";
+import { MonsterComponent, MonsterSpawnComponent } from "../../../../ecs/gameplay/monster/MonsterComponent";
+import { MonsterType } from "../../../../ecs/gameplay/monster/MonsterTypes";
 import {
   createMonsterEntities,
   createMonsterEntitiesForRules,
   createMonsterSpawnState,
-} from "../../../features/monster/MonsterFactory";
-import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../features/monster/MonsterSystem";
+} from "../../../../ecs/gameplay/monster/MonsterFactory";
+import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../../ecs/gameplay/monster/MonsterSystem";
 
 describe("MonsterSystem", () => {
   it("玩家金币跨过 100 倍数时生成一次 Rhino，重复帧不重复生成", () => {
@@ -68,6 +68,34 @@ describe("MonsterSystem", () => {
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterSpawnComponent.lastTriggeredMilestone0[spawnState]).toBe(3);
+  });
+
+  it("达到新 100 倍数时如果 Rhino 仍在场，则丢弃这次触发且隐藏后不补发", () => {
+    const world = createGameWorld();
+    const { player } = createSingletonEntities(world);
+    const spawnState = createMonsterSpawnState(world);
+    const [monster] = createMonsterEntities(world, { count: 1 });
+
+    PlayerComponent.money[player] = 100;
+    monsterSpawnSystem(world);
+
+    expect(MonsterComponent.visible[monster]).toBe(1);
+    expect(MonsterComponent.spawnSeq[monster]).toBe(1);
+    expect(MonsterSpawnComponent.lastTriggeredMilestone0[spawnState]).toBe(1);
+
+    PlayerComponent.money[player] = 200;
+    monsterSpawnSystem(world);
+
+    expect(MonsterComponent.visible[monster]).toBe(1);
+    expect(MonsterComponent.spawnSeq[monster]).toBe(1);
+    expect(MonsterSpawnComponent.lastTriggeredMilestone0[spawnState]).toBe(2);
+
+    MonsterComponent.visible[monster] = 0;
+    monsterSpawnSystem(world);
+
+    expect(MonsterComponent.visible[monster]).toBe(0);
+    expect(MonsterComponent.spawnSeq[monster]).toBe(1);
+    expect(MonsterSpawnComponent.lastTriggeredMilestone0[spawnState]).toBe(2);
   });
 
   it("按规则合计创建怪物槽位，避免多个触发规则只拿到最大值数量", () => {

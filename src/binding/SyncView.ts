@@ -12,9 +12,9 @@
  */
 import { defineQuery } from "bitecs";
 import { DirtyComponent } from "../ecs/components";
+import { DIRTY_TARGETS, type DirtyTarget } from "../sync/DirtyTargets";
 import { bitsOf } from "../sync/rules/ViewBindingRule";
 import type { ViewBindingRule } from "../sync/rules/ViewBindingRule";
-import type { DirtyTarget } from "../ecs/dirty/DirtySchemaTypes";
 import { SHREW_ANIMATION_RULES, SHREW_COMPONENT_RULES } from "../sync/rules/ShrewViewRules";
 import { HOLE_VIEW_RULES } from "../sync/rules/HoleViewRules";
 import { HAMMER_VIEW_RULES } from "../sync/rules/HammerViewRules";
@@ -25,18 +25,6 @@ import { HIT_VIEW_RULES } from "../sync/rules/HitViewRules";
 import { PERF_HERO_VIEW_RULES } from "../sync/rules/PerfHeroViewRules";
 
 const dirtyQuery = defineQuery([DirtyComponent]);
-const DIRTY_TARGETS: DirtyTarget[] = [
-  "shrewDirty",
-  "holeDirty",
-  "hammerDirty",
-  "comboDirty",
-  "sceneDirty",
-  "playerDirty",
-  "animDirty",
-  "hitDirty",
-  "perfHeroDirty",
-  "monsterDirty",
-];
 
 /** 视图绑定函数类型 */
 export type BindingFn = (eid: number, dirtyBits: number, forceFull: boolean) => void;
@@ -72,8 +60,7 @@ export class SyncView {
   registerChannel(channel: SyncChannel): void {
     const existingIndex = this.channels.findIndex(item => item.name === channel.name);
     if (existingIndex >= 0) {
-      this.channels[existingIndex] = channel;
-      return;
+      throw new Error(`SyncChannel name 重复: ${channel.name}`);
     }
     this.channels.push(channel);
   }

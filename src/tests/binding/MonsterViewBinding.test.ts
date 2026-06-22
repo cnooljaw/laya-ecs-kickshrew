@@ -1,17 +1,17 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { DirtyComponent } from "../../../ecs/components";
-import { createGameWorld } from "../../../ecs/world";
-import { dirtyMarkSystem } from "../../../ecs/systems/DirtyMarkSystem";
-import { SyncView } from "../../../binding/SyncView";
-import { createMonsterEntities } from "../../../features/monster/MonsterFactory";
-import { MonsterComponent } from "../../../features/monster/MonsterComponent";
-import { MonsterType } from "../../../features/monster/MonsterTypes";
-import { MONSTER_CONFIG } from "../../../features/monster/MonsterConfig";
-import { MonsterDirtyAspect } from "../../../features/monster/MonsterDirtyAspect";
-import { MONSTER_VIEW_RULES } from "../../../features/monster/MonsterViewRules";
-import { monsterRegistry, monsterViewBinding } from "../../../features/monster/MonsterViewBinding";
-import type { IMonsterNode } from "../../../sync/contracts/MonsterViewContract";
-import { BIT_MONSTER_SHOW, BIT_MONSTER_SPAWN } from "../../../sync/DirtyFlags";
+import { DirtyComponent } from "../../ecs/components";
+import { createGameWorld } from "../../ecs/world";
+import { dirtyMarkSystem } from "../../ecs/systems/DirtyMarkSystem";
+import { SyncView } from "../../binding/SyncView";
+import { createMonsterEntities } from "../../ecs/gameplay/monster/MonsterFactory";
+import { MonsterComponent } from "../../ecs/gameplay/monster/MonsterComponent";
+import { MonsterType } from "../../ecs/gameplay/monster/MonsterTypes";
+import { MONSTER_CONFIG } from "../../config/MonsterConfig";
+import { MonsterDirtyAspect } from "../../ecs/gameplay/monster/MonsterDirtyAspect";
+import { MONSTER_SYNC_RULES } from "../../sync/rules/MonsterSyncRules";
+import { monsterRegistry, monsterViewBinding } from "../../binding/MonsterViewBinding";
+import type { IMonsterNode } from "../../sync/contracts/MonsterViewContract";
+import { BIT_MONSTER_SHOW, BIT_MONSTER_SPAWN } from "../../sync/DirtyFlags";
 
 describe("MonsterViewBinding", () => {
   const registered: number[] = [];
@@ -77,7 +77,7 @@ describe("MonsterViewBinding", () => {
     syncView.registerChannel({
       name: "monster",
       dirtyTarget: "monsterDirty",
-      mask: MONSTER_VIEW_RULES.reduce((bits, rule) => bits | rule.bit, 0),
+      mask: MONSTER_SYNC_RULES.reduce((bits, rule) => bits | rule.bit, 0),
       binding: monsterViewBinding,
     });
 

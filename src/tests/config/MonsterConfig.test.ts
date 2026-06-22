@@ -4,8 +4,8 @@ import {
   MONSTER_SPAWN_RULES,
   validateMonsterConfig,
   type MonsterSpawnRule,
-} from "../../../features/monster/MonsterConfig";
-import { MonsterType } from "../../../features/monster/MonsterTypes";
+} from "../../config/MonsterConfig";
+import { MonsterType } from "../../ecs/gameplay/monster/MonsterTypes";
 
 describe("MonsterConfig", () => {
   it("默认 Rhino 配置通过校验", () => {

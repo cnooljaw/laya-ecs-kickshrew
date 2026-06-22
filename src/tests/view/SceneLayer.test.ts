@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { MapType } from "../../ecs/types";
 import { SceneLayer } from "../../view/SceneLayer";
 
 class FakeSprite {
@@ -52,4 +53,39 @@ describe("SceneLayer lifecycle", () => {
     expect(tweenClearAll).toHaveBeenCalledWith(mask);
     expect(mask.destroyed).toBe(true);
   });
+
+  it("旧地图背景异步加载晚返回时不会覆盖当前地图", async () => {
+    const loads: Array<{ url: string; resolve: (atlas: unknown) => void }> = [];
+    vi.stubGlobal("window", {
+      Laya: {
+        Sprite: FakeSprite,
+        Loader: { ATLAS: "atlas" },
+        loader: {
+          load: (url: string) => new Promise(resolve => {
+            loads.push({ url, resolve });
+          }),
+        },
+      },
+    });
+
+    const parent = new FakeSprite();
+    const layer = new SceneLayer();
+    layer.create(parent);
+    const bgSprite = parent.children[0];
+
+    layer.switchScene(MapType.Meadow);
+    layer.switchScene(MapType.Ship);
+
+    loads[0].resolve({
+      frames: [{ url: "shrew_grass_bg", width: 960, height: 640 }],
+    });
+    await flushPromises();
+
+    expect(bgSprite.graphics.drawTexture).not.toHaveBeenCalled();
+  });
 });
+
+async function flushPromises(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}

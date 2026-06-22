@@ -3,12 +3,12 @@ import {
   BIT_MONSTER_SCALE,
   BIT_MONSTER_SHOW,
   BIT_MONSTER_SPAWN,
-} from "../../sync/DirtyFlags";
-import type { IMonsterNode } from "../../sync/contracts/MonsterViewContract";
-import { createRule, defineViewRules } from "../../sync/rules/ViewBindingRule";
-import { MONSTER_CONFIG } from "./MonsterConfig";
-import { MonsterComponent } from "./MonsterComponent";
-import { MonsterType } from "./MonsterTypes";
+} from "../DirtyFlags";
+import type { IMonsterNode } from "../contracts/MonsterViewContract";
+import { createRule, defineViewRules } from "./ViewBindingRule";
+import { MONSTER_CONFIG } from "../../config/MonsterConfig";
+import { MonsterComponent } from "../../ecs/gameplay/monster/MonsterComponent";
+import { MonsterType } from "../../ecs/gameplay/monster/MonsterTypes";
 
 type MonsterField = Extract<keyof typeof MonsterComponent, string>;
 const rule = createRule<IMonsterNode, MonsterField>();
@@ -31,7 +31,7 @@ function applyVisible({ eid, node }: { eid: number; node: IMonsterNode }): void 
   node.setVisible(MonsterComponent.visible[eid] === 1);
 }
 
-export const MONSTER_VIEW_RULES = defineViewRules<IMonsterNode, MonsterField>(
+export const MONSTER_SYNC_RULES = defineViewRules<IMonsterNode, MonsterField>(
   "MonsterComponent",
   MonsterComponent,
   [

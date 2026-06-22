@@ -131,4 +131,39 @@ describe("ShrewNode animation positioning", () => {
     const mainLayer = FakeSprite.instances.find((sprite) => sprite.name === "ShrewMainLayer");
     expect(mainLayer?.removeChildrenCalls[0]).toEqual([0, -1, true]);
   });
+
+  it("旧 setSpriteFrame 异步加载晚返回时不会重建当前地鼠部件", async () => {
+    const loads: Array<{ resolve: (atlas: unknown) => void }> = [];
+    vi.stubGlobal("window", {
+      Laya: {
+        Sprite: FakeSprite,
+        Rectangle: FakeRectangle,
+        Loader: { ATLAS: "atlas" },
+        loader: {
+          load: () => new Promise(resolve => {
+            loads.push({ resolve });
+          }),
+        },
+      },
+    });
+
+    const node = new ShrewNode();
+    node.create(new FakeSprite());
+    const mainLayer = FakeSprite.instances.find((sprite) => sprite.name === "ShrewMainLayer");
+
+    node.setSpriteFrame(ShrewType.Red, MapType.Meadow);
+    node.setSpriteFrame(ShrewType.Blue, MapType.Meadow);
+
+    loads[0].resolve(makeAtlas([
+      "red_body",
+      "red_face_smile",
+      "red_ear_left_up",
+      "red_ear_right_up",
+      "red_hand_left",
+      "red_hand_right",
+    ]));
+    await flushPromises();
+
+    expect(mainLayer?.removeChildrenCalls).toHaveLength(0);
+  });
 });

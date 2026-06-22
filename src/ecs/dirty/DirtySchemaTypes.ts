@@ -1,16 +1,7 @@
-export type Snapshot = Record<string, number>;
+import type { DirtyTarget } from "../../sync/DirtyTargets";
+export type { DirtyTarget } from "../../sync/DirtyTargets";
 
-export type DirtyTarget =
-  | "shrewDirty"
-  | "animDirty"
-  | "holeDirty"
-  | "hammerDirty"
-  | "comboDirty"
-  | "sceneDirty"
-  | "playerDirty"
-  | "hitDirty"
-  | "perfHeroDirty"
-  | "monsterDirty";
+export type Snapshot = Record<string, number>;
 
 export interface DirtySnapshotStore {
   shrew: Map<number, Snapshot>;

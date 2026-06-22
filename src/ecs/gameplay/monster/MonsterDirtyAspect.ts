@@ -1,7 +1,7 @@
-import { DirtyComponent } from "../../ecs/components";
-import { createRuleDirtyAspect } from "../../ecs/dirty/RuleDirtyAspect";
+import { DirtyComponent } from "../../components";
+import { createRuleDirtyAspect } from "../../dirty/RuleDirtyAspect";
+import { MONSTER_SYNC_RULES } from "../../../sync/rules/MonsterSyncRules";
 import { MonsterComponent } from "./MonsterComponent";
-import { MONSTER_VIEW_RULES } from "./MonsterViewRules";
 
 export const MonsterDirtyAspect = createRuleDirtyAspect({
   name: "MonsterDirtyAspect",
@@ -12,6 +12,6 @@ export const MonsterDirtyAspect = createRuleDirtyAspect({
     name: "monsterDirty",
     storeKey: "monster",
     dirtyTarget: "monsterDirty",
-    rules: MONSTER_VIEW_RULES,
+    rules: MONSTER_SYNC_RULES,
   },
 });
