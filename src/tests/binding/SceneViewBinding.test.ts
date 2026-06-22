@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { ISceneLayer } from "../../sync/contracts/SceneViewContract";
 import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 import { SceneComponent } from "../../ecs/components";
 import {
   sceneViewBinding,
   registerSceneLayer,
   unregisterSceneLayer,
-  type ISceneLayer,
 } from "../../binding/SceneViewBinding";
 import { BIT_SCENE_MAP, BIT_SCENE_TIMER, BIT_SCENE_TRANSITION } from "../../sync/DirtyFlags";
 import { MapType } from "../../ecs/types";

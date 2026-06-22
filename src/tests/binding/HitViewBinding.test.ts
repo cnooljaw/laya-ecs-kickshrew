@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { IHitEffectNode } from "../../sync/contracts/HitViewContract";
 import { addComponent, addEntity } from "bitecs";
 import { createGameWorld } from "../../ecs/world";
 import { HitComponent } from "../../ecs/components";
@@ -6,7 +7,6 @@ import {
   hitViewBinding,
   registerHitEffectNode,
   unregisterHitEffectNode,
-  type IHitEffectNode,
 } from "../../binding/HitViewBinding";
 import { BIT_HIT_INDEX, BIT_HIT_REWARD, BIT_HIT_WASHIT } from "../../sync/DirtyFlags";
 

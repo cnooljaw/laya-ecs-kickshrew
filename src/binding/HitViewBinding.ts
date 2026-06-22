@@ -4,7 +4,6 @@
 import type { BindingFn } from "./SyncView";
 import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 import { HIT_VIEW_RULES } from "../sync/rules/HitViewRules";
-export type { IHitEffectNode } from "../sync/contracts/HitViewContract";
 import type { IHitEffectNode } from "../sync/contracts/HitViewContract";
 
 const hitRegistry = createViewNodeRegistry<IHitEffectNode>();

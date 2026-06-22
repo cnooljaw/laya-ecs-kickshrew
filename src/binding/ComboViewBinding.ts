@@ -4,7 +4,6 @@
 import type { BindingFn } from "./SyncView";
 import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 import { COMBO_VIEW_RULES } from "../sync/rules/ComboViewRules";
-export type { IComboNode } from "../sync/contracts/ComboViewContract";
 import type { IComboNode } from "../sync/contracts/ComboViewContract";
 
 const comboRegistry = createViewNodeRegistry<IComboNode>();

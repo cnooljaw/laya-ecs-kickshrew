@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { IComboNode } from "../../sync/contracts/ComboViewContract";
 import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 import { ComboComponent } from "../../ecs/components";
 import {
   comboViewBinding,
   registerComboNode,
   unregisterComboNode,
-  type IComboNode,
 } from "../../binding/ComboViewBinding";
 import { BIT_COMBO_COUNT, BIT_COMBO_ID, BIT_COMBO_TARGETS } from "../../sync/DirtyFlags";
 

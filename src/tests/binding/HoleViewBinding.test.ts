@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { IHoleNode } from "../../sync/contracts/HoleViewContract";
 import { createGameWorld, createHoleEntities } from "../../ecs/world";
 import { HoleComponent } from "../../ecs/components";
 import {
   holeViewBinding,
   registerHoleNode,
   unregisterHoleNode,
-  type IHoleNode,
 } from "../../binding/HoleViewBinding";
 import { BIT_HOLE_POS, BIT_HOLE_SHREW, BIT_HOLE_ZORDER } from "../../sync/DirtyFlags";
 import { MapType } from "../../ecs/types";

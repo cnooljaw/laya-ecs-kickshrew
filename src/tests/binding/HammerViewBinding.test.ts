@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { IHammerNode } from "../../sync/contracts/HammerViewContract";
 import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 import { HammerComponent } from "../../ecs/components";
 import {
   hammerViewBinding,
   registerHammerNode,
   unregisterHammerNode,
-  type IHammerNode,
 } from "../../binding/HammerViewBinding";
 import { BIT_HAMMER_HITTABLE, BIT_HAMMER_THUNDER, BIT_HAMMER_TYPE } from "../../sync/DirtyFlags";
 

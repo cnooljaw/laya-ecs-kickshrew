@@ -4,7 +4,6 @@
 import type { BindingFn } from "./SyncView";
 import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 import { HAMMER_VIEW_RULES } from "../sync/rules/HammerViewRules";
-export type { IHammerNode } from "../sync/contracts/HammerViewContract";
 import type { IHammerNode } from "../sync/contracts/HammerViewContract";
 
 const hammerRegistry = createViewNodeRegistry<IHammerNode>();

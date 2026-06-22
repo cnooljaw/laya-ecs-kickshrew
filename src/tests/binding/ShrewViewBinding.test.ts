@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
+import type { IShrewNode } from "../../sync/contracts/ShrewViewContract";
 import { createGameWorld, createShrewEntity } from "../../ecs/world";
 import { AnimationComponent, DirtyComponent, ShrewComponent } from "../../ecs/components";
 import { dirtyMarkSystem } from "../../ecs/systems/DirtyMarkSystem";
@@ -8,7 +9,6 @@ import {
   shrewAnimationViewBinding,
   shrewViewBinding,
   unregisterShrewNode,
-  type IShrewNode,
 } from "../../binding/ShrewViewBinding";
 import {
   BIT_ANIM_PROGRESS,

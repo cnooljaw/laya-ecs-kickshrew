@@ -4,7 +4,6 @@
 import type { BindingFn } from "./SyncView";
 import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 import { PLAYER_VIEW_RULES } from "../sync/rules/PlayerViewRules";
-export type { IPlayerHUD } from "../sync/contracts/PlayerViewContract";
 import type { IPlayerHUD } from "../sync/contracts/PlayerViewContract";
 
 const playerRegistry = createViewNodeRegistry<IPlayerHUD>();

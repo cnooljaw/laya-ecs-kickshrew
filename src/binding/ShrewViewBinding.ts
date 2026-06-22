@@ -14,7 +14,6 @@ import {
   SHREW_COMPONENT_RULES,
 } from "../sync/rules/ShrewViewRules";
 import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
-export type { IShrewNode } from "../sync/contracts/ShrewViewContract";
 import type { IShrewNode } from "../sync/contracts/ShrewViewContract";
 
 const shrewRegistry = createViewNodeRegistry<IShrewNode>();

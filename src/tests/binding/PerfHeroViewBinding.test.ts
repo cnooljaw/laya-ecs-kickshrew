@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { IPerfHeroNode } from "../../sync/contracts/PerfHeroViewContract";
 import { createGameWorld, createPerfHeroEntities } from "../../ecs/world";
 import { DirtyComponent, PerfHeroComponent } from "../../ecs/components";
 import { dirtyMarkSystem } from "../../ecs/systems/DirtyMarkSystem";
@@ -7,7 +8,6 @@ import {
   perfHeroViewBinding,
   registerPerfHeroNode,
   unregisterPerfHeroNode,
-  type IPerfHeroNode,
 } from "../../binding/PerfHeroViewBinding";
 import { BIT_PERF_HERO_SPAWN } from "../../sync/DirtyFlags";
 import { PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
