@@ -5,7 +5,7 @@ import {
   BIT_PERF_HERO_SCALE,
   BIT_PERF_HERO_SPAWN,
 } from "../DirtyFlags";
-import type { IPerfHeroNode } from "../../binding/PerfHeroViewBinding";
+import type { IPerfHeroNode } from "../contracts/PerfHeroViewContract";
 import { createRule, defineViewRules } from "./ViewBindingRule";
 
 type PerfHeroField = Extract<keyof typeof PerfHeroComponent, string>;

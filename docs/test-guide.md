@@ -68,12 +68,19 @@ npm test -- --run src/tests/resource/PlistConverter.test.ts
 npm test -- --run src/tests/ecs/PerfHeroSystem.test.ts src/tests/binding/PerfHeroViewBinding.test.ts src/tests/view/PerfHeroNode.test.ts
 ```
 
+MonsterFeature / Rhino 怪物：
+
+```bash
+npm test -- --run src/tests/features/monster src/tests/binding/SyncView.test.ts
+```
+
 当前测试覆盖重点：
 
 - ECS components/world。
 - 地鼠状态机。
 - 命中检测、连击、锤子、回包。
 - dirty mark 和 binding。
+- MonsterFeature 的金币里程碑触发、10 秒隐藏、SyncView channel 投影。
 - network seqId、乱序、超时。
 - plist 转 atlas。
 - 输入 adapter 和 view registry。

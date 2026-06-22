@@ -55,3 +55,9 @@ export const BIT_HIT_WASHIT = 0x0004;
 export const BIT_PERF_HERO_POS = 0x0001;
 export const BIT_PERF_HERO_SPAWN = 0x0002;
 export const BIT_PERF_HERO_SCALE = 0x0004;
+
+// ---- MonsterComponent 脏标记 ----
+export const BIT_MONSTER_SPAWN = 0x0001;
+export const BIT_MONSTER_POS = 0x0002;
+export const BIT_MONSTER_SCALE = 0x0004;
+export const BIT_MONSTER_SHOW = 0x0008;

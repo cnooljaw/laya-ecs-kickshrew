@@ -5,7 +5,7 @@ import {
   BIT_PLAYER_MONEY,
   BIT_PLAYER_POWER,
 } from "../DirtyFlags";
-import type { IPlayerHUD } from "../../binding/PlayerViewBinding";
+import type { IPlayerHUD } from "../contracts/PlayerViewContract";
 import { createRule, defineViewRules } from "./ViewBindingRule";
 
 type PlayerField = Extract<keyof typeof PlayerComponent, string>;

@@ -1404,14 +1404,14 @@ git commit -m "feat: add score milestone celebration" \
         <header>
           <div class="kicker">Implementation Checklist</div>
           <h2>落地清单：新增一种非地鼠怪物，出现 10 秒后消失</h2>
-          <p class="lead">这个怪物不是地鼠皮肤，而是自己的 entity。它可以复用 ECS、dirty、binding、ViewRegistry 这条链路，但不要塞进 ShrewComponent 里硬凑。</p>
+          <p class="lead">这个怪物不是地鼠皮肤，而是自己的 feature。Rhino 作为第一种 MonsterType，通过 MonsterFeature 接入 ECS、dirty、SyncView channel、binding 和 ViewRegistry。</p>
         </header>
         <div class="content split-wide">
           <div class="rows">
-            <div class="panel accent-green"><strong>1. 先建自己的 Component</strong><p>比如 `BonusMonsterComponent`：`type`、`posXRatio`、`posYRatio`、`ageSec`、`durationSec=10`、`visible`、`spawnSeq`。它不是地鼠，就不要混进 `ShrewComponent`。</p></div>
-            <div class="panel accent-blue"><strong>2. world.ts 给它创建 entity</strong><p>新增 `createBonusMonsterEntity(world, mapType)`，挂 `BonusMonsterComponent` 和 `DirtyComponent`。如果同屏最多一个，就复用同一个 eid；如果多个，就建池或数组。</p></div>
-            <div class="panel accent-violet"><strong>3. System 管 10 秒生命周期</strong><p>`bonusMonsterSystem(deltaSec)` 只改 ECS 字段：出现时 `visible=1, ageSec=0`，每帧累加，超过 10 秒改成 `visible=0` 或进入待复用状态。</p></div>
-            <div class="panel accent-red"><strong>4. dirty / binding / view 补齐</strong><p>`BonusMonsterComponent.visible -> BIT_BONUS_MONSTER_VISIBLE -> DirtyComponent.bonusMonsterDirty -> BonusMonsterViewBinding -> BonusMonsterNode.setVisible()`。</p></div>
+            <div class="panel accent-green"><strong>1. MonsterFeature 收口</strong><p>`src/features/monster` 放 Component、Config、Factory、System、Rules、Binding、Node、Feature。新增怪物优先改配置，不改底层分发。</p></div>
+            <div class="panel accent-blue"><strong>2. Rhino 配置化</strong><p>`MonsterType.Rhino` 指向 `resources/monster/rhino.sk`，默认同屏 1 个，`PlayerComponent.money` 跨过 100 的新倍数时出现一次。</p></div>
+            <div class="panel accent-violet"><strong>3. System 管 10 秒生命周期</strong><p>`monsterSpawnSystem` 负责触发出现，`monsterLifetimeSystem` 只改 ECS 字段：超过 10 秒设置 `visible=0`，不删除 entity。</p></div>
+            <div class="panel accent-red"><strong>4. SyncView channel 接入</strong><p>`MonsterComponent.visible -> BIT_MONSTER_SHOW -> DirtyComponent.monsterDirty -> monsterViewBinding -> MonsterNode.setVisible()`。</p></div>
           </div>
           <div class="diagram">
             <svg viewBox="0 0 820 430" role="img" aria-label="新增非地鼠怪物落地流程">
@@ -1421,19 +1421,19 @@ git commit -m "feat: add score milestone celebration" \
                 </marker>
               </defs>
               <rect x="52" y="46" width="180" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="142" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">create entity</text>
-              <text x="142" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">BonusMonster + Dirty</text>
+              <text x="142" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">MonsterFeature</text>
+              <text x="142" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">Rhino pool + Dirty</text>
               <rect x="310" y="46" width="200" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="410" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">bonusMonsterSystem</text>
-              <text x="410" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">ageSec += deltaSec</text>
+              <text x="410" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">monster systems</text>
+              <text x="410" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">money trigger / ageSec</text>
               <rect x="588" y="46" width="180" height="62" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
               <text x="678" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">DirtyMarkSystem</text>
               <text x="678" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">visible / pos 改了</text>
               <rect x="180" y="186" width="200" height="62" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="280" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">BonusMonsterBinding</text>
+              <text x="280" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">monsterViewBinding</text>
               <text x="280" y="234" text-anchor="middle" font-size="12" fill="#5f6b7a">读 visible / pos</text>
               <rect x="460" y="186" width="200" height="62" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
-              <text x="560" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">BonusMonsterNode</text>
+              <text x="560" y="212" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">MonsterNode</text>
               <text x="560" y="234" text-anchor="middle" font-size="12" fill="#5f6b7a">播放出现 / 消失</text>
               <rect x="230" y="326" width="360" height="54" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
               <text x="410" y="349" text-anchor="middle" font-size="14" font-weight="700" fill="#172231">10 秒到了，由 System 改 visible，不由 View 自己销毁规则状态</text>
@@ -1447,7 +1447,7 @@ git commit -m "feat: add score milestone celebration" \
           </div>
         </div>
         <footer class="footer">
-          <span>对应清单：world.ts 创建 entity -> System 生命周期 -> DirtyFlags/DirtyAspect -> Binding -> ViewNode -> ViewRegistry -> 测试。</span>
+          <span>对应清单：MonsterFeature -> MonsterConfig/Rules/System -> SyncView channel -> MonsterNode -> 测试。</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>

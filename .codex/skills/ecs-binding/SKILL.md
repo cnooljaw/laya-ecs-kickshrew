@@ -22,6 +22,7 @@ Use this project skill for changes that affect authoritative ECS state or how it
    - `src/ecs/world.ts`
    - relevant `src/ecs/systems/*.ts` or helper
    - `src/sync/DirtyFlags.ts`
+   - `src/sync/contracts/*ViewContract.ts`
    - `src/sync/rules/*ViewRules.ts`
    - relevant `src/ecs/dirty/aspects/*DirtyAspect.ts`
    - relevant `src/binding/*ViewBinding.ts`

@@ -14,15 +14,8 @@ import {
   SHREW_COMPONENT_RULES,
 } from "../sync/rules/ShrewViewRules";
 import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
-
-/** 地鼠视图节点接口 (由 Laya ShrewNode 实现) */
-export interface IShrewNode {
-  setSpriteFrame(shrewType: number, mapType: number): void;
-  setAnimation(actionState: number, animType: number, progress: number): void;
-  setClickable(clickable: boolean): void;
-  setHatVisible(visible: boolean): void;
-  setPropType(propType: number): void;
-}
+export type { IShrewNode } from "../sync/contracts/ShrewViewContract";
+import type { IShrewNode } from "../sync/contracts/ShrewViewContract";
 
 const shrewRegistry = createViewNodeRegistry<IShrewNode>();
 

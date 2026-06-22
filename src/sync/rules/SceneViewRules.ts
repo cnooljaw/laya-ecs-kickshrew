@@ -4,7 +4,7 @@ import {
   BIT_SCENE_TIMER,
   BIT_SCENE_TRANSITION,
 } from "../DirtyFlags";
-import type { ISceneLayer } from "../../binding/SceneViewBinding";
+import type { ISceneLayer } from "../contracts/SceneViewContract";
 import { createRule, defineViewRules, noView } from "./ViewBindingRule";
 
 type SceneField = Extract<keyof typeof SceneComponent, string>;

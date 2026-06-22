@@ -99,5 +99,6 @@ export const DirtyComponent = defineComponent({
   animDirty: Types.f32,
   hitDirty: Types.f32,
   perfHeroDirty: Types.f32,
+  monsterDirty: Types.f32,
   forceFullSync: Types.f32,
 });

@@ -1,10 +1,8 @@
 import type { BindingFn } from "./SyncView";
 import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 import { PERF_HERO_VIEW_RULES } from "../sync/rules/PerfHeroViewRules";
-
-export interface IPerfHeroNode {
-  playHero(heroType: number, skUrl: string, x: number, y: number, scale: number, spawnSeq: number): void;
-}
+export type { IPerfHeroNode } from "../sync/contracts/PerfHeroViewContract";
+import type { IPerfHeroNode } from "../sync/contracts/PerfHeroViewContract";
 
 const perfHeroRegistry = createViewNodeRegistry<IPerfHeroNode>();
 

@@ -4,7 +4,7 @@ import {
   BIT_HOLE_SHREW,
   BIT_HOLE_ZORDER,
 } from "../DirtyFlags";
-import type { IHoleNode } from "../../binding/HoleViewBinding";
+import type { IHoleNode } from "../contracts/HoleViewContract";
 import { createRule, defineViewRules } from "./ViewBindingRule";
 
 type HoleField = Extract<keyof typeof HoleComponent, string>;

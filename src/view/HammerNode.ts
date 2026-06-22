@@ -3,7 +3,7 @@
  *
  * Laya 实现：锤子中心点对齐点击点，避免点击位置与锤子视觉中心错位。
  */
-import type { IHammerNode } from "../binding/HammerViewBinding";
+import type { IHammerNode } from "../sync/contracts/HammerViewContract";
 import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
 import { HAMMER_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 

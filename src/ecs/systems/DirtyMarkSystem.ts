@@ -32,9 +32,12 @@ function getStore(world: object): DirtySnapshotStore {
 /**
  * 脏标记系统: 比较前后帧差异，设置 dirty bits
  */
-export function dirtyMarkSystem(world: any): void {
+export function dirtyMarkSystem(world: any, extraAspects: readonly typeof DIRTY_ASPECTS[number][] = []): void {
   const store = getStore(world);
   for (const aspect of DIRTY_ASPECTS) {
+    markAspectDirty(world, store, aspect);
+  }
+  for (const aspect of extraAspects) {
     markAspectDirty(world, store, aspect);
   }
 }

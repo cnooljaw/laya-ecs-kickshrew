@@ -22,7 +22,7 @@
  *
  * ZOrder（参考 ShrewData.lua）：hand=0, ear=1, body=3, face=6
  */
-import type { IShrewNode } from "../binding/ShrewViewBinding";
+import type { IShrewNode } from "../sync/contracts/ShrewViewContract";
 import { ShrewType, ShrewAction } from "../ecs/types";
 import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
 import { SHREW_VIEW_LAYOUT } from "../config/ViewLayoutConfig";

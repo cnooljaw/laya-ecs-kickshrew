@@ -2,7 +2,7 @@
  * PlayerHUD — 玩家信息面板
  * 显示金币、怒气值、体力、等级
  */
-import type { IPlayerHUD } from "../binding/PlayerViewBinding";
+import type { IPlayerHUD } from "../sync/contracts/PlayerViewContract";
 import { PLAYER_HUD_LAYOUT } from "../config/ViewLayoutConfig";
 
 export class PlayerHUD implements IPlayerHUD {

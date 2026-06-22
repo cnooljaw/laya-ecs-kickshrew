@@ -1,17 +1,31 @@
-import { registerComboNode, unregisterComboNode, IComboNode } from "../binding/ComboViewBinding";
-import { registerHammerNode, unregisterHammerNode, IHammerNode } from "../binding/HammerViewBinding";
-import { registerHitEffectNode, unregisterHitEffectNode, IHitEffectNode } from "../binding/HitViewBinding";
-import { registerHoleNode, unregisterHoleNode, IHoleNode } from "../binding/HoleViewBinding";
-import { registerPlayerHUD, unregisterPlayerHUD, IPlayerHUD } from "../binding/PlayerViewBinding";
-import { registerPerfHeroNode, unregisterPerfHeroNode, IPerfHeroNode } from "../binding/PerfHeroViewBinding";
-import { registerSceneLayer, unregisterSceneLayer, ISceneLayer } from "../binding/SceneViewBinding";
-import { registerShrewNode, unregisterShrewNode, IShrewNode } from "../binding/ShrewViewBinding";
+import { registerComboNode, unregisterComboNode } from "../binding/ComboViewBinding";
+import { registerHammerNode, unregisterHammerNode } from "../binding/HammerViewBinding";
+import { registerHitEffectNode, unregisterHitEffectNode } from "../binding/HitViewBinding";
+import { registerHoleNode, unregisterHoleNode } from "../binding/HoleViewBinding";
+import { registerPlayerHUD, unregisterPlayerHUD } from "../binding/PlayerViewBinding";
+import { registerPerfHeroNode, unregisterPerfHeroNode } from "../binding/PerfHeroViewBinding";
+import { registerSceneLayer, unregisterSceneLayer } from "../binding/SceneViewBinding";
+import { registerShrewNode, unregisterShrewNode } from "../binding/ShrewViewBinding";
+import type { ViewNodeRegistry } from "../binding/RuleViewBinding";
+import type { IComboNode } from "../sync/contracts/ComboViewContract";
+import type { IHammerNode } from "../sync/contracts/HammerViewContract";
+import type { IHitEffectNode } from "../sync/contracts/HitViewContract";
+import type { IHoleNode } from "../sync/contracts/HoleViewContract";
+import type { IPerfHeroNode } from "../sync/contracts/PerfHeroViewContract";
+import type { IPlayerHUD } from "../sync/contracts/PlayerViewContract";
+import type { ISceneLayer } from "../sync/contracts/SceneViewContract";
+import type { IShrewNode } from "../sync/contracts/ShrewViewContract";
 
 type Destroyable = { destroy(): void };
 
 export class ViewRegistry {
   private readonly _unregisters: Array<() => void> = [];
   private readonly _nodes: Destroyable[] = [];
+
+  registerNode<TNode>(eid: number, node: TNode & Destroyable, registry: ViewNodeRegistry<TNode>): void {
+    registry.register(eid, node);
+    this._track(node, () => registry.unregister(eid));
+  }
 
   registerSceneLayer(eid: number, node: ISceneLayer & Destroyable): void {
     registerSceneLayer(eid, node);

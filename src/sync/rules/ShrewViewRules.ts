@@ -13,7 +13,7 @@ import {
   BIT_SHREW_TIMER,
   BIT_SHREW_TYPE,
 } from "../DirtyFlags";
-import type { IShrewNode } from "../../binding/ShrewViewBinding";
+import type { IShrewNode } from "../contracts/ShrewViewContract";
 import { animTypeName, consoleHitTraceLogger } from "../../debug/HitTraceLogger";
 import {
   createRule,

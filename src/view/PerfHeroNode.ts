@@ -1,4 +1,4 @@
-import type { IPerfHeroNode } from "../binding/PerfHeroViewBinding";
+import type { IPerfHeroNode } from "../sync/contracts/PerfHeroViewContract";
 import { PERF_HERO_RESOURCES, PERF_HERO_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 
 interface PerfHeroResource {

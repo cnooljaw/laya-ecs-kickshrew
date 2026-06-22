@@ -9,7 +9,8 @@ export type DirtyTarget =
   | "sceneDirty"
   | "playerDirty"
   | "hitDirty"
-  | "perfHeroDirty";
+  | "perfHeroDirty"
+  | "monsterDirty";
 
 export interface DirtySnapshotStore {
   shrew: Map<number, Snapshot>;
@@ -21,6 +22,7 @@ export interface DirtySnapshotStore {
   player: Map<number, Snapshot>;
   hit: Map<number, Snapshot>;
   perfHero: Map<number, Snapshot>;
+  monster: Map<number, Snapshot>;
 }
 
 export type DirtyStoreKey = keyof DirtySnapshotStore;

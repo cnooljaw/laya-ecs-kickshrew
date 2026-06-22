@@ -294,7 +294,7 @@ Entity eid
   -> DirtyMark 映射 dirty bit、component 字段
 ```
 
-每条 dirty binding 链路都有一张更好读的表：`src/sync/rules/*ViewRules.ts`。它把 dirty 检测和 view 投影放在同一行配置里：
+每条 dirty binding 链路都有一张更好读的表：`src/sync/rules/*ViewRules.ts`。它把 dirty 检测和 view 投影放在同一行配置里。rules 依赖 `src/sync/contracts/*ViewContract.ts` 的表现接口，不直接依赖 binding 文件：
 
 ```ts
 const rule = createRule<IComboNode, ComboField>();
@@ -329,7 +329,7 @@ ECS Component 数据变化
   -> 清除 dirty bits
 ```
 
-`SyncView.sync(world)` 会遍历所有带 `DirtyComponent` 的实体。每个实体可能触发这些 binding：
+`SyncView.sync(world)` 会遍历所有带 `DirtyComponent` 的实体，再遍历已注册的 channel 表。每个 channel 声明 `dirtyTarget`、rules 派生出的 mask 和 binding：
 
 ```text
 shrewViewBinding   ShrewComponent + AnimationComponent -> ShrewNode
@@ -341,7 +341,10 @@ comboViewBinding   ComboComponent -> ComboNode
 sceneViewBinding   SceneComponent -> SceneLayer
 playerViewBinding  PlayerComponent -> PlayerHUD
 hitViewBinding     HitComponent -> HitEffectNode
+monsterViewBinding MonsterComponent -> MonsterNode
 ```
+
+新增实体类型时优先注册 `SyncChannel`，不要给 `SyncView` 再手写一组 `private xxxBinding/registerXxxBinding/if dirty/clear dirty` 分支。
 
 每个 binding 都有注册函数，例如：
 
@@ -635,6 +638,27 @@ GameScene.onTouch(x, y)
 8. 补 `src/tests/ecs/*.test.ts`。
 
 这是本项目最常见的扩展路径。
+
+### 新增一种非地鼠怪物
+
+独立怪物走 `src/features/monster/MonsterFeature.ts` 这类 Feature 入口，不混进地鼠状态机。当前 Rhino 资源：
+
+```text
+assets/resources/monster/rhino.sk
+assets/resources/monster/rhino.png
+```
+
+默认规则：
+
+```text
+PlayerComponent.money 跨过 100 的新倍数
+  -> MonsterSpawnSystem 生成 Rhino
+  -> MonsterComponent.visible = 1
+  -> 10 秒后 MonsterLifetimeSystem 设置 visible = 0
+  -> SyncView monster channel 投影到 MonsterNode
+```
+
+后续新增怪物优先改 `MonsterType`、`MONSTER_CONFIG`、`MONSTER_SPAWN_RULES` 和资源文件。不要再为每种怪物修改 `SyncView`、`DirtyMarkSystem`、`GameScene` 的固定注册分支。
 
 ## 4. 当前架构边界
 

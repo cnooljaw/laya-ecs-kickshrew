@@ -4,7 +4,7 @@ import {
   BIT_COMBO_ID,
   BIT_COMBO_TARGETS,
 } from "../DirtyFlags";
-import type { IComboNode } from "../../binding/ComboViewBinding";
+import type { IComboNode } from "../contracts/ComboViewContract";
 import { createRule, defineViewRules, noView } from "./ViewBindingRule";
 
 type ComboField = Extract<keyof typeof ComboComponent, string>;

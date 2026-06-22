@@ -18,6 +18,7 @@ export function createDirtySnapshotStore(): DirtySnapshotStore {
     player: new Map(),
     hit: new Map(),
     perfHero: new Map(),
+    monster: new Map(),
   };
 }
 

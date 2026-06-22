@@ -1,7 +1,7 @@
 /**
  * ComboNode — 连击闪电动画
  */
-import type { IComboNode } from "../binding/ComboViewBinding";
+import type { IComboNode } from "../sync/contracts/ComboViewContract";
 import { COMBO_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 
 export class ComboNode implements IComboNode {

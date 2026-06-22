@@ -17,7 +17,7 @@
  *   Laya 中将 cover 压缩到 960px 宽度，但高度必须保持自然值，
  *   否则 cover 过短无法正确遮挡洞口区域。
  */
-import type { ISceneLayer } from "../binding/SceneViewBinding";
+import type { ISceneLayer } from "../sync/contracts/SceneViewContract";
 import { MapType } from "../ecs/types";
 import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
 import { SCENE_LAYOUT, VIEWPORT } from "../config/ViewLayoutConfig";

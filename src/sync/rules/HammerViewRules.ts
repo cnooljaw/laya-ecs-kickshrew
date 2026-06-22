@@ -4,7 +4,7 @@ import {
   BIT_HAMMER_THUNDER,
   BIT_HAMMER_TYPE,
 } from "../DirtyFlags";
-import type { IHammerNode } from "../../binding/HammerViewBinding";
+import type { IHammerNode } from "../contracts/HammerViewContract";
 import { createRule, defineViewRules, noView } from "./ViewBindingRule";
 
 type HammerField = Extract<keyof typeof HammerComponent, string>;

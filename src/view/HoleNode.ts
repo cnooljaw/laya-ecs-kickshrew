@@ -2,7 +2,7 @@
  * HoleNode — 洞位容器节点
  * 含裁剪遮罩 + ShrewNode 子节点
  */
-import type { IHoleNode } from "../binding/HoleViewBinding";
+import type { IHoleNode } from "../sync/contracts/HoleViewContract";
 import { VIEWPORT } from "../config/ViewLayoutConfig";
 
 export class HoleNode implements IHoleNode {

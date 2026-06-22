@@ -104,7 +104,7 @@ const HOLE_VIEW_RULES = defineViewRules<IHoleNode, HoleField>(
 );
 ```
 
-这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。`*DirtyAspect` 从 rules 派生 `DirtyMark`，`*ViewBinding` 从同一份 rules 执行 `apply`，`allBits` 也由 `bitsOf(rules)` 计算。`noView` 表示这个字段只参与 dirty 记录，不直接调用 view，例如 `SceneComponent.sceneTimer`、`ComboComponent.comboID`。
+这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。rules 依赖 `src/sync/contracts/*ViewContract.ts` 的表现契约，不直接依赖 binding 文件。`*DirtyAspect` 从 rules 派生 `DirtyMark`，`*ViewBinding` 从同一份 rules 执行 `apply`，`allBits` 也由 `bitsOf(rules)` 计算。`noView` 表示这个字段只参与 dirty 记录，不直接调用 view，例如 `SceneComponent.sceneTimer`、`ComboComponent.comboID`。
 
 记忆顺序：
 
@@ -158,9 +158,10 @@ BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding -> HoleNode
 `SyncView.sync(world)` 负责：
 
 1. 遍历所有带 `DirtyComponent` 的实体。
-2. 判断各类 dirty bit 和 `forceFullSync`。
-3. 调对应 binding。
-4. 清除 dirty bit。
+2. 遍历已注册的 `SyncChannel` 表。
+3. 按 channel 的 `dirtyTarget + mask` 判断 dirty bit 和 `forceFullSync`。
+4. 调对应 binding。
+5. 统一清除所有 dirty bit。
 
 主要 binding：
 
@@ -173,9 +174,21 @@ comboViewBinding             ComboComponent -> ComboNode
 sceneViewBinding             SceneComponent -> SceneLayer
 playerViewBinding            PlayerComponent -> PlayerHUD
 hitViewBinding               HitComponent -> HitEffectNode
+monsterViewBinding           MonsterComponent -> MonsterNode
 ```
 
 ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 view node 自己查 ECS。
+
+新增独立实体类型时，不再优先修改 `SyncView`。Feature 只需要注册一个 channel：
+
+```ts
+createRuleSyncChannel({
+  name: "monster",
+  dirtyTarget: "monsterDirty",
+  rules: MONSTER_VIEW_RULES,
+  binding: monsterViewBinding,
+});
+```
 
 ## 新增 ECS 字段并显示到 Laya
 
@@ -189,6 +202,31 @@ ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 vi
 6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；`*DirtyAspect` 和 `*ViewBinding` 会共用这张表。
 7. 对应 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/**/*.test.ts`。
+
+## 新增独立实体类型
+
+如果是“非地鼠怪物”这类独立玩法对象，不建议塞进 `ShrewComponent`。优先按 Feature 组织：
+
+```text
+src/features/monster/
+  MonsterComponent.ts
+  MonsterConfig.ts
+  MonsterFactory.ts
+  MonsterSystem.ts
+  MonsterViewRules.ts
+  MonsterDirtyAspect.ts
+  MonsterViewBinding.ts
+  MonsterNode.ts
+  MonsterFeature.ts
+```
+
+Rhino 是当前第一种怪物，资源配置在 `MonsterConfig.ts`：
+
+```text
+MonsterType.Rhino -> resources/monster/rhino.sk
+```
+
+默认触发规则是 `PlayerComponent.money` 跨过 100 的新倍数时出现一次，同屏最多 1 个，10 秒后只把 `MonsterComponent.visible` 设为 0，不删除 ECS entity。后续新增怪物优先改 `MonsterType`、`MONSTER_CONFIG`、`MONSTER_SPAWN_RULES` 和资源文件，不应再修改 `SyncView`、`DirtyMarkSystem` 或 `GameScene` 的固定分支。
 
 ## 排查：ECS 数据变了但画面没变
 

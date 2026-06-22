@@ -1,0 +1,68 @@
+import { describe, expect, it } from "vitest";
+import { createGameWorld, createSingletonEntities } from "../../../ecs/world";
+import { PlayerComponent } from "../../../ecs/components";
+import { MonsterComponent, MonsterSpawnComponent } from "../../../features/monster/MonsterComponent";
+import { MonsterType } from "../../../features/monster/MonsterTypes";
+import { createMonsterEntities, createMonsterSpawnState } from "../../../features/monster/MonsterFactory";
+import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../features/monster/MonsterSystem";
+
+describe("MonsterSystem", () => {
+  it("玩家金币跨过 100 倍数时生成一次 Rhino，重复帧不重复生成", () => {
+    const world = createGameWorld();
+    const { player } = createSingletonEntities(world);
+    const spawnState = createMonsterSpawnState(world);
+    const [monster] = createMonsterEntities(world, { count: 1 });
+
+    PlayerComponent.money[player] = 99;
+    monsterSpawnSystem(world);
+
+    expect(MonsterComponent.visible[monster]).toBe(0);
+    expect(MonsterSpawnComponent.lastTriggeredMilestone0[spawnState]).toBe(0);
+
+    PlayerComponent.money[player] = 100;
+    monsterSpawnSystem(world);
+
+    expect(MonsterComponent.visible[monster]).toBe(1);
+    expect(MonsterComponent.monsterType[monster]).toBe(MonsterType.Rhino);
+    expect(MonsterComponent.durationSec[monster]).toBe(10);
+    expect(MonsterComponent.spawnSeq[monster]).toBe(1);
+    expect(MonsterSpawnComponent.lastTriggeredMilestone0[spawnState]).toBe(1);
+
+    monsterSpawnSystem(world);
+
+    expect(MonsterComponent.spawnSeq[monster]).toBe(1);
+    expect(MonsterSpawnComponent.lastTriggeredMilestone0[spawnState]).toBe(1);
+  });
+
+  it("隐藏策略下 Rhino 出现 10 秒后只设置 visible=0，不删除实体", () => {
+    const world = createGameWorld();
+    createSingletonEntities(world);
+    const [monster] = createMonsterEntities(world, { count: 1 });
+
+    MonsterComponent.monsterType[monster] = MonsterType.Rhino;
+    MonsterComponent.visible[monster] = 1;
+    MonsterComponent.ageSec[monster] = 9.5;
+    MonsterComponent.durationSec[monster] = 10;
+
+    monsterLifetimeSystem(world, 0.4);
+    expect(MonsterComponent.visible[monster]).toBe(1);
+
+    monsterLifetimeSystem(world, 0.2);
+    expect(MonsterComponent.visible[monster]).toBe(0);
+    expect(MonsterComponent.ageSec[monster]).toBe(10);
+  });
+
+  it("一次跨过多个 100 倍数时默认只生成一次，并消费到最新里程碑", () => {
+    const world = createGameWorld();
+    const { player } = createSingletonEntities(world);
+    const spawnState = createMonsterSpawnState(world);
+    const [monster] = createMonsterEntities(world, { count: 1 });
+
+    PlayerComponent.money[player] = 350;
+    monsterSpawnSystem(world);
+
+    expect(MonsterComponent.visible[monster]).toBe(1);
+    expect(MonsterComponent.spawnSeq[monster]).toBe(1);
+    expect(MonsterSpawnComponent.lastTriggeredMilestone0[spawnState]).toBe(3);
+  });
+});

@@ -4,11 +4,8 @@
 import type { BindingFn } from "./SyncView";
 import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
 import { SCENE_VIEW_RULES } from "../sync/rules/SceneViewRules";
-
-export interface ISceneLayer {
-  switchScene(mapType: number): void;
-  setTransitioning(transitioning: boolean): void;
-}
+export type { ISceneLayer } from "../sync/contracts/SceneViewContract";
+import type { ISceneLayer } from "../sync/contracts/SceneViewContract";
 
 const sceneRegistry = createViewNodeRegistry<ISceneLayer>();
 

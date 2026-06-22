@@ -4,7 +4,7 @@ import {
   BIT_HIT_REWARD,
   BIT_HIT_WASHIT,
 } from "../DirtyFlags";
-import type { IHitEffectNode } from "../../binding/HitViewBinding";
+import type { IHitEffectNode } from "../contracts/HitViewContract";
 import { createRule, defineViewRules } from "./ViewBindingRule";
 
 type HitField = Extract<keyof typeof HitComponent, string>;

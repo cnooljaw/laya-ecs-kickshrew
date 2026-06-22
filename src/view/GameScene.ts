@@ -36,6 +36,9 @@ import { ViewRegistry } from "./ViewRegistry";
 import { PerfHeroNode, PerfHeroSpinePoolGroup } from "./PerfHeroNode";
 import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../config/PerfTestConfig";
 import { resetShrewTimingOverride, setShrewTimingOverride } from "../config/GameTuning";
+import { GAME_FEATURES } from "../features/GameFeatures";
+import type { DirtyAspect } from "../ecs/dirty/DirtySchemaTypes";
+import type { GameSystem } from "../features/GameFeature";
 
 /** 音效路径 */
 const SND = {
@@ -143,6 +146,16 @@ export class GameScene {
       this._createPerfHeroes(this._perfConfig.heroCount);
     }
 
+    const featureForceFullEntities: number[] = [];
+    for (const feature of GAME_FEATURES) {
+      feature.setup?.({
+        world: this._world,
+        root: this._root,
+        viewRegistry: this._viewRegistry,
+        forceFullSyncEntities: featureForceFullEntities,
+      });
+    }
+
     // 9. 注册视图绑定
     this._syncView.registerShrewBinding(shrewViewBinding);
     this._syncView.registerAnimBinding(shrewAnimationViewBinding);
@@ -153,16 +166,28 @@ export class GameScene {
     this._syncView.registerPlayerBinding(playerViewBinding);
     this._syncView.registerHitBinding(hitViewBinding);
     this._syncView.registerPerfHeroBinding(perfHeroViewBinding);
+    for (const feature of GAME_FEATURES) {
+      this._syncView.registerChannels(feature.syncChannels ?? []);
+    }
 
     // 10. 设置网络回调
     this._network.onResponse((resp: KickResponse) => {
       hitResponseSystem(this._world, resp);
     });
 
+    const featureSystems: GameSystem[] = [];
+    const featureDirtyAspects: DirtyAspect[] = [];
+    for (const feature of GAME_FEATURES) {
+      featureSystems.push(...(feature.systems ?? []));
+      featureDirtyAspects.push(...(feature.dirtyAspects ?? []));
+    }
+
     this._loopPipeline = new GameLoopPipeline({
       world: this._world,
       network: this._network,
       syncView: this._syncView,
+      featureSystems,
+      featureDirtyAspects,
     });
 
     this._kickInput = new KickInputAdapter({
@@ -185,6 +210,7 @@ export class GameScene {
       ...this._holes,
       ...this._shrews,
       ...this._perfHeroes,
+      ...featureForceFullEntities,
     ];
     for (const eid of allEntities) {
       DirtyComponent.forceFullSync[eid] = 1;
