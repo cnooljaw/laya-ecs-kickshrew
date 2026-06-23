@@ -76,7 +76,7 @@ URL query
 - `src/ecs/gameplay/perfHero/PerfHeroSystem.ts`：推进压测英雄生命周期。
 - `src/binding/PerfHeroViewBinding.ts`：把 ECS 数据投影给 view node。
 - `src/view/PerfHeroNode.ts`：Spine 资源池、节点复用、进退场显示顺序。
-- `src/features/PerfHeroFeature.ts`：声明系统、dirty、sync channel，创建压测节点并持有共享池引用。
+- `src/features/PerfHeroFeature.ts`：声明系统和 `PerfHeroViewSync`，创建压测节点并持有共享池引用。
 
 ECS 侧只承载权威状态和随机重生，不直接操作 Laya。Spine/Skeleton 的创建、播放、隐藏、池化都属于 view 层。
 

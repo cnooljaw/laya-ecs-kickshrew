@@ -1,7 +1,6 @@
-import { coreSyncChannels } from "../binding/CoreSyncChannels";
+import { PerfHeroViewSync } from "../binding/viewSyncs";
 import { perfHeroSystem } from "../ecs/gameplay/perfHero/PerfHeroSystem";
 import { createPerfHeroEntities } from "../ecs/world";
-import { PerfHeroDirtyAspect } from "../sync/dirty/aspects/PerfHeroDirtyAspect";
 import { PerfHeroNode, PerfHeroSpinePoolGroup } from "../view/PerfHeroNode";
 import { system, type GameFeature } from "./GameFeature";
 
@@ -10,10 +9,9 @@ export const PerfHeroFeature: GameFeature = {
   systems: [
     system("feature", "perfHeroSystem", perfHeroSystem),
   ],
-  dirtyAspects: [
-    PerfHeroDirtyAspect,
+  viewSyncs: [
+    PerfHeroViewSync,
   ],
-  syncChannels: coreSyncChannels(["perfHero"]),
   setup: ({ world, root, viewRegistry, perfConfig, runtimeRefs, forceFullSyncEntities }) => {
     if (perfConfig.heroCount <= 0) return;
 

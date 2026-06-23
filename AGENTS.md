@@ -31,7 +31,8 @@ Main.ts
   -> createGameWorld/createSingletonEntities
   -> GAME_FEATURE_REGISTRY.setupAll(...)
   -> Feature 创建自己的 ECS 实体和 Laya 节点，并通过 ViewRegistry 注册
-  -> syncView.registerChannels(GAME_FEATURE_REGISTRY.syncChannels())
+  -> Feature 声明 viewSyncs，GameFeatureRegistry 展开 dirtyAspects/viewSyncChannels
+  -> syncView.registerChannels(GAME_FEATURE_REGISTRY.viewSyncChannels())
   -> 创建 GameLoopPipeline(featureRegistry)/KickInputAdapter
   -> Laya.timer.frameLoop
   -> GameScene.update(delta) -> GameLoopPipeline.update(delta)
@@ -63,8 +64,8 @@ Laya stage MOUSE_DOWN
 ## 强制架构边界
 
 - `src/ecs/**`：游戏规则和权威状态。默认不直接使用 `Laya.*`。
-- `src/binding/**`：从 ECS 读取 dirty 数据，调用 view node 接口。
-- `src/features/**`：薄装配层，声明 system phase、dirty aspect、sync channel 和 setup，不承载核心规则。
+- `src/binding/**`：从 ECS 读取 dirty 数据，调用 view node 接口；`binding/viewSyncs/**` 是 view sync 装配点。
+- `src/features/**`：薄装配层，声明 system phase、viewSyncs 和 setup，不承载核心规则。
 - `src/view/**`：Laya 表现层和运行时壳，可以使用 `Laya.*`。
 - `src/network/**`：协议、请求匹配、mock 网络。socket 回包不得直接操作 view。
 - `src/config/**`：静态配置和调参入口。
@@ -77,6 +78,7 @@ input/network/resource callback
   -> command/event adapter
   -> ECS systems / domain helpers
   -> DirtyComponent
+  -> ViewSyncChannel
   -> binding projection
   -> Laya view nodes
 ```
@@ -85,7 +87,7 @@ input/network/resource callback
 
 - 改状态机：`src/ecs/gameplay/core/ShrewStateSystem.ts`、`src/ecs/gameplay/core/ShrewLifecycle.ts`、`src/tests/ecs/ShrewStateSystem.test.ts`
 - 改命中规则：`src/ecs/gameplay/core/HitDetectionSystem.ts`、`src/view/KickInputAdapter.ts`、`src/tests/ecs/HitDetectionSystem.test.ts`
-- 改 dirty 同步：`src/sync/contracts/*ViewContract.ts`、`src/sync/DirtyFlags.ts`、`src/sync/DirtyTargets.ts`、`src/sync/rules/*ViewRules.ts`、`src/sync/dirty/aspects/*DirtyAspect.ts`、`src/binding/*ViewBinding.ts`、`src/features/*Feature.ts`
+- 改 dirty 同步：`src/sync/contracts/*ViewContract.ts`、`src/sync/DirtyFlags.ts`、`src/sync/DirtyTargets.ts`、`src/sync/rules/*ViewRules.ts`、`src/binding/*ViewBinding.ts`、`src/binding/viewSyncs/*ViewSync.ts`、`src/features/*Feature.ts`
 - 改独立玩法实体/怪物：ECS 规则放 `src/ecs/gameplay/*`，配置放 `src/config/*`，装配入口放 `src/features/*Feature.ts`
 - 改 Laya 表现：`src/view/*Node.ts`、`src/config/ViewLayoutConfig.ts`、`docs/laya-rules.md`
 - 改性能压测/Spine 池化：`src/config/PerfTestConfig.ts`、`src/config/ViewLayoutConfig.ts`、`src/ecs/gameplay/perfHero/PerfHeroSystem.ts`、`src/view/PerfHeroNode.ts`、`docs/performance-tuning.md`

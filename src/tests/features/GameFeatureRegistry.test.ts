@@ -3,6 +3,7 @@ import type { DirtyAspect } from "../../sync/dirty/DirtySchemaTypes";
 import { system, type GameFeature } from "../../features/GameFeature";
 import { GAME_FEATURES } from "../../features/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../features/GameFeatureRegistry";
+import type { ViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 
 const sceneAspect: DirtyAspect = {
   name: "sceneAspect",
@@ -20,30 +21,44 @@ const sceneAspect: DirtyAspect = {
   ],
 };
 
+const sceneViewSync: ViewSyncModule = {
+  name: "sceneViewSync",
+  rules: [],
+  dirtyAspect: sceneAspect,
+  channel: {
+    name: "scene",
+    dirtyTarget: "sceneDirty",
+    watchedBits: 0x01,
+    project: () => {},
+  },
+  describe: () => [],
+};
+
 function feature(name: string): GameFeature {
   return {
     name,
     systems: [system("feature", `${name}:system`, () => {})],
-    dirtyAspects: [sceneAspect],
-    syncChannels: [
+    viewSyncs: [
       {
-        name: `${name}:scene`,
-        dirtyTarget: "sceneDirty",
-        mask: 0x01,
-        binding: () => {},
+        ...sceneViewSync,
+        name: `${name}:sceneViewSync`,
+        channel: {
+          ...sceneViewSync.channel,
+          name: `${name}:scene`,
+        },
       },
     ],
   };
 }
 
 describe("GameFeatureRegistry", () => {
-  it("集中展开 feature systems、dirty aspects 和 sync channels", () => {
+  it("集中展开 feature systems、dirty aspects 和 view sync channels", () => {
     const registry = createGameFeatureRegistry([feature("featureA")]);
 
     expect(registry.systemsByPhase("feature")).toHaveLength(1);
     expect(registry.systemsByPhase("state")).toEqual([]);
     expect(registry.dirtyAspects()).toEqual([sceneAspect]);
-    expect(registry.syncChannels().map(channel => channel.name)).toEqual(["featureA:scene"]);
+    expect(registry.viewSyncChannels().map(channel => channel.name)).toEqual(["featureA:scene"]);
   });
 
   it("真实 GAME_FEATURES 表能通过注册校验", () => {
@@ -55,7 +70,7 @@ describe("GameFeatureRegistry", () => {
       "sceneCycleSystem",
       "hammerSystem",
     ]);
-    expect(registry.syncChannels().map(channel => channel.name)).toContain("monster");
+    expect(registry.viewSyncChannels().map(channel => channel.name)).toContain("monster");
   });
 
   it("每帧查询复用预计算结果，避免 Registry 侧产生数组分配", () => {
@@ -64,7 +79,7 @@ describe("GameFeatureRegistry", () => {
     expect(registry.systemsByPhase("feature")).toBe(registry.systemsByPhase("feature"));
     expect(registry.systemsByPhase("state")).toBe(registry.systemsByPhase("state"));
     expect(registry.dirtyAspects()).toBe(registry.dirtyAspects());
-    expect(registry.syncChannels()).toBe(registry.syncChannels());
+    expect(registry.viewSyncChannels()).toBe(registry.viewSyncChannels());
   });
 
   it("拒绝重复 system name，避免调试时难以定位顺序", () => {
@@ -81,23 +96,35 @@ describe("GameFeatureRegistry", () => {
       .toThrow("GameFeature name 重复: same");
   });
 
-  it("拒绝重复 sync channel name", () => {
+  it("拒绝重复 view sync channel name", () => {
     const first = feature("featureA");
     const second = feature("featureB");
-    second.syncChannels = first.syncChannels;
+    second.viewSyncs = [
+      {
+        ...second.viewSyncs![0],
+        channel: first.viewSyncs![0].channel,
+      },
+    ];
 
     expect(() => validateGameFeatures([first, second]))
       .toThrow("SyncChannel name 重复: featureA:scene");
   });
 
-  it("拒绝只注册 dirtyAspect 但没有对应 syncChannel 的 feature", () => {
+  it("拒绝 ViewSyncModule 内部 dirtyTarget 不配对", () => {
     const broken: GameFeature = {
       name: "broken",
-      dirtyAspects: [sceneAspect],
-      syncChannels: [],
+      viewSyncs: [
+        {
+          ...sceneViewSync,
+          channel: {
+            ...sceneViewSync.channel,
+            dirtyTarget: "playerDirty",
+          },
+        },
+      ],
     };
 
     expect(() => validateGameFeatures([broken]))
-      .toThrow("GameFeature broken 的 dirtyTarget 未注册 SyncChannel: sceneDirty");
+      .toThrow("GameFeature broken 的 ViewSyncModule 未声明对应 dirtyTarget: sceneViewSync");
   });
 });

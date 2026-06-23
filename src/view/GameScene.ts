@@ -81,7 +81,7 @@ export class GameScene {
     });
 
     // 3. 注册视图绑定
-    this._syncView.registerChannels(GAME_FEATURE_REGISTRY.syncChannels());
+    this._syncView.registerChannels(GAME_FEATURE_REGISTRY.viewSyncChannels());
 
     // 4. 设置网络回调
     this._network.onResponse((resp: KickResponse) => {

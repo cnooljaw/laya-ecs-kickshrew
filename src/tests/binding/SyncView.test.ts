@@ -13,8 +13,8 @@ describe("SyncView", () => {
     syncView.registerChannel({
       name: "testScene",
       dirtyTarget: "sceneDirty",
-      mask: 0x04,
-      binding: (boundEid, dirtyBits, forceFull) => {
+      watchedBits: 0x04,
+      project: (boundEid, dirtyBits, forceFull) => {
         calls.push({ eid: boundEid, dirtyBits, forceFull });
       },
     });
@@ -38,8 +38,8 @@ describe("SyncView", () => {
     syncView.registerChannel({
       name: "testScene",
       dirtyTarget: "sceneDirty",
-      mask: 0x04,
-      binding: (boundEid, dirtyBits, forceFull) => {
+      watchedBits: 0x04,
+      project: (boundEid, dirtyBits, forceFull) => {
         calls.push({ eid: boundEid, dirtyBits, forceFull });
       },
     });
@@ -57,8 +57,8 @@ describe("SyncView", () => {
     const channel = {
       name: "testScene",
       dirtyTarget: "sceneDirty" as const,
-      mask: 0x04,
-      binding: () => {},
+      watchedBits: 0x04,
+      project: () => {},
     };
 
     syncView.registerChannel(channel);

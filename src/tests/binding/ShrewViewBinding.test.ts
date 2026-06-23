@@ -4,7 +4,7 @@ import { createGameWorld, createShrewEntity } from "../../ecs/world";
 import { AnimationComponent, DirtyComponent, ShrewComponent } from "../../ecs/components";
 import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
 import { SyncView } from "../../binding/SyncView";
-import { CORE_SYNC_CHANNELS } from "../../binding/CoreSyncChannels";
+import { ShrewAnimationViewSync, ShrewViewSync } from "../../binding/viewSyncs";
 import {
   registerShrewNode,
   shrewViewBinding,
@@ -18,7 +18,6 @@ import {
   BIT_SHREW_TYPE,
 } from "../../sync/DirtyFlags";
 import { AnimType, MapType, ShrewAction, ShrewType } from "../../ecs/types";
-import { ShrewDirtyAspect } from "../../sync/dirty/aspects/ShrewDirtyAspect";
 
 describe("ShrewViewBinding", () => {
   const registered: number[] = [];
@@ -114,18 +113,18 @@ describe("ShrewViewBinding", () => {
     registered.push(eid);
 
     const syncView = new SyncView();
-    syncView.registerChannel(CORE_SYNC_CHANNELS.find(channel => channel.name === "anim")!);
+    syncView.registerChannel(ShrewAnimationViewSync.channel);
 
     ShrewComponent.actionState[eid] = ShrewAction.Up;
     AnimationComponent.animType[eid] = AnimType.Up;
     AnimationComponent.duration[eid] = 0.31;
     AnimationComponent.progress[eid] = 0;
-    dirtyMarkSystem(world, [ShrewDirtyAspect]);
+    dirtyMarkSystem(world, [ShrewViewSync.dirtyAspect, ShrewAnimationViewSync.dirtyAspect]);
     syncView.sync(world);
     animationCalls.length = 0;
 
     AnimationComponent.progress[eid] = 0.5;
-    dirtyMarkSystem(world, [ShrewDirtyAspect]);
+    dirtyMarkSystem(world, [ShrewViewSync.dirtyAspect, ShrewAnimationViewSync.dirtyAspect]);
 
     expect(DirtyComponent.shrewDirty[eid]).toBe(0);
     expect(DirtyComponent.animDirty[eid] & BIT_ANIM_PROGRESS).toBeTruthy();

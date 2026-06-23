@@ -1,6 +1,6 @@
 ---
 name: ecs-binding
-description: Use when changing ECS components, systems, DirtyFlags, DirtyAspect mappings, DirtyMarkSystem, SyncView, binding projections, or view synchronization in this project.
+description: Use when changing ECS components, systems, DirtyFlags, ViewSyncModule mappings, DirtyMarkSystem, SyncView, binding projections, or view synchronization in this project.
 ---
 
 # ECS Binding Workflow
@@ -24,8 +24,8 @@ Use this project skill for changes that affect authoritative ECS state or how it
    - `src/sync/DirtyFlags.ts`
    - `src/sync/contracts/*ViewContract.ts`
    - `src/sync/rules/*ViewRules.ts`
-   - relevant `src/sync/dirty/aspects/*DirtyAspect.ts`
    - relevant `src/binding/*ViewBinding.ts`
+   - relevant `src/binding/viewSyncs/*ViewSync.ts`
    - relevant `src/view/*Node.ts`
    - tests under `src/tests/**`
 4. Keep ECS logic free of `Laya.*`.
@@ -44,7 +44,7 @@ npx tsc --noEmit
 ## Review Checklist
 
 - Component is the authority; view node is not.
-- Dirty bit, DirtyAspect mark, binding, and node method names align.
+- Dirty bit, ViewSyncModule dirty mark, binding, and node method names align.
 - `forceFullSync` is not hiding normal dirty propagation gaps.
 - State transitions are covered by tests where practical.
 - System ordering is still explicit and documented when changed.

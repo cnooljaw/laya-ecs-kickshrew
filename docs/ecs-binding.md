@@ -42,7 +42,8 @@ System 修改 Component
   -> DirtyMarkSystem 对比上一帧快照
   -> DirtyComponent.xxxDirty 写 bitmask
   -> SyncView 遍历 DirtyComponent 实体
-  -> 调用对应 binding
+  -> 命中 ViewSyncChannel
+  -> 调用对应 project/binding
   -> binding 读取 component
   -> 调用 view node 接口
   -> SyncView 清除 dirty bits
@@ -62,9 +63,9 @@ BIT_ANIM_PROGRESS -> AnimationComponent.progress -> shrewAnimationViewBinding
 BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding
 ```
 
-## DirtyAspect
+## ViewSyncModule
 
-`src/sync/dirty/aspects/*DirtyAspect.ts` 声明每类实体的 dirty 映射。`DirtyMarkSystem` 只负责遍历外部传入的 aspect 列表，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`。运行时 aspect 列表由各个 `Feature` 声明，再由 `GameFeatureRegistry` 汇总，避免 DirtyMarkSystem 内置固定分支。
+`src/binding/viewSyncs/*ViewSync.ts` 是一条视图同步链路的阅读入口。它把同一份 rules 同时接到 dirty 标记和 view 投影上：`ViewSyncModule.rules` 用来派生 `dirtyAspect`，`ViewSyncModule.channel` 用来注册到 `SyncView`。`DirtyMarkSystem` 只负责遍历 `GameFeatureRegistry` 汇总出来的 aspect 列表，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`。
 
 核心角色：
 
@@ -77,9 +78,10 @@ ShrewNode = Laya 画面对象，只负责表现
 Binding = 把 ECS 数据翻译成 ShrewNode 方法调用
 ```
 
-DirtyAspect 分四层：
+ViewSyncModule 分五层：
 
 ```text
+ViewSyncModule 一条完整视图同步链路，例如 ShrewViewSync
 DirtyAspect   某类实体的组件组合，例如 ShrewComponent + AnimationComponent + DirtyComponent
 DirtyChannel  写到 DirtyComponent 的哪一列，例如 shrewDirty 或 animDirty
 DirtyMark     某个 dirty bit，对应一组 ECS 字段
@@ -103,7 +105,7 @@ const HOLE_VIEW_RULES = defineViewRules<IHoleNode, HoleField>(
 );
 ```
 
-这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。rules 依赖 `src/sync/contracts/*ViewContract.ts` 的表现契约，不直接依赖 binding 文件。`*DirtyAspect` 从 rules 派生 `DirtyMark`，`*ViewBinding` 从同一份 rules 执行 `apply`，`allBits` 也由 `bitsOf(rules)` 计算。`noView` 表示这个字段只参与 dirty 记录，不直接调用 view，例如 `SceneComponent.sceneTimer`。
+这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。rules 依赖 `src/sync/contracts/*ViewContract.ts` 的表现契约，不直接依赖 binding 文件。`*ViewSync` 从 rules 派生 `dirtyAspect` 和 `ViewSyncChannel`，`*ViewBinding` 从同一份 rules 执行 `apply`，`allBits/watchedBits` 也由 `bitsOf(rules)` 计算。`noView` 表示这个字段只参与 dirty 记录，不直接调用 view，例如 `SceneComponent.sceneTimer`。
 
 记忆顺序：
 
@@ -111,8 +113,9 @@ const HOLE_VIEW_RULES = defineViewRules<IHoleNode, HoleField>(
 Component 字段
   -> DirtyFlags bit
   -> ViewRules rule(bit, label, fields, apply/noView)
-  -> DirtyAspect DirtyMark（由 ViewRules 派生）
+  -> ViewSyncModule.dirtyAspect DirtyMark（由 ViewRules 派生）
   -> DirtyComponent.xxxDirty
+  -> ViewSyncModule.channel project
   -> ViewBinding 执行 rules.apply
   -> ViewNode 方法
 ```
@@ -157,9 +160,9 @@ BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding -> HoleNode
 `SyncView.sync(world)` 负责：
 
 1. 遍历所有带 `DirtyComponent` 的实体。
-2. 遍历已注册的 `SyncChannel` 表。
-3. 按 channel 的 `dirtyTarget + mask` 判断 dirty bit 和 `forceFullSync`。
-4. 调对应 binding。
+2. 遍历已注册的 `ViewSyncChannel` 表。
+3. 按 channel 的 `dirtyTarget + watchedBits` 判断 dirty bit 和 `forceFullSync`。
+4. 调对应 `project`，也就是 binding 投影函数。
 5. 统一清除所有 dirty bit。
 
 主要 binding：
@@ -177,20 +180,12 @@ monsterViewBinding           MonsterComponent -> MonsterNode
 
 ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 view node 自己查 ECS。
 
-新增独立实体类型时，不再优先修改 `SyncView`。Feature 只需要声明自己的 channel，`GameScene` 会统一调用 `syncView.registerChannels(GAME_FEATURE_REGISTRY.syncChannels())`：
+新增独立实体类型时，不再优先修改 `SyncView`。Feature 只需要声明自己的 `viewSyncs`，`GameFeatureRegistry` 会自动展开 dirty aspects 和 sync channels：
 
 ```ts
 export const MonsterFeature: GameFeature = {
   name: "monster",
-  dirtyAspects: [MonsterDirtyAspect],
-  syncChannels: [
-    createRuleSyncChannel({
-      name: "monster",
-      dirtyTarget: "monsterDirty",
-      rules: MONSTER_SYNC_RULES,
-      binding: monsterViewBinding,
-    }),
-  ],
+  viewSyncs: [MonsterViewSync],
 };
 ```
 
@@ -203,7 +198,7 @@ export const MonsterFeature: GameFeature = {
 3. 对应 system 或 helper 修改字段。
 4. `src/sync/DirtyFlags.ts` 增加 bit。
 5. 在对应 `src/sync/rules/*ViewRules.ts` 增加一行 `rule(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
-6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；`*DirtyAspect` 和 `*ViewBinding` 会共用这张表。
+6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；`*ViewSync` 和 `*ViewBinding` 会共用这张表。
 7. 对应 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/**/*.test.ts`。
 
@@ -216,7 +211,6 @@ src/ecs/gameplay/monster/
   MonsterComponent.ts
   MonsterFactory.ts
   MonsterSystem.ts
-  MonsterDirtyAspect.ts
 
 src/config/
   MonsterConfig.ts
@@ -226,6 +220,9 @@ src/sync/rules/
 
 src/binding/
   MonsterViewBinding.ts
+
+src/binding/viewSyncs/
+  MonsterViewSync.ts
 
 src/view/
   MonsterNode.ts
@@ -260,10 +257,10 @@ Monster 槽位按规则合计创建，而不是取最大值。例如同一种怪
 
 ```text
 Component 是否真的变了
-DirtyAspect 是否比较了这个字段
+ViewSyncModule.dirtyAspect 是否比较了这个字段
 DirtyComponent.xxxDirty 是否有对应 bit
-SyncView 是否注册了对应 binding
-binding 是否处理了对应 bit
+SyncView 是否注册了对应 ViewSyncChannel
+binding/project 是否处理了对应 bit
 view node 是否注册到正确 eid
 view node 方法是否真的更新了 Laya 节点
 ```
@@ -271,7 +268,7 @@ view node 方法是否真的更新了 Laya 节点
 常见坑：
 
 - 字段写进 component，但 `DirtyFlags` 没有 bit。
-- 对应 `DirtyAspect` 漏了字段。
+- 对应 `ViewSyncModule` 漏了字段。
 - binding 没处理这个 bit。
 - `shrewAnimationViewBinding` 没注册，导致 Up/Down 只有状态没有中间位移。
 - 节点已销毁但旧引用仍留在注册表。

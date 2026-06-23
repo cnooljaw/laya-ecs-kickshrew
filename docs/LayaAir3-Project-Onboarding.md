@@ -105,7 +105,7 @@ Laya stage MOUSE_DOWN
 - 创建 ECS world。
 - 创建单例实体：锤子、连击、场景、玩家、网络。
 - 调用 `GAME_FEATURE_REGISTRY.setupAll(...)`，让各 Feature 创建自己的实体和 Laya 节点。
-- 注册 `GAME_FEATURE_REGISTRY.syncChannels()` 汇总出的 SyncView channel。
+- 注册 `GAME_FEATURE_REGISTRY.viewSyncChannels()` 从 Feature `viewSyncs` 展开出的 SyncView channel。
 - 创建 `GameLoopPipeline` 和 `KickInputAdapter`，把帧循环和点击输入从装配器里拆出去。
 - 接入 `NetworkAdapter`。
 - 保留网络回包入口：`network.onResponse(resp => hitResponseSystem(world, resp))`。
@@ -120,7 +120,7 @@ dirtyMarkSystem(world, featureRegistry.dirtyAspects())
 syncView.sync(world)
 ```
 
-这表示：核心状态系统先改 ECS 数据，网络回包进入 ECS，独立玩法系统再执行，dirty 系统按 Feature 声明的 aspect 标记变更，最后 binding 把变更同步到 Laya 节点。
+这表示：核心状态系统先改 ECS 数据，网络回包进入 ECS，独立玩法系统再执行，dirty 系统按 Feature 声明的 `viewSyncs` 派生 aspect 标记变更，最后 binding 把变更同步到 Laya 节点。
 
 点击时 `GameScene.onTouch(x, y)` 会委托给 `KickInputAdapter.handleTouch(x, y)`：
 
@@ -261,7 +261,7 @@ Meadow -> Ship -> Space -> Meadow
 
 #### DirtyMarkSystem
 
-`DirtyMarkSystem.ts` 按 world 保存上一帧快照，比较当前帧组件字段，把差异写入 `DirtyComponent` 的各类 bitmask。字段读取、dirty bit、快照仓库和目标 dirty 数组由 `src/sync/dirty/aspects/*DirtyAspect.ts` 声明，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`：
+`DirtyMarkSystem.ts` 按 world 保存上一帧快照，比较当前帧组件字段，把差异写入 `DirtyComponent` 的各类 bitmask。字段读取、dirty bit、快照仓库和目标 dirty 数组由 `src/binding/viewSyncs/*ViewSync.ts` 通过 rules 派生，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`：
 
 - `shrewDirty` / `animDirty`：地鼠状态和动画进度。
 - `holeDirty`：洞位坐标、绑定地鼠、zIndex。
@@ -272,13 +272,14 @@ Meadow -> Ship -> Space -> Meadow
 
 第一次看到某个实体时会把对应组件标成全脏，后续帧只标记变化字段。`forceFullSync` 独立于这些 bit，通常用于首次同步或场景切换时要求 binding 全量刷新。
 
-DirtyAspect 的阅读顺序：
+ViewSyncModule 的阅读顺序：
 
 ```text
 Entity eid
   -> requires / defineQuery 声明 component 组合
-  -> DirtyChannel 写 DirtyComponent.xxxDirty
-  -> DirtyMark 映射 dirty bit、component 字段
+  -> rules 映射 dirty bit、component 字段、apply 函数
+  -> dirtyAspect 写 DirtyComponent.xxxDirty
+  -> channel 声明 dirtyTarget/watchedBits/project
 ```
 
 每条 dirty binding 链路都有一张更好读的表：`src/sync/rules/*ViewRules.ts`。它把 dirty 检测和 view 投影放在同一行配置里。rules 依赖 `src/sync/contracts/*ViewContract.ts` 的表现接口，不直接依赖 binding 文件：
@@ -295,13 +296,13 @@ Entity eid
 ECS Component 数据变化
   -> DirtyComponent 记录 dirty bits
   -> SyncView 遍历所有 DirtyComponent 实体
-  -> 调用对应 binding
+  -> 命中 ViewSyncChannel.project
   -> binding 读取组件数据
   -> 调用 Laya Node 接口
   -> 清除 dirty bits
 ```
 
-`SyncView.sync(world)` 会遍历所有带 `DirtyComponent` 的实体，再遍历已注册的 channel 表。每个 channel 声明 `dirtyTarget`、rules 派生出的 mask 和 binding：
+`SyncView.sync(world)` 会遍历所有带 `DirtyComponent` 的实体，再遍历已注册的 channel 表。每个 channel 声明 `dirtyTarget`、rules 派生出的 `watchedBits` 和 `project`：
 
 ```text
 shrewViewBinding   ShrewComponent + AnimationComponent -> ShrewNode
@@ -315,7 +316,7 @@ hitViewBinding     HitComponent -> HitEffectNode
 monsterViewBinding MonsterComponent -> MonsterNode
 ```
 
-新增实体类型时优先注册 `SyncChannel`，不要给 `SyncView` 再手写一组 `private xxxBinding/registerXxxBinding/if dirty/clear dirty` 分支。
+新增实体类型时优先新增 `*ViewSync.ts` 并挂到 Feature 的 `viewSyncs`，不要给 `SyncView` 再手写一组 `private xxxBinding/registerXxxBinding/if dirty/clear dirty` 分支。
 
 每个 binding 都有注册函数，例如：
 
@@ -337,7 +338,7 @@ registerPlayerHUD(playerEid, playerHUD);
 
 这套结构的代价：
 
-- 新增字段时，要同时考虑组件、dirty bit、dirty mark、binding、node 方法；优先改对应 `*ViewRules.ts` 这张表，减少 DirtyAspect 和 Binding 两边漏改。
+- 新增字段时，要同时考虑组件、dirty bit、dirty mark、binding、node 方法；优先改对应 `*ViewRules.ts` 这张表，再确认对应 `*ViewSync.ts` 已挂到 Feature。
 - 忘记标 dirty 时，ECS 数据变了但画面不变。
 - 忘记 unregister 时，可能保留旧节点引用。
 
@@ -495,7 +496,7 @@ GameScene.init()
   +-- GAME_FEATURE_REGISTRY.setupAll(...)
   |   +-- Feature 创建自己的实体和 Laya 节点
   |   +-- Feature 通过 ViewRegistry 注册 eid/node
-  +-- syncView.registerChannels(GAME_FEATURE_REGISTRY.syncChannels())
+  +-- syncView.registerChannels(GAME_FEATURE_REGISTRY.viewSyncChannels())
   +-- network.onResponse(resp => hitResponseSystem(world, resp))
   +-- new GameLoopPipeline(featureRegistry)
   +-- new KickInputAdapter(...)
@@ -599,7 +600,7 @@ GameScene.onTouch(x, y)
 3. 在 system 中修改字段。
 4. 在 `src/sync/DirtyFlags.ts` 增加 bit。
 5. 在对应 `src/sync/rules/*ViewRules.ts` 增加一行 `rule(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
-6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；对应 `*DirtyAspect` 和 `*ViewBinding` 会共用这张表。
+6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；对应 `*ViewSync` 和 `*ViewBinding` 会共用这张表。
 7. 在 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/ecs/*.test.ts`。
 
@@ -722,17 +723,17 @@ binding 不是事件推送模型。它每帧遍历 dirty 实体，然后从 comp
 A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 节点里猜状态。
 
 - 代码入口：`src/sync/dirty/DirtyMarkSystem.ts`、`src/binding/SyncView.ts`、对应 `src/binding/*ViewBinding.ts`。
-- 数据流：system 修改 component，`dirtyMarkSystem` 对比快照写 `DirtyComponent.xxxDirty`，`SyncView.sync()` 调 binding，binding 读取 component 更新 view node。
-- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `*ViewRules` 没比较这个字段；Feature 没声明 dirty aspect 或 sync channel；节点没有注册或已销毁但注册表还留着旧引用。
+- 数据流：system 修改 component，`dirtyMarkSystem` 对比快照写 `DirtyComponent.xxxDirty`，`SyncView.sync()` 命中 `ViewSyncChannel.project`，binding 读取 component 更新 view node。
+- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `*ViewRules` 没比较这个字段；Feature 没声明对应 `viewSyncs`；节点没有注册或已销毁但注册表还留着旧引用。
 - 验证方式：先跑 `npx vitest run src/tests/ecs/DirtyMarkSystem.test.ts`，再在相关 system 后打印 component 和 dirty bit。
 
 ### Q: 地鼠 Up/Down 状态有了，为什么 0.31 秒内没有真正上下移动？
 
-A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `AnimationComponent.progress`。`DirtyMarkSystem` 会把 progress 变化写进 `DirtyComponent.animDirty`，`CoreGameplayFeature` 声明 anim sync channel 后，`SyncView` 会在 anim dirty 时继续调用 `ShrewNode.setAnimation(actionState, animType, progress)`。
+A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `AnimationComponent.progress`。`DirtyMarkSystem` 会把 progress 变化写进 `DirtyComponent.animDirty`，`CoreGameplayFeature` 声明 `ShrewAnimationViewSync` 后，`SyncView` 会在 anim dirty 时继续调用 `ShrewNode.setAnimation(actionState, animType, progress)`。
 
 - 代码入口：`src/ecs/gameplay/core/AnimationTimerSystem.ts`、`src/sync/dirty/DirtyMarkSystem.ts`、`src/features/CoreGameplayFeature.ts`、`src/binding/ShrewViewBinding.ts`。
 - 数据流：`AnimationComponent.progress -> DirtyComponent.animDirty -> shrewAnimationViewBinding -> ShrewNode.setAnimation -> mainLayer.y`。
-- 常见坑：只处理 `BIT_SHREW_ACTION` 会同步动作开始，但不会同步动作中间帧；`animDirty` 有值但 Feature 没声明 anim channel 时，画面仍不动。
+- 常见坑：只处理 `BIT_SHREW_ACTION` 会同步动作开始，但不会同步动作中间帧；`animDirty` 有值但 Feature 没声明 `ShrewAnimationViewSync` 时，画面仍不动。
 - 验证方式：`npm test -- --run src/tests/binding/ShrewViewBinding.test.ts`。
 
 ### Q: 地鼠状态是不是太多，能不能精简？

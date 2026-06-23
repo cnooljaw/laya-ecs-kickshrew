@@ -12,7 +12,7 @@ describe("DirtyTargets", () => {
     expect([...DIRTY_TARGETS].sort()).toEqual(componentDirtyTargets);
   });
 
-  it("覆盖所有 DirtyAspect channel 的 dirtyTarget", () => {
+  it("覆盖所有 ViewSyncModule dirty channel 的 dirtyTarget", () => {
     const knownTargets = new Set(DIRTY_TARGETS);
 
     for (const aspect of GAME_FEATURE_REGISTRY.dirtyAspects()) {

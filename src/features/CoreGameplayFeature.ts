@@ -1,13 +1,15 @@
-import { coreSyncChannels } from "../binding/CoreSyncChannels";
+import {
+  HoleViewSync,
+  SceneViewSync,
+  ShrewAnimationViewSync,
+  ShrewViewSync,
+} from "../binding/viewSyncs";
 import { HoleComponent } from "../ecs/components";
 import { animationTimerSystem } from "../ecs/gameplay/core/AnimationTimerSystem";
 import { sceneCycleSystem } from "../ecs/gameplay/core/SceneCycleSystem";
 import { shrewStateSystem } from "../ecs/gameplay/core/ShrewStateSystem";
 import { createHoleEntities, createShrewEntity } from "../ecs/world";
 import { HOLE_COUNT, MapType, ShrewType } from "../ecs/types";
-import { HoleDirtyAspect } from "../sync/dirty/aspects/HoleDirtyAspect";
-import { SceneDirtyAspect } from "../sync/dirty/aspects/SceneDirtyAspect";
-import { ShrewDirtyAspect } from "../sync/dirty/aspects/ShrewDirtyAspect";
 import { HoleNode } from "../view/HoleNode";
 import { SceneLayer } from "../view/SceneLayer";
 import { ShrewNode } from "../view/ShrewNode";
@@ -20,12 +22,12 @@ export const CoreGameplayFeature: GameFeature = {
     system("state", "shrewStateSystem", shrewStateSystem),
     system("state", "sceneCycleSystem", (world) => sceneCycleSystem(world)),
   ],
-  dirtyAspects: [
-    ShrewDirtyAspect,
-    HoleDirtyAspect,
-    SceneDirtyAspect,
+  viewSyncs: [
+    ShrewViewSync,
+    ShrewAnimationViewSync,
+    HoleViewSync,
+    SceneViewSync,
   ],
-  syncChannels: coreSyncChannels(["shrew", "anim", "hole", "scene"]),
   setup: ({ world, root, singletons, viewRegistry, forceFullSyncEntities }) => {
     const sceneLayer = new SceneLayer();
     sceneLayer.create(root);

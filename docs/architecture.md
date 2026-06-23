@@ -47,6 +47,7 @@ Laya 入口层
   sync/rules/*SyncRules.ts
   binding/SyncView.ts
   binding/*ViewBinding.ts
+  binding/viewSyncs/*ViewSync.ts
 
 功能扩展层
   features/GameFeature.ts
@@ -81,14 +82,14 @@ input/network/resource callback
   -> command/event adapter
   -> ECS systems / domain helpers
   -> DirtyComponent
-  -> SyncView channel
+  -> ViewSyncChannel
   -> binding projection
   -> Laya view nodes
 ```
 
 不要让 ECS system 直接操作 Laya 节点。不要让 Laya 节点直接改权威游戏规则。socket 回包应先转成系统可消费的数据，再更新 ECS。
 
-新增独立玩法实体采用“ECS gameplay + 薄 Feature”边界。玩法权威状态、系统、工厂和 dirty aspect 放 `src/ecs/gameplay/<domain>/`；配置放 `src/config/`；同步规则放 `src/sync/rules/`；binding 放 `src/binding/`；Laya 节点放 `src/view/`。`src/features/<domain>/*Feature.ts` 只负责把这些能力装配进游戏，`GameScene` 只通过 `GAME_FEATURE_REGISTRY` 接入。
+新增独立玩法实体采用“ECS gameplay + 薄 Feature”边界。玩法权威状态、系统和工厂放 `src/ecs/gameplay/<domain>/`；配置放 `src/config/`；同步规则放 `src/sync/rules/`；binding 放 `src/binding/`；`src/binding/viewSyncs/*ViewSync.ts` 把 rules、dirty aspect 和 ViewSyncChannel 收束成一个可注册模块；Laya 节点放 `src/view/`。`src/features/*Feature.ts` 只负责把这些能力装配进游戏，`GameScene` 只通过 `GAME_FEATURE_REGISTRY` 接入。
 
 ## 启动和主循环
 
@@ -110,7 +111,7 @@ createSingletonEntities()
 GAME_FEATURE_REGISTRY.setupAll(...)
   -> Feature 创建自己的 ECS 实体和 Laya 节点
   -> Feature 通过 ViewRegistry 注册 eid/node
-syncView.registerChannels(GAME_FEATURE_REGISTRY.syncChannels())
+syncView.registerChannels(GAME_FEATURE_REGISTRY.viewSyncChannels())
 network.onResponse(resp => hitResponseSystem(world, resp))
 new GameLoopPipeline(featureRegistry)
 new KickInputAdapter(...)
@@ -207,7 +208,7 @@ HitDetectionSystem
 
 - `Main`：Laya `frameLoop`、stage 事件、脚本生命周期。
 - `GameScene`：world、singletons、运行时 adapter、view registry、network callback、FeatureRegistry 调用。
-- `Feature`：声明本模块的 system phase、dirty aspect、sync channel，并在 setup 中创建/注册本模块节点。
+- `Feature`：声明本模块的 system phase、viewSyncs，并在 setup 中创建/注册本模块节点。
 - `ViewRegistry`：ECS eid 和 view node 的注册关系，集中 unregister 和 destroy。
 - `view/*Node.ts`：自己创建的 Laya 子节点、timer/tween/异步资源回调保护。
 

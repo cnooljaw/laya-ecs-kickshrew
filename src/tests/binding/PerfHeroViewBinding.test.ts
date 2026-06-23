@@ -4,14 +4,13 @@ import { createGameWorld, createPerfHeroEntities } from "../../ecs/world";
 import { DirtyComponent, PerfHeroComponent } from "../../ecs/components";
 import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
 import { SyncView } from "../../binding/SyncView";
-import { CORE_SYNC_CHANNELS } from "../../binding/CoreSyncChannels";
+import { PerfHeroViewSync } from "../../binding/viewSyncs";
 import {
   registerPerfHeroNode,
   unregisterPerfHeroNode,
 } from "../../binding/PerfHeroViewBinding";
 import { BIT_PERF_HERO_SPAWN } from "../../sync/DirtyFlags";
 import { PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
-import { PerfHeroDirtyAspect } from "../../sync/dirty/aspects/PerfHeroDirtyAspect";
 
 describe("PerfHeroViewBinding", () => {
   const registered: number[] = [];
@@ -36,15 +35,15 @@ describe("PerfHeroViewBinding", () => {
     registered.push(eid);
 
     const syncView = new SyncView();
-    syncView.registerChannel(CORE_SYNC_CHANNELS.find(channel => channel.name === "perfHero")!);
+    syncView.registerChannel(PerfHeroViewSync.channel);
 
-    dirtyMarkSystem(world, [PerfHeroDirtyAspect]);
+    dirtyMarkSystem(world, [PerfHeroViewSync.dirtyAspect]);
     syncView.sync(world);
     plays.length = 0;
 
     PerfHeroComponent.heroType[eid] = 1;
     PerfHeroComponent.spawnSeq[eid] += 1;
-    dirtyMarkSystem(world, [PerfHeroDirtyAspect]);
+    dirtyMarkSystem(world, [PerfHeroViewSync.dirtyAspect]);
 
     expect(DirtyComponent.perfHeroDirty[eid] & BIT_PERF_HERO_SPAWN).toBeTruthy();
 

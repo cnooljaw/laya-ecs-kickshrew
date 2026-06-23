@@ -12,35 +12,14 @@
  */
 import { defineQuery } from "bitecs";
 import { DirtyComponent } from "../ecs/components";
-import { DIRTY_TARGETS, type DirtyTarget } from "../sync/DirtyTargets";
-import { bitsOf } from "../sync/rules/ViewBindingRule";
-import type { ViewBindingRule } from "../sync/rules/ViewBindingRule";
+import { DIRTY_TARGETS } from "../sync/DirtyTargets";
+import type { ViewProjectFn, ViewSyncChannel } from "../sync/viewSync/ViewSyncModule";
 
 const dirtyQuery = defineQuery([DirtyComponent]);
 
 /** 视图绑定函数类型 */
-export type BindingFn = (eid: number, dirtyBits: number, forceFull: boolean) => void;
-
-export interface SyncChannel {
-  name: string;
-  dirtyTarget: DirtyTarget;
-  mask: number;
-  binding: BindingFn;
-}
-
-export function createRuleSyncChannel<TNode>(options: {
-  name: string;
-  dirtyTarget: DirtyTarget;
-  rules: readonly ViewBindingRule<TNode>[];
-  binding: BindingFn;
-}): SyncChannel {
-  return {
-    name: options.name,
-    dirtyTarget: options.dirtyTarget,
-    mask: bitsOf(options.rules),
-    binding: options.binding,
-  };
-}
+export type BindingFn = ViewProjectFn;
+export type SyncChannel = ViewSyncChannel;
 
 /**
  * SyncView 同步器
@@ -75,8 +54,8 @@ export class SyncView {
 
       for (const channel of this.channels) {
         const dirtyBits = DirtyComponent[channel.dirtyTarget][eid];
-        if ((dirtyBits & channel.mask) || forceFull) {
-          channel.binding(eid, dirtyBits, forceFull);
+        if ((dirtyBits & channel.watchedBits) || forceFull) {
+          channel.project(eid, dirtyBits, forceFull);
         }
       }
 

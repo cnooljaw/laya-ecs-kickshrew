@@ -7,9 +7,8 @@ import { createMonsterEntities } from "../../ecs/gameplay/monster/MonsterFactory
 import { MonsterComponent } from "../../ecs/gameplay/monster/MonsterComponent";
 import { MonsterType } from "../../ecs/gameplay/monster/MonsterTypes";
 import { MONSTER_CONFIG } from "../../config/MonsterConfig";
-import { MonsterDirtyAspect } from "../../sync/dirty/aspects/MonsterDirtyAspect";
-import { MONSTER_SYNC_RULES } from "../../sync/rules/MonsterSyncRules";
 import { monsterRegistry, monsterViewBinding } from "../../binding/MonsterViewBinding";
+import { MonsterViewSync } from "../../binding/viewSyncs";
 import type { IMonsterNode } from "../../sync/contracts/MonsterViewContract";
 import { BIT_MONSTER_SHOW, BIT_MONSTER_SPAWN } from "../../sync/DirtyFlags";
 
@@ -74,19 +73,14 @@ describe("MonsterViewBinding", () => {
     registered.push(eid);
 
     const syncView = new SyncView();
-    syncView.registerChannel({
-      name: "monster",
-      dirtyTarget: "monsterDirty",
-      mask: MONSTER_SYNC_RULES.reduce((bits, rule) => bits | rule.bit, 0),
-      binding: monsterViewBinding,
-    });
+    syncView.registerChannel(MonsterViewSync.channel);
 
-    dirtyMarkSystem(world, [MonsterDirtyAspect]);
+    dirtyMarkSystem(world, [MonsterViewSync.dirtyAspect]);
     syncView.sync(world);
     visible.length = 0;
 
     MonsterComponent.visible[eid] = 1;
-    dirtyMarkSystem(world, [MonsterDirtyAspect]);
+    dirtyMarkSystem(world, [MonsterViewSync.dirtyAspect]);
 
     expect(DirtyComponent.monsterDirty[eid] & BIT_MONSTER_SHOW).toBeTruthy();
 

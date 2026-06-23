@@ -1,7 +1,6 @@
-import type { DirtyAspect } from "../sync/dirty/DirtySchemaTypes";
 import type { PerfTestRuntimeConfig } from "../config/PerfTestConfig";
 import type { SingletonEntities } from "../ecs/world";
-import type { SyncChannel } from "../binding/SyncView";
+import type { ViewSyncModule } from "../sync/viewSync/ViewSyncModule";
 import type { HammerNode } from "../view/HammerNode";
 import type { HitEffectNode } from "../view/HitEffectNode";
 import type { PerfHeroSpinePoolGroup } from "../view/PerfHeroNode";
@@ -40,6 +39,5 @@ export interface GameFeature {
   name: string;
   setup?: (ctx: FeatureSetupContext) => void;
   systems?: readonly FeatureSystemEntry[];
-  dirtyAspects?: readonly DirtyAspect[];
-  syncChannels?: readonly SyncChannel[];
+  viewSyncs?: readonly ViewSyncModule[];
 }

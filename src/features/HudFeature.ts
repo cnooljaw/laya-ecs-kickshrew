@@ -1,17 +1,14 @@
-import { coreSyncChannels } from "../binding/CoreSyncChannels";
-import { HitDirtyAspect } from "../sync/dirty/aspects/HitDirtyAspect";
-import { PlayerDirtyAspect } from "../sync/dirty/aspects/PlayerDirtyAspect";
+import { HitViewSync, PlayerViewSync } from "../binding/viewSyncs";
 import { HitEffectNode } from "../view/HitEffectNode";
 import { PlayerHUD } from "../view/PlayerHUD";
 import type { GameFeature } from "./GameFeature";
 
 export const HudFeature: GameFeature = {
   name: "hud",
-  dirtyAspects: [
-    PlayerDirtyAspect,
-    HitDirtyAspect,
+  viewSyncs: [
+    PlayerViewSync,
+    HitViewSync,
   ],
-  syncChannels: coreSyncChannels(["player", "hit"]),
   setup: ({ root, singletons, viewRegistry, runtimeRefs, forceFullSyncEntities }) => {
     const playerHUD = new PlayerHUD();
     playerHUD.create(root);

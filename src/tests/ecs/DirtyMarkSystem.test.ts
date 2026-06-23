@@ -14,21 +14,26 @@ import {
 } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType } from '../../ecs/types';
 import { dirtyMarkSystem, getDirtySnapshotForTest } from '../../sync/dirty/DirtyMarkSystem';
-import { ShrewDirtyAspect } from '../../sync/dirty/aspects/ShrewDirtyAspect';
 import { SHREW_COMPONENT_RULES, SHREW_ANIMATION_RULES } from '../../sync/rules/ShrewViewRules';
-import { HoleDirtyAspect } from '../../sync/dirty/aspects/HoleDirtyAspect';
 import { HOLE_VIEW_RULES } from '../../sync/rules/HoleViewRules';
-import { HammerDirtyAspect } from '../../sync/dirty/aspects/HammerDirtyAspect';
 import { HAMMER_VIEW_RULES } from '../../sync/rules/HammerViewRules';
-import { SceneDirtyAspect } from '../../sync/dirty/aspects/SceneDirtyAspect';
 import { SCENE_VIEW_RULES } from '../../sync/rules/SceneViewRules';
-import { PlayerDirtyAspect } from '../../sync/dirty/aspects/PlayerDirtyAspect';
 import { PLAYER_VIEW_RULES } from '../../sync/rules/PlayerViewRules';
-import { HitDirtyAspect } from '../../sync/dirty/aspects/HitDirtyAspect';
 import { HIT_VIEW_RULES } from '../../sync/rules/HitViewRules';
-import { PerfHeroDirtyAspect } from '../../sync/dirty/aspects/PerfHeroDirtyAspect';
 import { PERF_HERO_VIEW_RULES } from '../../sync/rules/PerfHeroViewRules';
+import { MONSTER_SYNC_RULES } from '../../sync/rules/MonsterSyncRules';
 import { GAME_FEATURE_REGISTRY } from '../../features/GameFeatures';
+import {
+  HammerViewSync,
+  HitViewSync,
+  HoleViewSync,
+  MonsterViewSync,
+  PerfHeroViewSync,
+  PlayerViewSync,
+  SceneViewSync,
+  ShrewAnimationViewSync,
+  ShrewViewSync,
+} from '../../binding/viewSyncs';
 import { bitsOf } from '../../sync/rules/ViewBindingRule';
 import {
   BIT_HOLE_POS,
@@ -63,15 +68,15 @@ describe('DirtyMarkSystem', () => {
     dirtyMarkSystem(world, GAME_FEATURE_REGISTRY.dirtyAspects());
   }
 
-  it('ShrewDirtyAspect 由表格式 ShrewViewRules 派生 dirty marks', () => {
-    expect(ShrewDirtyAspect.requires).toEqual([
+  it('Shrew ViewSyncModule 由表格式 ShrewViewRules 派生 dirty marks', () => {
+    expect(ShrewViewSync.dirtyAspect.requires).toEqual([
       'ShrewComponent',
       'AnimationComponent',
       'DirtyComponent',
     ]);
 
-    const shrewChannel = ShrewDirtyAspect.channels.find(channel => channel.dirtyTarget === 'shrewDirty');
-    const animChannel = ShrewDirtyAspect.channels.find(channel => channel.dirtyTarget === 'animDirty');
+    const shrewChannel = ShrewViewSync.dirtyAspect.channels.find(channel => channel.dirtyTarget === 'shrewDirty');
+    const animChannel = ShrewAnimationViewSync.dirtyAspect.channels.find(channel => channel.dirtyTarget === 'animDirty');
     const actionMark = shrewChannel?.marks.find(mark => mark.bit === BIT_SHREW_ACTION);
     const progressMark = animChannel?.marks.find(mark => mark.bit === BIT_ANIM_PROGRESS);
 
@@ -87,14 +92,26 @@ describe('DirtyMarkSystem', () => {
     expect(progressMark?.label).toBe('动画进度');
   });
 
-  it('所有 DirtyAspect 都由对应 ViewRules 派生，并且不再携带 viewTarget 字符串', () => {
+  it('ViewSyncModule 能描述字段到 channel 的同步路径', () => {
+    expect(ShrewViewSync.describe()[0]).toBe(
+      'ShrewComponent.shrewType -> shrewDirty.地鼠类型 -> shrew',
+    );
+    expect(ShrewAnimationViewSync.describe()[0]).toBe(
+      'AnimationComponent.animType -> animDirty.动画类型 -> anim',
+    );
+  });
+
+  it('所有 ViewSyncModule dirtyAspect 都由对应 ViewRules 派生，并且不再携带 viewTarget 字符串', () => {
     const cases = [
-      { aspect: HoleDirtyAspect, dirtyTarget: 'holeDirty', rules: HOLE_VIEW_RULES },
-      { aspect: HammerDirtyAspect, dirtyTarget: 'hammerDirty', rules: HAMMER_VIEW_RULES },
-      { aspect: SceneDirtyAspect, dirtyTarget: 'sceneDirty', rules: SCENE_VIEW_RULES },
-      { aspect: PlayerDirtyAspect, dirtyTarget: 'playerDirty', rules: PLAYER_VIEW_RULES },
-      { aspect: HitDirtyAspect, dirtyTarget: 'hitDirty', rules: HIT_VIEW_RULES },
-      { aspect: PerfHeroDirtyAspect, dirtyTarget: 'perfHeroDirty', rules: PERF_HERO_VIEW_RULES },
+      { aspect: ShrewViewSync.dirtyAspect, dirtyTarget: 'shrewDirty', rules: SHREW_COMPONENT_RULES },
+      { aspect: ShrewAnimationViewSync.dirtyAspect, dirtyTarget: 'animDirty', rules: SHREW_ANIMATION_RULES },
+      { aspect: HoleViewSync.dirtyAspect, dirtyTarget: 'holeDirty', rules: HOLE_VIEW_RULES },
+      { aspect: HammerViewSync.dirtyAspect, dirtyTarget: 'hammerDirty', rules: HAMMER_VIEW_RULES },
+      { aspect: SceneViewSync.dirtyAspect, dirtyTarget: 'sceneDirty', rules: SCENE_VIEW_RULES },
+      { aspect: PlayerViewSync.dirtyAspect, dirtyTarget: 'playerDirty', rules: PLAYER_VIEW_RULES },
+      { aspect: HitViewSync.dirtyAspect, dirtyTarget: 'hitDirty', rules: HIT_VIEW_RULES },
+      { aspect: PerfHeroViewSync.dirtyAspect, dirtyTarget: 'perfHeroDirty', rules: PERF_HERO_VIEW_RULES },
+      { aspect: MonsterViewSync.dirtyAspect, dirtyTarget: 'monsterDirty', rules: MONSTER_SYNC_RULES },
     ];
 
     for (const { aspect, dirtyTarget, rules } of cases) {
@@ -109,14 +126,15 @@ describe('DirtyMarkSystem', () => {
 
   it('每个 DirtyChannel 的 allBits 必须覆盖对应 ViewRules 的全部 bit', () => {
     const cases = [
-      { aspect: ShrewDirtyAspect, dirtyTarget: 'shrewDirty', rules: SHREW_COMPONENT_RULES },
-      { aspect: ShrewDirtyAspect, dirtyTarget: 'animDirty', rules: SHREW_ANIMATION_RULES },
-      { aspect: HoleDirtyAspect, dirtyTarget: 'holeDirty', rules: HOLE_VIEW_RULES },
-      { aspect: HammerDirtyAspect, dirtyTarget: 'hammerDirty', rules: HAMMER_VIEW_RULES },
-      { aspect: SceneDirtyAspect, dirtyTarget: 'sceneDirty', rules: SCENE_VIEW_RULES },
-      { aspect: PlayerDirtyAspect, dirtyTarget: 'playerDirty', rules: PLAYER_VIEW_RULES },
-      { aspect: HitDirtyAspect, dirtyTarget: 'hitDirty', rules: HIT_VIEW_RULES },
-      { aspect: PerfHeroDirtyAspect, dirtyTarget: 'perfHeroDirty', rules: PERF_HERO_VIEW_RULES },
+      { aspect: ShrewViewSync.dirtyAspect, dirtyTarget: 'shrewDirty', rules: SHREW_COMPONENT_RULES },
+      { aspect: ShrewAnimationViewSync.dirtyAspect, dirtyTarget: 'animDirty', rules: SHREW_ANIMATION_RULES },
+      { aspect: HoleViewSync.dirtyAspect, dirtyTarget: 'holeDirty', rules: HOLE_VIEW_RULES },
+      { aspect: HammerViewSync.dirtyAspect, dirtyTarget: 'hammerDirty', rules: HAMMER_VIEW_RULES },
+      { aspect: SceneViewSync.dirtyAspect, dirtyTarget: 'sceneDirty', rules: SCENE_VIEW_RULES },
+      { aspect: PlayerViewSync.dirtyAspect, dirtyTarget: 'playerDirty', rules: PLAYER_VIEW_RULES },
+      { aspect: HitViewSync.dirtyAspect, dirtyTarget: 'hitDirty', rules: HIT_VIEW_RULES },
+      { aspect: PerfHeroViewSync.dirtyAspect, dirtyTarget: 'perfHeroDirty', rules: PERF_HERO_VIEW_RULES },
+      { aspect: MonsterViewSync.dirtyAspect, dirtyTarget: 'monsterDirty', rules: MONSTER_SYNC_RULES },
     ];
 
     for (const { aspect, dirtyTarget, rules } of cases) {
