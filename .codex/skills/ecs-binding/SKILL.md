@@ -20,11 +20,11 @@ Use this project skill for changes that affect authoritative ECS state or how it
 3. If visible, update the full chain:
    - `src/ecs/components/index.ts`
    - `src/ecs/world.ts`
-   - relevant `src/ecs/systems/*.ts` or helper
+   - relevant `src/ecs/gameplay/<domain>/*.ts` or helper
    - `src/sync/DirtyFlags.ts`
    - `src/sync/contracts/*ViewContract.ts`
    - `src/sync/rules/*ViewRules.ts`
-   - relevant `src/ecs/dirty/aspects/*DirtyAspect.ts`
+   - relevant `src/sync/dirty/aspects/*DirtyAspect.ts`
    - relevant `src/binding/*ViewBinding.ts`
    - relevant `src/view/*Node.ts`
    - tests under `src/tests/**`

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld, createShrewEntity, createHoleEntities, createSingletonEntities } from '../../ecs/world';
 import { ShrewComponent, HoleComponent, HammerComponent } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType, HammerType, HOLE_COUNT } from '../../ecs/types';
-import { hitDetectionSystem, HitResult } from '../../ecs/systems/HitDetectionSystem';
+import { hitDetectionSystem, HitResult } from '../../ecs/gameplay/core/HitDetectionSystem';
 import { HAMMER_RULES, SHREW_TIMING } from '../../config/GameTuning';
 
 describe('HitDetectionSystem', () => {

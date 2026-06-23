@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import type { IShrewNode } from "../../sync/contracts/ShrewViewContract";
 import { createGameWorld, createShrewEntity } from "../../ecs/world";
 import { AnimationComponent, DirtyComponent, ShrewComponent } from "../../ecs/components";
-import { dirtyMarkSystem } from "../../ecs/systems/DirtyMarkSystem";
+import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
 import { SyncView } from "../../binding/SyncView";
 import { CORE_SYNC_CHANNELS } from "../../binding/CoreSyncChannels";
 import {
@@ -18,7 +18,7 @@ import {
   BIT_SHREW_TYPE,
 } from "../../sync/DirtyFlags";
 import { AnimType, MapType, ShrewAction, ShrewType } from "../../ecs/types";
-import { ShrewDirtyAspect } from "../../ecs/dirty/aspects/ShrewDirtyAspect";
+import { ShrewDirtyAspect } from "../../sync/dirty/aspects/ShrewDirtyAspect";
 
 describe("ShrewViewBinding", () => {
   const registered: number[] = [];

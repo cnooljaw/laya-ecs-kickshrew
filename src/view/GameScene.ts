@@ -9,7 +9,7 @@
  * 5. 启动网络层
  */
 import { createGameWorld, createSingletonEntities, SingletonEntities } from "../ecs/world";
-import { hitResponseSystem } from "../ecs/systems/HitResponseSystem";
+import { hitResponseSystem } from "../ecs/gameplay/hud/HitResponseSystem";
 import { SyncView } from "../binding/SyncView";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";

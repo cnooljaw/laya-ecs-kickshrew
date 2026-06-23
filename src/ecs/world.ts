@@ -16,7 +16,7 @@ import { HolePositions, getHoleGrid, getHoleZOrder } from "../config/HolePositio
 import { DESIGN_RESOLUTION } from "../config/GameTuning";
 import { PERF_HERO_RESOURCES, PERF_HERO_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 import { SCENE_CYCLE_INTERVAL } from "../config/SceneConfig";
-import { resetShrewForNextCycle } from "./ShrewLifecycle";
+import { resetShrewForNextCycle } from "./gameplay/core/ShrewLifecycle";
 
 /** 创建基础 ECS 世界 */
 export function createGameWorld() {

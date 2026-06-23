@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DirtyComponent, SceneComponent } from "../../ecs/components";
-import { createRuleDirtyAspect } from "../../ecs/dirty/RuleDirtyAspect";
+import { createRuleDirtyAspect } from "../../sync/dirty/RuleDirtyAspect";
 import { SCENE_VIEW_RULES } from "../../sync/rules/SceneViewRules";
 import { bitsOf } from "../../sync/rules/ViewBindingRule";
 

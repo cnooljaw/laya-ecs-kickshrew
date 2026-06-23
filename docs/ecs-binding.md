@@ -65,7 +65,7 @@ BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding
 
 ## DirtyAspect
 
-`src/ecs/dirty/aspects/*DirtyAspect.ts` 声明每类实体的 dirty 映射。`DirtyMarkSystem` 只负责遍历外部传入的 aspect 列表，通用比较逻辑在 `src/ecs/dirty/DirtySchemaRunner.ts`。运行时 aspect 列表由各个 `Feature` 声明，再由 `GameFeatureRegistry` 汇总，避免 DirtyMarkSystem 内置固定分支。
+`src/sync/dirty/aspects/*DirtyAspect.ts` 声明每类实体的 dirty 映射。`DirtyMarkSystem` 只负责遍历外部传入的 aspect 列表，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`。运行时 aspect 列表由各个 `Feature` 声明，再由 `GameFeatureRegistry` 汇总，避免 DirtyMarkSystem 内置固定分支。
 
 核心角色：
 
@@ -232,7 +232,7 @@ src/binding/
 src/view/
   MonsterNode.ts
 
-src/features/monster/
+src/features/
   MonsterFeature.ts
 ```
 

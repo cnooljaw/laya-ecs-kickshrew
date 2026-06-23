@@ -84,13 +84,13 @@ input/network/resource callback
 
 ## 常见改动入口
 
-- 改状态机：`src/ecs/systems/ShrewStateSystem.ts`、`src/ecs/ShrewLifecycle.ts`、`src/tests/ecs/ShrewStateSystem.test.ts`
-- 改命中规则：`src/ecs/systems/HitDetectionSystem.ts`、`src/view/KickInputAdapter.ts`、`src/tests/ecs/HitDetectionSystem.test.ts`
-- 改 dirty 同步：`src/sync/contracts/*ViewContract.ts`、`src/sync/DirtyFlags.ts`、`src/sync/DirtyTargets.ts`、`src/sync/rules/*ViewRules.ts`、`src/ecs/dirty/aspects/*DirtyAspect.ts`、`src/binding/*ViewBinding.ts`、`src/features/*/*Feature.ts`
-- 改独立玩法实体/怪物：ECS 规则放 `src/ecs/gameplay/*`，配置放 `src/config/*`，装配入口放 `src/features/*/*Feature.ts`
+- 改状态机：`src/ecs/gameplay/core/ShrewStateSystem.ts`、`src/ecs/gameplay/core/ShrewLifecycle.ts`、`src/tests/ecs/ShrewStateSystem.test.ts`
+- 改命中规则：`src/ecs/gameplay/core/HitDetectionSystem.ts`、`src/view/KickInputAdapter.ts`、`src/tests/ecs/HitDetectionSystem.test.ts`
+- 改 dirty 同步：`src/sync/contracts/*ViewContract.ts`、`src/sync/DirtyFlags.ts`、`src/sync/DirtyTargets.ts`、`src/sync/rules/*ViewRules.ts`、`src/sync/dirty/aspects/*DirtyAspect.ts`、`src/binding/*ViewBinding.ts`、`src/features/*Feature.ts`
+- 改独立玩法实体/怪物：ECS 规则放 `src/ecs/gameplay/*`，配置放 `src/config/*`，装配入口放 `src/features/*Feature.ts`
 - 改 Laya 表现：`src/view/*Node.ts`、`src/config/ViewLayoutConfig.ts`、`docs/laya-rules.md`
-- 改性能压测/Spine 池化：`src/config/PerfTestConfig.ts`、`src/config/ViewLayoutConfig.ts`、`src/ecs/systems/PerfHeroSystem.ts`、`src/view/PerfHeroNode.ts`、`docs/performance-tuning.md`
-- 改网络：`src/network/KickSocket.ts`、`src/network/NetworkAdapter.ts`、`src/ecs/systems/HitResponseSystem.ts`
+- 改性能压测/Spine 池化：`src/config/PerfTestConfig.ts`、`src/config/ViewLayoutConfig.ts`、`src/ecs/gameplay/perfHero/PerfHeroSystem.ts`、`src/view/PerfHeroNode.ts`、`docs/performance-tuning.md`
+- 改网络：`src/network/KickSocket.ts`、`src/network/NetworkAdapter.ts`、`src/ecs/gameplay/hud/HitResponseSystem.ts`
 - 改协议：`api/proto/kick.proto`、`src/network/KickProtoCodec.ts`、`src/network/ProtocolTypes.ts`、`src/tests/network/*`
 - 改测试/调试流程：`docs/test-guide.md`
 

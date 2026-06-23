@@ -1,5 +1,5 @@
 import { SyncView } from "../binding/SyncView";
-import { dirtyMarkSystem } from "../ecs/systems/DirtyMarkSystem";
+import { dirtyMarkSystem } from "../sync/dirty/DirtyMarkSystem";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { GameFeatureRegistry } from "../features/GameFeatureRegistry";
 

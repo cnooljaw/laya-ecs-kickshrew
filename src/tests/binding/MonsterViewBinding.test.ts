@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { DirtyComponent } from "../../ecs/components";
 import { createGameWorld } from "../../ecs/world";
-import { dirtyMarkSystem } from "../../ecs/systems/DirtyMarkSystem";
+import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
 import { SyncView } from "../../binding/SyncView";
 import { createMonsterEntities } from "../../ecs/gameplay/monster/MonsterFactory";
 import { MonsterComponent } from "../../ecs/gameplay/monster/MonsterComponent";
 import { MonsterType } from "../../ecs/gameplay/monster/MonsterTypes";
 import { MONSTER_CONFIG } from "../../config/MonsterConfig";
-import { MonsterDirtyAspect } from "../../ecs/gameplay/monster/MonsterDirtyAspect";
+import { MonsterDirtyAspect } from "../../sync/dirty/aspects/MonsterDirtyAspect";
 import { MONSTER_SYNC_RULES } from "../../sync/rules/MonsterSyncRules";
 import { monsterRegistry, monsterViewBinding } from "../../binding/MonsterViewBinding";
 import type { IMonsterNode } from "../../sync/contracts/MonsterViewContract";

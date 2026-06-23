@@ -176,7 +176,7 @@ DirtyComponent       各组件 dirty bitmask + forceFullSync
 
 ### 第 30-40 分钟：系统如何改变游戏状态
 
-重点读 `src/ecs/systems/`。
+重点读 `src/ecs/gameplay/`。核心地鼠和地图循环在 `src/ecs/gameplay/core/`，锤子在 `src/ecs/gameplay/hammer/`，HUD/回包在 `src/ecs/gameplay/hud/`，性能压测在 `src/ecs/gameplay/perfHero/`。
 
 #### AnimationTimerSystem
 
@@ -269,7 +269,7 @@ Meadow -> Ship -> Space -> Meadow
 
 #### DirtyMarkSystem
 
-`DirtyMarkSystem.ts` 按 world 保存上一帧快照，比较当前帧组件字段，把差异写入 `DirtyComponent` 的各类 bitmask。字段读取、dirty bit、快照仓库和目标 dirty 数组由 `src/ecs/dirty/aspects/*DirtyAspect.ts` 声明，通用比较逻辑在 `src/ecs/dirty/DirtySchemaRunner.ts`：
+`DirtyMarkSystem.ts` 按 world 保存上一帧快照，比较当前帧组件字段，把差异写入 `DirtyComponent` 的各类 bitmask。字段读取、dirty bit、快照仓库和目标 dirty 数组由 `src/sync/dirty/aspects/*DirtyAspect.ts` 声明，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`：
 
 - `shrewDirty` / `animDirty`：地鼠状态和动画进度。
 - `holeDirty`：洞位坐标、绑定地鼠、zIndex。
@@ -559,7 +559,7 @@ GameScene.onTouch(x, y)
 
 优先看：
 
-- `src/ecs/systems/ShrewStateSystem.ts`
+- `src/ecs/gameplay/core/ShrewStateSystem.ts`
 - `src/ecs/types.ts`
 - `src/binding/ShrewViewBinding.ts`
 - `src/view/ShrewNode.ts`
@@ -571,7 +571,7 @@ GameScene.onTouch(x, y)
 
 优先看：
 
-- `src/ecs/systems/HitDetectionSystem.ts`
+- `src/ecs/gameplay/core/HitDetectionSystem.ts`
 - `src/config/HolePositions.ts`
 - `src/ecs/components/index.ts`
 - `src/tests/ecs/HitDetectionSystem.test.ts`
@@ -584,7 +584,7 @@ GameScene.onTouch(x, y)
 
 - `src/config/HolePositions.ts`
 - `src/config/SceneConfig.ts`
-- `src/ecs/systems/SceneCycleSystem.ts`
+- `src/ecs/gameplay/core/SceneCycleSystem.ts`
 - `src/view/SceneLayer.ts`
 - `src/binding/SceneViewBinding.ts`
 - `src/binding/HoleViewBinding.ts`
@@ -595,11 +595,11 @@ GameScene.onTouch(x, y)
 
 优先看：
 
-- `src/ecs/systems/HammerSystem.ts`
+- `src/ecs/gameplay/hammer/HammerSystem.ts`
 - `src/config/HammerConfig.ts`
 - `src/view/HammerNode.ts`
 - `src/binding/HammerViewBinding.ts`
-- `src/ecs/systems/HitResponseSystem.ts`
+- `src/ecs/gameplay/hud/HitResponseSystem.ts`
 
 `PlayerComponent.angry >= 1000` 会触发雷神锤。
 
@@ -612,7 +612,7 @@ GameScene.onTouch(x, y)
 - `src/network/ProtocolTypes.ts`
 - `src/network/KickSocket.ts`
 - `src/network/NetworkAdapter.ts`
-- `src/ecs/systems/HitResponseSystem.ts`
+- `src/ecs/gameplay/hud/HitResponseSystem.ts`
 - `src/view/GameScene.ts`
 
 建议保留 `KickSocket` 的请求匹配机制。真实网络只需要实现 `ISocketTransport.send(data)`，并在收到服务端消息时调用 `KickSocket.onMessage(data)`。
@@ -634,7 +634,7 @@ GameScene.onTouch(x, y)
 
 ### 新增一种非地鼠怪物
 
-独立怪物采用“ECS gameplay + 薄 Feature”边界，不混进地鼠状态机。Rhino 的 ECS 规则在 `src/ecs/gameplay/monster/`，配置在 `src/config/MonsterConfig.ts`，同步规则在 `src/sync/rules/MonsterSyncRules.ts`，装配入口在 `src/features/monster/MonsterFeature.ts`。当前 Rhino 资源：
+独立怪物采用“ECS gameplay + 薄 Feature”边界，不混进地鼠状态机。Rhino 的 ECS 规则在 `src/ecs/gameplay/monster/`，配置在 `src/config/MonsterConfig.ts`，同步规则在 `src/sync/rules/MonsterSyncRules.ts`，装配入口在 `src/features/MonsterFeature.ts`。当前 Rhino 资源：
 
 ```text
 assets/resources/monster/rhino.sk
@@ -681,14 +681,17 @@ Laya 入口层
 Feature 装配层
   features/GameFeature.ts
   features/GameFeatureRegistry.ts
-  features/*/*Feature.ts
+  features/*Feature.ts
 
 纯游戏状态/规则层
   ecs/components
-  ecs/systems
+  ecs/gameplay/*/*
   ecs/types
 
 表现同步层
+  sync/contracts/*ViewContract.ts
+  sync/rules/*ViewRules.ts
+  sync/dirty/*
   binding/SyncView.ts
   binding/*ViewBinding.ts
 
@@ -716,7 +719,7 @@ Laya 表现层
 依赖方向应该尽量保持：
 
 ```text
-ecs/systems -> ecs/components/config/network types
+ecs/gameplay -> ecs/components/config/network types
 binding -> ecs/components + view interfaces
 view -> Laya + resource/config
 Feature -> 装配 ECS factory/system/dirty/sync/view registry
@@ -745,7 +748,7 @@ binding 不是事件推送模型。它每帧遍历 dirty 实体，然后从 comp
 
 A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 节点里猜状态。
 
-- 代码入口：`src/ecs/systems/DirtyMarkSystem.ts`、`src/binding/SyncView.ts`、对应 `src/binding/*ViewBinding.ts`。
+- 代码入口：`src/sync/dirty/DirtyMarkSystem.ts`、`src/binding/SyncView.ts`、对应 `src/binding/*ViewBinding.ts`。
 - 数据流：system 修改 component，`dirtyMarkSystem` 对比快照写 `DirtyComponent.xxxDirty`，`SyncView.sync()` 调 binding，binding 读取 component 更新 view node。
 - 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `*ViewRules` 没比较这个字段；Feature 没声明 dirty aspect 或 sync channel；节点没有注册或已销毁但注册表还留着旧引用。
 - 验证方式：先跑 `npx vitest run src/tests/ecs/DirtyMarkSystem.test.ts`，再在相关 system 后打印 component 和 dirty bit。
@@ -754,7 +757,7 @@ A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 
 
 A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `AnimationComponent.progress`。`DirtyMarkSystem` 会把 progress 变化写进 `DirtyComponent.animDirty`，`CoreGameplayFeature` 声明 anim sync channel 后，`SyncView` 会在 anim dirty 时继续调用 `ShrewNode.setAnimation(actionState, animType, progress)`。
 
-- 代码入口：`src/ecs/systems/AnimationTimerSystem.ts`、`src/ecs/systems/DirtyMarkSystem.ts`、`src/features/core/CoreGameplayFeature.ts`、`src/binding/ShrewViewBinding.ts`。
+- 代码入口：`src/ecs/gameplay/core/AnimationTimerSystem.ts`、`src/sync/dirty/DirtyMarkSystem.ts`、`src/features/CoreGameplayFeature.ts`、`src/binding/ShrewViewBinding.ts`。
 - 数据流：`AnimationComponent.progress -> DirtyComponent.animDirty -> shrewAnimationViewBinding -> ShrewNode.setAnimation -> mainLayer.y`。
 - 常见坑：只处理 `BIT_SHREW_ACTION` 会同步动作开始，但不会同步动作中间帧；`animDirty` 有值但 Feature 没声明 anim channel 时，画面仍不动。
 - 验证方式：`npm test -- --run src/tests/binding/ShrewViewBinding.test.ts`。
@@ -763,7 +766,7 @@ A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `Animatio
 
 A: 已精简为 `Wait/Up/Stand/Down/Dizzy`。`Wait` 同时承担“隐藏等待”和“下一轮入口”，所以不再需要 `None`；自然超时入洞时，`Down` 完成后调用 `resetShrewForNextCycle()`，所以不再需要 `Refresh`；命中后，`Dizzy` 自己用 `animTimer=0.3` 表达短暂停留，结束后直接重置到 `Wait`，所以不再需要 `Delay`，也不会复用 `Down`。
 
-- 代码入口：`src/ecs/ShrewLifecycle.ts`、`src/ecs/systems/ShrewStateSystem.ts`、`src/ecs/systems/HitDetectionSystem.ts`、`src/ecs/systems/SceneCycleSystem.ts`。
+- 代码入口：`src/ecs/gameplay/core/ShrewLifecycle.ts`、`src/ecs/gameplay/core/ShrewStateSystem.ts`、`src/ecs/gameplay/core/HitDetectionSystem.ts`、`src/ecs/gameplay/core/SceneCycleSystem.ts`。
 - 数据流：自然循环是 `Stand -> Down -> resetShrewForNextCycle -> Wait`；命中循环是 `HitDetectionSystem -> startShrewDizzyHold -> Dizzy -> resetShrewForNextCycle -> Wait`。
 - 常见坑：如果在命中时不重置 `animTimer`，`Dizzy` 会继承 Stand 的剩余停留时间；如果命中后还转 `Down`，会把“自然入洞动画”和“被击中消失”两种语义混在一起。
 - 验证方式：`npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts src/tests/ecs/SceneCycleSystem.test.ts src/tests/ecs/HitDetectionSystem.test.ts`。

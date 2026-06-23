@@ -1,4 +1,4 @@
-import type { DirtyAspect } from "../ecs/dirty/DirtySchemaTypes";
+import type { DirtyAspect } from "../sync/dirty/DirtySchemaTypes";
 import type { SyncChannel } from "../binding/SyncView";
 import type { FeatureSetupContext, FeatureSystemEntry, GameFeature, GameSystemPhase } from "./GameFeature";
 

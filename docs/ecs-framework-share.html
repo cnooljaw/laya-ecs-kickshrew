@@ -701,7 +701,7 @@
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/world.ts, src/features/core/CoreGameplayFeature.ts</span>
+          <span>对应代码：src/ecs/world.ts, src/features/CoreGameplayFeature.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -800,7 +800,7 @@
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/components/index.ts, src/ecs/world.ts, src/ecs/systems/ShrewStateSystem.ts</span>
+          <span>对应代码：src/ecs/components/index.ts, src/ecs/world.ts, src/ecs/gameplay/core/ShrewStateSystem.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1017,7 +1017,7 @@
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/systems/ShrewStateSystem.ts, src/ecs/ShrewLifecycle.ts</span>
+          <span>对应代码：src/ecs/gameplay/core/ShrewStateSystem.ts, src/ecs/gameplay/core/ShrewLifecycle.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1066,7 +1066,7 @@
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/sync/rules/*ViewRules.ts, src/binding/SyncView.ts</span>
+          <span>对应代码：src/sync/dirty/DirtySchemaRunner.ts, src/sync/rules/*ViewRules.ts, src/binding/SyncView.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1148,7 +1148,7 @@ progress:    0 -> 0           => 不标</pre>
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/dirty/DirtySchemaRunner.ts, src/ecs/dirty/aspects/ShrewDirtyAspect.ts</span>
+          <span>对应代码：src/sync/dirty/DirtySchemaRunner.ts, src/sync/dirty/aspects/ShrewDirtyAspect.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1219,7 +1219,7 @@ rule(BIT_SCENE_TIMER, "场景计时器",
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/systems/SceneCycleSystem.ts, src/ecs/dirty/aspects/SceneDirtyAspect.ts, src/binding/SceneViewBinding.ts</span>
+          <span>对应代码：src/ecs/gameplay/core/SceneCycleSystem.ts, src/sync/dirty/aspects/SceneDirtyAspect.ts, src/binding/SceneViewBinding.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1296,7 +1296,7 @@ rule(BIT_ANIM_PROGRESS, "动画进度",
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/systems/ShrewStateSystem.ts, src/sync/rules/ShrewViewRules.ts, src/sync/rules/ViewBindingRule.ts</span>
+          <span>对应代码：src/ecs/gameplay/core/ShrewStateSystem.ts, src/sync/rules/ShrewViewRules.ts, src/sync/rules/ViewBindingRule.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1403,7 +1403,7 @@ git commit -m "feat: add score milestone celebration" \
         </header>
         <div class="content split-wide">
           <div class="rows">
-            <div class="panel accent-green"><strong>1. 薄 Feature 装配</strong><p>`src/features/monster/MonsterFeature.ts` 只装配；Component、Factory、System、DirtyAspect 放 `src/ecs/gameplay/monster`，Config/SyncRules/Binding/Node 回到各自层。</p></div>
+            <div class="panel accent-green"><strong>1. 薄 Feature 装配</strong><p>`src/features/MonsterFeature.ts` 只装配；Component、Factory、System 放 `src/ecs/gameplay/monster`，DirtyAspect 放 `src/sync/dirty/aspects`，Config/SyncRules/Binding/Node 回到各自层。</p></div>
             <div class="panel accent-blue"><strong>2. Rhino 配置化</strong><p>`MonsterType.Rhino` 指向 `resources/monster/rhino.sk`，默认同屏 1 个，`PlayerComponent.money` 跨过 100 的新倍数时出现一次；若 Rhino 仍在场，本次触发直接丢弃。</p></div>
             <div class="panel accent-violet"><strong>3. System 管 10 秒生命周期</strong><p>`monsterSpawnSystem` 负责触发出现，`monsterLifetimeSystem` 只改 ECS 字段：超过 10 秒设置 `visible=0`，不删除 entity。</p></div>
             <div class="panel accent-red"><strong>4. SyncView channel 接入</strong><p>`MonsterComponent.visible -> BIT_MONSTER_SHOW -> DirtyComponent.monsterDirty -> monsterViewBinding -> MonsterNode.setVisible()`。</p></div>

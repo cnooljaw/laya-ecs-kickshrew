@@ -1,4 +1,4 @@
-import type { DirtyAspect } from "../ecs/dirty/DirtySchemaTypes";
+import type { DirtyAspect } from "../sync/dirty/DirtySchemaTypes";
 import type { PerfTestRuntimeConfig } from "../config/PerfTestConfig";
 import type { SingletonEntities } from "../ecs/world";
 import type { SyncChannel } from "../binding/SyncView";

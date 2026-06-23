@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { DirtyAspect } from "../../ecs/dirty/DirtySchemaTypes";
+import type { DirtyAspect } from "../../sync/dirty/DirtySchemaTypes";
 import { system, type GameFeature } from "../../features/GameFeature";
 import { GAME_FEATURES } from "../../features/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../features/GameFeatureRegistry";

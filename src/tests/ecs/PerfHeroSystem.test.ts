@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createGameWorld, createPerfHeroEntities } from "../../ecs/world";
 import { PerfHeroComponent } from "../../ecs/components";
-import { perfHeroSystem } from "../../ecs/systems/PerfHeroSystem";
+import { perfHeroSystem } from "../../ecs/gameplay/perfHero/PerfHeroSystem";
 import { PERF_HERO_VIEW_LAYOUT, PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
 
 describe("PerfHeroSystem", () => {

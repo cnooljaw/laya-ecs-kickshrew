@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld, createSingletonEntities } from '../../ecs/world';
 import { HammerComponent, PlayerComponent } from '../../ecs/components';
 import { HammerType } from '../../ecs/types';
-import { hammerSystem } from '../../ecs/systems/HammerSystem';
+import { hammerSystem } from '../../ecs/gameplay/hammer/HammerSystem';
 
 describe('HammerSystem', () => {
   let world: ReturnType<typeof createGameWorld>;

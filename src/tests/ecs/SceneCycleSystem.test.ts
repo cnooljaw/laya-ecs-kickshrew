@@ -3,7 +3,7 @@ import { createGameWorld, createShrewEntity, createHoleEntities, createSingleton
 import { SceneComponent, ShrewComponent, DirtyComponent } from '../../ecs/components';
 import { MapType, ShrewAction, ShrewType, HOLE_COUNT } from '../../ecs/types';
 import { SCENE_CYCLE_INTERVAL } from '../../config/SceneConfig';
-import { sceneCycleSystem } from '../../ecs/systems/SceneCycleSystem';
+import { sceneCycleSystem } from '../../ecs/gameplay/core/SceneCycleSystem';
 
 describe('SceneCycleSystem', () => {
   let world: ReturnType<typeof createGameWorld>;

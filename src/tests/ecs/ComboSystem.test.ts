@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld, createShrewEntity, createHoleEntities, createSingletonEntities } from '../../ecs/world';
 import { ShrewComponent, HoleComponent, ComboComponent } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType, HOLE_COUNT, GRID_SIZE } from '../../ecs/types';
-import { comboSystem, getAdjacentHoles } from '../../ecs/systems/ComboSystem';
+import { comboSystem, getAdjacentHoles } from '../../ecs/gameplay/hud/ComboSystem';
 
 describe('ComboSystem', () => {
   let world: ReturnType<typeof createGameWorld>;

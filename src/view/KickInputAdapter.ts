@@ -1,5 +1,5 @@
-import { comboSystem } from "../ecs/systems/ComboSystem";
-import { hitDetectionSystem } from "../ecs/systems/HitDetectionSystem";
+import { hitDetectionSystem } from "../ecs/gameplay/core/HitDetectionSystem";
+import { comboSystem } from "../ecs/gameplay/hud/ComboSystem";
 import { AnimationComponent, HammerComponent, ShrewComponent } from "../ecs/components";
 import { SingletonEntities } from "../ecs/world";
 import { NetworkAdapter } from "../network/NetworkAdapter";

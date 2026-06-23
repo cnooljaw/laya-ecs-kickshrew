@@ -36,10 +36,8 @@ Laya 入口层
 
 纯游戏状态/规则层
   ecs/components
-  ecs/systems
   ecs/gameplay/*/*
   ecs/types
-  ecs/ShrewLifecycle.ts
 
 表现同步层
   sync/contracts/*ViewContract.ts
@@ -161,7 +159,7 @@ Wait -> Up -> Stand -> Down -> Wait
 Dizzy(被击中短暂停留) -> Wait
 ```
 
-`None/Refresh/Delay` 已移除。下一轮重置统一走 `src/ecs/ShrewLifecycle.ts` 的 `resetShrewForNextCycle()`，命中短暂停留统一走 `startShrewDizzyHold()`。
+`None/Refresh/Delay` 已移除。下一轮重置统一走 `src/ecs/gameplay/core/ShrewLifecycle.ts` 的 `resetShrewForNextCycle()`，命中短暂停留统一走 `startShrewDizzyHold()`。
 
 自然循环：
 
@@ -253,12 +251,12 @@ createXxxEntity(world)
 
 ## 扩展入口
 
-- 改状态机：`src/ecs/systems/ShrewStateSystem.ts`、`src/ecs/ShrewLifecycle.ts`
-- 改命中规则：`src/ecs/systems/HitDetectionSystem.ts`、`src/view/KickInputAdapter.ts`
-- 改地图/洞位：`src/config/HolePositions.ts`、`src/config/SceneConfig.ts`、`src/ecs/systems/SceneCycleSystem.ts`
-- 改锤子/怒气：`src/ecs/systems/HammerSystem.ts`、`src/config/HammerConfig.ts`、`src/view/HammerNode.ts`
-- 接真实服务器：`src/network/KickSocket.ts`、`src/network/NetworkAdapter.ts`、`src/ecs/systems/HitResponseSystem.ts`
-- 做性能压测：`src/config/PerfTestConfig.ts`、`src/config/ViewLayoutConfig.ts`、`src/ecs/systems/PerfHeroSystem.ts`、`src/view/PerfHeroNode.ts`、`docs/performance-tuning.md`
+- 改状态机：`src/ecs/gameplay/core/ShrewStateSystem.ts`、`src/ecs/gameplay/core/ShrewLifecycle.ts`
+- 改命中规则：`src/ecs/gameplay/core/HitDetectionSystem.ts`、`src/view/KickInputAdapter.ts`
+- 改地图/洞位：`src/config/HolePositions.ts`、`src/config/SceneConfig.ts`、`src/ecs/gameplay/core/SceneCycleSystem.ts`
+- 改锤子/怒气：`src/ecs/gameplay/hammer/HammerSystem.ts`、`src/config/HammerConfig.ts`、`src/view/HammerNode.ts`
+- 接真实服务器：`src/network/KickSocket.ts`、`src/network/NetworkAdapter.ts`、`src/ecs/gameplay/hud/HitResponseSystem.ts`
+- 做性能压测：`src/config/PerfTestConfig.ts`、`src/config/ViewLayoutConfig.ts`、`src/ecs/gameplay/perfHero/PerfHeroSystem.ts`、`src/view/PerfHeroNode.ts`、`docs/performance-tuning.md`
 
 ## 架构原则
 

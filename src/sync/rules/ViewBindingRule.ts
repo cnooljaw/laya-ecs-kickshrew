@@ -1,5 +1,5 @@
-import { field } from "../../ecs/dirty/DirtyField";
-import type { DirtyField, DirtyMark } from "../../ecs/dirty/DirtySchemaTypes";
+import { field } from "../dirty/DirtyField";
+import type { DirtyField, DirtyMark } from "../dirty/DirtySchemaTypes";
 
 export interface ViewRuleContext<TNode> {
   eid: number;

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { IPerfHeroNode } from "../../sync/contracts/PerfHeroViewContract";
 import { createGameWorld, createPerfHeroEntities } from "../../ecs/world";
 import { DirtyComponent, PerfHeroComponent } from "../../ecs/components";
-import { dirtyMarkSystem } from "../../ecs/systems/DirtyMarkSystem";
+import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
 import { SyncView } from "../../binding/SyncView";
 import { CORE_SYNC_CHANNELS } from "../../binding/CoreSyncChannels";
 import {
@@ -11,7 +11,7 @@ import {
 } from "../../binding/PerfHeroViewBinding";
 import { BIT_PERF_HERO_SPAWN } from "../../sync/DirtyFlags";
 import { PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
-import { PerfHeroDirtyAspect } from "../../ecs/dirty/aspects/PerfHeroDirtyAspect";
+import { PerfHeroDirtyAspect } from "../../sync/dirty/aspects/PerfHeroDirtyAspect";
 
 describe("PerfHeroViewBinding", () => {
   const registered: number[] = [];
