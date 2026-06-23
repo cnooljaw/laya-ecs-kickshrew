@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { DirtyAspect } from "../../ecs/dirty/DirtySchemaTypes";
-import type { GameFeature } from "../../features/GameFeature";
+import { system, type GameFeature } from "../../features/GameFeature";
+import { GAME_FEATURES } from "../../features/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../features/GameFeatureRegistry";
 
 const sceneAspect: DirtyAspect = {
@@ -22,7 +23,7 @@ const sceneAspect: DirtyAspect = {
 function feature(name: string): GameFeature {
   return {
     name,
-    systems: [() => {}],
+    systems: [system("feature", `${name}:system`, () => {})],
     dirtyAspects: [sceneAspect],
     syncChannels: [
       {
@@ -39,9 +40,31 @@ describe("GameFeatureRegistry", () => {
   it("集中展开 feature systems、dirty aspects 和 sync channels", () => {
     const registry = createGameFeatureRegistry([feature("featureA")]);
 
-    expect(registry.systems()).toHaveLength(1);
+    expect(registry.systemsByPhase("feature")).toHaveLength(1);
+    expect(registry.systemsByPhase("state")).toEqual([]);
     expect(registry.dirtyAspects()).toEqual([sceneAspect]);
     expect(registry.syncChannels().map(channel => channel.name)).toEqual(["featureA:scene"]);
+  });
+
+  it("真实 GAME_FEATURES 表能通过注册校验", () => {
+    const registry = createGameFeatureRegistry(GAME_FEATURES);
+
+    expect(registry.systemsByPhase("state").map(system => system.name)).toEqual([
+      "animationTimerSystem",
+      "shrewStateSystem",
+      "sceneCycleSystem",
+      "hammerSystem",
+    ]);
+    expect(registry.syncChannels().map(channel => channel.name)).toContain("monster");
+  });
+
+  it("拒绝重复 system name，避免调试时难以定位顺序", () => {
+    const first = feature("featureA");
+    const second = feature("featureB");
+    second.systems = first.systems;
+
+    expect(() => validateGameFeatures([first, second]))
+      .toThrow("FeatureSystem name 重复: featureA:system");
   });
 
   it("拒绝重复 feature name", () => {

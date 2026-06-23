@@ -4,15 +4,15 @@
  * 职责: 比较当前帧与上一帧的组件数据差异，设置 DirtyComponent 的 bitmask。
  * SyncView 读取这些 bitmask 来决定哪些 Laya 节点属性需要更新。
  *
- * 具体的 entity 组件组合、字段和 dirty bit 声明在 ecs/dirty/aspects；
+ * 具体的 entity 组件组合、字段和 dirty bit 由 FeatureRegistry 提供；
  * sync/rules/*ViewRules 同时派生 dirty mark 和 view apply。
  */
-import { DIRTY_ASPECTS } from "../dirty/aspects";
 import {
   createDirtySnapshotStore,
   markAspectDirty,
 } from "../dirty/DirtySchemaRunner";
 import type {
+  DirtyAspect,
   DirtySnapshotStore,
   DirtyStoreKey,
   Snapshot,
@@ -32,12 +32,9 @@ function getStore(world: object): DirtySnapshotStore {
 /**
  * 脏标记系统: 比较前后帧差异，设置 dirty bits
  */
-export function dirtyMarkSystem(world: any, extraAspects: readonly typeof DIRTY_ASPECTS[number][] = []): void {
+export function dirtyMarkSystem(world: any, aspects: readonly DirtyAspect[]): void {
   const store = getStore(world);
-  for (const aspect of DIRTY_ASPECTS) {
-    markAspectDirty(world, store, aspect);
-  }
-  for (const aspect of extraAspects) {
+  for (const aspect of aspects) {
     markAspectDirty(world, store, aspect);
   }
 }

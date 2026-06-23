@@ -1,6 +1,6 @@
 import { createRuleSyncChannel } from "../../binding/SyncView";
 import { DirtyComponent } from "../../ecs/components";
-import type { GameFeature } from "../GameFeature";
+import { system, type GameFeature } from "../GameFeature";
 import { monsterRegistry, monsterViewBinding } from "../../binding/MonsterViewBinding";
 import { assertValidMonsterConfig, MONSTER_SPAWN_RULES } from "../../config/MonsterConfig";
 import { MonsterDirtyAspect } from "../../ecs/gameplay/monster/MonsterDirtyAspect";
@@ -11,7 +11,10 @@ import { MonsterNode } from "../../view/MonsterNode";
 
 export const MonsterFeature: GameFeature = {
   name: "monster",
-  systems: [monsterLifetimeSystem, monsterSpawnSystem],
+  systems: [
+    system("feature", "monsterLifetimeSystem", monsterLifetimeSystem),
+    system("feature", "monsterSpawnSystem", monsterSpawnSystem),
+  ],
   dirtyAspects: [MonsterDirtyAspect],
   syncChannels: [
     createRuleSyncChannel({

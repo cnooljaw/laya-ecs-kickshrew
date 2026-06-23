@@ -109,32 +109,28 @@ Main.ts
 ```text
 createGameWorld()
 createSingletonEntities()
-createHoleEntities()
-createShrewEntity()
-new SceneLayer/HoleNode/ShrewNode/HammerNode/PlayerHUD/...
-viewRegistry.registerXxxNode(eid, node)
-syncView.registerXxxBinding(...)
+GAME_FEATURE_REGISTRY.setupAll(...)
+  -> Feature 创建自己的 ECS 实体和 Laya 节点
+  -> Feature 通过 ViewRegistry 注册 eid/node
+syncView.registerChannels(GAME_FEATURE_REGISTRY.syncChannels())
 network.onResponse(resp => hitResponseSystem(world, resp))
-new GameLoopPipeline(...)
+new GameLoopPipeline(featureRegistry)
 new KickInputAdapter(...)
-forceFullSync all entities
+forceFullSync Feature 上报的初始实体
 syncView.sync(world)
 ```
 
 `GameLoopPipeline.update(deltaSec)` 的系统顺序：
 
 ```text
-animationTimerSystem(world, deltaSec)
-shrewStateSystem(world, deltaSec)
-sceneCycleSystem(world)
-hammerSystem(world)
+featureRegistry.systemsByPhase("state")
 network.update()
-perfHeroSystem(world, deltaSec)  // 仅 perf 压测实体
-dirtyMarkSystem(world)
+featureRegistry.systemsByPhase("feature")
+dirtyMarkSystem(world, featureRegistry.dirtyAspects())
 syncView.sync(world)
 ```
 
-这个顺序的含义是：先推进规则和状态，再标记 dirty，最后把变化投影到 Laya 节点。`perfHeroSystem` 只处理 `?perf=1` 创建的压测英雄实体，用于测 Laya Spine/Skeleton、dirty binding 和节点池压力，不属于正式打地鼠规则主线。
+这个顺序的含义是：先推进核心规则和状态，再处理独立 Feature 系统，再标记 dirty，最后把变化投影到 Laya 节点。`GameLoopPipeline` 不再手写具体 system 列表，只按 phase 执行 FeatureRegistry 汇总出的系统。
 
 ## 点击流程
 
@@ -213,11 +209,12 @@ HitDetectionSystem
 当前 owner：
 
 - `Main`：Laya `frameLoop`、stage 事件、脚本生命周期。
-- `GameScene`：world、singletons、运行时 adapter、view registry、network callback。
+- `GameScene`：world、singletons、运行时 adapter、view registry、network callback、FeatureRegistry 调用。
+- `Feature`：声明本模块的 system phase、dirty aspect、sync channel，并在 setup 中创建/注册本模块节点。
 - `ViewRegistry`：ECS eid 和 view node 的注册关系，集中 unregister 和 destroy。
 - `view/*Node.ts`：自己创建的 Laya 子节点、timer/tween/异步资源回调保护。
 
-性能压测中的 Spine 池是特殊共享表现资源：`GameScene` 持有 `PerfHeroSpinePoolGroup`，单个 `PerfHeroNode` 只持有当前 active 实例，`ViewRegistry` 仍负责节点销毁和 binding unregister。
+性能压测中的 Spine 池是特殊共享表现资源：`PerfHeroFeature` 在 setup 中创建 `PerfHeroSpinePoolGroup` 并交给运行时 refs，单个 `PerfHeroNode` 只持有当前 active 实例，`ViewRegistry` 仍负责节点销毁和 binding unregister。
 
 ### world 和 entity 生命周期
 
@@ -227,9 +224,8 @@ HitDetectionSystem
 GameScene.init()
   -> createGameWorld()
   -> createSingletonEntities(world)
-  -> createHoleEntities(world, MapType.Meadow)
-  -> createShrewEntity(world, shrewType, MapType.Meadow)
-  -> ViewRegistry.registerXxxNode(eid, node)
+  -> GAME_FEATURE_REGISTRY.setupAll(...)
+  -> Feature 创建自己的实体和 ViewRegistry 注册关系
 ```
 
 `createGameWorld()` 只创建空 world。真正的游戏状态来自 `world.ts` 里创建的几类 entity：

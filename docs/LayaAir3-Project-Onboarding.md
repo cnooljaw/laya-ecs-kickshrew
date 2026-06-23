@@ -96,17 +96,16 @@ Laya stage MOUSE_DOWN
   -> GameScene.onTouch(x, y)
 ```
 
-### 第 10-20 分钟：GameScene 是总装配器
+### 第 10-20 分钟：GameScene 是运行时壳
 
 再读 `src/view/GameScene.ts`。
 
-`GameScene` 不是纯视图类，它是当前项目的运行时装配器。它负责：
+`GameScene` 不是纯视图类，但它不再直接知道所有玩法细节。它负责：
 
 - 创建 ECS world。
 - 创建单例实体：锤子、连击、场景、玩家、网络。
-- 创建 9 个洞位实体和 9 个地鼠实体。
-- 创建 Laya 节点：背景层、洞位、地鼠、锤子、HUD、连击、击中特效。
-- 通过 `ViewRegistry` 注册 view node，并在销毁时统一 unregister/destroy。
+- 调用 `GAME_FEATURE_REGISTRY.setupAll(...)`，让各 Feature 创建自己的实体和 Laya 节点。
+- 注册 `GAME_FEATURE_REGISTRY.syncChannels()` 汇总出的 SyncView channel。
 - 创建 `GameLoopPipeline` 和 `KickInputAdapter`，把帧循环和点击输入从装配器里拆出去。
 - 接入 `NetworkAdapter`。
 - 保留网络回包入口：`network.onResponse(resp => hitResponseSystem(world, resp))`。
@@ -114,17 +113,14 @@ Laya stage MOUSE_DOWN
 `GameScene.update(deltaSec)` 会委托给 `GameLoopPipeline.update(deltaSec)`。顺序很关键：
 
 ```text
-animationTimerSystem(world, deltaSec)
-shrewStateSystem(world, deltaSec)
-sceneCycleSystem(world)
-hammerSystem(world)
+featureRegistry.systemsByPhase("state")
 network.update()
-perfHeroSystem(world, deltaSec)  // perf=1 时处理压测英雄
-dirtyMarkSystem(world)
+featureRegistry.systemsByPhase("feature")
+dirtyMarkSystem(world, featureRegistry.dirtyAspects())
 syncView.sync(world)
 ```
 
-这表示：系统先改 ECS 数据，dirty 系统再标记变更，最后 binding 把变更同步到 Laya 节点。
+这表示：核心状态系统先改 ECS 数据，网络回包进入 ECS，独立玩法系统再执行，dirty 系统按 Feature 声明的 aspect 标记变更，最后 binding 把变更同步到 Laya 节点。
 
 点击时 `GameScene.onTouch(x, y)` 会委托给 `KickInputAdapter.handleTouch(x, y)`：
 
@@ -522,27 +518,24 @@ GameScene.init()
   |
   +-- createGameWorld()
   +-- createSingletonEntities()
-  +-- createHoleEntities()
-  +-- createShrewEntity()
-  +-- new SceneLayer/HoleNode/ShrewNode/HammerNode/PlayerHUD/...
-  +-- viewRegistry.registerXxxNode(eid, node)
-  +-- syncView.registerXxxBinding(...)
+  +-- GAME_FEATURE_REGISTRY.setupAll(...)
+  |   +-- Feature 创建自己的实体和 Laya 节点
+  |   +-- Feature 通过 ViewRegistry 注册 eid/node
+  +-- syncView.registerChannels(GAME_FEATURE_REGISTRY.syncChannels())
   +-- network.onResponse(resp => hitResponseSystem(world, resp))
-  +-- new GameLoopPipeline(...)
+  +-- new GameLoopPipeline(featureRegistry)
   +-- new KickInputAdapter(...)
-  +-- forceFullSync all entities
+  +-- forceFullSync Feature 上报的初始实体
   +-- syncView.sync(world)
 
 每帧:
 GameScene.update(delta)
   |
   +-- GameLoopPipeline.update(delta)
-      +-- animationTimerSystem
-      +-- shrewStateSystem
-      +-- sceneCycleSystem
-      +-- hammerSystem
+      +-- featureRegistry.systemsByPhase("state")
       +-- network.update
-      +-- dirtyMarkSystem
+      +-- featureRegistry.systemsByPhase("feature")
+      +-- dirtyMarkSystem(featureRegistry.dirtyAspects())
       +-- syncView.sync
 
 点击:
@@ -685,6 +678,11 @@ Laya 入口层
   view/KickInputAdapter.ts
   view/ViewRegistry.ts
 
+Feature 装配层
+  features/GameFeature.ts
+  features/GameFeatureRegistry.ts
+  features/*/*Feature.ts
+
 纯游戏状态/规则层
   ecs/components
   ecs/systems
@@ -721,7 +719,8 @@ Laya 表现层
 ecs/systems -> ecs/components/config/network types
 binding -> ecs/components + view interfaces
 view -> Laya + resource/config
-GameScene -> everything for assembly
+Feature -> 装配 ECS factory/system/dirty/sync/view registry
+GameScene -> world/runtime shell + FeatureRegistry
 ```
 
 不要让 ECS system 直接操作 Laya 节点。不要让 Laya 节点直接改权威游戏规则。
@@ -748,16 +747,16 @@ A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 
 
 - 代码入口：`src/ecs/systems/DirtyMarkSystem.ts`、`src/binding/SyncView.ts`、对应 `src/binding/*ViewBinding.ts`。
 - 数据流：system 修改 component，`dirtyMarkSystem` 对比快照写 `DirtyComponent.xxxDirty`，`SyncView.sync()` 调 binding，binding 读取 component 更新 view node。
-- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `*ViewRules` 没比较这个字段；binding 没注册；节点没有注册或已销毁但注册表还留着旧引用。
+- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `*ViewRules` 没比较这个字段；Feature 没声明 dirty aspect 或 sync channel；节点没有注册或已销毁但注册表还留着旧引用。
 - 验证方式：先跑 `npx vitest run src/tests/ecs/DirtyMarkSystem.test.ts`，再在相关 system 后打印 component 和 dirty bit。
 
 ### Q: 地鼠 Up/Down 状态有了，为什么 0.31 秒内没有真正上下移动？
 
-A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `AnimationComponent.progress`。`DirtyMarkSystem` 会把 progress 变化写进 `DirtyComponent.animDirty`，`GameScene` 必须注册 `shrewAnimationViewBinding`，让 `SyncView` 在 anim dirty 时继续调用 `ShrewNode.setAnimation(actionState, animType, progress)`。
+A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `AnimationComponent.progress`。`DirtyMarkSystem` 会把 progress 变化写进 `DirtyComponent.animDirty`，`CoreGameplayFeature` 声明 anim sync channel 后，`SyncView` 会在 anim dirty 时继续调用 `ShrewNode.setAnimation(actionState, animType, progress)`。
 
-- 代码入口：`src/ecs/systems/AnimationTimerSystem.ts`、`src/ecs/systems/DirtyMarkSystem.ts`、`src/binding/ShrewViewBinding.ts`、`src/view/GameScene.ts`。
+- 代码入口：`src/ecs/systems/AnimationTimerSystem.ts`、`src/ecs/systems/DirtyMarkSystem.ts`、`src/features/core/CoreGameplayFeature.ts`、`src/binding/ShrewViewBinding.ts`。
 - 数据流：`AnimationComponent.progress -> DirtyComponent.animDirty -> shrewAnimationViewBinding -> ShrewNode.setAnimation -> mainLayer.y`。
-- 常见坑：只处理 `BIT_SHREW_ACTION` 会同步动作开始，但不会同步动作中间帧；`animDirty` 有值但没有注册 anim binding 时，`SyncView` 会清掉 dirty，画面仍不动。
+- 常见坑：只处理 `BIT_SHREW_ACTION` 会同步动作开始，但不会同步动作中间帧；`animDirty` 有值但 Feature 没声明 anim channel 时，画面仍不动。
 - 验证方式：`npm test -- --run src/tests/binding/ShrewViewBinding.test.ts`。
 
 ### Q: 地鼠状态是不是太多，能不能精简？

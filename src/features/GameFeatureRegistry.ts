@@ -1,10 +1,10 @@
 import type { DirtyAspect } from "../ecs/dirty/DirtySchemaTypes";
 import type { SyncChannel } from "../binding/SyncView";
-import type { FeatureSetupContext, GameFeature, GameSystem } from "./GameFeature";
+import type { FeatureSetupContext, FeatureSystemEntry, GameFeature, GameSystemPhase } from "./GameFeature";
 
 export interface GameFeatureRegistry {
   setupAll(ctx: FeatureSetupContext): void;
-  systems(): GameSystem[];
+  systemsByPhase(phase: GameSystemPhase): FeatureSystemEntry[];
   dirtyAspects(): DirtyAspect[];
   syncChannels(): SyncChannel[];
 }
@@ -17,7 +17,8 @@ export function createGameFeatureRegistry(features: readonly GameFeature[]): Gam
         feature.setup?.(ctx);
       }
     },
-    systems: () => collectFeatureItems(features, feature => feature.systems),
+    systemsByPhase: phase => collectFeatureItems(features, feature => feature.systems)
+      .filter(system => system.phase === phase),
     dirtyAspects: () => collectFeatureItems(features, feature => feature.dirtyAspects),
     syncChannels: () => collectFeatureItems(features, feature => feature.syncChannels),
   };
@@ -26,6 +27,7 @@ export function createGameFeatureRegistry(features: readonly GameFeature[]): Gam
 export function validateGameFeatures(features: readonly GameFeature[]): void {
   const featureNames = new Set<string>();
   const syncChannelNames = new Set<string>();
+  const systemNames = new Set<string>();
 
   for (const feature of features) {
     if (featureNames.has(feature.name)) {
@@ -38,6 +40,13 @@ export function validateGameFeatures(features: readonly GameFeature[]): void {
         throw new Error(`SyncChannel name 重复: ${channel.name}`);
       }
       syncChannelNames.add(channel.name);
+    }
+
+    for (const system of feature.systems ?? []) {
+      if (systemNames.has(system.name)) {
+        throw new Error(`FeatureSystem name 重复: ${system.name}`);
+      }
+      systemNames.add(system.name);
     }
 
     validateFeatureDirtySyncPair(feature);

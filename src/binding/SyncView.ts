@@ -15,14 +15,6 @@ import { DirtyComponent } from "../ecs/components";
 import { DIRTY_TARGETS, type DirtyTarget } from "../sync/DirtyTargets";
 import { bitsOf } from "../sync/rules/ViewBindingRule";
 import type { ViewBindingRule } from "../sync/rules/ViewBindingRule";
-import { SHREW_ANIMATION_RULES, SHREW_COMPONENT_RULES } from "../sync/rules/ShrewViewRules";
-import { HOLE_VIEW_RULES } from "../sync/rules/HoleViewRules";
-import { HAMMER_VIEW_RULES } from "../sync/rules/HammerViewRules";
-import { COMBO_VIEW_RULES } from "../sync/rules/ComboViewRules";
-import { SCENE_VIEW_RULES } from "../sync/rules/SceneViewRules";
-import { PLAYER_VIEW_RULES } from "../sync/rules/PlayerViewRules";
-import { HIT_VIEW_RULES } from "../sync/rules/HitViewRules";
-import { PERF_HERO_VIEW_RULES } from "../sync/rules/PerfHeroViewRules";
 
 const dirtyQuery = defineQuery([DirtyComponent]);
 
@@ -69,88 +61,6 @@ export class SyncView {
     for (const channel of channels) {
       this.registerChannel(channel);
     }
-  }
-
-  /** 注册地鼠绑定 */
-  registerShrewBinding(fn: BindingFn): void {
-    this.registerChannel(createRuleSyncChannel({
-      name: "shrew",
-      dirtyTarget: "shrewDirty",
-      rules: SHREW_COMPONENT_RULES,
-      binding: fn,
-    }));
-  }
-  /** 注册洞位绑定 */
-  registerHoleBinding(fn: BindingFn): void {
-    this.registerChannel(createRuleSyncChannel({
-      name: "hole",
-      dirtyTarget: "holeDirty",
-      rules: HOLE_VIEW_RULES,
-      binding: fn,
-    }));
-  }
-  /** 注册锤子绑定 */
-  registerHammerBinding(fn: BindingFn): void {
-    this.registerChannel(createRuleSyncChannel({
-      name: "hammer",
-      dirtyTarget: "hammerDirty",
-      rules: HAMMER_VIEW_RULES,
-      binding: fn,
-    }));
-  }
-  /** 注册连击绑定 */
-  registerComboBinding(fn: BindingFn): void {
-    this.registerChannel(createRuleSyncChannel({
-      name: "combo",
-      dirtyTarget: "comboDirty",
-      rules: COMBO_VIEW_RULES,
-      binding: fn,
-    }));
-  }
-  /** 注册场景绑定 */
-  registerSceneBinding(fn: BindingFn): void {
-    this.registerChannel(createRuleSyncChannel({
-      name: "scene",
-      dirtyTarget: "sceneDirty",
-      rules: SCENE_VIEW_RULES,
-      binding: fn,
-    }));
-  }
-  /** 注册玩家绑定 */
-  registerPlayerBinding(fn: BindingFn): void {
-    this.registerChannel(createRuleSyncChannel({
-      name: "player",
-      dirtyTarget: "playerDirty",
-      rules: PLAYER_VIEW_RULES,
-      binding: fn,
-    }));
-  }
-  /** 注册动画绑定 */
-  registerAnimBinding(fn: BindingFn): void {
-    this.registerChannel(createRuleSyncChannel({
-      name: "anim",
-      dirtyTarget: "animDirty",
-      rules: SHREW_ANIMATION_RULES,
-      binding: fn,
-    }));
-  }
-  /** 注册击中绑定 */
-  registerHitBinding(fn: BindingFn): void {
-    this.registerChannel(createRuleSyncChannel({
-      name: "hit",
-      dirtyTarget: "hitDirty",
-      rules: HIT_VIEW_RULES,
-      binding: fn,
-    }));
-  }
-  /** 注册调试压测英雄 Spine 绑定 */
-  registerPerfHeroBinding(fn: BindingFn): void {
-    this.registerChannel(createRuleSyncChannel({
-      name: "perfHero",
-      dirtyTarget: "perfHeroDirty",
-      rules: PERF_HERO_VIEW_RULES,
-      binding: fn,
-    }));
   }
 
   /**

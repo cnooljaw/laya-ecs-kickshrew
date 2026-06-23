@@ -696,12 +696,12 @@
               <path d="M500 113 C604 126 674 142 698 156" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow14)"></path>
               <path d="M536 203 H586" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow14)"></path>
               <path d="M431 242 V304" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow14)"></path>
-              <text x="431" y="454" text-anchor="middle" font-size="13" fill="#5f6b7a">GameScene.init 负责把这些 eid 注册到 ViewRegistry，之后 SyncView 才能找到对应 Laya 节点</text>
+              <text x="431" y="454" text-anchor="middle" font-size="13" fill="#5f6b7a">Feature.setup 负责把这些 eid 注册到 ViewRegistry，之后 SyncView 才能找到对应 Laya 节点</text>
             </svg>
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/world.ts, src/view/GameScene.ts</span>
+          <span>对应代码：src/ecs/world.ts, src/features/core/CoreGameplayFeature.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -875,11 +875,9 @@
         </header>
         <div class="content">
           <div class="route">
-            <div class="route-step">animationTimerSystem<small>动画进度</small></div>
-            <div class="route-step">shrewStateSystem<small>地鼠 FSM</small></div>
-            <div class="route-step">sceneCycleSystem<small>地图轮换</small></div>
-            <div class="route-step">hammerSystem<small>锤子冷却</small></div>
+            <div class="route-step">state phase<small>核心状态系统</small></div>
             <div class="route-step">network.update<small>超时检查</small></div>
+            <div class="route-step">feature phase<small>独立玩法系统</small></div>
             <div class="route-step">dirtyMarkSystem<small>字段 diff</small></div>
             <div class="route-step">syncView.sync<small>投影到 Laya</small></div>
           </div>
@@ -895,13 +893,10 @@
           </div>
           <pre class="code">GameScene.update(delta)
   -> GameLoopPipeline.update(delta)
-  -> animationTimerSystem
-  -> shrewStateSystem
-  -> sceneCycleSystem
-  -> hammerSystem
+  -> featureRegistry.systemsByPhase("state")
   -> network.update
-  -> perfHeroSystem
-  -> dirtyMarkSystem
+  -> featureRegistry.systemsByPhase("feature")
+  -> dirtyMarkSystem(featureRegistry.dirtyAspects())
   -> syncView.sync</pre>
         </div>
         <footer class="footer">

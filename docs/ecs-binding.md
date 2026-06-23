@@ -65,7 +65,7 @@ BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding
 
 ## DirtyAspect
 
-`src/ecs/dirty/aspects/*DirtyAspect.ts` 声明每类实体的 dirty 映射。`DirtyMarkSystem` 只负责遍历这些 aspect，通用比较逻辑在 `src/ecs/dirty/DirtySchemaRunner.ts`。
+`src/ecs/dirty/aspects/*DirtyAspect.ts` 声明每类实体的 dirty 映射。`DirtyMarkSystem` 只负责遍历外部传入的 aspect 列表，通用比较逻辑在 `src/ecs/dirty/DirtySchemaRunner.ts`。运行时 aspect 列表由各个 `Feature` 声明，再由 `GameFeatureRegistry` 汇总，避免 DirtyMarkSystem 内置固定分支。
 
 核心角色：
 
@@ -179,15 +179,21 @@ monsterViewBinding           MonsterComponent -> MonsterNode
 
 ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 view node 自己查 ECS。
 
-新增独立实体类型时，不再优先修改 `SyncView`。Feature 只需要注册一个 channel：
+新增独立实体类型时，不再优先修改 `SyncView`。Feature 只需要声明自己的 channel，`GameScene` 会统一调用 `syncView.registerChannels(GAME_FEATURE_REGISTRY.syncChannels())`：
 
 ```ts
-createRuleSyncChannel({
+export const MonsterFeature: GameFeature = {
   name: "monster",
-  dirtyTarget: "monsterDirty",
-  rules: MONSTER_SYNC_RULES,
-  binding: monsterViewBinding,
-});
+  dirtyAspects: [MonsterDirtyAspect],
+  syncChannels: [
+    createRuleSyncChannel({
+      name: "monster",
+      dirtyTarget: "monsterDirty",
+      rules: MONSTER_SYNC_RULES,
+      binding: monsterViewBinding,
+    }),
+  ],
+};
 ```
 
 ## 新增 ECS 字段并显示到 Laya

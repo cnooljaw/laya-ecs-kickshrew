@@ -1,20 +1,13 @@
 import { SyncView } from "../binding/SyncView";
-import { animationTimerSystem } from "../ecs/systems/AnimationTimerSystem";
 import { dirtyMarkSystem } from "../ecs/systems/DirtyMarkSystem";
-import { hammerSystem } from "../ecs/systems/HammerSystem";
-import { perfHeroSystem } from "../ecs/systems/PerfHeroSystem";
-import { sceneCycleSystem } from "../ecs/systems/SceneCycleSystem";
-import { shrewStateSystem } from "../ecs/systems/ShrewStateSystem";
 import { NetworkAdapter } from "../network/NetworkAdapter";
-import type { DirtyAspect } from "../ecs/dirty/DirtySchemaTypes";
-import type { GameSystem } from "../features/GameFeature";
+import type { GameFeatureRegistry } from "../features/GameFeatureRegistry";
 
 interface GameLoopPipelineDeps {
   world: any;
   network: NetworkAdapter;
   syncView: SyncView;
-  featureSystems?: readonly GameSystem[];
-  featureDirtyAspects?: readonly DirtyAspect[];
+  featureRegistry: GameFeatureRegistry;
 }
 
 export class GameLoopPipeline {
@@ -23,16 +16,14 @@ export class GameLoopPipeline {
   update(deltaSec: number): void {
     const { world, network, syncView } = this._deps;
 
-    animationTimerSystem(world, deltaSec);
-    shrewStateSystem(world, deltaSec);
-    sceneCycleSystem(world);
-    hammerSystem(world, undefined, false, false, deltaSec);
-    network.update();
-    perfHeroSystem(world, deltaSec);
-    for (const system of this._deps.featureSystems ?? []) {
-      system(world, deltaSec);
+    for (const system of this._deps.featureRegistry.systemsByPhase("state")) {
+      system.run(world, deltaSec);
     }
-    dirtyMarkSystem(world, this._deps.featureDirtyAspects);
+    network.update();
+    for (const system of this._deps.featureRegistry.systemsByPhase("feature")) {
+      system.run(world, deltaSec);
+    }
+    dirtyMarkSystem(world, this._deps.featureRegistry.dirtyAspects());
     syncView.sync(world);
   }
 }

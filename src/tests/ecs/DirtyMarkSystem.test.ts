@@ -31,6 +31,7 @@ import { HitDirtyAspect } from '../../ecs/dirty/aspects/HitDirtyAspect';
 import { HIT_VIEW_RULES } from '../../sync/rules/HitViewRules';
 import { PerfHeroDirtyAspect } from '../../ecs/dirty/aspects/PerfHeroDirtyAspect';
 import { PERF_HERO_VIEW_RULES } from '../../sync/rules/PerfHeroViewRules';
+import { DIRTY_ASPECTS } from '../../ecs/dirty/aspects';
 import { bitsOf } from '../../sync/rules/ViewBindingRule';
 import {
   BIT_HOLE_POS,
@@ -63,6 +64,10 @@ describe('DirtyMarkSystem', () => {
   beforeEach(() => {
     world = createGameWorld();
   });
+
+  function markDirty(): void {
+    dirtyMarkSystem(world, DIRTY_ASPECTS);
+  }
 
   it('ShrewDirtyAspect 由表格式 ShrewViewRules 派生 dirty marks', () => {
     expect(ShrewDirtyAspect.requires).toEqual([
@@ -131,9 +136,9 @@ describe('DirtyMarkSystem', () => {
   it('组件值未变化: 对应 dirty bit 为 0', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
     // 第一次执行建立快照（首次全脏是正常的）
-    dirtyMarkSystem(world);
+    markDirty();
     // 第二次执行，无变化时应为 0
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.shrewDirty[eid]).toBe(0);
   });
@@ -141,14 +146,14 @@ describe('DirtyMarkSystem', () => {
   it('快照对象跨帧复用，避免长期运行时每帧分配临时对象', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
 
-    dirtyMarkSystem(world);
+    markDirty();
     const firstSnapshot = getDirtySnapshotForTest(world, 'shrew', eid);
 
     ShrewComponent.hp[eid] -= 1;
-    dirtyMarkSystem(world);
+    markDirty();
     const secondSnapshot = getDirtySnapshotForTest(world, 'shrew', eid);
 
-    dirtyMarkSystem(world);
+    markDirty();
     const thirdSnapshot = getDirtySnapshotForTest(world, 'shrew', eid);
 
     expect(firstSnapshot).toBeTruthy();
@@ -158,38 +163,38 @@ describe('DirtyMarkSystem', () => {
 
   it('shrewType 变化: BIT_SHREW_TYPE 被设置', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-    dirtyMarkSystem(world); // 建立快照
+    markDirty(); // 建立快照
     ShrewComponent.shrewType[eid] = ShrewType.Blue;
-    dirtyMarkSystem(world); // 比较差异
+    markDirty(); // 比较差异
 
     expect(DirtyComponent.shrewDirty[eid]).not.toBe(0);
   });
 
   it('hp 变化: BIT_SHREW_HP 被设置', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-    dirtyMarkSystem(world);
+    markDirty();
     ShrewComponent.hp[eid] = 0;
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.shrewDirty[eid]).not.toBe(0);
   });
 
   it('actionState 变化: BIT_SHREW_ACTION 被设置', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-    dirtyMarkSystem(world);
+    markDirty();
     ShrewComponent.actionState[eid] = ShrewAction.Up;
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.shrewDirty[eid]).not.toBe(0);
   });
 
   it('多个字段同时变化: 多个 bit 同时为 1', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-    dirtyMarkSystem(world);
+    markDirty();
     ShrewComponent.shrewType[eid] = ShrewType.Blue;
     ShrewComponent.hp[eid] = 0;
     ShrewComponent.actionState[eid] = ShrewAction.Dizzy;
-    dirtyMarkSystem(world);
+    markDirty();
 
     const dirty = DirtyComponent.shrewDirty[eid];
     expect(dirty).not.toBe(0);
@@ -200,9 +205,9 @@ describe('DirtyMarkSystem', () => {
 
   it('animType 变化: animDirty 被设置', () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-    dirtyMarkSystem(world);
+    markDirty();
     AnimationComponent.animType[eid] = 1;
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.animDirty[eid]).not.toBe(0);
   });
@@ -211,18 +216,18 @@ describe('DirtyMarkSystem', () => {
     const singletons = createSingletonEntities(world);
     DirtyComponent.forceFullSync[singletons.scene] = 1;
 
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.forceFullSync[singletons.scene]).toBe(1);
   });
 
   it('HoleComponent 变化: 位置和关联地鼠 dirty bit 被设置', () => {
     const [holeEid] = createHoleEntities(world, MapType.Meadow);
-    dirtyMarkSystem(world);
+    markDirty();
 
     HoleComponent.posXRatio[holeEid] += 0.01;
     HoleComponent.shrewEid[holeEid] = 99;
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.holeDirty[holeEid] & BIT_HOLE_POS).toBeTruthy();
     expect(DirtyComponent.holeDirty[holeEid] & BIT_HOLE_SHREW).toBeTruthy();
@@ -230,12 +235,12 @@ describe('DirtyMarkSystem', () => {
 
   it('HammerComponent 变化: 类型、雷神状态和可击打状态 dirty bit 被设置', () => {
     const singletons = createSingletonEntities(world);
-    dirtyMarkSystem(world);
+    markDirty();
 
     HammerComponent.selectedType[singletons.hammer] = 2;
     HammerComponent.isThunderActive[singletons.hammer] = 1;
     HammerComponent.hitTable[singletons.hammer] = 0;
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.hammerDirty[singletons.hammer] & BIT_HAMMER_TYPE).toBeTruthy();
     expect(DirtyComponent.hammerDirty[singletons.hammer] & BIT_HAMMER_THUNDER).toBeTruthy();
@@ -244,12 +249,12 @@ describe('DirtyMarkSystem', () => {
 
   it('SceneComponent 变化: 地图、计时和过渡 dirty bit 被设置', () => {
     const singletons = createSingletonEntities(world);
-    dirtyMarkSystem(world);
+    markDirty();
 
     SceneComponent.currentMap[singletons.scene] = MapType.Ship;
     SceneComponent.sceneTimer[singletons.scene] = 1;
     SceneComponent.transitioning[singletons.scene] = 1;
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.sceneDirty[singletons.scene] & BIT_SCENE_MAP).toBeTruthy();
     expect(DirtyComponent.sceneDirty[singletons.scene] & BIT_SCENE_TIMER).toBeTruthy();
@@ -258,14 +263,14 @@ describe('DirtyMarkSystem', () => {
 
   it('PlayerComponent 变化: HUD 相关 dirty bit 被设置', () => {
     const singletons = createSingletonEntities(world);
-    dirtyMarkSystem(world);
+    markDirty();
 
     PlayerComponent.money[singletons.player] = 100;
     PlayerComponent.angry[singletons.player] = 50;
     PlayerComponent.power[singletons.player] = 10;
     PlayerComponent.powerTop[singletons.player] = 100;
     PlayerComponent.level[singletons.player] = 2;
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.playerDirty[singletons.player] & BIT_PLAYER_MONEY).toBeTruthy();
     expect(DirtyComponent.playerDirty[singletons.player] & BIT_PLAYER_ANGRY).toBeTruthy();
@@ -275,12 +280,12 @@ describe('DirtyMarkSystem', () => {
 
   it('ComboComponent 变化: 次数、ID 和目标 dirty bit 被设置', () => {
     const singletons = createSingletonEntities(world);
-    dirtyMarkSystem(world);
+    markDirty();
 
     ComboComponent.comboCount[singletons.combo] = 2;
     ComboComponent.comboID[singletons.combo] = 7;
     ComboComponent.targetHole0[singletons.combo] = 1;
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.comboDirty[singletons.combo] & BIT_COMBO_COUNT).toBeTruthy();
     expect(DirtyComponent.comboDirty[singletons.combo] & BIT_COMBO_ID).toBeTruthy();
@@ -291,12 +296,12 @@ describe('DirtyMarkSystem', () => {
     const hitEid = addEntity(world);
     addComponent(world, HitComponent, hitEid);
     addComponent(world, DirtyComponent, hitEid);
-    dirtyMarkSystem(world);
+    markDirty();
 
     HitComponent.shrewIndex[hitEid] = 3;
     HitComponent.reward[hitEid] = 50;
     HitComponent.wasHit[hitEid] = 1;
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.hitDirty[hitEid] & BIT_HIT_INDEX).toBeTruthy();
     expect(DirtyComponent.hitDirty[hitEid] & BIT_HIT_REWARD).toBeTruthy();
@@ -305,11 +310,11 @@ describe('DirtyMarkSystem', () => {
 
   it('PerfHeroComponent 变化: 位置和重生序号 dirty bit 被设置', () => {
     const [eid] = createPerfHeroEntities(world, 1);
-    dirtyMarkSystem(world);
+    markDirty();
 
     PerfHeroComponent.posX[eid] += 1;
     PerfHeroComponent.spawnSeq[eid] += 1;
-    dirtyMarkSystem(world);
+    markDirty();
 
     expect(DirtyComponent.perfHeroDirty[eid] & BIT_PERF_HERO_POS).toBeTruthy();
     expect(DirtyComponent.perfHeroDirty[eid] & BIT_PERF_HERO_SPAWN).toBeTruthy();

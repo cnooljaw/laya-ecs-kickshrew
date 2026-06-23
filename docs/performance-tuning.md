@@ -59,7 +59,7 @@ resources/heros/beila_girl.sk
 ```text
 URL query
   -> getPerfTestRuntimeConfig()
-  -> GameScene._createPerfHeroes(count)
+  -> PerfHeroFeature.setup()
   -> createPerfHeroEntities()
   -> perfHeroSystem(delta)
   -> DirtyMarkSystem 标记 BIT_PERF_HERO_*
@@ -76,7 +76,7 @@ URL query
 - `src/ecs/systems/PerfHeroSystem.ts`：推进压测英雄生命周期。
 - `src/binding/PerfHeroViewBinding.ts`：把 ECS 数据投影给 view node。
 - `src/view/PerfHeroNode.ts`：Spine 资源池、节点复用、进退场显示顺序。
-- `src/view/GameScene.ts`：创建压测节点并持有共享池。
+- `src/features/perfHero/PerfHeroFeature.ts`：声明系统、dirty、sync channel，创建压测节点并持有共享池引用。
 
 ECS 侧只承载权威状态和随机重生，不直接操作 Laya。Spine/Skeleton 的创建、播放、隐藏、池化都属于 view 层。
 
@@ -173,8 +173,8 @@ heroes=200&shrewFast=0
 2. **不要在每次 respawn 时 `destroy + buildArmature`。**  
    即使 `.sk` templet 已缓存，每秒上百次 Skeleton 创建销毁也会带来分配、GC 和构建成本。按 Spine 资源建池，复用 Skeleton 实例。
 
-3. **资源池由场景持有，槽位节点只持有当前实例。**  
-   `GameScene` 持有 `PerfHeroSpinePoolGroup`，每个 `PerfHeroNode` 负责自己的位置和当前 active 实例。场景销毁时统一释放池，节点销毁时 release 当前实例。
+3. **资源池由 Feature 创建，槽位节点只持有当前实例。**  
+   `PerfHeroFeature` 创建 `PerfHeroSpinePoolGroup` 并交给运行时 refs，`GameScene.destroy()` 统一释放池；每个 `PerfHeroNode` 负责自己的位置和当前 active 实例，节点销毁时 release 当前实例。
 
 4. **复用节点进场前必须隐藏并重置本地状态。**  
    pooled Skeleton 可能停在上一轮最后一帧。attach 时先 `visible=false`，重置 `x/y/scale/rotation/alpha`，调用 `play()` 后再显示父容器。
@@ -266,5 +266,5 @@ npm run build:debug
 - ECS 不引入 Laya 对象、Skeleton、loader、timer。
 - binding 只投影数据，不承担池化生命周期。
 - view node 负责局部显示状态、STOPPED 事件、pending 请求和 pooled instance。
-- 生命周期 owner 要清楚：`GameScene` 管共享池，`ViewRegistry` 管节点销毁，`PerfHeroNode` 管当前 active 实例。
+- 生命周期 owner 要清楚：`PerfHeroFeature` 创建共享池并交给运行时 refs，`ViewRegistry` 管节点销毁，`PerfHeroNode` 管当前 active 实例。
 - 不用 `forceFullSync` 或隐藏全局节点来掩盖局部状态机问题。
