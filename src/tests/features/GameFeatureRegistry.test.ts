@@ -58,6 +58,15 @@ describe("GameFeatureRegistry", () => {
     expect(registry.syncChannels().map(channel => channel.name)).toContain("monster");
   });
 
+  it("每帧查询复用预计算结果，避免 Registry 侧产生数组分配", () => {
+    const registry = createGameFeatureRegistry([feature("featureA")]);
+
+    expect(registry.systemsByPhase("feature")).toBe(registry.systemsByPhase("feature"));
+    expect(registry.systemsByPhase("state")).toBe(registry.systemsByPhase("state"));
+    expect(registry.dirtyAspects()).toBe(registry.dirtyAspects());
+    expect(registry.syncChannels()).toBe(registry.syncChannels());
+  });
+
   it("拒绝重复 system name，避免调试时难以定位顺序", () => {
     const first = feature("featureA");
     const second = feature("featureB");

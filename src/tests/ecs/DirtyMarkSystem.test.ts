@@ -31,7 +31,7 @@ import { HitDirtyAspect } from '../../ecs/dirty/aspects/HitDirtyAspect';
 import { HIT_VIEW_RULES } from '../../sync/rules/HitViewRules';
 import { PerfHeroDirtyAspect } from '../../ecs/dirty/aspects/PerfHeroDirtyAspect';
 import { PERF_HERO_VIEW_RULES } from '../../sync/rules/PerfHeroViewRules';
-import { DIRTY_ASPECTS } from '../../ecs/dirty/aspects';
+import { GAME_FEATURE_REGISTRY } from '../../features/GameFeatures';
 import { bitsOf } from '../../sync/rules/ViewBindingRule';
 import {
   BIT_HOLE_POS,
@@ -66,7 +66,7 @@ describe('DirtyMarkSystem', () => {
   });
 
   function markDirty(): void {
-    dirtyMarkSystem(world, DIRTY_ASPECTS);
+    dirtyMarkSystem(world, GAME_FEATURE_REGISTRY.dirtyAspects());
   }
 
   it('ShrewDirtyAspect 由表格式 ShrewViewRules 派生 dirty marks', () => {

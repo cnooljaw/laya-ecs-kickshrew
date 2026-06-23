@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DirtyComponent } from "../../ecs/components";
-import { DIRTY_ASPECTS } from "../../ecs/dirty/aspects";
-import { MonsterDirtyAspect } from "../../ecs/gameplay/monster/MonsterDirtyAspect";
+import { GAME_FEATURE_REGISTRY } from "../../features/GameFeatures";
 import { DIRTY_TARGETS } from "../../sync/DirtyTargets";
 
 describe("DirtyTargets", () => {
@@ -15,9 +14,8 @@ describe("DirtyTargets", () => {
 
   it("覆盖所有 DirtyAspect channel 的 dirtyTarget", () => {
     const knownTargets = new Set(DIRTY_TARGETS);
-    const aspects = [...DIRTY_ASPECTS, MonsterDirtyAspect];
 
-    for (const aspect of aspects) {
+    for (const aspect of GAME_FEATURE_REGISTRY.dirtyAspects()) {
       for (const channel of aspect.channels) {
         expect(knownTargets.has(channel.dirtyTarget)).toBe(true);
       }

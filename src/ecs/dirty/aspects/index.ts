@@ -1,4 +1,3 @@
-import type { DirtyAspect } from "../DirtySchemaTypes";
 import { ComboDirtyAspect } from "./ComboDirtyAspect";
 import { HammerDirtyAspect } from "./HammerDirtyAspect";
 import { HitDirtyAspect } from "./HitDirtyAspect";
@@ -18,14 +17,3 @@ export {
   SceneDirtyAspect,
   ShrewDirtyAspect,
 };
-
-export const DIRTY_ASPECTS: DirtyAspect[] = [
-  ShrewDirtyAspect,
-  HoleDirtyAspect,
-  HammerDirtyAspect,
-  ComboDirtyAspect,
-  SceneDirtyAspect,
-  PlayerDirtyAspect,
-  HitDirtyAspect,
-  PerfHeroDirtyAspect,
-];

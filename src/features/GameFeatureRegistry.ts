@@ -4,23 +4,28 @@ import type { FeatureSetupContext, FeatureSystemEntry, GameFeature, GameSystemPh
 
 export interface GameFeatureRegistry {
   setupAll(ctx: FeatureSetupContext): void;
-  systemsByPhase(phase: GameSystemPhase): FeatureSystemEntry[];
-  dirtyAspects(): DirtyAspect[];
-  syncChannels(): SyncChannel[];
+  systemsByPhase(phase: GameSystemPhase): readonly FeatureSystemEntry[];
+  dirtyAspects(): readonly DirtyAspect[];
+  syncChannels(): readonly SyncChannel[];
 }
 
 export function createGameFeatureRegistry(features: readonly GameFeature[]): GameFeatureRegistry {
   validateGameFeatures(features);
+  const systems = collectFeatureItems(features, feature => feature.systems);
+  const stateSystems = systems.filter(system => system.phase === "state");
+  const featureSystems = systems.filter(system => system.phase === "feature");
+  const dirtyAspects = collectFeatureItems(features, feature => feature.dirtyAspects);
+  const syncChannels = collectFeatureItems(features, feature => feature.syncChannels);
+
   return {
     setupAll: ctx => {
       for (const feature of features) {
         feature.setup?.(ctx);
       }
     },
-    systemsByPhase: phase => collectFeatureItems(features, feature => feature.systems)
-      .filter(system => system.phase === phase),
-    dirtyAspects: () => collectFeatureItems(features, feature => feature.dirtyAspects),
-    syncChannels: () => collectFeatureItems(features, feature => feature.syncChannels),
+    systemsByPhase: phase => phase === "state" ? stateSystems : featureSystems,
+    dirtyAspects: () => dirtyAspects,
+    syncChannels: () => syncChannels,
   };
 }
 
