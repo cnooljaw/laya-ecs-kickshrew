@@ -130,7 +130,6 @@ hitDetectionSystem(world, xRatio, yRatio)
 锤子跟随并播放击打动画
 如果击中：
   播放音效
-  comboSystem(world, hitHoleIndex)
   network.sendKick(...)
 否则：
   播放未击中音效
@@ -148,7 +147,6 @@ hitDetectionSystem(world, xRatio, yRatio)
 ShrewComponent       地鼠类型、血量、状态、帽子、地图、可点击、动画计时、道具
 HoleComponent        洞位行列、位置比例、绑定的地鼠 eid、zIndex
 HammerComponent      当前锤子、雷神锤状态、是否可击打 hitTable
-ComboComponent       连击数、comboID、最多 3 个目标洞位
 SceneComponent       当前地图、场景计时、循环间隔、切换状态
 PlayerComponent      金币、怒气、体力、等级
 AnimationComponent   动画类型、进度、时长
@@ -231,12 +229,6 @@ touchYRatio = stage.mouseY / 640
 
 洞位坐标来自 `src/config/HolePositions.ts`。
 
-#### ComboSystem
-
-`ComboSystem.ts` 负责连击目标选择。
-
-它根据被击中的洞位，在 3x3 网格中找相邻洞位，最多取 3 个可点击地鼠作为连击目标。洞位对外协议用 1-9，所以写回 `targetHole0/1/2` 时会 `+1`。
-
 #### SceneCycleSystem
 
 `SceneCycleSystem.ts` 负责地图循环。
@@ -274,7 +266,6 @@ Meadow -> Ship -> Space -> Meadow
 - `shrewDirty` / `animDirty`：地鼠状态和动画进度。
 - `holeDirty`：洞位坐标、绑定地鼠、zIndex。
 - `hammerDirty`：锤子类型、雷神锤状态、是否可击打。
-- `comboDirty`：连击次数、comboID、目标洞位。
 - `sceneDirty`：当前地图、场景计时、切换状态。
 - `playerDirty`：金币、怒气、体力/体力上限、等级。
 - `hitDirty`：击中特效的地鼠索引、奖励、是否命中。
@@ -292,22 +283,7 @@ Entity eid
 
 每条 dirty binding 链路都有一张更好读的表：`src/sync/rules/*ViewRules.ts`。它把 dirty 检测和 view 投影放在同一行配置里。rules 依赖 `src/sync/contracts/*ViewContract.ts` 的表现接口，不直接依赖 binding 文件：
 
-```ts
-const rule = createRule<IComboNode, ComboField>();
-
-export const COMBO_VIEW_RULES = defineViewRules<IComboNode, ComboField>(
-  "ComboComponent",
-  ComboComponent,
-  [
-    // bit                 label            fields                                  apply
-    rule(BIT_COMBO_COUNT,   "连击次数",      ["comboCount"],                         applyCombo),
-    rule(BIT_COMBO_ID,      "连击编号",      ["comboID"],                            noView),
-    rule(BIT_COMBO_TARGETS, "连击目标洞位",  ["targetHole0", "targetHole1", "targetHole2"], applyCombo),
-  ],
-);
-```
-
-`fields` 是 DirtyMarkSystem 要比较的 ECS 字段，`apply` 是对应 `*ViewBinding` 命中 dirty bit 后真正调用的函数，`allBits` 由 `bitsOf(rules)` 自动得到。`noView` 表示字段只参与 dirty 记录，不直接调用 view。比如 `BIT_COMBO_COUNT` 和 `BIT_COMBO_TARGETS` 都复用 `applyCombo`，同一帧同时变化时 binding 会去重，只刷新一次连击 UI。
+`fields` 是 DirtyMarkSystem 要比较的 ECS 字段，`apply` 是对应 `*ViewBinding` 命中 dirty bit 后真正调用的函数，`allBits` 由 `bitsOf(rules)` 自动得到。`noView` 表示字段只参与 dirty 记录，不直接调用 view。
 
 ### 第 40-50 分钟：dirty binding 怎么把 ECS 显示出来
 
@@ -333,7 +309,6 @@ shrewAnimationViewBinding
                    AnimationComponent.progress -> ShrewNode 位移
 holeViewBinding    HoleComponent -> HoleNode
 hammerViewBinding  HammerComponent -> HammerNode
-comboViewBinding   ComboComponent -> ComboNode
 sceneViewBinding   SceneComponent -> SceneLayer
 playerViewBinding  PlayerComponent -> PlayerHUD
 hitViewBinding     HitComponent -> HitEffectNode
@@ -380,7 +355,6 @@ HoleNode            洞位容器
 ShrewNode           复合地鼠精灵，处理 Cocos 坐标到 Laya 坐标转换
 HammerNode          锤子光标和击打动画
 PlayerHUD           玩家金币/怒气/体力/等级
-ComboNode           连击表现
 HitEffectNode       金币/宝箱等击中特效
 GoldParticleNode    金币粒子
 DizzyStarNode       眩晕星星
@@ -544,7 +518,6 @@ GameScene.onTouch(x, y)
   +-- KickInputAdapter.handleTouch(x, y)
       +-- hitDetectionSystem
       +-- HammerNode.followTouch/playHitAnimation
-      +-- comboSystem
       +-- NetworkAdapter.sendKick
           |
           +-- KickSocket.sendKick protobuf

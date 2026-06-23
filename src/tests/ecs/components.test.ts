@@ -7,7 +7,6 @@ import {
   ShrewComponent,
   HoleComponent,
   HammerComponent,
-  ComboComponent,
   SceneComponent,
   PlayerComponent,
   AnimationComponent,
@@ -192,14 +191,6 @@ describe("ECS Components & World", () => {
       expect(PlayerComponent.money[singletons.player]).toBe(0);
       expect(PlayerComponent.angry[singletons.player]).toBe(0);
       expect(PlayerComponent.power[singletons.player]).toBe(0);
-    });
-
-    it("should create combo singleton with zero values", () => {
-      const world = createGameWorld();
-      const singletons = createSingletonEntities(world);
-
-      expect(ComboComponent.comboCount[singletons.combo]).toBe(0);
-      expect(ComboComponent.comboID[singletons.combo]).toBe(0);
     });
 
     it("should create network singleton", () => {

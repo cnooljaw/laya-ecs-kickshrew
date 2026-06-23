@@ -25,11 +25,6 @@ export const BIT_HAMMER_TYPE = 0x0001;
 export const BIT_HAMMER_THUNDER = 0x0002;
 export const BIT_HAMMER_HITTABLE = 0x0004;
 
-// ---- ComboComponent 脏标记 ----
-export const BIT_COMBO_COUNT = 0x0001;
-export const BIT_COMBO_ID = 0x0002;
-export const BIT_COMBO_TARGETS = 0x0004;
-
 // ---- SceneComponent 脏标记 ----
 export const BIT_SCENE_MAP = 0x0001;
 export const BIT_SCENE_TIMER = 0x0002;

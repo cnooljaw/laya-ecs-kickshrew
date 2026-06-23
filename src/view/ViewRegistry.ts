@@ -1,4 +1,3 @@
-import { registerComboNode, unregisterComboNode } from "../binding/ComboViewBinding";
 import { registerHammerNode, unregisterHammerNode } from "../binding/HammerViewBinding";
 import { registerHitEffectNode, unregisterHitEffectNode } from "../binding/HitViewBinding";
 import { registerHoleNode, unregisterHoleNode } from "../binding/HoleViewBinding";
@@ -7,7 +6,6 @@ import { registerPerfHeroNode, unregisterPerfHeroNode } from "../binding/PerfHer
 import { registerSceneLayer, unregisterSceneLayer } from "../binding/SceneViewBinding";
 import { registerShrewNode, unregisterShrewNode } from "../binding/ShrewViewBinding";
 import type { ViewNodeRegistry } from "../binding/RuleViewBinding";
-import type { IComboNode } from "../sync/contracts/ComboViewContract";
 import type { IHammerNode } from "../sync/contracts/HammerViewContract";
 import type { IHitEffectNode } from "../sync/contracts/HitViewContract";
 import type { IHoleNode } from "../sync/contracts/HoleViewContract";
@@ -50,11 +48,6 @@ export class ViewRegistry {
   registerPlayerHUD(eid: number, node: IPlayerHUD & Destroyable): void {
     registerPlayerHUD(eid, node);
     this._track(node, () => unregisterPlayerHUD(eid));
-  }
-
-  registerComboNode(eid: number, node: IComboNode & Destroyable): void {
-    registerComboNode(eid, node);
-    this._track(node, () => unregisterComboNode(eid));
   }
 
   registerHitEffectNode(eid: number, node: IHitEffectNode & Destroyable): void {

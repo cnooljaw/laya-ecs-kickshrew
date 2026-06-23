@@ -10,7 +10,6 @@ import {
   SceneComponent,
   PlayerComponent,
   HitComponent,
-  ComboComponent,
   PerfHeroComponent,
 } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType } from '../../ecs/types';
@@ -21,8 +20,6 @@ import { HoleDirtyAspect } from '../../sync/dirty/aspects/HoleDirtyAspect';
 import { HOLE_VIEW_RULES } from '../../sync/rules/HoleViewRules';
 import { HammerDirtyAspect } from '../../sync/dirty/aspects/HammerDirtyAspect';
 import { HAMMER_VIEW_RULES } from '../../sync/rules/HammerViewRules';
-import { ComboDirtyAspect } from '../../sync/dirty/aspects/ComboDirtyAspect';
-import { COMBO_VIEW_RULES } from '../../sync/rules/ComboViewRules';
 import { SceneDirtyAspect } from '../../sync/dirty/aspects/SceneDirtyAspect';
 import { SCENE_VIEW_RULES } from '../../sync/rules/SceneViewRules';
 import { PlayerDirtyAspect } from '../../sync/dirty/aspects/PlayerDirtyAspect';
@@ -51,9 +48,6 @@ import {
   BIT_HIT_INDEX,
   BIT_HIT_REWARD,
   BIT_HIT_WASHIT,
-  BIT_COMBO_COUNT,
-  BIT_COMBO_ID,
-  BIT_COMBO_TARGETS,
   BIT_PERF_HERO_POS,
   BIT_PERF_HERO_SPAWN,
 } from '../../sync/DirtyFlags';
@@ -97,7 +91,6 @@ describe('DirtyMarkSystem', () => {
     const cases = [
       { aspect: HoleDirtyAspect, dirtyTarget: 'holeDirty', rules: HOLE_VIEW_RULES },
       { aspect: HammerDirtyAspect, dirtyTarget: 'hammerDirty', rules: HAMMER_VIEW_RULES },
-      { aspect: ComboDirtyAspect, dirtyTarget: 'comboDirty', rules: COMBO_VIEW_RULES },
       { aspect: SceneDirtyAspect, dirtyTarget: 'sceneDirty', rules: SCENE_VIEW_RULES },
       { aspect: PlayerDirtyAspect, dirtyTarget: 'playerDirty', rules: PLAYER_VIEW_RULES },
       { aspect: HitDirtyAspect, dirtyTarget: 'hitDirty', rules: HIT_VIEW_RULES },
@@ -120,7 +113,6 @@ describe('DirtyMarkSystem', () => {
       { aspect: ShrewDirtyAspect, dirtyTarget: 'animDirty', rules: SHREW_ANIMATION_RULES },
       { aspect: HoleDirtyAspect, dirtyTarget: 'holeDirty', rules: HOLE_VIEW_RULES },
       { aspect: HammerDirtyAspect, dirtyTarget: 'hammerDirty', rules: HAMMER_VIEW_RULES },
-      { aspect: ComboDirtyAspect, dirtyTarget: 'comboDirty', rules: COMBO_VIEW_RULES },
       { aspect: SceneDirtyAspect, dirtyTarget: 'sceneDirty', rules: SCENE_VIEW_RULES },
       { aspect: PlayerDirtyAspect, dirtyTarget: 'playerDirty', rules: PLAYER_VIEW_RULES },
       { aspect: HitDirtyAspect, dirtyTarget: 'hitDirty', rules: HIT_VIEW_RULES },
@@ -276,20 +268,6 @@ describe('DirtyMarkSystem', () => {
     expect(DirtyComponent.playerDirty[singletons.player] & BIT_PLAYER_ANGRY).toBeTruthy();
     expect(DirtyComponent.playerDirty[singletons.player] & BIT_PLAYER_POWER).toBeTruthy();
     expect(DirtyComponent.playerDirty[singletons.player] & BIT_PLAYER_LEVEL).toBeTruthy();
-  });
-
-  it('ComboComponent 变化: 次数、ID 和目标 dirty bit 被设置', () => {
-    const singletons = createSingletonEntities(world);
-    markDirty();
-
-    ComboComponent.comboCount[singletons.combo] = 2;
-    ComboComponent.comboID[singletons.combo] = 7;
-    ComboComponent.targetHole0[singletons.combo] = 1;
-    markDirty();
-
-    expect(DirtyComponent.comboDirty[singletons.combo] & BIT_COMBO_COUNT).toBeTruthy();
-    expect(DirtyComponent.comboDirty[singletons.combo] & BIT_COMBO_ID).toBeTruthy();
-    expect(DirtyComponent.comboDirty[singletons.combo] & BIT_COMBO_TARGETS).toBeTruthy();
   });
 
   it('HitComponent 变化: 命中索引、奖励和命中状态 dirty bit 被设置', () => {

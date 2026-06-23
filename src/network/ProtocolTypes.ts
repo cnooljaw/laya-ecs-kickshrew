@@ -25,7 +25,7 @@ export interface KickRequest {
     shrewindex: number;     // 地鼠洞位索引 (1~9)
     protectType: number;    // 保护类型
   }>;
-  comboID: number;          // 连击编号
+  comboID: number;          // 协议兼容保留字段，客户端内部不再计算连击，固定传 0
 }
 
 /** 服务器 → 客户端: 击打结果回包 */
@@ -43,6 +43,6 @@ export interface KickResponse {
     shrewIndex: number;     // 地鼠洞位索引
     reward: number;         // 奖励金额
   }>;
-  combo: number;            // 连击数
-  comboId: number;          // 连击编号
+  combo: number;            // 协议兼容保留字段，客户端内部忽略
+  comboId: number;          // 协议兼容保留字段，客户端内部忽略
 }

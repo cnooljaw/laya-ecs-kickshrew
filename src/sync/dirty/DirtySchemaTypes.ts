@@ -8,7 +8,6 @@ export interface DirtySnapshotStore {
   anim: Map<number, Snapshot>;
   hole: Map<number, Snapshot>;
   hammer: Map<number, Snapshot>;
-  combo: Map<number, Snapshot>;
   scene: Map<number, Snapshot>;
   player: Map<number, Snapshot>;
   hit: Map<number, Snapshot>;

@@ -4,7 +4,6 @@ import {
 } from "./ShrewViewBinding";
 import { holeViewBinding } from "./HoleViewBinding";
 import { hammerViewBinding } from "./HammerViewBinding";
-import { comboViewBinding } from "./ComboViewBinding";
 import { sceneViewBinding } from "./SceneViewBinding";
 import { playerViewBinding } from "./PlayerViewBinding";
 import { hitViewBinding } from "./HitViewBinding";
@@ -13,7 +12,6 @@ import { createRuleSyncChannel, type SyncChannel } from "./SyncView";
 import { SHREW_ANIMATION_RULES, SHREW_COMPONENT_RULES } from "../sync/rules/ShrewViewRules";
 import { HOLE_VIEW_RULES } from "../sync/rules/HoleViewRules";
 import { HAMMER_VIEW_RULES } from "../sync/rules/HammerViewRules";
-import { COMBO_VIEW_RULES } from "../sync/rules/ComboViewRules";
 import { SCENE_VIEW_RULES } from "../sync/rules/SceneViewRules";
 import { PLAYER_VIEW_RULES } from "../sync/rules/PlayerViewRules";
 import { HIT_VIEW_RULES } from "../sync/rules/HitViewRules";
@@ -43,12 +41,6 @@ export const CORE_SYNC_CHANNELS: readonly SyncChannel[] = [
     dirtyTarget: "hammerDirty",
     rules: HAMMER_VIEW_RULES,
     binding: hammerViewBinding,
-  }),
-  createRuleSyncChannel({
-    name: "combo",
-    dirtyTarget: "comboDirty",
-    rules: COMBO_VIEW_RULES,
-    binding: comboViewBinding,
   }),
   createRuleSyncChannel({
     name: "scene",

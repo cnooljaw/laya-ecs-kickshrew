@@ -140,7 +140,6 @@ Laya stage MOUSE_DOWN
       -> 设计坐标转比例
       -> hitDetectionSystem(world, xRatio, yRatio)
       -> HammerNode.followTouch/playHitAnimation
-      -> comboSystem(world, hitHoleIndex)
       -> NetworkAdapter.sendKick(...)
           -> KickSocket.sendKick(...) protobuf encode/send
           -> MockServer.handleKick(...)（本地 mock 先 protobuf decode，回包再 encode）
@@ -228,7 +227,7 @@ GameScene.init()
 
 `createGameWorld()` 只创建空 world。真正的游戏状态来自 `world.ts` 里创建的几类 entity：
 
-- 单例 entity：`hammer`、`combo`、`scene`、`player`、`network`。
+- 单例 entity：`hammer`、`scene`、`player`、`network`。
 - 洞位 entity：9 个 `HoleComponent`，保存行列、坐标比例、zIndex、`shrewEid`。
 - 地鼠 entity：挂 `ShrewComponent`、`AnimationComponent`、`DirtyComponent`。
 - 压测 entity：`PerfHeroComponent` 只服务 perf 调试链路。

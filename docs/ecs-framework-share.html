@@ -660,7 +660,7 @@
         </header>
         <div class="content split-wide">
           <div class="rows">
-            <div class="panel accent-green"><strong>1. 单例 entity</strong><p>`createSingletonEntities(world)` 创建 hammer、combo、scene、player、network。它们不是全局变量，而是 world 里的固定 entity。</p></div>
+            <div class="panel accent-green"><strong>1. 单例 entity</strong><p>`createSingletonEntities(world)` 创建 hammer、scene、player、network。它们不是全局变量，而是 world 里的固定 entity。</p></div>
             <div class="panel accent-blue"><strong>2. 洞位 entity</strong><p>`createHoleEntities(world, MapType.Meadow)` 创建 9 个洞，记录行列、比例坐标、zIndex，以及 `shrewEid` 关联。</p></div>
             <div class="panel accent-amber"><strong>3. 地鼠 entity</strong><p>`createShrewEntity(world, shrewType, mapType)` 给地鼠挂 `ShrewComponent`、`AnimationComponent`、`DirtyComponent`，然后用 `resetShrewForNextCycle` 初始化下一轮等待。</p></div>
           </div>

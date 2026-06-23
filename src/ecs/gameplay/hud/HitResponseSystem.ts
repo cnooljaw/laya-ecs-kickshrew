@@ -6,11 +6,10 @@
  * 2. 更新玩家数据: money/angry/power/level
  * 3. 检查愤怒值触发雷神锤
  * 4. 更新锤子选中类型(hammerId)
- * 5. 更新连击数据(combo/comboId)
- * 6. 返回击中奖励列表(shrewResp)，由视图层播放动画
+ * 5. 返回击中奖励列表(shrewResp)，由视图层播放动画
  */
 import { defineQuery } from "bitecs";
-import { PlayerComponent, HammerComponent, ComboComponent } from "../../components";
+import { PlayerComponent, HammerComponent } from "../../components";
 import { HammerType } from "../../types";
 import { HAMMER_RULES } from "../../../config/GameTuning";
 import { consoleHitTraceLogger, HitTraceLogger } from "../../../debug/HitTraceLogger";
@@ -37,7 +36,6 @@ export interface KickResponse {
 
 const playerQuery = defineQuery([PlayerComponent]);
 const hammerQuery = defineQuery([HammerComponent]);
-const comboQuery = defineQuery([ComboComponent]);
 
 /**
  * 处理击打回包
@@ -85,8 +83,6 @@ export function hitResponseSystem(
       levelAfter: PlayerComponent.level[eid],
       numOfShrew: resp.numOfShrew,
       shrewResp: resp.shrewResp,
-      combo: resp.combo,
-      comboId: resp.comboId,
     });
   }
 
@@ -101,14 +97,6 @@ export function hitResponseSystem(
       HammerComponent.isThunderActive[eid] = 1;
       HammerComponent.selectedType[eid] = HammerType.Thunder;
     }
-  }
-
-  // 更新连击数据
-  const comboEntities = comboQuery(world);
-  if (comboEntities.length > 0 && resp.combo > 0) {
-    const eid = comboEntities[0];
-    ComboComponent.comboCount[eid] = resp.combo;
-    ComboComponent.comboID[eid] = resp.comboId;
   }
 
   return resp.shrewResp || [];

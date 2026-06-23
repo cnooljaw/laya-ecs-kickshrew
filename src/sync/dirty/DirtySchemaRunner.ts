@@ -13,7 +13,6 @@ export function createDirtySnapshotStore(): DirtySnapshotStore {
     anim: new Map(),
     hole: new Map(),
     hammer: new Map(),
-    combo: new Map(),
     scene: new Map(),
     player: new Map(),
     hit: new Map(),

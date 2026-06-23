@@ -23,9 +23,6 @@ export const ATLAS_MAP: Record<string, string> = {
   // ---- 游戏通用 UI ----
   game_view: "kickshrew/kickshrew_game_view",
 
-  // ---- 连击闪电 ----
-  combo_lightning: "kickshrew/kickshrew_combo_lighting",
-
   // ---- 锤子特效 ----
   hammer_effect: "kickshrew/kickshrew_hammer_effect",
   angry_hammer_effect: "kickshrew/kickshrew_angry_hammer_effect",

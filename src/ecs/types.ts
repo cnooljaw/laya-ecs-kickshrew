@@ -68,7 +68,6 @@ export const enum AnimType {
   HatBreak = 5,
   Swelling = 6,
   HammerEffect = 7,
-  ComboLightning = 8,
   TreasureBox = 9,
 }
 

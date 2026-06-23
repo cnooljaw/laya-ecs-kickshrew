@@ -1,5 +1,4 @@
 import { hitDetectionSystem } from "../ecs/gameplay/core/HitDetectionSystem";
-import { comboSystem } from "../ecs/gameplay/hud/ComboSystem";
 import { AnimationComponent, HammerComponent, ShrewComponent } from "../ecs/components";
 import { SingletonEntities } from "../ecs/world";
 import { NetworkAdapter } from "../network/NetworkAdapter";
@@ -90,8 +89,6 @@ export class KickInputAdapter {
       });
       playSound(KICK_INPUT_SOUNDS.hitOne);
       playSound(KICK_INPUT_SOUNDS.mouse1);
-
-      comboSystem(world, result.hitHoleIndex);
 
       const request = {
         cmd: "kick",

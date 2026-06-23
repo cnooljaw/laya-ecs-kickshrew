@@ -4,7 +4,6 @@ import {
   ShrewComponent,
   HoleComponent,
   HammerComponent,
-  ComboComponent,
   SceneComponent,
   PlayerComponent,
   AnimationComponent,
@@ -107,7 +106,6 @@ export function respawnPerfHero(eid: number): void {
 /** 单例实体集合 */
 export interface SingletonEntities {
   hammer: number;
-  combo: number;
   scene: number;
   player: number;
   network: number;
@@ -125,18 +123,6 @@ export function createSingletonEntities(world: ReturnType<typeof createWorld>): 
   HammerComponent.hitCooldownSec[hammer] = 0;
   DirtyComponent.hammerDirty[hammer] = 0;
   DirtyComponent.forceFullSync[hammer] = 0;
-
-  // Combo
-  const combo = addEntity(world);
-  addComponent(world, ComboComponent, combo);
-  addComponent(world, DirtyComponent, combo);
-  ComboComponent.comboCount[combo] = 0;
-  ComboComponent.comboID[combo] = 0;
-  ComboComponent.targetHole0[combo] = 0;
-  ComboComponent.targetHole1[combo] = 0;
-  ComboComponent.targetHole2[combo] = 0;
-  DirtyComponent.comboDirty[combo] = 0;
-  DirtyComponent.forceFullSync[combo] = 0;
 
   // Scene
   const scene = addEntity(world);
@@ -167,7 +153,7 @@ export function createSingletonEntities(world: ReturnType<typeof createWorld>): 
   NetworkComponent.connected[network] = 0;
   NetworkComponent.pendingKick[network] = 0;
 
-  return { hammer, combo, scene, player, network };
+  return { hammer, scene, player, network };
 }
 
 function randomEdgePosition(edge: number): { x: number; y: number } {

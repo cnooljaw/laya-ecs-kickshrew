@@ -12,7 +12,6 @@
 ShrewComponent       地鼠类型、血量、状态、帽子、地图、可点击、动画计时、道具
 HoleComponent        洞位行列、位置比例、绑定的地鼠 eid、zIndex
 HammerComponent      当前锤子、雷神锤状态、是否可击打 hitTable
-ComboComponent       连击数、comboID、最多 3 个目标洞位
 SceneComponent       当前地图、场景计时、循环间隔、切换状态
 PlayerComponent      金币、怒气、体力、等级
 AnimationComponent   动画类型、进度、时长
@@ -104,7 +103,7 @@ const HOLE_VIEW_RULES = defineViewRules<IHoleNode, HoleField>(
 );
 ```
 
-这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。rules 依赖 `src/sync/contracts/*ViewContract.ts` 的表现契约，不直接依赖 binding 文件。`*DirtyAspect` 从 rules 派生 `DirtyMark`，`*ViewBinding` 从同一份 rules 执行 `apply`，`allBits` 也由 `bitsOf(rules)` 计算。`noView` 表示这个字段只参与 dirty 记录，不直接调用 view，例如 `SceneComponent.sceneTimer`、`ComboComponent.comboID`。
+这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view 投影函数。rules 依赖 `src/sync/contracts/*ViewContract.ts` 的表现契约，不直接依赖 binding 文件。`*DirtyAspect` 从 rules 派生 `DirtyMark`，`*ViewBinding` 从同一份 rules 执行 `apply`，`allBits` 也由 `bitsOf(rules)` 计算。`noView` 表示这个字段只参与 dirty 记录，不直接调用 view，例如 `SceneComponent.sceneTimer`。
 
 记忆顺序：
 
@@ -151,7 +150,7 @@ BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding -> HoleNode
 
 这表示 X 或 Y 任一变化都触发同一个位置更新 bit。
 
-多个 dirty bit 共用一个表现更新时，让多行指向同一个 `apply`。例如 `BIT_COMBO_COUNT` 和 `BIT_COMBO_TARGETS` 都指向 `applyCombo`。`applyMatchedRules` 会按函数引用去重，同一帧只调用一次。
+多个 dirty bit 共用一个表现更新时，让多行指向同一个 `apply`。`applyMatchedRules` 会按函数引用去重，同一帧只调用一次。
 
 ## SyncView 和 Binding
 
@@ -170,7 +169,6 @@ shrewViewBinding             ShrewComponent -> ShrewNode
 shrewAnimationViewBinding    AnimationComponent.progress -> ShrewNode 位移
 holeViewBinding              HoleComponent -> HoleNode
 hammerViewBinding            HammerComponent -> HammerNode
-comboViewBinding             ComboComponent -> ComboNode
 sceneViewBinding             SceneComponent -> SceneLayer
 playerViewBinding            PlayerComponent -> PlayerHUD
 hitViewBinding               HitComponent -> HitEffectNode

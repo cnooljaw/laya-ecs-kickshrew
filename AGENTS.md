@@ -54,7 +54,6 @@ Laya stage MOUSE_DOWN
   -> GameScene.onTouch(x, y)
   -> KickInputAdapter.handleTouch(x, y)
   -> hitDetectionSystem(world, xRatio, yRatio)
-  -> comboSystem
   -> NetworkAdapter.sendKick
   -> KickSocket protobuf encode/send
   -> MockServer protobuf decode/encode（本地 mock）

@@ -51,7 +51,6 @@ export function animTypeName(animType: number): string {
     case 5: return "HatBreak";
     case 6: return "Swelling";
     case 7: return "HammerEffect";
-    case 8: return "ComboLightning";
     case 9: return "TreasureBox";
     default: return `Unknown(${animType})`;
   }

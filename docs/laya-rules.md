@@ -18,7 +18,6 @@ HoleNode            洞位容器
 ShrewNode           复合地鼠精灵，处理 Cocos 坐标到 Laya 坐标转换
 HammerNode          锤子光标和击打动画
 PlayerHUD           玩家金币/怒气/体力/等级
-ComboNode           连击表现
 HitEffectNode       金币/宝箱等击中特效
 GoldParticleNode    金币粒子
 DizzyStarNode       眩晕星星

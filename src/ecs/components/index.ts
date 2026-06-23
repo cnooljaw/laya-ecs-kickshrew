@@ -30,15 +30,6 @@ export const HammerComponent = defineComponent({
   hitCooldownSec: Types.f32,
 });
 
-/** 连击组件(单例) */
-export const ComboComponent = defineComponent({
-  comboCount: Types.f32,
-  comboID: Types.f32,
-  targetHole0: Types.f32,
-  targetHole1: Types.f32,
-  targetHole2: Types.f32,
-});
-
 /** 场景组件(单例) */
 export const SceneComponent = defineComponent({
   currentMap: Types.f32,
@@ -93,7 +84,6 @@ export const DirtyComponent = defineComponent({
   shrewDirty: Types.f32,
   holeDirty: Types.f32,
   hammerDirty: Types.f32,
-  comboDirty: Types.f32,
   sceneDirty: Types.f32,
   playerDirty: Types.f32,
   animDirty: Types.f32,

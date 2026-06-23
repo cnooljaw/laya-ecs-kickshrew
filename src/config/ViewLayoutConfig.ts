@@ -40,17 +40,6 @@ export const SHREW_VIEW_LAYOUT = {
   dizzyTweenMs: 80,
 } as const;
 
-export const COMBO_VIEW_LAYOUT = {
-  zOrder: 2000,
-  color: "#FFD700",
-  fontSize: 48,
-  x: 375,
-  y: 500,
-  anchorX: 0.5,
-  anchorY: 0.5,
-  visibleMs: 1500,
-} as const;
-
 export const HIT_EFFECT_VIEW_LAYOUT = {
   zOrder: 2100,
 } as const;

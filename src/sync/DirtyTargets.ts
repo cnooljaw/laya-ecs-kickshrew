@@ -3,7 +3,6 @@ export const DIRTY_TARGETS = [
   "animDirty",
   "holeDirty",
   "hammerDirty",
-  "comboDirty",
   "sceneDirty",
   "playerDirty",
   "hitDirty",

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld, createSingletonEntities } from '../../ecs/world';
-import { PlayerComponent, HammerComponent, ComboComponent } from '../../ecs/components';
+import { PlayerComponent, HammerComponent } from '../../ecs/components';
 import { HammerType } from '../../ecs/types';
 import { hitResponseSystem, KickResponse } from '../../ecs/gameplay/hud/HitResponseSystem';
 
@@ -80,15 +80,6 @@ describe('HitResponseSystem', () => {
     hitResponseSystem(world, resp);
 
     expect(PlayerComponent.money[singletons.player]).toBe(50);
-  });
-
-  it('combo>0: 更新 ComboComponent', () => {
-    const resp = makeResponse({ combo: 3, comboId: 7 });
-
-    hitResponseSystem(world, resp);
-
-    expect(ComboComponent.comboCount[singletons.combo]).toBe(3);
-    expect(ComboComponent.comboID[singletons.combo]).toBe(7);
   });
 
   it('shrewResp 包含奖励数据', () => {
