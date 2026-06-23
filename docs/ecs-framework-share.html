@@ -654,54 +654,54 @@
 
       <article class="slide" data-title="World Build">
         <header>
-          <div class="kicker">world.ts</div>
-          <h2>用 world.ts 看我们怎么搭出地鼠 world</h2>
-          <p class="lead">`createGameWorld()` 只创建空世界。真正的游戏状态，是后面把单例、洞位、地鼠这些 entity 一个个加进去。</p>
+          <div class="kicker">World + Feature Setup</div>
+          <h2>world.ts 只建 ECS 数据，Feature.setup 负责具体装配</h2>
+          <p class="lead">`createGameWorld()` 只创建空 world；`createSingletonEntities()` 创建全局单例。洞位、地鼠、怪物、HUD、锤子和压测实体由各 Feature 在 setup 阶段创建并注册视图。</p>
         </header>
         <div class="content split-wide">
           <div class="rows">
             <div class="panel accent-green"><strong>1. 单例 entity</strong><p>`createSingletonEntities(world)` 创建 hammer、scene、player、network。它们不是全局变量，而是 world 里的固定 entity。</p></div>
-            <div class="panel accent-blue"><strong>2. 洞位 entity</strong><p>`createHoleEntities(world, MapType.Meadow)` 创建 9 个洞，记录行列、比例坐标、zIndex，以及 `shrewEid` 关联。</p></div>
-            <div class="panel accent-amber"><strong>3. 地鼠 entity</strong><p>`createShrewEntity(world, shrewType, mapType)` 给地鼠挂 `ShrewComponent`、`AnimationComponent`、`DirtyComponent`，然后用 `resetShrewForNextCycle` 初始化下一轮等待。</p></div>
+            <div class="panel accent-blue"><strong>2. CoreGameplayFeature.setup</strong><p>创建 9 个洞位和 9 只地鼠，建立 `HoleComponent.shrewEid` 关系，同时创建 `HoleNode/ShrewNode` 并注册到 `ViewRegistry`。</p></div>
+            <div class="panel accent-amber"><strong>3. 其它 Feature.setup</strong><p>`HammerFeature`、`HudFeature`、`PerfHeroFeature`、`MonsterFeature` 分别创建自己的 ECS 实体、Laya 节点和 view registry 关系。</p></div>
           </div>
           <div class="diagram">
-            <svg viewBox="0 0 860 500" role="img" aria-label="world.ts 构建地鼠 world">
+            <svg viewBox="0 0 860 500" role="img" aria-label="GameScene 通过 world 和 Feature setup 装配游戏">
               <defs>
                 <marker id="arrow14" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
                   <path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path>
                 </marker>
               </defs>
               <rect x="330" y="34" width="200" height="64" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="430" y="62" text-anchor="middle" font-size="17" font-weight="700" fill="#17385d">createGameWorld()</text>
-              <text x="430" y="84" text-anchor="middle" font-size="12" fill="#5f6b7a">bitecs createWorld</text>
+              <text x="430" y="62" text-anchor="middle" font-size="17" font-weight="700" fill="#17385d">GameScene.init()</text>
+              <text x="430" y="84" text-anchor="middle" font-size="12" fill="#5f6b7a">创建 world + 调 FeatureRegistry</text>
 
               <rect x="58" y="164" width="210" height="78" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="163" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">SingletonEntities</text>
-              <text x="163" y="216" text-anchor="middle" font-size="12" fill="#5f6b7a">scene / player / hammer...</text>
+              <text x="163" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">world.ts</text>
+              <text x="163" y="216" text-anchor="middle" font-size="12" fill="#5f6b7a">空 world / singleton eid</text>
 
               <rect x="326" y="164" width="210" height="78" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="431" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">9 Hole Entities</text>
-              <text x="431" y="216" text-anchor="middle" font-size="12" fill="#5f6b7a">grid / posRatio / zIndex</text>
+              <text x="431" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">CoreGameplayFeature</text>
+              <text x="431" y="216" text-anchor="middle" font-size="12" fill="#5f6b7a">holes / shrews / nodes</text>
 
               <rect x="594" y="164" width="210" height="78" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="699" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">9 Shrew Entities</text>
-              <text x="699" y="216" text-anchor="middle" font-size="12" fill="#5f6b7a">state / animation / dirty</text>
+              <text x="699" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">Other Features</text>
+              <text x="699" y="216" text-anchor="middle" font-size="12" fill="#5f6b7a">hammer / hud / monster...</text>
 
               <rect x="326" y="312" width="210" height="78" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="431" y="342" text-anchor="middle" font-size="15" font-weight="700" fill="#172231">HoleComponent.shrewEid</text>
-              <text x="431" y="364" text-anchor="middle" font-size="12" fill="#5f6b7a">洞位知道自己挂哪只地鼠</text>
+              <text x="431" y="342" text-anchor="middle" font-size="15" font-weight="700" fill="#172231">ViewRegistry</text>
+              <text x="431" y="364" text-anchor="middle" font-size="12" fill="#5f6b7a">eid -> Laya node</text>
 
               <path d="M430 98 V154" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow14)"></path>
               <path d="M360 113 C260 126 188 142 164 156" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow14)"></path>
               <path d="M500 113 C604 126 674 142 698 156" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#arrow14)"></path>
               <path d="M536 203 H586" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow14)"></path>
               <path d="M431 242 V304" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow14)"></path>
-              <text x="431" y="454" text-anchor="middle" font-size="13" fill="#5f6b7a">Feature.setup 负责把这些 eid 注册到 ViewRegistry，之后 SyncView 才能找到对应 Laya 节点</text>
+              <text x="431" y="454" text-anchor="middle" font-size="13" fill="#5f6b7a">world.ts 不再是唯一创建点；新增玩法优先看对应 Feature.setup 和 ecs/gameplay/&lt;domain&gt;</text>
             </svg>
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/world.ts, src/features/CoreGameplayFeature.ts</span>
+          <span>对应代码：src/view/GameScene.ts, src/ecs/world.ts, src/features/*Feature.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1026,7 +1026,7 @@
         <header>
           <div class="kicker">Dirty Mark / Binding</div>
           <h2>dirty mark 的本质：把字段变化翻译成 view 更新 bit</h2>
-          <p class="lead">System 只改 Component。DirtyMarkSystem 用上一帧快照做 diff，把变化写进 DirtyComponent；binding 再用同一张 ViewRules 表执行 view apply。</p>
+          <p class="lead">System 只改 Component。DirtyMarkSystem 用上一帧快照做 diff，把变化写进 DirtyComponent；SyncView 命中 ViewSyncChannel 后执行 project，再由 rules.apply 调用 view contract。</p>
         </header>
         <div class="content">
           <div class="diagram">
@@ -1049,24 +1049,24 @@
               <text x="669" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">DirtyComponent</text>
               <text x="669" y="126" text-anchor="middle" font-size="12" fill="#5f6b7a">sceneDirty = 0x0001</text>
               <rect x="790" y="70" width="150" height="82" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
-              <text x="865" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">Binding / Node</text>
-              <text x="865" y="126" text-anchor="middle" font-size="12" fill="#5f6b7a">只更新相关表现</text>
+              <text x="865" y="102" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">ViewSync</text>
+              <text x="865" y="126" text-anchor="middle" font-size="12" fill="#5f6b7a">channel.project</text>
               <path d="M160 111 H196" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
               <path d="M350 111 H386" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
               <path d="M548 111 H584" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
               <path d="M746 111 H782" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
               <rect x="74" y="214" width="832" height="72" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="490" y="244" text-anchor="middle" font-size="16" fill="#283442">ShrewComponent.actionState -> BIT_SHREW_ACTION -> DirtyComponent.shrewDirty -> rules.applyAnimation</text>
-              <text x="490" y="268" text-anchor="middle" font-size="13" fill="#5f6b7a">dirty 不是“有变化就全量刷新”，而是“哪个字段变了，就打开哪个表现 bit”</text>
+              <text x="490" y="244" text-anchor="middle" font-size="15" fill="#283442">HitComponent.wasHit -> BIT_HIT_WASHIT -> DirtyComponent.hitDirty -> HitViewSync.channel.project</text>
+              <text x="490" y="268" text-anchor="middle" font-size="13" fill="#5f6b7a">project 进入 hitViewBinding，rules.applyHitEffect 再调用 IHitEffectNode.showReward/showMiss</text>
             </svg>
           </div>
           <div class="two">
-            <div class="panel accent-cyan"><strong>第一次同步为什么全量？</strong><p>`DirtySchemaRunner` 第一次看到 eid 时没有 snapshot，会填充快照并写 `channel.allBits`，让 view 拿到初始状态。</p></div>
-            <div class="panel accent-red"><strong>之后为什么差量？</strong><p>后续每帧只比较 ViewSyncModule/rules 声明的字段；字段值不同才 OR 对应 bit，并更新 snapshot，SyncView 同步后清空 bit。</p></div>
+            <div class="panel accent-cyan"><strong>第一次同步为什么全量？</strong><p>`DirtySchemaRunner` 第一次看到 eid 时没有 snapshot，会填充快照并写 `channel.allBits`；`SyncView` 也会处理 `forceFullSync`。</p></div>
+            <div class="panel accent-red"><strong>之后为什么差量？</strong><p>后续每帧只比较 ViewSyncModule/rules 声明的字段；字段值不同才 OR 对应 bit，命中 `watchedBits` 后才执行对应 project。</p></div>
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/sync/dirty/DirtySchemaRunner.ts, src/sync/rules/*ViewRules.ts, src/binding/SyncView.ts</span>
+          <span>对应代码：src/sync/dirty/DirtySchemaRunner.ts, src/sync/viewSync/ViewSyncModule.ts, src/binding/SyncView.ts, src/binding/RuleViewBinding.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1157,7 +1157,7 @@ progress:    0 -> 0           => 不标</pre>
         <header>
           <div class="kicker">Scene Dirty Example</div>
           <h2>例子：SceneComponent 场景从 Meadow 切到 Ship</h2>
-          <p class="lead">这页用一个场景单例讲透传统 dirty 链路：谁写数据、谁发现变化、dirty bit 写到哪里、binding 如何消费 bit。</p>
+          <p class="lead">这页用一个场景单例讲透新 dirty 链路：System 写 ECS，ViewRules 声明字段到 contract apply，SceneViewSync 把 dirtyAspect 和 channel 组合起来。</p>
         </header>
         <div class="content split-wide">
           <div class="rows">
@@ -1169,14 +1169,22 @@ SceneComponent.transitioning[sceneEid] = 1;
 DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
             </div>
             <div class="panel accent-blue">
-              <strong>2. ViewRules 声明字段到 bit</strong>
+              <strong>2. SceneViewRules 声明字段到 contract</strong>
               <pre class="code">rule(BIT_SCENE_MAP, "当前地图",
     ["currentMap"], applySwitchScene)
-rule(BIT_SCENE_TIMER, "场景计时器",
-    ["sceneTimer"], noView)</pre>
+rule(BIT_SCENE_TRANSITION, "场景切换状态",
+    ["transitioning"], applyTransitioning)</pre>
             </div>
             <div class="panel accent-amber">
-              <strong>3. apply 函数消费 bit</strong>
+              <strong>3. ViewSyncModule 接入 SyncView</strong>
+              <pre class="code">export const SceneViewSync = defineViewSyncModule({
+  dirtyTarget: "sceneDirty",
+  rules: SCENE_VIEW_RULES,
+  project: sceneViewBinding,
+});</pre>
+            </div>
+            <div class="panel accent-violet">
+              <strong>4. apply 调用 view contract</strong>
               <pre class="code">function applySwitchScene({ eid, node }) {
   node.switchScene(SceneComponent.currentMap[eid]);
 }</pre>
@@ -1194,19 +1202,19 @@ rule(BIT_SCENE_TIMER, "场景计时器",
               <text x="196" y="89" text-anchor="middle" font-size="13" fill="#5f6b7a">currentMap: Meadow -> Ship</text>
               <rect x="414" y="34" width="300" height="74" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
               <text x="564" y="65" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">SceneViewSync</text>
-              <text x="564" y="89" text-anchor="middle" font-size="13" fill="#5f6b7a">query([SceneComponent, DirtyComponent])</text>
+              <text x="564" y="89" text-anchor="middle" font-size="13" fill="#5f6b7a">rules -> dirtyAspect + channel</text>
               <rect x="414" y="156" width="300" height="74" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
               <text x="564" y="187" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">DirtySchemaRunner</text>
               <text x="564" y="211" text-anchor="middle" font-size="13" fill="#5f6b7a">snapshot 不同 -> sceneDirty |= 0x0001</text>
               <rect x="46" y="156" width="300" height="74" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
               <text x="196" y="187" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">SyncView.sync</text>
-              <text x="196" y="211" text-anchor="middle" font-size="13" fill="#5f6b7a">检测 sceneDirty 或 forceFull</text>
+              <text x="196" y="211" text-anchor="middle" font-size="13" fill="#5f6b7a">命中 watchedBits/forceFull</text>
               <rect x="46" y="278" width="300" height="74" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
               <text x="196" y="309" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">sceneViewBinding</text>
-              <text x="196" y="333" text-anchor="middle" font-size="13" fill="#5f6b7a">读取 currentMap[eid]</text>
+              <text x="196" y="333" text-anchor="middle" font-size="13" fill="#5f6b7a">applyMatchedRules</text>
               <rect x="414" y="278" width="300" height="74" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
-              <text x="564" y="309" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">SceneLayer.switchScene</text>
-              <text x="564" y="333" text-anchor="middle" font-size="13" fill="#5f6b7a">Laya 背景和 cover 切换</text>
+              <text x="564" y="309" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">ISceneLayer.switchScene</text>
+              <text x="564" y="333" text-anchor="middle" font-size="13" fill="#5f6b7a">SceneLayer 实现 Laya 切换</text>
               <rect x="196" y="420" width="368" height="54" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
               <text x="380" y="453" text-anchor="middle" font-size="15" fill="#283442">SyncView 最后清空 sceneDirty 和 forceFullSync</text>
               <path d="M346 71 H406" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow9)"></path>
@@ -1442,7 +1450,7 @@ git commit -m "feat: add score milestone celebration" \
           </div>
         </div>
         <footer class="footer">
-          <span>对应清单：MonsterConfig 校验 -> ecs/gameplay/monster 建池和系统 -> MonsterFeature 装配 -> SyncView channel -> MonsterNode -> 测试。</span>
+          <span>对应清单：MonsterConfig 校验 -> ecs/gameplay/monster 建池和系统 -> MonsterFeature 装配 -> MonsterViewSync -> MonsterNode -> 测试。</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
