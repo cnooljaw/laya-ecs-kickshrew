@@ -1328,7 +1328,7 @@ git status --short
 
 # 2. Red / Green 验证
 npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts
-npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/binding/ShrewViewBinding.test.ts
+npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/sync/CoreViewSync.test.ts
 
 # 3. 类型检查，运行时改动再跑 debug
 npx tsc --noEmit

@@ -146,6 +146,9 @@ export class KickSocket {
   }
 
   close(): void {
+    for (const [seqId, pending] of this._pendingRequests) {
+      pending.reject(`Kick socket closed: seqId=${seqId}`);
+    }
     this._pendingRequests.clear();
     this._transport.close?.();
   }

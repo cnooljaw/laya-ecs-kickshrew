@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { getPerfTestRuntimeConfig } from "../../config/PerfTestConfig";
+import { MONSTER_SPAWN_RULES } from "../../config/MonsterConfig";
 import { DirtyComponent } from "../../ecs/components";
+import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 import type { DirtyAspect } from "../../sync/dirty/DirtySchemaTypes";
-import { system, type GameFeature } from "../../features/GameFeature";
-import { GAME_FEATURES } from "../../features/GameFeatures";
+import { system, type FeatureSetupContext, type GameFeature } from "../../features/GameFeature";
+import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../features/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../features/GameFeatureRegistry";
 import type { ViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 
@@ -67,6 +70,52 @@ describe("GameFeatureRegistry", () => {
       "hammerSystem",
     ]);
     expect(registry.viewSyncs().map(sync => sync.name)).toContain("monster");
+  });
+
+  it("真实 feature setup 按模块创建并挂载完整运行时对象", () => {
+    const originalWindow = globalThis.window;
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: {},
+    });
+    const world = createGameWorld();
+    const singletons = createSingletonEntities(world);
+    const mounts = new Map<string, number>();
+    const owned: object[] = [];
+    const context = {
+      world,
+      root: null,
+      singletons,
+      perfConfig: getPerfTestRuntimeConfig(""),
+      mount: (sync: ViewSyncModule, _eid: number, node: any) => {
+        mounts.set(sync.name, (mounts.get(sync.name) ?? 0) + 1);
+        return node;
+      },
+      own: <T extends { destroy(): void }>(resource: T) => {
+        owned.push(resource);
+        return resource;
+      },
+    } as FeatureSetupContext;
+
+    try {
+      GAME_FEATURE_REGISTRY.setupAll(context);
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+
+    expect(Object.fromEntries(mounts)).toEqual({
+      scene: 1,
+      hole: 9,
+      shrew: 9,
+      hammer: 1,
+      player: 1,
+      hit: 1,
+      monster: MONSTER_SPAWN_RULES.reduce((count, rule) => count + rule.maxActiveCount, 0),
+    });
+    expect(owned).toEqual([]);
   });
 
   it("每帧查询复用预计算结果，避免 Registry 侧产生数组分配", () => {

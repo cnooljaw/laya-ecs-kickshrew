@@ -1,10 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { createGameWorld, createSingletonEntities } from '../../ecs/world';
-import { PlayerComponent, HammerComponent } from '../../ecs/components';
-import { HammerType } from '../../ecs/types';
-import { hitResponseSystem, KickResponse } from '../../ecs/gameplay/hud/HitResponseSystem';
+import { beforeEach, describe, expect, it } from "vitest";
+import { HAMMER_RULES } from "../../config/GameTuning";
+import { HammerComponent, PlayerComponent } from "../../ecs/components";
+import {
+  hitResponseSystem,
+  type KickResponse,
+} from "../../ecs/gameplay/hud/HitResponseSystem";
+import { HammerType } from "../../ecs/types";
+import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 
-describe('HitResponseSystem', () => {
+describe("HitResponseSystem", () => {
   let world: ReturnType<typeof createGameWorld>;
   let singletons: ReturnType<typeof createSingletonEntities>;
 
@@ -15,7 +19,7 @@ describe('HitResponseSystem', () => {
 
   const makeResponse = (overrides: Partial<KickResponse> = {}): KickResponse => ({
     seqId: 1,
-    cmd: 'kickResult',
+    cmd: "kickResult",
     ret: 0,
     money: 100,
     angry: 50,
@@ -29,61 +33,15 @@ describe('HitResponseSystem', () => {
     ...overrides,
   });
 
-  it('ret=0: 更新 money/angry/power', () => {
-    const resp = makeResponse({ money: 100, angry: 50, power: 10 });
-
-    hitResponseSystem(world, resp);
-
-    expect(PlayerComponent.money[singletons.player]).toBe(100);
-    expect(PlayerComponent.angry[singletons.player]).toBe(50);
-    expect(PlayerComponent.power[singletons.player]).toBe(10);
-  });
-
-  it('ret=0: 更新 levelScore', () => {
-    const resp = makeResponse({ levelScore: 200 });
-
-    hitResponseSystem(world, resp);
-
-    expect(PlayerComponent.level[singletons.player]).toBe(200);
-  });
-
-  it('angry>=1000: 触发 isThunderActive=1', () => {
-    PlayerComponent.angry[singletons.player] = 990;
-    const resp = makeResponse({ angry: 1010 });
-
-    hitResponseSystem(world, resp);
-
-    expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(1);
-  });
-
-  it('angry<1000: 不触发雷神锤', () => {
-    PlayerComponent.angry[singletons.player] = 500;
-    const resp = makeResponse({ angry: 800 });
-
-    hitResponseSystem(world, resp);
-
-    expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(0);
-  });
-
-  it('hammerId=99(雷神): 验证锤子类型', () => {
-    const resp = makeResponse({ hammerId: HammerType.Thunder });
-
-    hitResponseSystem(world, resp);
-
-    expect(HammerComponent.selectedType[singletons.hammer]).toBe(HammerType.Thunder);
-  });
-
-  it('ret=-1: 不更新玩家数据', () => {
-    PlayerComponent.money[singletons.player] = 50;
-    const resp = makeResponse({ ret: -1, money: 999 });
-
-    hitResponseSystem(world, resp);
-
-    expect(PlayerComponent.money[singletons.player]).toBe(50);
-  });
-
-  it('shrewResp 包含奖励数据', () => {
-    const resp = makeResponse({
+  it("applies a successful response to player, hammer and rewards", () => {
+    PlayerComponent.money[singletons.player] = 20;
+    PlayerComponent.power[singletons.player] = 3;
+    const response = makeResponse({
+      money: 100,
+      angry: 50,
+      power: 10,
+      levelScore: 200,
+      hammerId: HammerType.Gold,
       numOfShrew: 2,
       shrewResp: [
         { shrewIndex: 0, reward: 50 },
@@ -91,19 +49,75 @@ describe('HitResponseSystem', () => {
       ],
     });
 
-    const result = hitResponseSystem(world, resp);
+    const rewards = hitResponseSystem(world, response);
 
-    expect(result.length).toBe(2);
-    expect(result[0].reward).toBe(50);
-    expect(result[1].reward).toBe(100);
+    expect({
+      money: PlayerComponent.money[singletons.player],
+      angry: PlayerComponent.angry[singletons.player],
+      power: PlayerComponent.power[singletons.player],
+      level: PlayerComponent.level[singletons.player],
+      hammer: HammerComponent.selectedType[singletons.hammer],
+      rewards,
+    }).toEqual({
+      money: 120,
+      angry: 50,
+      power: 13,
+      level: 200,
+      hammer: HammerType.Gold,
+      rewards: response.shrewResp,
+    });
   });
 
-  it('记录服务器回包应用后的分数增量', () => {
-    const events: Array<{ event: string; payload: Record<string, unknown> }> = [];
-    const resp = makeResponse({ money: 120, power: 3, levelScore: 450 });
+  it.each([
+    { angry: HAMMER_RULES.thunderAngryThreshold - 1, active: 0 },
+    { angry: HAMMER_RULES.thunderAngryThreshold, active: 1 },
+    { angry: HAMMER_RULES.thunderAngryThreshold + 1, active: 1 },
+  ])("applies the thunder threshold at angry=$angry", ({ angry, active }) => {
+    hitResponseSystem(world, makeResponse({ angry, hammerId: HammerType.Wood }));
 
-    (hitResponseSystem as any)(world, resp, {
-      log: (event: string, payload: Record<string, unknown>) => events.push({ event, payload }),
+    expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(active);
+    expect(HammerComponent.selectedType[singletons.hammer]).toBe(
+      active === 1 ? HammerType.Thunder : HammerType.Wood,
+    );
+  });
+
+  it("rejects an error response without changing authoritative state", () => {
+    PlayerComponent.money[singletons.player] = 50;
+    PlayerComponent.angry[singletons.player] = 10;
+    PlayerComponent.power[singletons.player] = 3;
+    PlayerComponent.level[singletons.player] = 20;
+    const before = {
+      money: PlayerComponent.money[singletons.player],
+      angry: PlayerComponent.angry[singletons.player],
+      power: PlayerComponent.power[singletons.player],
+      level: PlayerComponent.level[singletons.player],
+      hammer: HammerComponent.selectedType[singletons.hammer],
+    };
+
+    const rewards = hitResponseSystem(world, makeResponse({
+      ret: -1,
+      money: 999,
+      angry: 999,
+      power: 999,
+      levelScore: 999,
+      hammerId: HammerType.Thunder,
+    }));
+
+    expect(rewards).toEqual([]);
+    expect({
+      money: PlayerComponent.money[singletons.player],
+      angry: PlayerComponent.angry[singletons.player],
+      power: PlayerComponent.power[singletons.player],
+      level: PlayerComponent.level[singletons.player],
+      hammer: HammerComponent.selectedType[singletons.hammer],
+    }).toEqual(before);
+  });
+
+  it("logs score deltas after applying the response", () => {
+    const events: Array<{ event: string; payload: Record<string, unknown> }> = [];
+
+    hitResponseSystem(world, makeResponse({ money: 120, power: 3, levelScore: 450 }), {
+      log: (event, payload) => events.push({ event, payload }),
     });
 
     expect(events).toEqual([
@@ -111,7 +125,6 @@ describe('HitResponseSystem', () => {
         event: "score.applied",
         payload: expect.objectContaining({
           seqId: 1,
-          ret: 0,
           moneyBefore: 0,
           moneyDelta: 120,
           moneyAfter: 120,

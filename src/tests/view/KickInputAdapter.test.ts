@@ -107,4 +107,42 @@ describe("KickInputAdapter", () => {
     expect(sentRequests).toHaveLength(0);
     expect(HammerComponent.hitSeq[singletons.hammer]).toBe(0);
   });
+
+  it("网络请求失败时记录 requestFailed", async () => {
+    const world = createGameWorld();
+    const singletons = createSingletonEntities(world);
+    const [holeEid] = createHoleEntities(world, MapType.Meadow);
+    const shrewEid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
+    const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
+
+    HoleComponent.shrewEid[holeEid] = shrewEid;
+    ShrewComponent.isClickable[shrewEid] = 1;
+
+    const adapter = new KickInputAdapter({
+      world,
+      singletons,
+      network: {
+        sendKick: () => Promise.reject(new Error("offline")),
+      } as any,
+      playSound: () => {},
+      traceLogger: {
+        log: (event: string, payload: Record<string, unknown>) => traceEvents.push({ event, payload }),
+      },
+    });
+
+    adapter.handleTouch(
+      HoleComponent.posXRatio[holeEid] * DESIGN_RESOLUTION.width,
+      HoleComponent.posYRatio[holeEid] * DESIGN_RESOLUTION.height,
+    );
+    await Promise.resolve();
+
+    expect(traceEvents[traceEvents.length - 1]).toEqual({
+      event: "network.requestFailed",
+      payload: {
+        hitHoleIndex: 0,
+        hitShrewEid: shrewEid,
+        error: "Error: offline",
+      },
+    });
+  });
 });

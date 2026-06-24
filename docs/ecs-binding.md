@@ -309,7 +309,7 @@ view node 方法是否真的更新了 Laya 节点
 
 ```bash
 npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts
-npm test -- --run src/tests/binding/ShrewViewBinding.test.ts
+npm test -- --run src/tests/sync/CoreViewSync.test.ts
 ```
 
 ## 地鼠状态机 Q&A

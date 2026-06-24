@@ -114,4 +114,26 @@ describe('KickSocket', () => {
     await Promise.all([p1, p2]);
     expect(timeoutSeqIds).toEqual([1, 2]);
   });
+
+  it('close 拒绝全部 pending 请求并关闭 transport', async () => {
+    let closed = 0;
+    const closingSocket = new KickSocket({
+      send: () => {},
+      close: () => { closed += 1; },
+    });
+    const first = closingSocket.sendKick({
+      cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0,
+    });
+    const second = closingSocket.sendKick({
+      cmd: 'kick', hammerType: 1, bKickShrew: 1, numOfShrew: 0, shrews: [], comboID: 0,
+    });
+    const firstRejected = expect(first).rejects.toBe("Kick socket closed: seqId=1");
+    const secondRejected = expect(second).rejects.toBe("Kick socket closed: seqId=2");
+
+    closingSocket.close();
+
+    expect(closingSocket.getPendingCount()).toBe(0);
+    expect(closed).toBe(1);
+    await Promise.all([firstRejected, secondRejected]);
+  });
 });

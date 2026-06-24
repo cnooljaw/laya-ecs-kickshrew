@@ -734,9 +734,9 @@ A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 
 A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `AnimationComponent.progress`。`DirtyMarkSystem` 会把 progress 变化写进 `DirtyComponent.animDirty`，`CoreGameplayFeature` 声明 `ShrewAnimationViewSync` 后，`SyncView` 会在 anim dirty 时继续调用 `ShrewNode.setAnimation(actionState, animType, progress)`。
 
 - 代码入口：`src/ecs/gameplay/core/AnimationTimerSystem.ts`、`src/sync/dirty/DirtyMarkSystem.ts`、`src/features/CoreGameplayFeature.ts`、`src/sync/viewSync/specs/ShrewViewSyncSpec.ts`。
-- 数据流：`AnimationComponent.progress -> DirtyComponent.animDirty -> shrewAnimationViewBinding -> ShrewNode.setAnimation -> mainLayer.y`。
+- 数据流：`AnimationComponent.progress -> DirtyComponent.animDirty -> ShrewAnimationViewSync -> ShrewNode.setAnimation -> mainLayer.y`。
 - 常见坑：只处理 `BIT_SHREW_ACTION` 会同步动作开始，但不会同步动作中间帧；`animDirty` 有值但 Feature 没声明 `ShrewAnimationViewSync` 时，画面仍不动。
-- 验证方式：`npm test -- --run src/tests/binding/ShrewViewBinding.test.ts`。
+- 验证方式：`npm test -- --run src/tests/sync/CoreViewSync.test.ts`。
 
 ### Q: 地鼠状态是不是太多，能不能精简？
 

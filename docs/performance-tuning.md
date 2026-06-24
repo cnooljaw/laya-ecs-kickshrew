@@ -51,7 +51,7 @@ resources/heros/beila_girl.sk
    - dirty/binding：`spawnSeq`、位置、缩放、资源投影。
    - view：Skeleton 池、STOPPED、pending 请求、visible 状态、async loader。
    - 发布：debug 构建、静态服务绑定、浏览器缓存。
-5. 行为 bug 先补测试：`PerfHeroNode.test.ts` 测池化/隐藏/瞬移，`PerfHeroSystem.test.ts` 测生命周期，`PerfHeroViewBinding.test.ts` 测投影。
+5. 行为 bug 先补测试：`PerfHeroNode.test.ts` 测池化/隐藏/瞬移，`PerfHeroSystem.test.ts` 测生命周期，`FeatureViewSync.test.ts` 测投影。
 6. 修改后跑窄测试、`npx tsc --noEmit`；运行时可见改动继续跑 `npm test` 和 `npm run build:debug`。
 
 ## 压测链路
@@ -242,7 +242,7 @@ npm test -- --run src/tests/ecs/PerfHeroSystem.test.ts
 dirty/binding：
 
 ```bash
-npm test -- --run src/tests/binding/PerfHeroViewBinding.test.ts
+npm test -- --run src/tests/sync/FeatureViewSync.test.ts
 ```
 
 view node 池化和显示顺序：

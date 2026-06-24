@@ -210,4 +210,20 @@ describe('KickProtoCodec', () => {
 
     expect(miss.bKickShrew).toBe(0);
   });
+
+  it('拒绝超出 buffer 的 length-delimited payload', () => {
+    expect(() => decodeKickResponse(new Uint8Array([
+      0x08, 0x01,
+      0x10, 0xd2, 0x0f,
+      0x1a, 0x05, 0x08,
+    ]))).toThrow("protobuf length-delimited field exceeds buffer");
+  });
+
+  it('拒绝未知 Envelope.msg_id', () => {
+    expect(() => decodeKickResponse(new Uint8Array([
+      0x08, 0x01,
+      0x10, 0x63,
+      0x1a, 0x00,
+    ]))).toThrow("unsupported protocol msg_id 99");
+  });
 });

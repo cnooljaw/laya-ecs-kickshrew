@@ -41,7 +41,7 @@ npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts
 dirty 标记和 binding：
 
 ```bash
-npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/binding
+npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts src/tests/sync src/tests/binding
 ```
 
 输入点击：
@@ -53,7 +53,7 @@ npm test -- --run src/tests/view/KickInputAdapter.test.ts
 网络：
 
 ```bash
-npm test -- --run src/tests/network/KickProtoCodec.test.ts src/tests/network/KickSocket.test.ts src/tests/network/MockServer.test.ts
+npm test -- --run src/tests/network
 ```
 
 资源转换：
@@ -65,25 +65,35 @@ npm test -- --run src/tests/resource/PlistConverter.test.ts
 性能压测英雄：
 
 ```bash
-npm test -- --run src/tests/ecs/PerfHeroSystem.test.ts src/tests/binding/PerfHeroViewBinding.test.ts src/tests/view/PerfHeroNode.test.ts
+npm test -- --run src/tests/ecs/PerfHeroSystem.test.ts src/tests/sync/FeatureViewSync.test.ts src/tests/view/PerfHeroNode.test.ts
 ```
 
 MonsterFeature / Rhino 怪物：
 
 ```bash
-npm test -- --run src/tests/config/MonsterConfig.test.ts src/tests/ecs/gameplay/monster/MonsterSystem.test.ts src/tests/binding/MonsterViewBinding.test.ts src/tests/features/GameFeatureRegistry.test.ts src/tests/binding/SyncView.test.ts src/tests/sync/DirtyChannels.test.ts
+npm test -- --run src/tests/config/MonsterConfig.test.ts src/tests/ecs/gameplay/monster/MonsterSystem.test.ts src/tests/sync/FeatureViewSync.test.ts src/tests/features/GameFeatureRegistry.test.ts
+```
+
+world、Feature 和场景生命周期：
+
+```bash
+npm test -- --run src/tests/ecs/WorldFactory.test.ts src/tests/features src/tests/view/GameScene.test.ts
 ```
 
 当前测试覆盖重点：
 
-- ECS components/world。
+- world factory 的组件组合和业务默认值。
 - 地鼠状态机。
-- 命中检测、连击、锤子、回包。
-- dirty mark 和 binding。
-- Rhino 的金币里程碑触发、同屏满员时丢弃该次触发、10 秒隐藏、Feature 装配校验和 SyncView channel 投影。
-- network seqId、乱序、超时。
+- 命中检测、锤子阈值、回包状态应用。
+- dirty mark、ViewSyncModule 元数据和 Core/HUD/Feature 投影。
+- 单 world 进入/退出、Feature 实际 mount 数量和 runtime 清理。
+- 场景循环时地鼠、洞位坐标、层级和 full-sync 更新。
+- Rhino 的金币里程碑触发、同屏满员时丢弃该次触发、10 秒隐藏和 view sync。
+- network protobuf 边界、seqId、乱序、超时、close 取消 pending。
 - plist 转 atlas。
-- 输入 adapter 和 view registry。
+- 输入 adapter 的命中、冷却和网络失败路径。
+
+测试优先验证项目行为和边界，不重复验证 bitecs、TypeScript 等依赖本身的基础能力，也不为接口字段“存在”这类编译期事实增加运行时断言。
 
 ## 调试构建
 

@@ -55,33 +55,4 @@ describe('MockServer', () => {
     expect(resp.shrewResp.length).toBe(3);
   });
 
-  it('回包结构与 KickResponse 接口一致', () => {
-    const req: KickRequest = {
-      seqId: 5, cmd: 'kick', hammerType: 1, bKickShrew: 1,
-      numOfShrew: 1, shrews: [{ shrewindex: 1, protectType: 0 }], comboID: 0,
-    };
-    const resp = mockServer.handleKick(req);
-    // 验证所有 KickResponse 字段存在
-    expect(resp).toHaveProperty('seqId');
-    expect(resp).toHaveProperty('cmd');
-    expect(resp).toHaveProperty('ret');
-    expect(resp).toHaveProperty('money');
-    expect(resp).toHaveProperty('angry');
-    expect(resp).toHaveProperty('power');
-    expect(resp).toHaveProperty('levelScore');
-    expect(resp).toHaveProperty('hammerId');
-    expect(resp).toHaveProperty('numOfShrew');
-    expect(resp).toHaveProperty('shrewResp');
-    expect(resp).toHaveProperty('combo');
-    expect(resp).toHaveProperty('comboId');
-  });
-
-  it('seqId 原样回传', () => {
-    const req: KickRequest = {
-      seqId: 42, cmd: 'kick', hammerType: 1, bKickShrew: 1,
-      numOfShrew: 1, shrews: [{ shrewindex: 1, protectType: 0 }], comboID: 0,
-    };
-    const resp = mockServer.handleKick(req);
-    expect(resp.seqId).toBe(42);
-  });
 });

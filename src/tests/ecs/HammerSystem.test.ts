@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { createGameWorld, createSingletonEntities } from '../../ecs/world';
-import { HammerComponent, PlayerComponent } from '../../ecs/components';
-import { HammerType } from '../../ecs/types';
-import { hammerSystem } from '../../ecs/gameplay/hammer/HammerSystem';
+import { beforeEach, describe, expect, it } from "vitest";
+import { HAMMER_RULES } from "../../config/GameTuning";
+import { HammerComponent, PlayerComponent } from "../../ecs/components";
+import { hammerSystem } from "../../ecs/gameplay/hammer/HammerSystem";
+import { HammerType } from "../../ecs/types";
+import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 
-describe('HammerSystem', () => {
+describe("HammerSystem", () => {
   let world: ReturnType<typeof createGameWorld>;
   let singletons: ReturnType<typeof createSingletonEntities>;
 
@@ -13,55 +14,41 @@ describe('HammerSystem', () => {
     singletons = createSingletonEntities(world);
   });
 
-  it('默认锤子 selectedType=Wood(1)', () => {
-    expect(HammerComponent.selectedType[singletons.hammer]).toBe(HammerType.Wood);
-  });
-
-  it('切换锤子: selectedType 更新', () => {
+  it("switches the selected hammer outside thunder mode", () => {
     hammerSystem(world, HammerType.Gold);
 
     expect(HammerComponent.selectedType[singletons.hammer]).toBe(HammerType.Gold);
   });
 
-  it('angry 从 990 变 1010: 触发雷神锤 isThunderActive=1, selectedType=Thunder', () => {
-    PlayerComponent.angry[singletons.player] = 1010;
+  it.each([
+    { angry: HAMMER_RULES.thunderAngryThreshold - 1, active: 0 },
+    { angry: HAMMER_RULES.thunderAngryThreshold, active: 1 },
+    { angry: HAMMER_RULES.thunderAngryThreshold + 1, active: 1 },
+  ])("applies the thunder threshold at angry=$angry", ({ angry, active }) => {
+    PlayerComponent.angry[singletons.player] = angry;
 
     hammerSystem(world);
 
-    expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(1);
-    expect(HammerComponent.selectedType[singletons.hammer]).toBe(HammerType.Thunder);
+    expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(active);
+    expect(HammerComponent.selectedType[singletons.hammer]).toBe(
+      active === 1 ? HammerType.Thunder : HammerType.Wood,
+    );
+    expect(HammerComponent.hitTable[singletons.hammer]).toBe(active === 1 ? 0 : 1);
   });
 
-  it('angry < 1000: 不触发雷神锤', () => {
-    PlayerComponent.angry[singletons.player] = 800;
-
+  it("restores the normal hammer after the thunder animation", () => {
+    PlayerComponent.angry[singletons.player] = HAMMER_RULES.thunderAngryThreshold;
     hammerSystem(world);
 
-    expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(0);
-  });
-
-  it('雷神锤动画完成: isThunderActive=0, selectedType 恢复 previousType', () => {
-    // 先触发雷神锤
-    PlayerComponent.angry[singletons.player] = 1010;
-    hammerSystem(world);
-    expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(1);
-
-    // 雷神锤动画完成
-    hammerSystem(world, HammerType.Gold, true);
+    hammerSystem(world, undefined, true);
 
     expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(0);
     expect(HammerComponent.selectedType[singletons.hammer]).toBe(HammerType.Gold);
+    expect(HammerComponent.hitTable[singletons.hammer]).toBe(1);
+    expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBe(0);
   });
 
-  it('雷神锤状态时 hitTable=0, 阻止普通敲击', () => {
-    PlayerComponent.angry[singletons.player] = 1010;
-    hammerSystem(world);
-
-    // 雷神锤触发时 hitTable 应该为 0（由雷神锤动画控制）
-    expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(1);
-  });
-
-  it('hitTable 恢复: 锤子动画结束后 hitTable=1', () => {
+  it("restores hitTable immediately when the hit animation completes", () => {
     HammerComponent.hitTable[singletons.hammer] = 0;
     HammerComponent.hitCooldownSec[singletons.hammer] = 0.24;
 
@@ -71,7 +58,7 @@ describe('HammerSystem', () => {
     expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBe(0);
   });
 
-  it('普通击打冷却结束后自动恢复 hitTable=1', () => {
+  it("restores hitTable when the ordinary hit cooldown expires", () => {
     HammerComponent.hitTable[singletons.hammer] = 0;
     HammerComponent.hitCooldownSec[singletons.hammer] = 0.24;
 
