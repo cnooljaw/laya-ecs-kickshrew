@@ -18,13 +18,15 @@ Use this project skill for changes that touch Laya presentation or runtime owner
 1. Locate the owner:
    - `Main` for frameLoop and stage events
    - `GameScene` for runtime assembly
+   - `Feature` for creating/registering this domain's nodes during setup
    - `ViewRegistry` for binding map registration and node destroy
    - view node for local children, tweens, timers, and async load guards
 2. Keep rules out of view nodes. Convert input to adapter calls or ECS/system updates.
-3. Move new visual tuning numbers into `src/config/ViewLayoutConfig.ts` unless they are resource data.
-4. Guard async loader callbacks against destroyed nodes or stale scene state.
-5. Clear timers/tweens/events using the same owner that registered them.
-6. For runtime-visible changes, run related tests and then `npm run debug:ready` when practical.
+3. Implement view contract methods in `view/*Node.ts`; do not make nodes inspect ECS components or dirty bits directly.
+4. Move new visual tuning numbers into `src/config/ViewLayoutConfig.ts` unless they are resource data.
+5. Guard async loader callbacks against destroyed nodes or stale scene state.
+6. Clear timers/tweens/events using the same owner that registered them.
+7. For runtime-visible changes, run related tests and then `npm run debug:ready` when practical.
 
 ## Runtime Debug Notes
 
@@ -47,6 +49,7 @@ npm run debug:ready
 ## Review Checklist
 
 - No Laya object becomes the authoritative game state.
+- View nodes are reached through `I*Node` contracts and `ViewRegistry`, not direct string reflection or ECS lookups.
 - Repeated `destroy()` or scene switch does not retain dead nodes.
 - Rebuild paths destroy old owned children instead of only detaching them.
 - Async load callbacks are idempotent.

@@ -261,7 +261,7 @@ Meadow -> Ship -> Space -> Meadow
 
 #### DirtyMarkSystem
 
-`DirtyMarkSystem.ts` 按 world 保存上一帧快照，比较当前帧组件字段，把差异写入 `DirtyComponent` 的各类 bitmask。字段读取、dirty bit、快照仓库和目标 dirty 数组由 `src/binding/viewSyncs/*ViewSync.ts` 通过 rules 派生，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`：
+`DirtyMarkSystem.ts` 按 world 保存上一帧快照，比较当前帧组件字段，把差异写入 `DirtyComponent` 的各类 bitmask。字段读取、dirty bit、快照仓库和目标 dirty 数组由 `src/binding/viewSyncs/*ViewSync.ts` 通过 `ViewSyncSpec` 派生，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`：
 
 - `shrewDirty` / `animDirty`：地鼠状态和动画进度。
 - `holeDirty`：洞位坐标、绑定地鼠、zIndex。
@@ -277,7 +277,7 @@ ViewSyncModule 的阅读顺序：
 ```text
 Entity eid
   -> requires / defineQuery 声明 component 组合
-  -> rules 映射 dirty bit、component 字段、apply 函数
+  -> spec 映射 dirty bit、component 字段、apply 函数
   -> dirtyAspect 写 DirtyComponent.xxxDirty
   -> channel 声明 dirtyTarget/watchedBits/project
 ```
@@ -302,7 +302,7 @@ ECS Component 数据变化
   -> 清除 dirty bits
 ```
 
-`SyncView.sync(world)` 会遍历所有带 `DirtyComponent` 的实体，再遍历已注册的 channel 表。每个 channel 声明 `dirtyTarget`、rules 派生出的 `watchedBits` 和 `project`：
+`SyncView.sync(world)` 会遍历所有带 `DirtyComponent` 的实体，再遍历已注册的 channel 表。每个 channel 声明 `dirtyTarget`、spec 派生出的 `watchedBits` 和 `project`：
 
 ```text
 shrewViewBinding   ShrewComponent + AnimationComponent -> ShrewNode
@@ -694,7 +694,8 @@ Laya 表现层
 
 ```text
 ecs/gameplay -> ecs/components/config/network types
-binding -> ecs/components + view interfaces
+sync/viewSync/specs -> ecs/components + sync/contracts
+binding -> ecs/components + sync/viewSync/specs + view interfaces
 view -> Laya + resource/config
 Feature -> 装配 ECS factory/system/dirty/sync/view registry
 GameScene -> world/runtime shell + FeatureRegistry

@@ -17,7 +17,7 @@ Use this project skill for changes that affect authoritative ECS state or how it
 
 1. Identify the authoritative component field and the system/helper that owns writes to it.
 2. Check whether the field must be visible in Laya.
-3. If visible, update the full chain:
+3. If visible, start from the `ViewSyncSpec` row and update the full chain:
    - `src/ecs/components/index.ts`
    - `src/ecs/world.ts`
    - relevant `src/ecs/gameplay/<domain>/*.ts` or helper
@@ -29,8 +29,24 @@ Use this project skill for changes that affect authoritative ECS state or how it
    - relevant `src/view/*Node.ts`
    - tests under `src/tests/**`
 4. Keep ECS logic free of `Laya.*`.
-5. Prefer pure helpers for reusable state reset or transition logic.
-6. Verify with the narrowest related test first, then broaden if the change touches shared behavior.
+5. Keep `ViewSyncSpec` free of concrete Laya nodes, loaders, tweens, timers, and resource lifecycle code. It may read ECS components and call `I*Node` contracts.
+6. For new independent gameplay, keep Feature thin: ECS state/systems/factory in `src/ecs/gameplay/<domain>`, config in `src/config`, sync spec in `src/sync/viewSync/specs`, projection in `src/binding`, Laya implementation in `src/view`, and Feature only for setup/systems/viewSyncs registration.
+7. Prefer pure helpers for reusable state reset or transition logic.
+8. Verify with the narrowest related test first, then broaden if the change touches shared behavior.
+
+## Mental Model
+
+```text
+System changes Component
+  -> ViewSyncSpec.fields opens dirty bit
+  -> DirtyMarkSystem writes DirtyComponent.xxxDirty
+  -> SyncView finds ViewSyncChannel
+  -> ViewSyncBinding executes spec.apply
+  -> I*Node contract
+  -> view/*Node.ts Laya implementation
+```
+
+`ViewSyncSpec` has two meanings in one table: dirty rule (`fields -> bit`) and view projection rule (`bit -> apply`). Prefer local `createSyncRow<IContract, Field>()` helpers so rows stay readable.
 
 ## Common Test Commands
 
@@ -44,7 +60,9 @@ npx tsc --noEmit
 ## Review Checklist
 
 - Component is the authority; view node is not.
-- Dirty bit, ViewSyncModule dirty mark, binding, and node method names align.
+- Dirty bit, ViewSyncSpec row, ViewSyncModule channel, binding, and node method names align.
+- `bitsOf(spec)` covers the intended dirty bits; do not reintroduce hand-written all-bits constants.
 - `forceFullSync` is not hiding normal dirty propagation gaps.
+- Feature only wires this domain into the game; it does not become a new rule container.
 - State transitions are covered by tests where practical.
 - System ordering is still explicit and documented when changed.

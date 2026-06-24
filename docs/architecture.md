@@ -91,6 +91,34 @@ input/network/resource callback
 
 新增独立玩法实体采用“ECS gameplay + 薄 Feature”边界。玩法权威状态、系统和工厂放 `src/ecs/gameplay/<domain>/`；配置放 `src/config/`；同步规格放 `src/sync/viewSync/specs/`；binding 放 `src/binding/`；`src/binding/viewSyncs/*ViewSync.ts` 把 ViewSyncSpec、dirty aspect 和 ViewSyncChannel 收束成一个可注册模块；Laya 节点放 `src/view/`。`src/features/*Feature.ts` 只负责把这些能力装配进游戏，`GameScene` 只通过 `GAME_FEATURE_REGISTRY` 接入。
 
+## 本轮重构沉淀
+
+这轮重构后的核心取舍是：用 ECS 保持权威规则纯净，用 Feature 降低新增玩法的注册成本，用 ViewSyncSpec 把“字段变化应该打开哪个 dirty bit”和“dirty 命中后调用哪个 view contract”写在同一张表里。这样新人新增玩法时优先照一个 Feature 模板落地，但业务规则仍然回到 `ecs/gameplay/<domain>/`，不会让 Feature 变成新的大号 `GameScene`。
+
+判断代码应该放哪里时按下面顺序：
+
+```text
+是否是权威游戏规则/状态？
+  -> 放 ecs/gameplay 或 ecs/components
+
+是否是静态调参、资源路径、触发条件？
+  -> 放 config
+
+是否是 ECS 字段到 dirty bit/view contract 的同步规格？
+  -> 放 sync/viewSync/specs/*ViewSyncSpec.ts
+
+是否是读取 ECS 并调用 view contract？
+  -> 放 binding/*ViewBinding.ts
+
+是否是 Laya 节点、资源加载、tween/timer、显示细节？
+  -> 放 view/*Node.ts
+
+是否只是把本玩法的实体、节点、systems、viewSyncs 注册进游戏？
+  -> 放 features/*Feature.ts
+```
+
+Feature 的权限要保持窄：可以创建本模块实体、创建/注册节点、声明 system phase 和 viewSyncs；不应该持有核心规则分支，不应该直接操作别的 Feature 的内部状态，也不应该绕过 ECS 改 view 表现。Feature 越薄，`GameScene` 越小，ECS 边界也越稳定。
+
 ## 启动和主循环
 
 ```text

@@ -65,7 +65,7 @@ BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding
 
 ## ViewSyncModule
 
-`src/binding/viewSyncs/*ViewSync.ts` 是一条视图同步链路的阅读入口。它把同一份 rules 同时接到 dirty 标记和 view 投影上：`ViewSyncModule.rules` 用来派生 `dirtyAspect`，`ViewSyncModule.channel` 用来注册到 `SyncView`。`DirtyMarkSystem` 只负责遍历 `GameFeatureRegistry` 汇总出来的 aspect 列表，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`。
+`src/binding/viewSyncs/*ViewSync.ts` 是一条视图同步链路的阅读入口。它把同一份 `ViewSyncSpec` 同时接到 dirty 标记和 view 投影上：`ViewSyncModule.spec` 用来派生 `dirtyAspect`，`ViewSyncModule.channel` 用来注册到 `SyncView`。`DirtyMarkSystem` 只负责遍历 `GameFeatureRegistry` 汇总出来的 aspect 列表，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`。
 
 核心角色：
 
@@ -84,7 +84,7 @@ ViewSyncModule 分五层：
 ViewSyncModule 一条完整视图同步链路，例如 ShrewViewSync
 DirtyAspect   某类实体的组件组合，例如 ShrewComponent + AnimationComponent + DirtyComponent
 DirtyChannel  写到 DirtyComponent 的哪一列，例如 shrewDirty 或 animDirty
-DirtyMark     某个 dirty bit，对应一组 ECS 字段
+ViewSyncSpec  表格式同步规格，声明 bit、说明、字段和 apply/noProjection
 DirtyField    一个可比较的 component 字段，例如 ShrewComponent.actionState
 ```
 
@@ -154,6 +154,42 @@ BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding -> HoleNode
 这表示 X 或 Y 任一变化都触发同一个位置更新 bit。
 
 多个 dirty bit 共用一个表现更新时，让多行指向同一个 `apply`。`applyMatchedViewSyncSpec` 会按函数引用去重，同一帧只调用一次。
+
+## ViewSyncSpec 设计约定
+
+`ViewSyncSpec` 不是普通 UI 规则表，它同时承担两层语义：
+
+```text
+dirty 规则：ECS fields -> dirty bit
+view 投影：dirty bit -> I*Node contract apply
+```
+
+因此 spec 文件可以读取 ECS component 和 `src/sync/contracts/*ViewContract.ts`，但不要引入具体 Laya 节点、loader、tween、timer 或资源生命周期代码。`applyXxx()` 的职责是从 ECS 取数据并调用 contract，例如 `node.showReward(...)`；真正的 Laya 表现由 `view/*Node.ts` 实现。
+
+命名上优先使用本地 helper 隐藏泛型，让表看起来像配置：
+
+```ts
+const syncRow = createSyncRow<IShrewNode, ComponentField>();
+
+export const SHREW_COMPONENT_SYNC_SPEC = defineShrewComponentSyncSpec([
+  // bit                  label         fields          apply
+  syncRow(BIT_SHREW_TYPE, "地鼠类型",   ["shrewType"],  applySpriteFrame),
+  syncRow(BIT_SHREW_MAP,  "地图类型",   ["mapType"],    applySpriteFrame),
+  syncRow(BIT_SHREW_HAT,  "帽子显示",   ["hasHat"],     applyHatVisible),
+]);
+```
+
+新增或 review 一条同步链路时，用这条完整路径读代码：
+
+```text
+System 改 Component
+  -> ViewSyncSpec.fields 命中变化字段
+  -> DirtySchemaRunner 写 DirtyComponent.xxxDirty
+  -> SyncView 命中 ViewSyncChannel.watchedBits
+  -> ViewSyncBinding 调 applyMatchedViewSyncSpec
+  -> applyXxx 调 I*Node contract
+  -> view/*Node.ts 实现 Laya 表现
+```
 
 ## SyncView 和 Binding
 
@@ -268,8 +304,8 @@ view node 方法是否真的更新了 Laya 节点
 常见坑：
 
 - 字段写进 component，但 `DirtyFlags` 没有 bit。
-- 对应 `ViewSyncModule` 漏了字段。
-- binding 没处理这个 bit。
+- 对应 `ViewSyncSpec` 漏了字段或 bit。
+- binding/spec apply 没处理这个 bit。
 - `shrewAnimationViewBinding` 没注册，导致 Up/Down 只有状态没有中间位移。
 - 节点已销毁但旧引用仍留在注册表。
 
@@ -322,7 +358,7 @@ AnimationComponent.progress
 ## ECS 使用风险
 
 - 状态分散：新增字段前先判断是否已有合适 component。
-- 样板膨胀：dirty bit、schema、binding、node 方法要命名一致。
+- 样板膨胀：dirty bit、ViewSyncSpec、binding、node 方法要命名一致。
 - 调试困难：复杂 system 要能通过测试重放。
 - 同步遗漏：不要用 `forceFullSync` 掩盖常规 dirty 漏标。
 - 生命周期不清：world、view node、timer、stage event、network callback 都要有 owner。

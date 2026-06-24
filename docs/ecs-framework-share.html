@@ -1026,7 +1026,7 @@
         <header>
           <div class="kicker">Dirty Mark / Binding</div>
           <h2>dirty mark 的本质：把字段变化翻译成 view 更新 bit</h2>
-          <p class="lead">System 只改 Component。DirtyMarkSystem 用上一帧快照做 diff，把变化写进 DirtyComponent；SyncView 命中 ViewSyncChannel 后执行 project，再由 rules.apply 调用 view contract。</p>
+          <p class="lead">System 只改 Component。DirtyMarkSystem 用上一帧快照做 diff，把变化写进 DirtyComponent；SyncView 命中 ViewSyncChannel 后执行 project，再由 spec.apply 调用 view contract。</p>
         </header>
         <div class="content">
           <div class="diagram">
@@ -1057,12 +1057,12 @@
               <path d="M746 111 H782" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
               <rect x="74" y="214" width="832" height="72" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
               <text x="490" y="244" text-anchor="middle" font-size="15" fill="#283442">HitComponent.wasHit -> BIT_HIT_WASHIT -> DirtyComponent.hitDirty -> HitViewSync.channel.project</text>
-              <text x="490" y="268" text-anchor="middle" font-size="13" fill="#5f6b7a">project 进入 hitViewBinding，rules.applyHitEffect 再调用 IHitEffectNode.showReward/showMiss</text>
+              <text x="490" y="268" text-anchor="middle" font-size="13" fill="#5f6b7a">project 进入 hitViewBinding，spec.applyHitEffect 再调用 IHitEffectNode.showReward/showMiss</text>
             </svg>
           </div>
           <div class="two">
             <div class="panel accent-cyan"><strong>第一次同步为什么全量？</strong><p>`DirtySchemaRunner` 第一次看到 eid 时没有 snapshot，会填充快照并写 `channel.allBits`；`SyncView` 也会处理 `forceFullSync`。</p></div>
-            <div class="panel accent-red"><strong>之后为什么差量？</strong><p>后续每帧只比较 ViewSyncModule/rules 声明的字段；字段值不同才 OR 对应 bit，命中 `watchedBits` 后才执行对应 project。</p></div>
+            <div class="panel accent-red"><strong>之后为什么差量？</strong><p>后续每帧只比较 ViewSyncModule/spec 声明的字段；字段值不同才 OR 对应 bit，命中 `watchedBits` 后才执行对应 project。</p></div>
           </div>
         </div>
         <footer class="footer">
@@ -1202,7 +1202,7 @@ rule(BIT_SCENE_TRANSITION, "场景切换状态",
               <text x="196" y="89" text-anchor="middle" font-size="13" fill="#5f6b7a">currentMap: Meadow -> Ship</text>
               <rect x="414" y="34" width="300" height="74" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
               <text x="564" y="65" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">SceneViewSync</text>
-              <text x="564" y="89" text-anchor="middle" font-size="13" fill="#5f6b7a">rules -> dirtyAspect + channel</text>
+              <text x="564" y="89" text-anchor="middle" font-size="13" fill="#5f6b7a">spec -> dirtyAspect + channel</text>
               <rect x="414" y="156" width="300" height="74" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
               <text x="564" y="187" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">DirtySchemaRunner</text>
               <text x="564" y="211" text-anchor="middle" font-size="13" fill="#5f6b7a">snapshot 不同 -> sceneDirty |= 0x0001</text>
@@ -1263,7 +1263,7 @@ rule(BIT_SCENE_TRANSITION, "场景切换状态",
               <text x="401" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">分发两个 binding</text>
               <rect x="558" y="190" width="180" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
               <text x="648" y="220" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">ShrewViewBinding</text>
-              <text x="648" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">执行 rules.apply</text>
+              <text x="648" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">执行 spec.apply</text>
               <rect x="296" y="338" width="210" height="72" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
               <text x="401" y="368" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">ShrewNode.setAnimation</text>
               <text x="401" y="390" text-anchor="middle" font-size="12" fill="#5f6b7a">mainLayer.y 插值出洞</text>
@@ -1285,7 +1285,7 @@ AnimationComponent.progress[eid] = 0;
 AnimationComponent.duration[eid] = timing.upDurationSec;</pre>
             </div>
             <div class="panel accent-blue">
-              <strong>2. 表格式 rules 声明变化</strong>
+              <strong>2. 表格式 ViewSyncSpec 声明变化</strong>
               <pre class="code">rule(BIT_SHREW_ACTION, "动作状态",
     ["actionState"], applyAnimation)
 rule(BIT_ANIM_PROGRESS, "动画进度",
@@ -1411,7 +1411,7 @@ git commit -m "feat: add score milestone celebration" \
         </header>
         <div class="content split-wide">
           <div class="rows">
-            <div class="panel accent-green"><strong>1. 薄 Feature 装配</strong><p>`src/features/MonsterFeature.ts` 只装配；Component、Factory、System 放 `src/ecs/gameplay/monster`，Config/SyncRules/Binding/ViewSync/Node 回到各自层。</p></div>
+            <div class="panel accent-green"><strong>1. 薄 Feature 装配</strong><p>`src/features/MonsterFeature.ts` 只装配；Component、Factory、System 放 `src/ecs/gameplay/monster`，Config/ViewSyncSpec/Binding/ViewSync/Node 回到各自层。</p></div>
             <div class="panel accent-blue"><strong>2. Rhino 配置化</strong><p>`MonsterType.Rhino` 指向 `resources/monster/rhino.sk`，默认同屏 1 个，`PlayerComponent.money` 跨过 100 的新倍数时出现一次；若 Rhino 仍在场，本次触发直接丢弃。</p></div>
             <div class="panel accent-violet"><strong>3. System 管 10 秒生命周期</strong><p>`monsterSpawnSystem` 负责触发出现，`monsterLifetimeSystem` 只改 ECS 字段：超过 10 秒设置 `visible=0`，不删除 entity。</p></div>
             <div class="panel accent-red"><strong>4. ViewSync 接入</strong><p>`MonsterComponent.visible -> BIT_MONSTER_SHOW -> DirtyComponent.monsterDirty -> MonsterViewSync.channel -> monsterViewBinding -> MonsterNode.setVisible()`。</p></div>
