@@ -1,15 +1,11 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import type { IShrewNode } from "../../sync/contracts/ShrewViewContract";
 import { createGameWorld, createShrewEntity } from "../../ecs/world";
 import { AnimationComponent, DirtyComponent, ShrewComponent } from "../../ecs/components";
 import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
 import { SyncView } from "../../binding/SyncView";
+import { createViewSyncRuntime } from "../../binding/ViewSyncRuntime";
 import { ShrewAnimationViewSync, ShrewViewSync } from "../../binding/viewSyncs";
-import {
-  registerShrewNode,
-  shrewViewBinding,
-  unregisterShrewNode,
-} from "../../binding/ShrewViewBinding";
 import {
   BIT_ANIM_PROGRESS,
   BIT_SHREW_HP,
@@ -20,15 +16,6 @@ import {
 import { AnimType, MapType, ShrewAction, ShrewType } from "../../ecs/types";
 
 describe("ShrewViewBinding", () => {
-  const registered: number[] = [];
-
-  afterEach(() => {
-    for (const eid of registered) {
-      unregisterShrewNode(eid);
-    }
-    registered.length = 0;
-  });
-
   function createNode(calls: {
     spriteFrames?: Array<{ shrewType: number; mapType: number }>;
     animations?: Array<{ actionState: number; animType: number; progress: number }>;
@@ -60,13 +47,13 @@ describe("ShrewViewBinding", () => {
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
     const calls = { spriteFrames: [] as Array<{ shrewType: number; mapType: number }> };
     const node = createNode(calls);
-    registerShrewNode(eid, node);
-    registered.push(eid);
+    const runtime = createViewSyncRuntime([ShrewViewSync, ShrewAnimationViewSync]);
+    runtime.registryFor(ShrewViewSync).register(eid, node);
 
     ShrewComponent.shrewType[eid] = ShrewType.Blue;
     ShrewComponent.mapType[eid] = MapType.Ship;
 
-    shrewViewBinding(eid, BIT_SHREW_TYPE | BIT_SHREW_MAP, false);
+    runtime.channelFor(ShrewViewSync).project(eid, BIT_SHREW_TYPE | BIT_SHREW_MAP, false);
 
     expect(calls.spriteFrames).toEqual([
       { shrewType: ShrewType.Blue, mapType: MapType.Ship },
@@ -84,10 +71,10 @@ describe("ShrewViewBinding", () => {
       props: [] as number[],
     };
     const node = createNode(calls);
-    registerShrewNode(eid, node);
-    registered.push(eid);
+    const runtime = createViewSyncRuntime([ShrewViewSync, ShrewAnimationViewSync]);
+    runtime.registryFor(ShrewViewSync).register(eid, node);
 
-    shrewViewBinding(eid, BIT_SHREW_HP | BIT_SHREW_TIMER, false);
+    runtime.channelFor(ShrewViewSync).project(eid, BIT_SHREW_HP | BIT_SHREW_TIMER, false);
 
     expect(calls.spriteFrames).toEqual([]);
     expect(calls.animations).toEqual([]);
@@ -109,11 +96,11 @@ describe("ShrewViewBinding", () => {
       setHatVisible: () => {},
       setPropType: () => {},
     };
-    registerShrewNode(eid, node);
-    registered.push(eid);
+    const runtime = createViewSyncRuntime([ShrewViewSync, ShrewAnimationViewSync]);
+    runtime.registryFor(ShrewViewSync).register(eid, node);
 
     const syncView = new SyncView();
-    syncView.registerChannel(ShrewAnimationViewSync.channel);
+    syncView.registerChannels(runtime.channels());
 
     ShrewComponent.actionState[eid] = ShrewAction.Up;
     AnimationComponent.animType[eid] = AnimType.Up;

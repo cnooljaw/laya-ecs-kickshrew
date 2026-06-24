@@ -24,6 +24,7 @@ export const BIT_HOLE_ZORDER = 0x0004;
 export const BIT_HAMMER_TYPE = 0x0001;
 export const BIT_HAMMER_THUNDER = 0x0002;
 export const BIT_HAMMER_HITTABLE = 0x0004;
+export const BIT_HAMMER_HIT_FEEDBACK = 0x0008;
 
 // ---- SceneComponent 脏标记 ----
 export const BIT_SCENE_MAP = 0x0001;

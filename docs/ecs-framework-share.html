@@ -1056,7 +1056,7 @@
               <path d="M548 111 H584" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
               <path d="M746 111 H782" stroke="#2364aa" stroke-width="3" marker-end="url(#arrow6)"></path>
               <rect x="74" y="214" width="832" height="72" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="490" y="244" text-anchor="middle" font-size="15" fill="#283442">HitComponent.wasHit -> BIT_HIT_WASHIT -> DirtyComponent.hitDirty -> HitViewSync.channel.project</text>
+              <text x="490" y="244" text-anchor="middle" font-size="15" fill="#283442">HitComponent.wasHit -> BIT_HIT_WASHIT -> DirtyComponent.hitDirty -> ViewSyncRuntime.channel.project</text>
               <text x="490" y="268" text-anchor="middle" font-size="13" fill="#5f6b7a">project 进入 hitViewBinding，spec.applyHitEffect 再调用 IHitEffectNode.showReward/showMiss</text>
             </svg>
           </div>
@@ -1227,7 +1227,7 @@ rule(BIT_SCENE_TRANSITION, "场景切换状态",
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/gameplay/core/SceneCycleSystem.ts, src/binding/viewSyncs/SceneViewSync.ts, src/binding/SceneViewBinding.ts</span>
+          <span>对应代码：src/ecs/gameplay/core/SceneCycleSystem.ts, src/binding/viewSyncs/SceneViewSync.ts, src/sync/viewSync/specs/SceneViewSyncSpec.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1414,7 +1414,7 @@ git commit -m "feat: add score milestone celebration" \
             <div class="panel accent-green"><strong>1. 薄 Feature 装配</strong><p>`src/features/MonsterFeature.ts` 只装配；Component、Factory、System 放 `src/ecs/gameplay/monster`，Config/ViewSyncSpec/Binding/ViewSync/Node 回到各自层。</p></div>
             <div class="panel accent-blue"><strong>2. Rhino 配置化</strong><p>`MonsterType.Rhino` 指向 `resources/monster/rhino.sk`，默认同屏 1 个，`PlayerComponent.money` 跨过 100 的新倍数时出现一次；若 Rhino 仍在场，本次触发直接丢弃。</p></div>
             <div class="panel accent-violet"><strong>3. System 管 10 秒生命周期</strong><p>`monsterSpawnSystem` 负责触发出现，`monsterLifetimeSystem` 只改 ECS 字段：超过 10 秒设置 `visible=0`，不删除 entity。</p></div>
-            <div class="panel accent-red"><strong>4. ViewSync 接入</strong><p>`MonsterComponent.visible -> BIT_MONSTER_SHOW -> DirtyComponent.monsterDirty -> MonsterViewSync.channel -> monsterViewBinding -> MonsterNode.setVisible()`。</p></div>
+            <div class="panel accent-red"><strong>4. ViewSync 接入</strong><p>`MonsterComponent.visible -> BIT_MONSTER_SHOW -> DirtyComponent.monsterDirty -> ViewSyncRuntime.channel -> MonsterViewSyncSpec -> MonsterNode.setVisible()`。</p></div>
           </div>
           <div class="diagram">
             <svg viewBox="0 0 820 430" role="img" aria-label="新增非地鼠怪物落地流程">

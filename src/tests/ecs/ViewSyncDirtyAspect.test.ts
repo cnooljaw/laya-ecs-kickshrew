@@ -13,7 +13,6 @@ describe("ViewSyncDirtyAspect", () => {
       requires: ["SceneComponent", "DirtyComponent"],
       channel: {
         name: "sceneDirty",
-        storeKey: "scene",
         dirtyTarget: "sceneDirty",
         spec: SCENE_VIEW_SYNC_SPEC,
       },
@@ -22,6 +21,7 @@ describe("ViewSyncDirtyAspect", () => {
     expect(aspect.name).toBe("TestSceneDirtyAspect");
     expect(aspect.requires).toEqual(["SceneComponent", "DirtyComponent"]);
     expect(aspect.channels).toHaveLength(1);
+    expect(aspect.channels[0].dirtyArray).toBe(DirtyComponent.sceneDirty);
     expect(aspect.channels[0].allBits).toBe(bitsOf(SCENE_VIEW_SYNC_SPEC));
     expect(aspect.channels[0].marks.map(mark => mark.bit)).toEqual(
       SCENE_VIEW_SYNC_SPEC.map(rule => rule.bit),

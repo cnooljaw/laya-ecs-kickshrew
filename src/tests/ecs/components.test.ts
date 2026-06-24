@@ -81,6 +81,13 @@ describe("ECS Components & World", () => {
 
       expect(DirtyComponent.shrewDirty[entity]).toBe(0);
     });
+
+    it("DirtyComponent should use integer typed arrays for bitmasks and full-sync flags", () => {
+      expect(DirtyComponent.shrewDirty).toBeInstanceOf(Uint32Array);
+      expect(DirtyComponent.animDirty).toBeInstanceOf(Uint32Array);
+      expect(DirtyComponent.monsterDirty).toBeInstanceOf(Uint32Array);
+      expect(DirtyComponent.forceFullSync).toBeInstanceOf(Uint8Array);
+    });
   });
 
   describe("createShrewEntity", () => {

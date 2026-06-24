@@ -1,5 +1,5 @@
 import { createViewSyncDirtyAspect } from "../dirty/ViewSyncDirtyAspect";
-import type { DirtyAspect, DirtyStoreKey, DirtyTarget } from "../dirty/DirtySchemaTypes";
+import type { DirtyArray, DirtyAspect, DirtyTarget } from "../dirty/DirtySchemaTypes";
 import { bitsOf } from "./ViewSyncSpec";
 import type { ViewSyncSpec } from "./ViewSyncSpec";
 
@@ -8,15 +8,19 @@ export type ViewProjectFn = (eid: number, dirtyBits: number, forceFull: boolean)
 export interface ViewSyncChannel {
   name: string;
   dirtyTarget: DirtyTarget;
+  dirtyArray: DirtyArray;
   watchedBits: number;
   project: ViewProjectFn;
 }
 
 export interface ViewSyncModule<TNode = any> {
   name: string;
+  registryKey: string;
   spec: ViewSyncSpec<TNode>;
   dirtyAspect: DirtyAspect;
-  channel: ViewSyncChannel;
+  dirtyTarget: DirtyTarget;
+  dirtyArray: DirtyArray;
+  watchedBits: number;
   describe: () => string[];
 }
 
@@ -26,10 +30,9 @@ export interface ViewSyncModuleOptions<TNode> {
   description: string;
   requires: string[];
   components: any[];
-  storeKey: DirtyStoreKey;
+  registryKey?: string;
   dirtyTarget: DirtyTarget;
   spec: ViewSyncSpec<TNode>;
-  project: ViewProjectFn;
 }
 
 export function defineViewSyncModule<TNode>(
@@ -43,7 +46,6 @@ export function defineViewSyncModule<TNode>(
     components: options.components,
     channel: {
       name: options.name,
-      storeKey: options.storeKey,
       dirtyTarget: options.dirtyTarget,
       spec: options.spec,
     },
@@ -51,14 +53,12 @@ export function defineViewSyncModule<TNode>(
 
   return {
     name: options.name,
+    registryKey: options.registryKey ?? options.name,
     spec: options.spec,
     dirtyAspect,
-    channel: {
-      name: options.name,
-      dirtyTarget: options.dirtyTarget,
-      watchedBits,
-      project: options.project,
-    },
+    dirtyTarget: options.dirtyTarget,
+    dirtyArray: dirtyAspect.channels[0].dirtyArray,
+    watchedBits,
     describe: () => describeViewSyncModule(options),
   };
 }

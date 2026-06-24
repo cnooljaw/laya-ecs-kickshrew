@@ -9,18 +9,20 @@
  * 5. 启动网络层
  */
 import { createGameWorld, createSingletonEntities, SingletonEntities } from "../ecs/world";
+import { deleteWorld } from "bitecs";
 import { hitResponseSystem } from "../ecs/gameplay/hud/HitResponseSystem";
 import { SyncView } from "../binding/SyncView";
+import { createViewSyncRuntime, type ViewSyncRuntime } from "../binding/ViewSyncRuntime";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";
-import { DirtyComponent } from "../ecs/components";
 import { GameLoopPipeline } from "./GameLoopPipeline";
 import { KickInputAdapter } from "./KickInputAdapter";
 import { ViewRegistry } from "./ViewRegistry";
 import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../config/PerfTestConfig";
 import { resetShrewTimingOverride, setShrewTimingOverride } from "../config/GameTuning";
 import { GAME_FEATURE_REGISTRY } from "../features/GameFeatures";
-import type { GameRuntimeRefs } from "../features/GameFeature";
+import { releaseDirtyWorld } from "../sync/dirty/DirtyMarkSystem";
+import { createFeatureSetupContext } from "../features/GameFeatureRuntime";
 
 /** 音效路径 */
 const SND = {
@@ -28,7 +30,7 @@ const SND = {
 };
 
 export class GameScene {
-  private _world: any;
+  private _world: any = null;
   private _singletons!: SingletonEntities;
   private _syncView: SyncView;
   private _network: NetworkAdapter;
@@ -36,7 +38,7 @@ export class GameScene {
   private _perfConfig: PerfTestRuntimeConfig;
   private _running: boolean = false;
   private _root: any = null;
-  private _runtimeRefs: GameRuntimeRefs = {};
+  private _viewSyncRuntime: ViewSyncRuntime | null = null;
   private _loopPipeline: GameLoopPipeline | null = null;
   private _kickInput: KickInputAdapter | null = null;
 
@@ -68,22 +70,19 @@ export class GameScene {
       Laya.SoundManager.playMusic(SND.bg, 0);
     }
 
-    const featureForceFullEntities: number[] = [];
-    this._runtimeRefs = {};
-    GAME_FEATURE_REGISTRY.setupAll({
+    this._viewSyncRuntime = createViewSyncRuntime(GAME_FEATURE_REGISTRY.viewSyncs());
+    this._syncView.registerChannels(this._viewSyncRuntime.channels());
+
+    GAME_FEATURE_REGISTRY.setupAll(createFeatureSetupContext({
       world: this._world,
       root: this._root,
       singletons: this._singletons,
-      viewRegistry: this._viewRegistry,
       perfConfig: this._perfConfig,
-      runtimeRefs: this._runtimeRefs,
-      forceFullSyncEntities: featureForceFullEntities,
-    });
+      viewRegistry: this._viewRegistry,
+      viewSyncRuntime: this._viewSyncRuntime,
+    }));
 
-    // 3. 注册视图绑定
-    this._syncView.registerChannels(GAME_FEATURE_REGISTRY.viewSyncChannels());
-
-    // 4. 设置网络回调
+    // 3. 设置网络回调
     this._network.onResponse((resp: KickResponse) => {
       hitResponseSystem(this._world, resp);
     });
@@ -99,17 +98,13 @@ export class GameScene {
       world: this._world,
       singletons: this._singletons,
       network: this._network,
-      getHammerNode: () => this._runtimeRefs.hammerNode ?? null,
       playSound: (url: string) => {
         const RuntimeLaya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
         if (RuntimeLaya) RuntimeLaya.SoundManager.playSound(url);
       },
     });
 
-    // 5. 首次全量同步（设置 forceFullSync，确保所有节点显示正确初始状态）
-    for (const eid of new Set(featureForceFullEntities)) {
-      DirtyComponent.forceFullSync[eid] = 1;
-    }
+    // 4. mount 已设置 forceFullSync，统一执行首次同步。
     this._syncView.sync(this._world);
   }
 
@@ -131,8 +126,14 @@ export class GameScene {
     this._kickInput = null;
     this._loopPipeline = null;
     this._viewRegistry.clear();
-    this._runtimeRefs.perfHeroPool?.destroy();
-    this._runtimeRefs = {};
+    this._viewSyncRuntime?.clear();
+    this._viewSyncRuntime = null;
+    this._syncView.clear();
+    if (this._world) {
+      releaseDirtyWorld(this._world);
+      deleteWorld(this._world);
+      this._world = null;
+    }
     if (this._root) {
       this._root.destroy();
       this._root = null;

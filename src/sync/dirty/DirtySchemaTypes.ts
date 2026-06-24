@@ -1,21 +1,8 @@
-import type { DirtyTarget } from "../../sync/DirtyTargets";
-export type { DirtyTarget } from "../../sync/DirtyTargets";
-
 export type Snapshot = Record<string, number>;
 
-export interface DirtySnapshotStore {
-  shrew: Map<number, Snapshot>;
-  anim: Map<number, Snapshot>;
-  hole: Map<number, Snapshot>;
-  hammer: Map<number, Snapshot>;
-  scene: Map<number, Snapshot>;
-  player: Map<number, Snapshot>;
-  hit: Map<number, Snapshot>;
-  perfHero: Map<number, Snapshot>;
-  monster: Map<number, Snapshot>;
-}
-
-export type DirtyStoreKey = keyof DirtySnapshotStore;
+export type DirtyArray = Uint32Array;
+export type DirtyTarget = Extract<keyof typeof import("../../ecs/components").DirtyComponent, `${string}Dirty`>;
+export type DirtySnapshotStore = Map<string, Map<number, Snapshot>>;
 
 export interface DirtyField {
   path: string;
@@ -30,8 +17,8 @@ export interface DirtyMark {
 
 export interface DirtyChannel {
   name: string;
-  storeKey: DirtyStoreKey;
   dirtyTarget: DirtyTarget;
+  dirtyArray: DirtyArray;
   allBits: number;
   marks: DirtyMark[];
 }

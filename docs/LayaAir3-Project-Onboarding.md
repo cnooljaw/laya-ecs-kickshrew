@@ -105,7 +105,7 @@ Laya stage MOUSE_DOWN
 - 创建 ECS world。
 - 创建单例实体：锤子、连击、场景、玩家、网络。
 - 调用 `GAME_FEATURE_REGISTRY.setupAll(...)`，让各 Feature 创建自己的实体和 Laya 节点。
-- 注册 `GAME_FEATURE_REGISTRY.viewSyncChannels()` 从 Feature `viewSyncs` 展开出的 SyncView channel。
+- 用 `createViewSyncRuntime(GAME_FEATURE_REGISTRY.viewSyncs())` 编译本次 world 的实例级 registry 和 SyncView channel。
 - 创建 `GameLoopPipeline` 和 `KickInputAdapter`，把帧循环和点击输入从装配器里拆出去。
 - 接入 `NetworkAdapter`。
 - 保留网络回包入口：`network.onResponse(resp => hitResponseSystem(world, resp))`。
@@ -284,11 +284,11 @@ Entity eid
 
 每条 dirty binding 链路都有一张更好读的表：`src/sync/viewSync/specs/*ViewSyncSpec.ts`。它把 dirty 检测和 view contract 投影放在同一行配置里。spec 依赖 `src/sync/contracts/*ViewContract.ts` 的表现接口，不直接依赖 binding 文件或 Laya 节点：
 
-`fields` 是 DirtyMarkSystem 要比较的 ECS 字段，`apply` 是对应 `*ViewBinding` 命中 dirty bit 后真正调用的函数，`allBits` 由 `bitsOf(spec)` 自动得到。`noProjection` 表示字段只参与 dirty 记录，不直接调用 view。
+`fields` 是 DirtyMarkSystem 要比较的 ECS 字段，`apply` 是 runtime channel 命中 dirty bit 后真正调用的函数，`allBits` 由 `bitsOf(spec)` 自动得到。`noProjection` 表示字段只参与 dirty 记录，不直接调用 view。
 
 ### 第 40-50 分钟：dirty binding 怎么把 ECS 显示出来
 
-读 `src/binding/SyncView.ts` 和各个 `*ViewBinding.ts`。
+读 `src/binding/SyncView.ts`、`src/binding/ViewSyncRuntime.ts` 和 `src/sync/viewSync/specs/*ViewSyncSpec.ts`。
 
 核心思想：
 
@@ -305,28 +305,26 @@ ECS Component 数据变化
 `SyncView.sync(world)` 会遍历所有带 `DirtyComponent` 的实体，再遍历已注册的 channel 表。每个 channel 声明 `dirtyTarget`、spec 派生出的 `watchedBits` 和 `project`：
 
 ```text
-shrewViewBinding   ShrewComponent + AnimationComponent -> ShrewNode
-shrewAnimationViewBinding
-                   AnimationComponent.progress -> ShrewNode 位移
-holeViewBinding    HoleComponent -> HoleNode
-hammerViewBinding  HammerComponent -> HammerNode
-sceneViewBinding   SceneComponent -> SceneLayer
-playerViewBinding  PlayerComponent -> PlayerHUD
-hitViewBinding     HitComponent -> HitEffectNode
-monsterViewBinding MonsterComponent -> MonsterNode
+ShrewViewSyncSpec   ShrewComponent + AnimationComponent -> ShrewNode
+HoleViewSyncSpec    HoleComponent -> HoleNode
+HammerViewSyncSpec  HammerComponent -> HammerNode
+SceneViewSyncSpec   SceneComponent -> SceneLayer
+PlayerViewSyncSpec  PlayerComponent -> PlayerHUD
+HitViewSyncSpec     HitComponent -> HitEffectNode
+MonsterViewSyncSpec MonsterComponent -> MonsterNode
 ```
 
 新增实体类型时优先新增 `*ViewSync.ts` 并挂到 Feature 的 `viewSyncs`，不要给 `SyncView` 再手写一组 `private xxxBinding/registerXxxBinding/if dirty/clear dirty` 分支。
 
-每个 binding 都有注册函数，例如：
+Feature 在初始化时统一使用 `mount()`：
 
 ```ts
-registerShrewNode(shrewEid, shrewNode);
-registerHoleNode(holeEid, holeNode);
-registerPlayerHUD(playerEid, playerHUD);
+mount(ShrewViewSync, shrewEid, shrewNode);
+mount(HoleViewSync, holeEid, holeNode);
+mount(PlayerViewSync, playerEid, playerHUD);
 ```
 
-这些注册通过 `ViewRegistry` 发生在 `GameScene.init()`。也就是说，ECS 实体 eid 和 Laya 节点对象之间的关系不是由 Laya 节点自己找的，而是由装配层建立，并在 `GameScene.destroy()` 时集中解除注册和销毁节点。
+这些注册通过本次 world 的 `ViewSyncRuntime` 发生在 `GameScene.init()`。`mount()` 同时设置首次 full sync，并在 `GameScene.destroy()` 时集中反注册和销毁节点。
 
 地鼠出洞/入洞有两条 dirty 链路：`ShrewComponent.actionState` 变化时由 `shrewViewBinding` 切换动作，`AnimationComponent.progress` 在 0.31 秒动画期间变化时由 `shrewAnimationViewBinding` 持续推进 `ShrewNode.setAnimation()`。如果只注册前者，地鼠会收到 Up/Down 起始状态，但后续 progress 不再同步，画面看起来就不会上下运动。
 
@@ -495,12 +493,14 @@ GameScene.init()
   +-- createSingletonEntities()
   +-- GAME_FEATURE_REGISTRY.setupAll(...)
   |   +-- Feature 创建自己的实体和 Laya 节点
-  |   +-- Feature 通过 ViewRegistry 注册 eid/node
-  +-- syncView.registerChannels(GAME_FEATURE_REGISTRY.viewSyncChannels())
+  +-- createViewSyncRuntime(GAME_FEATURE_REGISTRY.viewSyncs())
+  |   +-- 为本次 world 创建实例级 registry/channel
+  +-- Feature 通过 mount(viewSync, eid, node) 注册
+  +-- syncView.registerChannels(viewSyncRuntime.channels())
   +-- network.onResponse(resp => hitResponseSystem(world, resp))
   +-- new GameLoopPipeline(featureRegistry)
   +-- new KickInputAdapter(...)
-  +-- forceFullSync Feature 上报的初始实体
+  +-- mount 自动设置初始 forceFullSync
   +-- syncView.sync(world)
 
 每帧:
@@ -535,7 +535,7 @@ GameScene.onTouch(x, y)
 
 - `src/ecs/gameplay/core/ShrewStateSystem.ts`
 - `src/ecs/types.ts`
-- `src/binding/ShrewViewBinding.ts`
+- `src/sync/viewSync/specs/ShrewViewSyncSpec.ts`
 - `src/view/ShrewNode.ts`
 - `src/tests/ecs/ShrewStateSystem.test.ts`
 
@@ -560,8 +560,8 @@ GameScene.onTouch(x, y)
 - `src/config/SceneConfig.ts`
 - `src/ecs/gameplay/core/SceneCycleSystem.ts`
 - `src/view/SceneLayer.ts`
-- `src/binding/SceneViewBinding.ts`
-- `src/binding/HoleViewBinding.ts`
+- `src/sync/viewSync/specs/SceneViewSyncSpec.ts`
+- `src/sync/viewSync/specs/HoleViewSyncSpec.ts`
 
 修改洞位位置时注意 cover 遮罩的 zOrder 关系。
 
@@ -572,7 +572,7 @@ GameScene.onTouch(x, y)
 - `src/ecs/gameplay/hammer/HammerSystem.ts`
 - `src/config/HammerConfig.ts`
 - `src/view/HammerNode.ts`
-- `src/binding/HammerViewBinding.ts`
+- `src/sync/viewSync/specs/HammerViewSyncSpec.ts`
 - `src/ecs/gameplay/hud/HitResponseSystem.ts`
 
 `PlayerComponent.angry >= 1000` 会触发雷神锤。
@@ -667,7 +667,8 @@ Feature 装配层
   sync/viewSync/specs/*ViewSyncSpec.ts
   sync/dirty/*
   binding/SyncView.ts
-  binding/*ViewBinding.ts
+  binding/ViewSyncBinding.ts
+  binding/ViewSyncRuntime.ts
 
 Laya 表现层
   view/*Node.ts
@@ -723,7 +724,7 @@ binding 不是事件推送模型。它每帧遍历 dirty 实体，然后从 comp
 
 A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 节点里猜状态。
 
-- 代码入口：`src/sync/dirty/DirtyMarkSystem.ts`、`src/binding/SyncView.ts`、对应 `src/binding/*ViewBinding.ts`。
+- 代码入口：`src/sync/dirty/DirtyMarkSystem.ts`、`src/binding/SyncView.ts`、`src/binding/ViewSyncRuntime.ts` 和对应 `src/sync/viewSync/specs/*ViewSyncSpec.ts`。
 - 数据流：system 修改 component，`dirtyMarkSystem` 对比快照写 `DirtyComponent.xxxDirty`，`SyncView.sync()` 命中 `ViewSyncChannel.project`，binding 读取 component 更新 view node。
 - 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `*ViewSyncSpec` 没比较这个字段；Feature 没声明对应 `viewSyncs`；节点没有注册或已销毁但注册表还留着旧引用。
 - 验证方式：先跑 `npx vitest run src/tests/ecs/DirtyMarkSystem.test.ts`，再在相关 system 后打印 component 和 dirty bit。
@@ -732,7 +733,7 @@ A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 
 
 A: `Up/Down` 的动作状态只负责切换阶段，真正位移来自 `AnimationComponent.progress`。`DirtyMarkSystem` 会把 progress 变化写进 `DirtyComponent.animDirty`，`CoreGameplayFeature` 声明 `ShrewAnimationViewSync` 后，`SyncView` 会在 anim dirty 时继续调用 `ShrewNode.setAnimation(actionState, animType, progress)`。
 
-- 代码入口：`src/ecs/gameplay/core/AnimationTimerSystem.ts`、`src/sync/dirty/DirtyMarkSystem.ts`、`src/features/CoreGameplayFeature.ts`、`src/binding/ShrewViewBinding.ts`。
+- 代码入口：`src/ecs/gameplay/core/AnimationTimerSystem.ts`、`src/sync/dirty/DirtyMarkSystem.ts`、`src/features/CoreGameplayFeature.ts`、`src/sync/viewSync/specs/ShrewViewSyncSpec.ts`。
 - 数据流：`AnimationComponent.progress -> DirtyComponent.animDirty -> shrewAnimationViewBinding -> ShrewNode.setAnimation -> mainLayer.y`。
 - 常见坑：只处理 `BIT_SHREW_ACTION` 会同步动作开始，但不会同步动作中间帧；`animDirty` 有值但 Feature 没声明 `ShrewAnimationViewSync` 时，画面仍不动。
 - 验证方式：`npm test -- --run src/tests/binding/ShrewViewBinding.test.ts`。

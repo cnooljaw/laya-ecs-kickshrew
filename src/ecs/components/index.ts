@@ -28,6 +28,9 @@ export const HammerComponent = defineComponent({
   isThunderActive: Types.f32,
   hitTable: Types.f32,
   hitCooldownSec: Types.f32,
+  touchX: Types.f32,
+  touchY: Types.f32,
+  hitSeq: Types.ui32,
 });
 
 /** 场景组件(单例) */
@@ -81,14 +84,14 @@ export const NetworkComponent = defineComponent({
 
 /** 脏标记组件 */
 export const DirtyComponent = defineComponent({
-  shrewDirty: Types.f32,
-  holeDirty: Types.f32,
-  hammerDirty: Types.f32,
-  sceneDirty: Types.f32,
-  playerDirty: Types.f32,
-  animDirty: Types.f32,
-  hitDirty: Types.f32,
-  perfHeroDirty: Types.f32,
-  monsterDirty: Types.f32,
-  forceFullSync: Types.f32,
+  shrewDirty: Types.ui32,
+  holeDirty: Types.ui32,
+  hammerDirty: Types.ui32,
+  sceneDirty: Types.ui32,
+  playerDirty: Types.ui32,
+  animDirty: Types.ui32,
+  hitDirty: Types.ui32,
+  perfHeroDirty: Types.ui32,
+  monsterDirty: Types.ui32,
+  forceFullSync: Types.ui8,
 });

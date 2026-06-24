@@ -42,11 +42,11 @@ Laya 入口层
 表现同步层
   sync/contracts/*ViewContract.ts
   sync/DirtyFlags.ts
-  sync/DirtyTargets.ts
   sync/viewSync/ViewSyncSpec.ts
   sync/viewSync/specs/*ViewSyncSpec.ts
   binding/SyncView.ts
-  binding/*ViewBinding.ts
+  binding/ViewSyncBinding.ts
+  binding/ViewSyncRuntime.ts
   binding/viewSyncs/*ViewSync.ts
 
 功能扩展层
@@ -108,7 +108,7 @@ input/network/resource callback
   -> 放 sync/viewSync/specs/*ViewSyncSpec.ts
 
 是否是读取 ECS 并调用 view contract？
-  -> 放 binding/*ViewBinding.ts
+  -> 放 sync/viewSync/specs/*ViewSyncSpec.ts；通用执行器在 binding/ViewSyncBinding.ts
 
 是否是 Laya 节点、资源加载、tween/timer、显示细节？
   -> 放 view/*Node.ts
@@ -138,8 +138,9 @@ createGameWorld()
 createSingletonEntities()
 GAME_FEATURE_REGISTRY.setupAll(...)
   -> Feature 创建自己的 ECS 实体和 Laya 节点
-  -> Feature 通过 ViewRegistry 注册 eid/node
-syncView.registerChannels(GAME_FEATURE_REGISTRY.viewSyncChannels())
+  -> Feature 通过 mount(viewSync, eid, node) 注册 eid/node 并设置首次 full sync
+createViewSyncRuntime(GAME_FEATURE_REGISTRY.viewSyncs())
+syncView.registerChannels(viewSyncRuntime.channels())
 network.onResponse(resp => hitResponseSystem(world, resp))
 new GameLoopPipeline(featureRegistry)
 new KickInputAdapter(...)
@@ -244,15 +245,18 @@ HitDetectionSystem
 
 ### world 和 entity 生命周期
 
-当前主线是一局游戏一个 bitecs world：
+当前主线是一局游戏一个 bitecs world。运行期不以频繁 `removeEntity` 为目标，退出时销毁整个 runtime：
 
 ```text
 GameScene.init()
   -> createGameWorld()
   -> createSingletonEntities(world)
+  -> createViewSyncRuntime(...)
   -> GAME_FEATURE_REGISTRY.setupAll(...)
   -> Feature 创建自己的实体和 ViewRegistry 注册关系
 ```
+
+`GameScene.destroy()` 按 owner 整批释放 network、view registry、view sync runtime、dirty snapshots 和 bitecs world。下一次进入重新创建 world 和全部运行时注册表。
 
 `createGameWorld()` 只创建空 world。真正的游戏状态来自 `world.ts` 里创建的几类 entity：
 

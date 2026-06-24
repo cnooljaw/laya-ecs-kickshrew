@@ -1,11 +1,11 @@
 import { defineQuery } from "bitecs";
+import { DirtyComponent } from "../../ecs/components";
 import type { ViewSyncSpec } from "../viewSync/ViewSyncSpec";
 import { bitsOf, toDirtyMarks } from "../viewSync/ViewSyncSpec";
-import type { DirtyAspect, DirtyStoreKey, DirtyTarget } from "./DirtySchemaTypes";
+import type { DirtyAspect, DirtyTarget } from "./DirtySchemaTypes";
 
 interface ViewSyncDirtyChannelOptions {
   name: string;
-  storeKey: DirtyStoreKey;
   dirtyTarget: DirtyTarget;
   spec: ViewSyncSpec<any>;
 }
@@ -29,8 +29,8 @@ export function createViewSyncDirtyAspect(options: ViewSyncDirtyAspectOptions): 
     query,
     channels: channels.map(channel => ({
       name: channel.name,
-      storeKey: channel.storeKey,
       dirtyTarget: channel.dirtyTarget,
+      dirtyArray: DirtyComponent[channel.dirtyTarget],
       allBits: bitsOf(channel.spec),
       marks: toDirtyMarks(channel.spec),
     })),

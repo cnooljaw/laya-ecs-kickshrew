@@ -1,24 +1,12 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { IPlayerHUD } from "../../sync/contracts/PlayerViewContract";
 import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 import { PlayerComponent } from "../../ecs/components";
-import {
-  playerViewBinding,
-  registerPlayerHUD,
-  unregisterPlayerHUD,
-} from "../../binding/PlayerViewBinding";
+import { createViewSyncRuntime } from "../../binding/ViewSyncRuntime";
+import { PlayerViewSync } from "../../binding/viewSyncs";
 import { BIT_PLAYER_ANGRY, BIT_PLAYER_LEVEL, BIT_PLAYER_MONEY, BIT_PLAYER_POWER } from "../../sync/DirtyFlags";
 
 describe("PlayerViewBinding", () => {
-  const registered: number[] = [];
-
-  afterEach(() => {
-    for (const eid of registered) {
-      unregisterPlayerHUD(eid);
-    }
-    registered.length = 0;
-  });
-
   it("表格式规则按 player dirty bit 投影 HUD 数值", () => {
     const world = createGameWorld();
     const { player: eid } = createSingletonEntities(world);
@@ -34,8 +22,8 @@ describe("PlayerViewBinding", () => {
       setPower: (value, max) => calls.power.push({ value, max }),
       setLevel: value => calls.level.push(value),
     };
-    registerPlayerHUD(eid, node);
-    registered.push(eid);
+    const runtime = createViewSyncRuntime([PlayerViewSync]);
+    runtime.registryFor(PlayerViewSync).register(eid, node);
 
     PlayerComponent.money[eid] = 100;
     PlayerComponent.angry[eid] = 50;
@@ -43,7 +31,7 @@ describe("PlayerViewBinding", () => {
     PlayerComponent.powerTop[eid] = 10;
     PlayerComponent.level[eid] = 2;
 
-    playerViewBinding(
+    runtime.channelFor(PlayerViewSync).project(
       eid,
       BIT_PLAYER_MONEY | BIT_PLAYER_ANGRY | BIT_PLAYER_POWER | BIT_PLAYER_LEVEL,
       false,

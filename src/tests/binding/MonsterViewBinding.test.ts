@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { DirtyComponent } from "../../ecs/components";
 import { createGameWorld } from "../../ecs/world";
 import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
@@ -7,21 +7,12 @@ import { createMonsterEntities } from "../../ecs/gameplay/monster/MonsterFactory
 import { MonsterComponent } from "../../ecs/gameplay/monster/MonsterComponent";
 import { MonsterType } from "../../ecs/gameplay/monster/MonsterTypes";
 import { MONSTER_CONFIG } from "../../config/MonsterConfig";
-import { monsterRegistry, monsterViewBinding } from "../../binding/MonsterViewBinding";
+import { createViewSyncRuntime } from "../../binding/ViewSyncRuntime";
 import { MonsterViewSync } from "../../binding/viewSyncs";
 import type { IMonsterNode } from "../../sync/contracts/MonsterViewContract";
 import { BIT_MONSTER_SHOW, BIT_MONSTER_SPAWN } from "../../sync/DirtyFlags";
 
 describe("MonsterViewBinding", () => {
-  const registered: number[] = [];
-
-  afterEach(() => {
-    for (const eid of registered) {
-      monsterRegistry.unregister(eid);
-    }
-    registered.length = 0;
-  });
-
   it("Rhino 生成和显隐 dirty 会投影到 MonsterNode contract", () => {
     const world = createGameWorld();
     const [eid] = createMonsterEntities(world, { count: 1 });
@@ -39,14 +30,18 @@ describe("MonsterViewBinding", () => {
         calls.visible.push(visible);
       },
     };
-    monsterRegistry.register(eid, node);
-    registered.push(eid);
+    const runtime = createViewSyncRuntime([MonsterViewSync]);
+    runtime.registryFor(MonsterViewSync).register(eid, node);
 
     MonsterComponent.monsterType[eid] = MonsterType.Rhino;
     MonsterComponent.visible[eid] = 1;
     MonsterComponent.spawnSeq[eid] = 1;
 
-    monsterViewBinding(eid, BIT_MONSTER_SPAWN | BIT_MONSTER_SHOW, false);
+    runtime.channelFor(MonsterViewSync).project(
+      eid,
+      BIT_MONSTER_SPAWN | BIT_MONSTER_SHOW,
+      false,
+    );
 
     expect(calls.monsters).toEqual([
       {
@@ -69,11 +64,11 @@ describe("MonsterViewBinding", () => {
       setScale: () => {},
       setVisible: value => visible.push(value),
     };
-    monsterRegistry.register(eid, node);
-    registered.push(eid);
+    const runtime = createViewSyncRuntime([MonsterViewSync]);
+    runtime.registryFor(MonsterViewSync).register(eid, node);
 
     const syncView = new SyncView();
-    syncView.registerChannel(MonsterViewSync.channel);
+    syncView.registerChannels(runtime.channels());
 
     dirtyMarkSystem(world, [MonsterViewSync.dirtyAspect]);
     syncView.sync(world);

@@ -28,11 +28,10 @@ export const CoreGameplayFeature: GameFeature = {
     HoleViewSync,
     SceneViewSync,
   ],
-  setup: ({ world, root, singletons, viewRegistry, forceFullSyncEntities }) => {
+  setup: ({ world, root, singletons, mount }) => {
     const sceneLayer = new SceneLayer();
     sceneLayer.create(root);
-    viewRegistry.registerSceneLayer(singletons.scene, sceneLayer);
-    forceFullSyncEntities.push(singletons.scene);
+    mount(SceneViewSync, singletons.scene, sceneLayer);
 
     const holes = createHoleEntities(world, MapType.Meadow);
     for (let i = 0; i < HOLE_COUNT; i++) {
@@ -45,14 +44,12 @@ export const CoreGameplayFeature: GameFeature = {
       holeNode.create(root);
       holeNode.setPosition(HoleComponent.posXRatio[holeEid], HoleComponent.posYRatio[holeEid]);
       holeNode.setZOrder(HoleComponent.zIndex[holeEid]);
-      viewRegistry.registerHoleNode(holeEid, holeNode);
+      mount(HoleViewSync, holeEid, holeNode);
 
       const shrewNode = new ShrewNode();
       shrewNode.create(holeNode.getContainer() || root);
       shrewNode.setSpriteFrame(shrewType, MapType.Meadow);
-      viewRegistry.registerShrewNode(shrewEid, shrewNode);
-
-      forceFullSyncEntities.push(holeEid, shrewEid);
+      mount(ShrewViewSync, shrewEid, shrewNode);
     }
   },
 };

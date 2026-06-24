@@ -121,6 +121,9 @@ export function createSingletonEntities(world: ReturnType<typeof createWorld>): 
   HammerComponent.isThunderActive[hammer] = 0;
   HammerComponent.hitTable[hammer] = 1;
   HammerComponent.hitCooldownSec[hammer] = 0;
+  HammerComponent.touchX[hammer] = 0;
+  HammerComponent.touchY[hammer] = 0;
+  HammerComponent.hitSeq[hammer] = 0;
   DirtyComponent.hammerDirty[hammer] = 0;
   DirtyComponent.forceFullSync[hammer] = 0;
 

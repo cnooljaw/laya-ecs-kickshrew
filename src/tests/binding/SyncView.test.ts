@@ -4,7 +4,7 @@ import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 import { SyncView } from "../../binding/SyncView";
 
 describe("SyncView", () => {
-  it("通过 channel 表分发 dirty binding，并统一清理 dirty bits", () => {
+  it("通过 channel 表分发 dirty binding，并只清理已注册 channel 的 dirty bits", () => {
     const world = createGameWorld();
     const { scene: eid } = createSingletonEntities(world);
     const calls: Array<{ eid: number; dirtyBits: number; forceFull: boolean }> = [];
@@ -13,6 +13,7 @@ describe("SyncView", () => {
     syncView.registerChannel({
       name: "testScene",
       dirtyTarget: "sceneDirty",
+      dirtyArray: DirtyComponent.sceneDirty,
       watchedBits: 0x04,
       project: (boundEid, dirtyBits, forceFull) => {
         calls.push({ eid: boundEid, dirtyBits, forceFull });
@@ -26,7 +27,7 @@ describe("SyncView", () => {
 
     expect(calls).toEqual([{ eid, dirtyBits: 0x04, forceFull: false }]);
     expect(DirtyComponent.sceneDirty[eid]).toBe(0);
-    expect(DirtyComponent.playerDirty[eid]).toBe(0);
+    expect(DirtyComponent.playerDirty[eid]).toBe(0x02);
   });
 
   it("forceFullSync 会触发已注册 channel，即使该 channel 没有 dirty bit", () => {
@@ -38,6 +39,7 @@ describe("SyncView", () => {
     syncView.registerChannel({
       name: "testScene",
       dirtyTarget: "sceneDirty",
+      dirtyArray: DirtyComponent.sceneDirty,
       watchedBits: 0x04,
       project: (boundEid, dirtyBits, forceFull) => {
         calls.push({ eid: boundEid, dirtyBits, forceFull });
@@ -57,6 +59,7 @@ describe("SyncView", () => {
     const channel = {
       name: "testScene",
       dirtyTarget: "sceneDirty" as const,
+      dirtyArray: DirtyComponent.sceneDirty,
       watchedBits: 0x04,
       project: () => {},
     };

@@ -13,7 +13,11 @@ import {
   PerfHeroComponent,
 } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType } from '../../ecs/types';
-import { dirtyMarkSystem, getDirtySnapshotForTest } from '../../sync/dirty/DirtyMarkSystem';
+import {
+  dirtyMarkSystem,
+  getDirtySnapshotForTest,
+  releaseDirtyWorld,
+} from '../../sync/dirty/DirtyMarkSystem';
 import { SHREW_COMPONENT_SYNC_SPEC, SHREW_ANIMATION_SYNC_SPEC } from '../../sync/viewSync/specs/ShrewViewSyncSpec';
 import { HOLE_VIEW_SYNC_SPEC } from '../../sync/viewSync/specs/HoleViewSyncSpec';
 import { HAMMER_VIEW_SYNC_SPEC } from '../../sync/viewSync/specs/HammerViewSyncSpec';
@@ -169,6 +173,16 @@ describe('DirtyMarkSystem', () => {
     expect(firstSnapshot).toBeTruthy();
     expect(secondSnapshot).toBe(firstSnapshot);
     expect(thirdSnapshot).toBe(firstSnapshot);
+  });
+
+  it('world 退出时可以一次性释放全部 dirty snapshots', () => {
+    const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
+    markDirty();
+    expect(getDirtySnapshotForTest(world, 'shrew', eid)).toBeTruthy();
+
+    releaseDirtyWorld(world);
+
+    expect(getDirtySnapshotForTest(world, 'shrew', eid)).toBeUndefined();
   });
 
   it('shrewType 变化: BIT_SHREW_TYPE 被设置', () => {

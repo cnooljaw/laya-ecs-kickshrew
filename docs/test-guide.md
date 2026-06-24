@@ -71,7 +71,7 @@ npm test -- --run src/tests/ecs/PerfHeroSystem.test.ts src/tests/binding/PerfHer
 MonsterFeature / Rhino 怪物：
 
 ```bash
-npm test -- --run src/tests/config/MonsterConfig.test.ts src/tests/ecs/gameplay/monster/MonsterSystem.test.ts src/tests/binding/MonsterViewBinding.test.ts src/tests/features/GameFeatureRegistry.test.ts src/tests/binding/SyncView.test.ts src/tests/sync/DirtyTargets.test.ts
+npm test -- --run src/tests/config/MonsterConfig.test.ts src/tests/ecs/gameplay/monster/MonsterSystem.test.ts src/tests/binding/MonsterViewBinding.test.ts src/tests/features/GameFeatureRegistry.test.ts src/tests/binding/SyncView.test.ts src/tests/sync/DirtyChannels.test.ts
 ```
 
 当前测试覆盖重点：

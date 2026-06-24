@@ -1,12 +1,12 @@
 import type { DirtyAspect } from "../sync/dirty/DirtySchemaTypes";
-import type { ViewSyncChannel, ViewSyncModule } from "../sync/viewSync/ViewSyncModule";
+import type { ViewSyncModule } from "../sync/viewSync/ViewSyncModule";
 import type { FeatureSetupContext, FeatureSystemEntry, GameFeature, GameSystemPhase } from "./GameFeature";
 
 export interface GameFeatureRegistry {
   setupAll(ctx: FeatureSetupContext): void;
   systemsByPhase(phase: GameSystemPhase): readonly FeatureSystemEntry[];
   dirtyAspects(): readonly DirtyAspect[];
-  viewSyncChannels(): readonly ViewSyncChannel[];
+  viewSyncs(): readonly ViewSyncModule[];
 }
 
 export function createGameFeatureRegistry(features: readonly GameFeature[]): GameFeatureRegistry {
@@ -16,7 +16,6 @@ export function createGameFeatureRegistry(features: readonly GameFeature[]): Gam
   const featureSystems = systems.filter(system => system.phase === "feature");
   const viewSyncs = collectFeatureItems(features, feature => feature.viewSyncs);
   const dirtyAspects = viewSyncs.map(sync => sync.dirtyAspect);
-  const viewSyncChannels = viewSyncs.map(sync => sync.channel);
 
   return {
     setupAll: ctx => {
@@ -26,14 +25,13 @@ export function createGameFeatureRegistry(features: readonly GameFeature[]): Gam
     },
     systemsByPhase: phase => phase === "state" ? stateSystems : featureSystems,
     dirtyAspects: () => dirtyAspects,
-    viewSyncChannels: () => viewSyncChannels,
+    viewSyncs: () => viewSyncs,
   };
 }
 
 export function validateGameFeatures(features: readonly GameFeature[]): void {
   const featureNames = new Set<string>();
   const viewSyncNames = new Set<string>();
-  const syncChannelNames = new Set<string>();
   const systemNames = new Set<string>();
 
   for (const feature of features) {
@@ -43,7 +41,7 @@ export function validateGameFeatures(features: readonly GameFeature[]): void {
     featureNames.add(feature.name);
 
     for (const viewSync of feature.viewSyncs ?? []) {
-      validateFeatureViewSync(feature, viewSync, viewSyncNames, syncChannelNames);
+      validateFeatureViewSync(feature, viewSync, viewSyncNames);
     }
 
     for (const system of feature.systems ?? []) {
@@ -59,20 +57,13 @@ function validateFeatureViewSync(
   feature: GameFeature,
   viewSync: ViewSyncModule,
   viewSyncNames: Set<string>,
-  syncChannelNames: Set<string>,
 ): void {
   if (viewSyncNames.has(viewSync.name)) {
     throw new Error(`ViewSyncModule name 重复: ${viewSync.name}`);
   }
   viewSyncNames.add(viewSync.name);
 
-  const channel = viewSync.channel;
-  if (syncChannelNames.has(channel.name)) {
-    throw new Error(`SyncChannel name 重复: ${channel.name}`);
-  }
-  syncChannelNames.add(channel.name);
-
-  if (!viewSync.dirtyAspect.channels.some(item => item.dirtyTarget === channel.dirtyTarget)) {
+  if (!viewSync.dirtyAspect.channels.some(item => item.dirtyTarget === viewSync.dirtyTarget)) {
     throw new Error(
       `GameFeature ${feature.name} 的 ViewSyncModule 未声明对应 dirtyTarget: ${viewSync.name}`,
     );

@@ -14,7 +14,6 @@ import {
 import type {
   DirtyAspect,
   DirtySnapshotStore,
-  DirtyStoreKey,
   Snapshot,
 } from "./DirtySchemaTypes";
 
@@ -41,8 +40,12 @@ export function dirtyMarkSystem(world: any, aspects: readonly DirtyAspect[]): vo
 
 export function getDirtySnapshotForTest(
   world: object,
-  storeKey: DirtyStoreKey,
+  channelName: string,
   eid: number,
 ): Snapshot | undefined {
-  return stores.get(world)?.[storeKey].get(eid);
+  return stores.get(world)?.get(channelName)?.get(eid);
+}
+
+export function releaseDirtyWorld(world: object): void {
+  stores.delete(world);
 }

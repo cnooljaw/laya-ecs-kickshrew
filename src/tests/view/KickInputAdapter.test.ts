@@ -5,19 +5,6 @@ import { MapType, ShrewAction, ShrewType } from "../../ecs/types";
 import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../config/GameTuning";
 import { KickInputAdapter, KICK_INPUT_SOUNDS } from "../../view/KickInputAdapter";
 
-function createHammerSpy() {
-  return {
-    positions: [] as Array<[number, number]>,
-    hitCount: 0,
-    followTouch(x: number, y: number): void {
-      this.positions.push([x, y]);
-    },
-    playHitAnimation(): void {
-      this.hitCount++;
-    },
-  };
-}
-
 describe("KickInputAdapter", () => {
   it("点中可点击地鼠时播放命中音效并发送击打请求", () => {
     const world = createGameWorld();
@@ -27,7 +14,6 @@ describe("KickInputAdapter", () => {
     const sentRequests: any[] = [];
     const playedSounds: string[] = [];
     const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
-    const hammer = createHammerSpy();
 
     HoleComponent.shrewEid[holeEid] = shrewEid;
     ShrewComponent.isClickable[shrewEid] = 1;
@@ -37,7 +23,6 @@ describe("KickInputAdapter", () => {
       world,
       singletons,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
-      getHammerNode: () => hammer,
       playSound: url => playedSounds.push(url),
       traceLogger: {
         log: (event: string, payload: Record<string, unknown>) => traceEvents.push({ event, payload }),
@@ -48,8 +33,9 @@ describe("KickInputAdapter", () => {
     const y = HoleComponent.posYRatio[holeEid] * DESIGN_RESOLUTION.height;
     adapter.handleTouch(x, y);
 
-    expect(hammer.positions).toEqual([[x, y]]);
-    expect(hammer.hitCount).toBe(1);
+    expect(HammerComponent.touchX[singletons.hammer]).toBeCloseTo(x, 3);
+    expect(HammerComponent.touchY[singletons.hammer]).toBeCloseTo(y, 3);
+    expect(HammerComponent.hitSeq[singletons.hammer]).toBe(1);
     expect(playedSounds).toEqual([KICK_INPUT_SOUNDS.hitOne, KICK_INPUT_SOUNDS.mouse1]);
     expect(sentRequests).toHaveLength(1);
     expect(sentRequests[0].bKickShrew).toBe(1);
@@ -82,7 +68,6 @@ describe("KickInputAdapter", () => {
       world,
       singletons,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
-      getHammerNode: () => null,
       playSound: url => playedSounds.push(url),
     });
 
@@ -90,6 +75,7 @@ describe("KickInputAdapter", () => {
 
     expect(playedSounds).toEqual([KICK_INPUT_SOUNDS.hitNull]);
     expect(sentRequests).toHaveLength(0);
+    expect(HammerComponent.hitSeq[singletons.hammer]).toBe(1);
   });
 
   it("锤子冷却中时记录 blocked 而不是 miss", () => {
@@ -107,7 +93,6 @@ describe("KickInputAdapter", () => {
       world,
       singletons,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
-      getHammerNode: () => null,
       playSound: url => playedSounds.push(url),
       traceLogger: {
         log: (event: string, payload: Record<string, unknown>) => traceEvents.push({ event, payload }),
@@ -120,5 +105,6 @@ describe("KickInputAdapter", () => {
     expect(traceEvents[1].payload.hitCooldownSec).toBeCloseTo(0.12, 3);
     expect(playedSounds).toEqual([KICK_INPUT_SOUNDS.hitNull]);
     expect(sentRequests).toHaveLength(0);
+    expect(HammerComponent.hitSeq[singletons.hammer]).toBe(0);
   });
 });

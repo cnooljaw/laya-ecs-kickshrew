@@ -74,7 +74,8 @@ URL query
 - `src/config/ViewLayoutConfig.ts`：资源、数量上限、边缘分布、缩放、循环时间。
 - `src/ecs/world.ts`：创建压测实体、随机边缘位置、随机英雄类型。
 - `src/ecs/gameplay/perfHero/PerfHeroSystem.ts`：推进压测英雄生命周期。
-- `src/binding/PerfHeroViewBinding.ts`：把 ECS 数据投影给 view node。
+- `src/sync/viewSync/specs/PerfHeroViewSyncSpec.ts`：声明 ECS 到 view contract 的投影。
+- `src/binding/ViewSyncRuntime.ts`：初始化实例级 registry 和 channel。
 - `src/view/PerfHeroNode.ts`：Spine 资源池、节点复用、进退场显示顺序。
 - `src/features/PerfHeroFeature.ts`：声明系统和 `PerfHeroViewSync`，创建压测节点并持有共享池引用。
 

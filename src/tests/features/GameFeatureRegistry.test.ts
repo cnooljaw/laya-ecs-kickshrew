@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DirtyComponent } from "../../ecs/components";
 import type { DirtyAspect } from "../../sync/dirty/DirtySchemaTypes";
 import { system, type GameFeature } from "../../features/GameFeature";
 import { GAME_FEATURES } from "../../features/GameFeatures";
@@ -13,8 +14,8 @@ const sceneAspect: DirtyAspect = {
   channels: [
     {
       name: "scene",
-      storeKey: "scene",
       dirtyTarget: "sceneDirty",
+      dirtyArray: DirtyComponent.sceneDirty,
       allBits: 0x01,
       marks: [],
     },
@@ -23,14 +24,12 @@ const sceneAspect: DirtyAspect = {
 
 const sceneViewSync: ViewSyncModule = {
   name: "sceneViewSync",
+  registryKey: "scene",
   spec: [],
   dirtyAspect: sceneAspect,
-  channel: {
-    name: "scene",
-    dirtyTarget: "sceneDirty",
-    watchedBits: 0x01,
-    project: () => {},
-  },
+  dirtyTarget: "sceneDirty",
+  dirtyArray: DirtyComponent.sceneDirty,
+  watchedBits: 0x01,
   describe: () => [],
 };
 
@@ -42,23 +41,20 @@ function feature(name: string): GameFeature {
       {
         ...sceneViewSync,
         name: `${name}:sceneViewSync`,
-        channel: {
-          ...sceneViewSync.channel,
-          name: `${name}:scene`,
-        },
+        registryKey: `${name}:scene`,
       },
     ],
   };
 }
 
 describe("GameFeatureRegistry", () => {
-  it("集中展开 feature systems、dirty aspects 和 view sync channels", () => {
+  it("集中展开 feature systems、dirty aspects 和 view sync descriptions", () => {
     const registry = createGameFeatureRegistry([feature("featureA")]);
 
     expect(registry.systemsByPhase("feature")).toHaveLength(1);
     expect(registry.systemsByPhase("state")).toEqual([]);
     expect(registry.dirtyAspects()).toEqual([sceneAspect]);
-    expect(registry.viewSyncChannels().map(channel => channel.name)).toEqual(["featureA:scene"]);
+    expect(registry.viewSyncs().map(sync => sync.name)).toEqual(["featureA:sceneViewSync"]);
   });
 
   it("真实 GAME_FEATURES 表能通过注册校验", () => {
@@ -70,7 +66,7 @@ describe("GameFeatureRegistry", () => {
       "sceneCycleSystem",
       "hammerSystem",
     ]);
-    expect(registry.viewSyncChannels().map(channel => channel.name)).toContain("monster");
+    expect(registry.viewSyncs().map(sync => sync.name)).toContain("monster");
   });
 
   it("每帧查询复用预计算结果，避免 Registry 侧产生数组分配", () => {
@@ -79,7 +75,7 @@ describe("GameFeatureRegistry", () => {
     expect(registry.systemsByPhase("feature")).toBe(registry.systemsByPhase("feature"));
     expect(registry.systemsByPhase("state")).toBe(registry.systemsByPhase("state"));
     expect(registry.dirtyAspects()).toBe(registry.dirtyAspects());
-    expect(registry.viewSyncChannels()).toBe(registry.viewSyncChannels());
+    expect(registry.viewSyncs()).toBe(registry.viewSyncs());
   });
 
   it("拒绝重复 system name，避免调试时难以定位顺序", () => {
@@ -96,18 +92,13 @@ describe("GameFeatureRegistry", () => {
       .toThrow("GameFeature name 重复: same");
   });
 
-  it("拒绝重复 view sync channel name", () => {
+  it("拒绝重复 view sync name", () => {
     const first = feature("featureA");
     const second = feature("featureB");
-    second.viewSyncs = [
-      {
-        ...second.viewSyncs![0],
-        channel: first.viewSyncs![0].channel,
-      },
-    ];
+    second.viewSyncs = first.viewSyncs;
 
     expect(() => validateGameFeatures([first, second]))
-      .toThrow("SyncChannel name 重复: featureA:scene");
+      .toThrow("ViewSyncModule name 重复: featureA:sceneViewSync");
   });
 
   it("拒绝 ViewSyncModule 内部 dirtyTarget 不配对", () => {
@@ -116,10 +107,8 @@ describe("GameFeatureRegistry", () => {
       viewSyncs: [
         {
           ...sceneViewSync,
-          channel: {
-            ...sceneViewSync.channel,
-            dirtyTarget: "playerDirty",
-          },
+          dirtyTarget: "playerDirty",
+          dirtyArray: DirtyComponent.playerDirty,
         },
       ],
     };

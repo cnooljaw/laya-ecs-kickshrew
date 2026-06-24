@@ -9,16 +9,13 @@ export const HudFeature: GameFeature = {
     PlayerViewSync,
     HitViewSync,
   ],
-  setup: ({ root, singletons, viewRegistry, runtimeRefs, forceFullSyncEntities }) => {
+  setup: ({ root, singletons, mount }) => {
     const playerHUD = new PlayerHUD();
     playerHUD.create(root);
-    viewRegistry.registerPlayerHUD(singletons.player, playerHUD);
+    mount(PlayerViewSync, singletons.player, playerHUD);
 
     const hitEffectNode = new HitEffectNode();
     hitEffectNode.create(root);
-    viewRegistry.registerHitEffectNode(singletons.player, hitEffectNode);
-    runtimeRefs.hitEffectNode = hitEffectNode;
-
-    forceFullSyncEntities.push(singletons.player);
+    mount(HitViewSync, singletons.player, hitEffectNode);
   },
 };

@@ -6,14 +6,19 @@ export interface ViewNodeRegistry<TNode> {
   register(eid: number, node: TNode): void;
   unregister(eid: number): void;
   get(eid: number): TNode | undefined;
+  clear(): void;
 }
 
 export function createViewNodeRegistry<TNode>(): ViewNodeRegistry<TNode> {
   const nodeMap = new Map<number, TNode>();
   return {
-    register: (eid, node) => { nodeMap.set(eid, node); },
+    register: (eid, node) => {
+      if (nodeMap.has(eid)) throw new Error(`View node eid 重复注册: ${eid}`);
+      nodeMap.set(eid, node);
+    },
     unregister: eid => { nodeMap.delete(eid); },
     get: eid => nodeMap.get(eid),
+    clear: () => { nodeMap.clear(); },
   };
 }
 

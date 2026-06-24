@@ -1,4 +1,3 @@
-import { DirtyComponent } from "../../ecs/components";
 import type {
   DirtyAspect,
   DirtyChannel,
@@ -8,17 +7,7 @@ import type {
 } from "./DirtySchemaTypes";
 
 export function createDirtySnapshotStore(): DirtySnapshotStore {
-  return {
-    shrew: new Map(),
-    anim: new Map(),
-    hole: new Map(),
-    hammer: new Map(),
-    scene: new Map(),
-    player: new Map(),
-    hit: new Map(),
-    perfHero: new Map(),
-    monster: new Map(),
-  };
+  return new Map();
 }
 
 function fillSnapshot(snapshot: Snapshot, eid: number, marks: DirtyMark[]): void {
@@ -44,8 +33,12 @@ function dirtyBitsAndUpdateSnapshot(snapshot: Snapshot, eid: number, marks: Dirt
 }
 
 function markChannelDirty(entities: ArrayLike<number>, store: DirtySnapshotStore, channel: DirtyChannel): void {
-  const snapshotStore = store[channel.storeKey];
-  const dirtyArray = (DirtyComponent as any)[channel.dirtyTarget];
+  let snapshotStore = store.get(channel.name);
+  if (!snapshotStore) {
+    snapshotStore = new Map();
+    store.set(channel.name, snapshotStore);
+  }
+  const dirtyArray = channel.dirtyArray;
 
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i];

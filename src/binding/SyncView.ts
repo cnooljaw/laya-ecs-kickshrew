@@ -12,7 +12,6 @@
  */
 import { defineQuery } from "bitecs";
 import { DirtyComponent } from "../ecs/components";
-import { DIRTY_TARGETS } from "../sync/DirtyTargets";
 import type { ViewProjectFn, ViewSyncChannel } from "../sync/viewSync/ViewSyncModule";
 
 const dirtyQuery = defineQuery([DirtyComponent]);
@@ -27,6 +26,7 @@ export type SyncChannel = ViewSyncChannel;
  */
 export class SyncView {
   private readonly channels: SyncChannel[] = [];
+  private readonly dirtyArrays: Uint32Array[] = [];
 
   registerChannel(channel: SyncChannel): void {
     const existingIndex = this.channels.findIndex(item => item.name === channel.name);
@@ -34,6 +34,9 @@ export class SyncView {
       throw new Error(`SyncChannel name 重复: ${channel.name}`);
     }
     this.channels.push(channel);
+    if (!this.dirtyArrays.includes(channel.dirtyArray)) {
+      this.dirtyArrays.push(channel.dirtyArray);
+    }
   }
 
   registerChannels(channels: readonly SyncChannel[]): void {
@@ -53,17 +56,22 @@ export class SyncView {
       const forceFull = DirtyComponent.forceFullSync[eid] === 1;
 
       for (const channel of this.channels) {
-        const dirtyBits = DirtyComponent[channel.dirtyTarget][eid];
+        const dirtyBits = channel.dirtyArray[eid];
         if ((dirtyBits & channel.watchedBits) || forceFull) {
           channel.project(eid, dirtyBits, forceFull);
         }
       }
 
       // 清除 dirty bits (forceFullSync 也清除)
-      for (const target of DIRTY_TARGETS) {
-        DirtyComponent[target][eid] = 0;
+      for (const dirtyArray of this.dirtyArrays) {
+        dirtyArray[eid] = 0;
       }
       DirtyComponent.forceFullSync[eid] = 0;
     }
+  }
+
+  clear(): void {
+    this.channels.length = 0;
+    this.dirtyArrays.length = 0;
   }
 }

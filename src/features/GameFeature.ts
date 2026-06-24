@@ -1,10 +1,7 @@
 import type { PerfTestRuntimeConfig } from "../config/PerfTestConfig";
 import type { SingletonEntities } from "../ecs/world";
 import type { ViewSyncModule } from "../sync/viewSync/ViewSyncModule";
-import type { HammerNode } from "../view/HammerNode";
-import type { HitEffectNode } from "../view/HitEffectNode";
-import type { PerfHeroSpinePoolGroup } from "../view/PerfHeroNode";
-import type { ViewRegistry } from "../view/ViewRegistry";
+import type { Destroyable } from "../view/ViewRegistry";
 
 export type GameSystem = (world: any, deltaSec: number) => void;
 export type GameSystemPhase = "state" | "feature";
@@ -19,20 +16,17 @@ export function system(phase: GameSystemPhase, name: string, run: GameSystem): F
   return { phase, name, run };
 }
 
-export interface GameRuntimeRefs {
-  hammerNode?: HammerNode;
-  hitEffectNode?: HitEffectNode;
-  perfHeroPool?: PerfHeroSpinePoolGroup;
-}
-
 export interface FeatureSetupContext {
   world: any;
   root: any;
   singletons: SingletonEntities;
-  viewRegistry: ViewRegistry;
   perfConfig: PerfTestRuntimeConfig;
-  runtimeRefs: GameRuntimeRefs;
-  forceFullSyncEntities: number[];
+  mount<TContract, TNode extends TContract & Destroyable>(
+    sync: ViewSyncModule<TContract>,
+    eid: number,
+    node: TNode,
+  ): TNode;
+  own<TResource extends Destroyable>(resource: TResource): TResource;
 }
 
 export interface GameFeature {

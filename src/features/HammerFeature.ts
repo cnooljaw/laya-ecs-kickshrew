@@ -13,11 +13,9 @@ export const HammerFeature: GameFeature = {
   viewSyncs: [
     HammerViewSync,
   ],
-  setup: ({ root, singletons, viewRegistry, runtimeRefs, forceFullSyncEntities }) => {
+  setup: ({ root, singletons, mount }) => {
     const hammerNode = new HammerNode();
     hammerNode.create(root);
-    viewRegistry.registerHammerNode(singletons.hammer, hammerNode);
-    runtimeRefs.hammerNode = hammerNode;
-    forceFullSyncEntities.push(singletons.hammer);
+    mount(HammerViewSync, singletons.hammer, hammerNode);
   },
 };

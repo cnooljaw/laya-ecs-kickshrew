@@ -3,6 +3,13 @@ import { createViewSyncBinding, createViewNodeRegistry } from "../../binding/Vie
 import { defineViewSyncSpec, createSyncRow } from "../../sync/viewSync/ViewSyncSpec";
 
 describe("ViewSyncBinding", () => {
+  it("拒绝同一 runtime registry 重复注册 eid", () => {
+    const registry = createViewNodeRegistry<object>();
+    registry.register(1, {});
+
+    expect(() => registry.register(1, {})).toThrow("View node eid 重复注册: 1");
+  });
+
   it("用共享 registry 创建多个 rule binding，并把 source 透传给 apply", () => {
     const calls: Array<{ source: string | undefined; value: number }> = [];
     const component = {

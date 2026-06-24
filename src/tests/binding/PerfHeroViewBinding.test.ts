@@ -1,27 +1,15 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { IPerfHeroNode } from "../../sync/contracts/PerfHeroViewContract";
 import { createGameWorld, createPerfHeroEntities } from "../../ecs/world";
 import { DirtyComponent, PerfHeroComponent } from "../../ecs/components";
 import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
 import { SyncView } from "../../binding/SyncView";
+import { createViewSyncRuntime } from "../../binding/ViewSyncRuntime";
 import { PerfHeroViewSync } from "../../binding/viewSyncs";
-import {
-  registerPerfHeroNode,
-  unregisterPerfHeroNode,
-} from "../../binding/PerfHeroViewBinding";
 import { BIT_PERF_HERO_SPAWN } from "../../sync/DirtyFlags";
 import { PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
 
 describe("PerfHeroViewBinding", () => {
-  const registered: number[] = [];
-
-  afterEach(() => {
-    for (const eid of registered) {
-      unregisterPerfHeroNode(eid);
-    }
-    registered.length = 0;
-  });
-
   it("英雄重生时通过 dirty binding 通知节点播放对应 Spine", () => {
     const world = createGameWorld();
     const [eid] = createPerfHeroEntities(world, 1);
@@ -31,11 +19,11 @@ describe("PerfHeroViewBinding", () => {
         plays.push({ heroType, skUrl, x, y, scale, spawnSeq });
       },
     };
-    registerPerfHeroNode(eid, node);
-    registered.push(eid);
+    const runtime = createViewSyncRuntime([PerfHeroViewSync]);
+    runtime.registryFor(PerfHeroViewSync).register(eid, node);
 
     const syncView = new SyncView();
-    syncView.registerChannel(PerfHeroViewSync.channel);
+    syncView.registerChannels(runtime.channels());
 
     dirtyMarkSystem(world, [PerfHeroViewSync.dirtyAspect]);
     syncView.sync(world);

@@ -12,18 +12,16 @@ export const PerfHeroFeature: GameFeature = {
   viewSyncs: [
     PerfHeroViewSync,
   ],
-  setup: ({ world, root, viewRegistry, perfConfig, runtimeRefs, forceFullSyncEntities }) => {
+  setup: ({ world, root, perfConfig, mount, own }) => {
     if (perfConfig.heroCount <= 0) return;
 
     const entities = createPerfHeroEntities(world, perfConfig.heroCount);
-    const pool = new PerfHeroSpinePoolGroup();
-    runtimeRefs.perfHeroPool = pool;
+    const pool = own(new PerfHeroSpinePoolGroup());
 
     for (const eid of entities) {
       const node = new PerfHeroNode(pool);
       node.create(root);
-      viewRegistry.registerPerfHeroNode(eid, node);
-      forceFullSyncEntities.push(eid);
+      mount(PerfHeroViewSync, eid, node);
     }
   },
 };

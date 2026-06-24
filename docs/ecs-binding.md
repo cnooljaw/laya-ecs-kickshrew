@@ -65,7 +65,7 @@ BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding
 
 ## ViewSyncModule
 
-`src/binding/viewSyncs/*ViewSync.ts` 是一条视图同步链路的阅读入口。它把同一份 `ViewSyncSpec` 同时接到 dirty 标记和 view 投影上：`ViewSyncModule.spec` 用来派生 `dirtyAspect`，`ViewSyncModule.channel` 用来注册到 `SyncView`。`DirtyMarkSystem` 只负责遍历 `GameFeatureRegistry` 汇总出来的 aspect 列表，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`。
+`src/binding/viewSyncs/*ViewSync.ts` 是一条视图同步链路的阅读入口。它把同一份 `ViewSyncSpec` 接到 dirty 标记，并声明实例级 registry 的分组。初始化时 `createViewSyncRuntime()` 把静态 `ViewSyncModule` 编译成 runtime channel；`DirtyMarkSystem` 遍历 `GameFeatureRegistry` 汇总出来的 aspect，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`。
 
 核心角色：
 
@@ -115,7 +115,7 @@ Component 字段
   -> ViewSyncSpec syncRow(bit, label, fields, apply/noProjection)
   -> ViewSyncModule.dirtyAspect DirtyMark（由 ViewSyncSpec 派生）
   -> DirtyComponent.xxxDirty
-  -> ViewSyncModule.channel project
+  -> ViewSyncRuntime.channel.project
   -> ViewSyncBinding 执行 spec.apply
   -> ViewNode 方法
 ```
@@ -201,20 +201,19 @@ System 改 Component
 4. 调对应 `project`，也就是 binding 投影函数。
 5. 统一清除所有 dirty bit。
 
-主要 binding：
+主要投影规格：
 
 ```text
-shrewViewBinding             ShrewComponent -> ShrewNode
-shrewAnimationViewBinding    AnimationComponent.progress -> ShrewNode 位移
-holeViewBinding              HoleComponent -> HoleNode
-hammerViewBinding            HammerComponent -> HammerNode
-sceneViewBinding             SceneComponent -> SceneLayer
-playerViewBinding            PlayerComponent -> PlayerHUD
-hitViewBinding               HitComponent -> HitEffectNode
-monsterViewBinding           MonsterComponent -> MonsterNode
+ShrewViewSyncSpec            ShrewComponent/AnimationComponent -> ShrewNode
+HoleViewSyncSpec             HoleComponent -> HoleNode
+HammerViewSyncSpec           HammerComponent -> HammerNode
+SceneViewSyncSpec            SceneComponent -> SceneLayer
+PlayerViewSyncSpec           PlayerComponent -> PlayerHUD
+HitViewSyncSpec              HitComponent -> HitEffectNode
+MonsterViewSyncSpec          MonsterComponent -> MonsterNode
 ```
 
-ECS eid 和 Laya node 的映射由 `ViewRegistry` 在装配期建立，不由 view node 自己查 ECS。
+ECS eid 和 Laya node 的映射由初始化期 `ViewSyncRuntime` 的实例级 registry 建立，不由 view node 自己查 ECS。Feature 只调用 `mount(viewSync, eid, node)`；框架负责注册、反注册、首次 full sync 和节点销毁。
 
 新增独立实体类型时，不再优先修改 `SyncView`。Feature 只需要声明自己的 `viewSyncs`，`GameFeatureRegistry` 会自动展开 dirty aspects 和 sync channels：
 
@@ -253,9 +252,6 @@ src/config/
 
 src/sync/viewSync/specs/
   MonsterViewSyncSpec.ts
-
-src/binding/
-  MonsterViewBinding.ts
 
 src/binding/viewSyncs/
   MonsterViewSync.ts

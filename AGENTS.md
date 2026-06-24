@@ -32,7 +32,8 @@ Main.ts
   -> GAME_FEATURE_REGISTRY.setupAll(...)
   -> Feature 创建自己的 ECS 实体和 Laya 节点，并通过 ViewRegistry 注册
   -> Feature 声明 viewSyncs，GameFeatureRegistry 展开 dirtyAspects/viewSyncChannels
-  -> syncView.registerChannels(GAME_FEATURE_REGISTRY.viewSyncChannels())
+  -> createViewSyncRuntime(GAME_FEATURE_REGISTRY.viewSyncs()) 编译实例级 registry/channels
+  -> syncView.registerChannels(viewSyncRuntime.channels())
   -> 创建 GameLoopPipeline(featureRegistry)/KickInputAdapter
   -> Laya.timer.frameLoop
   -> GameScene.update(delta) -> GameLoopPipeline.update(delta)
@@ -87,7 +88,7 @@ input/network/resource callback
 
 - 改状态机：`src/ecs/gameplay/core/ShrewStateSystem.ts`、`src/ecs/gameplay/core/ShrewLifecycle.ts`、`src/tests/ecs/ShrewStateSystem.test.ts`
 - 改命中规则：`src/ecs/gameplay/core/HitDetectionSystem.ts`、`src/view/KickInputAdapter.ts`、`src/tests/ecs/HitDetectionSystem.test.ts`
-- 改 dirty 同步：`src/sync/contracts/*ViewContract.ts`、`src/sync/DirtyFlags.ts`、`src/sync/DirtyTargets.ts`、`src/sync/viewSync/specs/*ViewSyncSpec.ts`、`src/binding/*ViewBinding.ts`、`src/binding/viewSyncs/*ViewSync.ts`、`src/features/*Feature.ts`
+- 改 dirty 同步：`src/sync/contracts/*ViewContract.ts`、`src/sync/DirtyFlags.ts`、`src/sync/viewSync/specs/*ViewSyncSpec.ts`、`src/binding/ViewSyncBinding.ts`、`src/binding/ViewSyncRuntime.ts`、`src/binding/viewSyncs/*ViewSync.ts`、`src/features/*Feature.ts`
 - 改独立玩法实体/怪物：ECS 规则放 `src/ecs/gameplay/*`，配置放 `src/config/*`，装配入口放 `src/features/*Feature.ts`
 - 改 Laya 表现：`src/view/*Node.ts`、`src/config/ViewLayoutConfig.ts`、`docs/laya-rules.md`
 - 改性能压测/Spine 池化：`src/config/PerfTestConfig.ts`、`src/config/ViewLayoutConfig.ts`、`src/ecs/gameplay/perfHero/PerfHeroSystem.ts`、`src/view/PerfHeroNode.ts`、`docs/performance-tuning.md`

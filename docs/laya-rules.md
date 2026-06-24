@@ -48,8 +48,9 @@ MonsterNode         独立怪物的 Laya Spine 节点，例如 Rhino
 
 - `Main`：frameLoop、stage event、脚本生命周期。
 - `GameScene`：world、network callback、runtime adapter、ViewRegistry、FeatureRegistry 调用。
-- `Feature`：创建本模块的 view node、注册 ViewRegistry、上报首帧 forceFullSync 实体。
-- `ViewRegistry`：binding 注册表和 view node 销毁。
+- `Feature`：创建本模块的 view node，通过 `mount()` 声明 eid/viewSync/node 关系，通过 `own()` 声明共享资源。
+- `ViewSyncRuntime`：初始化时创建实例级 eid/node registry 和 channel。
+- `ViewRegistry`：统一反注册和销毁 mount/own 的对象。
 - view node：自己创建的 Laya 子节点、局部 timer/tween/异步回调保护。
 
 ## Spine 和对象池
@@ -57,7 +58,7 @@ MonsterNode         独立怪物的 Laya Spine 节点，例如 Rhino
 Spine/Skeleton 压测见 `docs/performance-tuning.md`。运行时规则：
 
 - `.sk` templet 可以缓存，但 Skeleton 实例也应按资源池化，避免每轮 `destroy + buildArmature`。
-- 共享池由对应 Feature 创建并交给运行时 refs 持有，单个 view node 只持有当前 active 实例。
+- 共享池由对应 Feature 创建并通过 `own()` 交给运行时持有，单个 view node 只持有当前 active 实例。
 - pooled Skeleton attach 到容器前先隐藏，并重置本地 `x/y/scale/rotation/alpha`。
 - 父容器应在设置新坐标和调用 `play()` 期间保持隐藏，播放状态重置完成后再显示。
 - 如果旧动画仍可见，下一次重生请求不要立刻改父容器坐标；应 pending 到 STOPPED/退场隐藏后再应用。
