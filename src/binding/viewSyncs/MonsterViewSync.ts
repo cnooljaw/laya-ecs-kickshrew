@@ -1,6 +1,6 @@
 import { DirtyComponent } from "../../ecs/components";
 import { MonsterComponent } from "../../ecs/gameplay/monster/MonsterComponent";
-import { MONSTER_SYNC_RULES } from "../../sync/rules/MonsterSyncRules";
+import { MONSTER_VIEW_SYNC_SPEC } from "../../sync/viewSync/specs/MonsterViewSyncSpec";
 import { defineViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 import { monsterViewBinding } from "../MonsterViewBinding";
 
@@ -12,6 +12,6 @@ export const MonsterViewSync = defineViewSyncModule({
   components: [MonsterComponent, DirtyComponent],
   storeKey: "monster",
   dirtyTarget: "monsterDirty",
-  rules: MONSTER_SYNC_RULES,
+  spec: MONSTER_VIEW_SYNC_SPEC,
   project: monsterViewBinding,
 });

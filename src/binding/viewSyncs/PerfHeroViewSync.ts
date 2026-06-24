@@ -1,5 +1,5 @@
 import { DirtyComponent, PerfHeroComponent } from "../../ecs/components";
-import { PERF_HERO_VIEW_RULES } from "../../sync/rules/PerfHeroViewRules";
+import { PERF_HERO_VIEW_SYNC_SPEC } from "../../sync/viewSync/specs/PerfHeroViewSyncSpec";
 import { defineViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 import { perfHeroViewBinding } from "../PerfHeroViewBinding";
 
@@ -11,6 +11,6 @@ export const PerfHeroViewSync = defineViewSyncModule({
   components: [PerfHeroComponent, DirtyComponent],
   storeKey: "perfHero",
   dirtyTarget: "perfHeroDirty",
-  rules: PERF_HERO_VIEW_RULES,
+  spec: PERF_HERO_VIEW_SYNC_SPEC,
   project: perfHeroViewBinding,
 });

@@ -1,5 +1,5 @@
 import { DirtyComponent, HoleComponent } from "../../ecs/components";
-import { HOLE_VIEW_RULES } from "../../sync/rules/HoleViewRules";
+import { HOLE_VIEW_SYNC_SPEC } from "../../sync/viewSync/specs/HoleViewSyncSpec";
 import { defineViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 import { holeViewBinding } from "../HoleViewBinding";
 
@@ -11,6 +11,6 @@ export const HoleViewSync = defineViewSyncModule({
   components: [HoleComponent, DirtyComponent],
   storeKey: "hole",
   dirtyTarget: "holeDirty",
-  rules: HOLE_VIEW_RULES,
+  spec: HOLE_VIEW_SYNC_SPEC,
   project: holeViewBinding,
 });

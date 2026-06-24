@@ -87,7 +87,7 @@ input/network/resource callback
 
 - 改状态机：`src/ecs/gameplay/core/ShrewStateSystem.ts`、`src/ecs/gameplay/core/ShrewLifecycle.ts`、`src/tests/ecs/ShrewStateSystem.test.ts`
 - 改命中规则：`src/ecs/gameplay/core/HitDetectionSystem.ts`、`src/view/KickInputAdapter.ts`、`src/tests/ecs/HitDetectionSystem.test.ts`
-- 改 dirty 同步：`src/sync/contracts/*ViewContract.ts`、`src/sync/DirtyFlags.ts`、`src/sync/DirtyTargets.ts`、`src/sync/rules/*ViewRules.ts`、`src/binding/*ViewBinding.ts`、`src/binding/viewSyncs/*ViewSync.ts`、`src/features/*Feature.ts`
+- 改 dirty 同步：`src/sync/contracts/*ViewContract.ts`、`src/sync/DirtyFlags.ts`、`src/sync/DirtyTargets.ts`、`src/sync/viewSync/specs/*ViewSyncSpec.ts`、`src/binding/*ViewBinding.ts`、`src/binding/viewSyncs/*ViewSync.ts`、`src/features/*Feature.ts`
 - 改独立玩法实体/怪物：ECS 规则放 `src/ecs/gameplay/*`，配置放 `src/config/*`，装配入口放 `src/features/*Feature.ts`
 - 改 Laya 表现：`src/view/*Node.ts`、`src/config/ViewLayoutConfig.ts`、`docs/laya-rules.md`
 - 改性能压测/Spine 池化：`src/config/PerfTestConfig.ts`、`src/config/ViewLayoutConfig.ts`、`src/ecs/gameplay/perfHero/PerfHeroSystem.ts`、`src/view/PerfHeroNode.ts`、`docs/performance-tuning.md`

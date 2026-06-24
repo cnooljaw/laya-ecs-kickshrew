@@ -1,7 +1,7 @@
-import { createRuleDirtyAspect } from "../dirty/RuleDirtyAspect";
+import { createViewSyncDirtyAspect } from "../dirty/ViewSyncDirtyAspect";
 import type { DirtyAspect, DirtyStoreKey, DirtyTarget } from "../dirty/DirtySchemaTypes";
-import { bitsOf } from "../rules/ViewBindingRule";
-import type { ViewBindingRule } from "../rules/ViewBindingRule";
+import { bitsOf } from "./ViewSyncSpec";
+import type { ViewSyncSpec } from "./ViewSyncSpec";
 
 export type ViewProjectFn = (eid: number, dirtyBits: number, forceFull: boolean) => void;
 
@@ -14,13 +14,13 @@ export interface ViewSyncChannel {
 
 export interface ViewSyncModule<TNode = any> {
   name: string;
-  rules: readonly ViewBindingRule<TNode>[];
+  spec: ViewSyncSpec<TNode>;
   dirtyAspect: DirtyAspect;
   channel: ViewSyncChannel;
   describe: () => string[];
 }
 
-export interface RuleViewSyncModuleOptions<TNode> {
+export interface ViewSyncModuleOptions<TNode> {
   name: string;
   aspectName: string;
   description: string;
@@ -28,15 +28,15 @@ export interface RuleViewSyncModuleOptions<TNode> {
   components: any[];
   storeKey: DirtyStoreKey;
   dirtyTarget: DirtyTarget;
-  rules: readonly ViewBindingRule<TNode>[];
+  spec: ViewSyncSpec<TNode>;
   project: ViewProjectFn;
 }
 
 export function defineViewSyncModule<TNode>(
-  options: RuleViewSyncModuleOptions<TNode>,
+  options: ViewSyncModuleOptions<TNode>,
 ): ViewSyncModule<TNode> {
-  const watchedBits = bitsOf(options.rules);
-  const dirtyAspect = createRuleDirtyAspect({
+  const watchedBits = bitsOf(options.spec);
+  const dirtyAspect = createViewSyncDirtyAspect({
     name: options.aspectName,
     description: options.description,
     requires: options.requires,
@@ -45,13 +45,13 @@ export function defineViewSyncModule<TNode>(
       name: options.name,
       storeKey: options.storeKey,
       dirtyTarget: options.dirtyTarget,
-      rules: options.rules,
+      spec: options.spec,
     },
   });
 
   return {
     name: options.name,
-    rules: options.rules,
+    spec: options.spec,
     dirtyAspect,
     channel: {
       name: options.name,
@@ -64,9 +64,9 @@ export function defineViewSyncModule<TNode>(
 }
 
 export function describeViewSyncModule<TNode>(
-  sync: Pick<RuleViewSyncModuleOptions<TNode>, "name" | "dirtyTarget" | "rules">,
+  sync: Pick<ViewSyncModuleOptions<TNode>, "name" | "dirtyTarget" | "spec">,
 ): string[] {
-  return sync.rules.map(rule => {
+  return sync.spec.map(rule => {
     const fields = rule.dirtyFields.map(field => field.path).join(", ");
     return `${fields} -> ${sync.dirtyTarget}.${rule.label} -> ${sync.name}`;
   });

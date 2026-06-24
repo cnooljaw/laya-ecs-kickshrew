@@ -23,7 +23,7 @@ Use this project skill for changes that affect authoritative ECS state or how it
    - relevant `src/ecs/gameplay/<domain>/*.ts` or helper
    - `src/sync/DirtyFlags.ts`
    - `src/sync/contracts/*ViewContract.ts`
-   - `src/sync/rules/*ViewRules.ts`
+   - `src/sync/viewSync/specs/*ViewSyncSpec.ts`
    - relevant `src/binding/*ViewBinding.ts`
    - relevant `src/binding/viewSyncs/*ViewSync.ts`
    - relevant `src/view/*Node.ts`

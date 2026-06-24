@@ -1,5 +1,5 @@
 import { DirtyComponent, SceneComponent } from "../../ecs/components";
-import { SCENE_VIEW_RULES } from "../../sync/rules/SceneViewRules";
+import { SCENE_VIEW_SYNC_SPEC } from "../../sync/viewSync/specs/SceneViewSyncSpec";
 import { defineViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 import { sceneViewBinding } from "../SceneViewBinding";
 
@@ -11,6 +11,6 @@ export const SceneViewSync = defineViewSyncModule({
   components: [SceneComponent, DirtyComponent],
   storeKey: "scene",
   dirtyTarget: "sceneDirty",
-  rules: SCENE_VIEW_RULES,
+  spec: SCENE_VIEW_SYNC_SPEC,
   project: sceneViewBinding,
 });

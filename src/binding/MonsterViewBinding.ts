@@ -1,7 +1,7 @@
 import type { BindingFn } from "./SyncView";
-import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
+import { createViewSyncBinding, createViewNodeRegistry } from "./ViewSyncBinding";
 import type { IMonsterNode } from "../sync/contracts/MonsterViewContract";
-import { MONSTER_SYNC_RULES } from "../sync/rules/MonsterSyncRules";
+import { MONSTER_VIEW_SYNC_SPEC } from "../sync/viewSync/specs/MonsterViewSyncSpec";
 
 export const monsterRegistry = createViewNodeRegistry<IMonsterNode>();
-export const monsterViewBinding: BindingFn = createRuleBinding(monsterRegistry, MONSTER_SYNC_RULES, "monsterDirty");
+export const monsterViewBinding: BindingFn = createViewSyncBinding(monsterRegistry, MONSTER_VIEW_SYNC_SPEC, "monsterDirty");

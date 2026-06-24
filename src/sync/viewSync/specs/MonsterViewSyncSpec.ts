@@ -3,15 +3,15 @@ import {
   BIT_MONSTER_SCALE,
   BIT_MONSTER_SHOW,
   BIT_MONSTER_SPAWN,
-} from "../DirtyFlags";
-import type { IMonsterNode } from "../contracts/MonsterViewContract";
-import { createRule, defineViewRules } from "./ViewBindingRule";
-import { MONSTER_CONFIG } from "../../config/MonsterConfig";
-import { MonsterComponent } from "../../ecs/gameplay/monster/MonsterComponent";
-import { MonsterType } from "../../ecs/gameplay/monster/MonsterTypes";
+} from "../../DirtyFlags";
+import type { IMonsterNode } from "../../contracts/MonsterViewContract";
+import { createSyncRow, defineViewSyncSpec } from "../ViewSyncSpec";
+import { MONSTER_CONFIG } from "../../../config/MonsterConfig";
+import { MonsterComponent } from "../../../ecs/gameplay/monster/MonsterComponent";
+import { MonsterType } from "../../../ecs/gameplay/monster/MonsterTypes";
 
 type MonsterField = Extract<keyof typeof MonsterComponent, string>;
-const rule = createRule<IMonsterNode, MonsterField>();
+const syncRow = createSyncRow<IMonsterNode, MonsterField>();
 
 function applyMonster({ eid, node }: { eid: number; node: IMonsterNode }): void {
   const monsterType = MonsterComponent.monsterType[eid] as MonsterType;
@@ -31,14 +31,14 @@ function applyVisible({ eid, node }: { eid: number; node: IMonsterNode }): void 
   node.setVisible(MonsterComponent.visible[eid] === 1);
 }
 
-export const MONSTER_SYNC_RULES = defineViewRules<IMonsterNode, MonsterField>(
+export const MONSTER_VIEW_SYNC_SPEC = defineViewSyncSpec<IMonsterNode, MonsterField>(
   "MonsterComponent",
   MonsterComponent,
   [
     // bit                label        fields                    apply
-    rule(BIT_MONSTER_SPAWN, "怪物生成", ["monsterType", "spawnSeq"], applyMonster),
-    rule(BIT_MONSTER_POS,   "怪物坐标", ["posX", "posY"],           applyPosition),
-    rule(BIT_MONSTER_SCALE, "怪物缩放", ["scale"],                  applyScale),
-    rule(BIT_MONSTER_SHOW,  "怪物显隐", ["visible"],                applyVisible),
+    syncRow(BIT_MONSTER_SPAWN, "怪物生成", ["monsterType", "spawnSeq"], applyMonster),
+    syncRow(BIT_MONSTER_POS,   "怪物坐标", ["posX", "posY"],           applyPosition),
+    syncRow(BIT_MONSTER_SCALE, "怪物缩放", ["scale"],                  applyScale),
+    syncRow(BIT_MONSTER_SHOW,  "怪物显隐", ["visible"],                applyVisible),
   ],
 );

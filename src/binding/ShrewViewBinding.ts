@@ -10,10 +10,10 @@
  */
 import type { BindingFn } from "./SyncView";
 import {
-  SHREW_ANIMATION_RULES,
-  SHREW_COMPONENT_RULES,
-} from "../sync/rules/ShrewViewRules";
-import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
+  SHREW_ANIMATION_SYNC_SPEC,
+  SHREW_COMPONENT_SYNC_SPEC,
+} from "../sync/viewSync/specs/ShrewViewSyncSpec";
+import { createViewSyncBinding, createViewNodeRegistry } from "./ViewSyncBinding";
 import type { IShrewNode } from "../sync/contracts/ShrewViewContract";
 
 const shrewRegistry = createViewNodeRegistry<IShrewNode>();
@@ -25,7 +25,7 @@ export const registerShrewNode = shrewRegistry.register;
 export const unregisterShrewNode = shrewRegistry.unregister;
 
 /** 地鼠视图绑定函数 */
-export const shrewViewBinding: BindingFn = createRuleBinding(shrewRegistry, SHREW_COMPONENT_RULES, "shrewDirty");
+export const shrewViewBinding: BindingFn = createViewSyncBinding(shrewRegistry, SHREW_COMPONENT_SYNC_SPEC, "shrewDirty");
 
 /** 地鼠动画绑定函数: AnimationComponent.progress 变化时驱动 0.31s 出洞/入洞位移 */
-export const shrewAnimationViewBinding: BindingFn = createRuleBinding(shrewRegistry, SHREW_ANIMATION_RULES, "animDirty");
+export const shrewAnimationViewBinding: BindingFn = createViewSyncBinding(shrewRegistry, SHREW_ANIMATION_SYNC_SPEC, "animDirty");

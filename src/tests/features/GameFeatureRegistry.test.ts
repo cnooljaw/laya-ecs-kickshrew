@@ -23,7 +23,7 @@ const sceneAspect: DirtyAspect = {
 
 const sceneViewSync: ViewSyncModule = {
   name: "sceneViewSync",
-  rules: [],
+  spec: [],
   dirtyAspect: sceneAspect,
   channel: {
     name: "scene",

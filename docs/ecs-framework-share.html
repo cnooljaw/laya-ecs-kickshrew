@@ -1066,7 +1066,7 @@
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/sync/dirty/DirtySchemaRunner.ts, src/sync/viewSync/ViewSyncModule.ts, src/binding/SyncView.ts, src/binding/RuleViewBinding.ts</span>
+          <span>对应代码：src/sync/dirty/DirtySchemaRunner.ts, src/sync/viewSync/ViewSyncModule.ts, src/binding/SyncView.ts, src/binding/ViewSyncBinding.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>
@@ -1157,7 +1157,7 @@ progress:    0 -> 0           => 不标</pre>
         <header>
           <div class="kicker">Scene Dirty Example</div>
           <h2>例子：SceneComponent 场景从 Meadow 切到 Ship</h2>
-          <p class="lead">这页用一个场景单例讲透新 dirty 链路：System 写 ECS，ViewRules 声明字段到 contract apply，SceneViewSync 把 dirtyAspect 和 channel 组合起来。</p>
+          <p class="lead">这页用一个场景单例讲透新 dirty 链路：System 写 ECS，ViewSyncSpec 声明字段到 contract apply，SceneViewSync 把 dirtyAspect 和 channel 组合起来。</p>
         </header>
         <div class="content split-wide">
           <div class="rows">
@@ -1169,7 +1169,7 @@ SceneComponent.transitioning[sceneEid] = 1;
 DirtyComponent.forceFullSync[sceneEid] = 1;</pre>
             </div>
             <div class="panel accent-blue">
-              <strong>2. SceneViewRules 声明字段到 contract</strong>
+              <strong>2. SceneViewSyncSpec 声明字段到 contract</strong>
               <pre class="code">rule(BIT_SCENE_MAP, "当前地图",
     ["currentMap"], applySwitchScene)
 rule(BIT_SCENE_TRANSITION, "场景切换状态",
@@ -1179,7 +1179,7 @@ rule(BIT_SCENE_TRANSITION, "场景切换状态",
               <strong>3. ViewSyncModule 接入 SyncView</strong>
               <pre class="code">export const SceneViewSync = defineViewSyncModule({
   dirtyTarget: "sceneDirty",
-  rules: SCENE_VIEW_RULES,
+  spec: SCENE_VIEW_SYNC_SPEC,
   project: sceneViewBinding,
 });</pre>
             </div>
@@ -1211,7 +1211,7 @@ rule(BIT_SCENE_TRANSITION, "场景切换状态",
               <text x="196" y="211" text-anchor="middle" font-size="13" fill="#5f6b7a">命中 watchedBits/forceFull</text>
               <rect x="46" y="278" width="300" height="74" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
               <text x="196" y="309" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">sceneViewBinding</text>
-              <text x="196" y="333" text-anchor="middle" font-size="13" fill="#5f6b7a">applyMatchedRules</text>
+              <text x="196" y="333" text-anchor="middle" font-size="13" fill="#5f6b7a">applyMatchedViewSyncSpec</text>
               <rect x="414" y="278" width="300" height="74" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
               <text x="564" y="309" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">ISceneLayer.switchScene</text>
               <text x="564" y="333" text-anchor="middle" font-size="13" fill="#5f6b7a">SceneLayer 实现 Laya 切换</text>
@@ -1236,7 +1236,7 @@ rule(BIT_SCENE_TRANSITION, "场景切换状态",
         <header>
           <div class="kicker">Shrew Dirty Example</div>
           <h2>例子：地鼠从 Wait 变成 Up，画面为什么会动</h2>
-          <p class="lead">状态机只改 ECS 数据。dirty 和 binding 共用 `*ViewRules` 表，字段变化负责开 bit，apply 函数负责更新节点。</p>
+          <p class="lead">状态机只改 ECS 数据。dirty 和 binding 共用 `*ViewSyncSpec` 表，字段变化负责开 bit，apply 函数负责调用 view contract。</p>
         </header>
         <div class="content split-wide">
           <div class="diagram">
@@ -1253,7 +1253,7 @@ rule(BIT_SCENE_TRANSITION, "场景切换状态",
               <text x="401" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">改 ECS 数据</text>
               <text x="401" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">actionState=Up, animType=Up</text>
               <rect x="558" y="42" width="180" height="72" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="648" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">ViewRules</text>
+              <text x="648" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">ViewSyncSpec</text>
               <text x="648" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">rule(bit, fields, apply)</text>
               <rect x="34" y="190" width="210" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
               <text x="139" y="220" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">DirtyComponent</text>
@@ -1304,7 +1304,7 @@ rule(BIT_ANIM_PROGRESS, "动画进度",
           </div>
         </div>
         <footer class="footer">
-          <span>对应代码：src/ecs/gameplay/core/ShrewStateSystem.ts, src/sync/rules/ShrewViewRules.ts, src/sync/rules/ViewBindingRule.ts</span>
+          <span>对应代码：src/ecs/gameplay/core/ShrewStateSystem.ts, src/sync/viewSync/specs/ShrewViewSyncSpec.ts, src/sync/viewSync/ViewSyncSpec.ts</span>
           <div class="nav"><button data-prev aria-label="上一页">‹</button><button data-next aria-label="下一页">›</button></div>
         </footer>
       </article>

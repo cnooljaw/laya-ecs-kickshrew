@@ -5,7 +5,7 @@ import { registerPlayerHUD, unregisterPlayerHUD } from "../binding/PlayerViewBin
 import { registerPerfHeroNode, unregisterPerfHeroNode } from "../binding/PerfHeroViewBinding";
 import { registerSceneLayer, unregisterSceneLayer } from "../binding/SceneViewBinding";
 import { registerShrewNode, unregisterShrewNode } from "../binding/ShrewViewBinding";
-import type { ViewNodeRegistry } from "../binding/RuleViewBinding";
+import type { ViewNodeRegistry } from "../binding/ViewSyncBinding";
 import type { IHammerNode } from "../sync/contracts/HammerViewContract";
 import type { IHitEffectNode } from "../sync/contracts/HitViewContract";
 import type { IHoleNode } from "../sync/contracts/HoleViewContract";

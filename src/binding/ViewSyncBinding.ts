@@ -1,5 +1,5 @@
-import type { ViewBindingRule } from "../sync/rules/ViewBindingRule";
-import { applyMatchedRules } from "../sync/rules/ViewBindingRule";
+import type { ViewSyncSpec } from "../sync/viewSync/ViewSyncSpec";
+import { applyMatchedViewSyncSpec } from "../sync/viewSync/ViewSyncSpec";
 import type { BindingFn } from "./SyncView";
 
 export interface ViewNodeRegistry<TNode> {
@@ -17,15 +17,15 @@ export function createViewNodeRegistry<TNode>(): ViewNodeRegistry<TNode> {
   };
 }
 
-export function createRuleBinding<TNode>(
+export function createViewSyncBinding<TNode>(
   registry: ViewNodeRegistry<TNode>,
-  rules: readonly ViewBindingRule<TNode>[],
+  spec: ViewSyncSpec<TNode>,
   source?: string,
 ): BindingFn {
   return (eid: number, dirtyBits: number, forceFull: boolean): void => {
     const node = registry.get(eid);
     if (!node) return;
 
-    applyMatchedRules(rules, { eid, node, dirtyBits, forceFull, source });
+    applyMatchedViewSyncSpec(spec, { eid, node, dirtyBits, forceFull, source });
   };
 }

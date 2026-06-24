@@ -2,12 +2,12 @@
  * PlayerViewBinding — PlayerComponent → PlayerHUD 绑定
  */
 import type { BindingFn } from "./SyncView";
-import { createRuleBinding, createViewNodeRegistry } from "./RuleViewBinding";
-import { PLAYER_VIEW_RULES } from "../sync/rules/PlayerViewRules";
+import { createViewSyncBinding, createViewNodeRegistry } from "./ViewSyncBinding";
+import { PLAYER_VIEW_SYNC_SPEC } from "../sync/viewSync/specs/PlayerViewSyncSpec";
 import type { IPlayerHUD } from "../sync/contracts/PlayerViewContract";
 
 const playerRegistry = createViewNodeRegistry<IPlayerHUD>();
 
 export const registerPlayerHUD = playerRegistry.register;
 export const unregisterPlayerHUD = playerRegistry.unregister;
-export const playerViewBinding: BindingFn = createRuleBinding(playerRegistry, PLAYER_VIEW_RULES);
+export const playerViewBinding: BindingFn = createViewSyncBinding(playerRegistry, PLAYER_VIEW_SYNC_SPEC);

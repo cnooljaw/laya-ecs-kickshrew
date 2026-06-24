@@ -1,5 +1,5 @@
 import { DirtyComponent, HammerComponent } from "../../ecs/components";
-import { HAMMER_VIEW_RULES } from "../../sync/rules/HammerViewRules";
+import { HAMMER_VIEW_SYNC_SPEC } from "../../sync/viewSync/specs/HammerViewSyncSpec";
 import { defineViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 import { hammerViewBinding } from "../HammerViewBinding";
 
@@ -11,6 +11,6 @@ export const HammerViewSync = defineViewSyncModule({
   components: [HammerComponent, DirtyComponent],
   storeKey: "hammer",
   dirtyTarget: "hammerDirty",
-  rules: HAMMER_VIEW_RULES,
+  spec: HAMMER_VIEW_SYNC_SPEC,
   project: hammerViewBinding,
 });

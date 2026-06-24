@@ -43,8 +43,8 @@ Laya 入口层
   sync/contracts/*ViewContract.ts
   sync/DirtyFlags.ts
   sync/DirtyTargets.ts
-  sync/rules/*ViewRules.ts
-  sync/rules/*SyncRules.ts
+  sync/viewSync/ViewSyncSpec.ts
+  sync/viewSync/specs/*ViewSyncSpec.ts
   binding/SyncView.ts
   binding/*ViewBinding.ts
   binding/viewSyncs/*ViewSync.ts
@@ -89,7 +89,7 @@ input/network/resource callback
 
 不要让 ECS system 直接操作 Laya 节点。不要让 Laya 节点直接改权威游戏规则。socket 回包应先转成系统可消费的数据，再更新 ECS。
 
-新增独立玩法实体采用“ECS gameplay + 薄 Feature”边界。玩法权威状态、系统和工厂放 `src/ecs/gameplay/<domain>/`；配置放 `src/config/`；同步规则放 `src/sync/rules/`；binding 放 `src/binding/`；`src/binding/viewSyncs/*ViewSync.ts` 把 rules、dirty aspect 和 ViewSyncChannel 收束成一个可注册模块；Laya 节点放 `src/view/`。`src/features/*Feature.ts` 只负责把这些能力装配进游戏，`GameScene` 只通过 `GAME_FEATURE_REGISTRY` 接入。
+新增独立玩法实体采用“ECS gameplay + 薄 Feature”边界。玩法权威状态、系统和工厂放 `src/ecs/gameplay/<domain>/`；配置放 `src/config/`；同步规格放 `src/sync/viewSync/specs/`；binding 放 `src/binding/`；`src/binding/viewSyncs/*ViewSync.ts` 把 ViewSyncSpec、dirty aspect 和 ViewSyncChannel 收束成一个可注册模块；Laya 节点放 `src/view/`。`src/features/*Feature.ts` 只负责把这些能力装配进游戏，`GameScene` 只通过 `GAME_FEATURE_REGISTRY` 接入。
 
 ## 启动和主循环
 

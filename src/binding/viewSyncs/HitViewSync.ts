@@ -1,5 +1,5 @@
 import { DirtyComponent, HitComponent } from "../../ecs/components";
-import { HIT_VIEW_RULES } from "../../sync/rules/HitViewRules";
+import { HIT_VIEW_SYNC_SPEC } from "../../sync/viewSync/specs/HitViewSyncSpec";
 import { defineViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 import { hitViewBinding } from "../HitViewBinding";
 
@@ -11,6 +11,6 @@ export const HitViewSync = defineViewSyncModule({
   components: [HitComponent, DirtyComponent],
   storeKey: "hit",
   dirtyTarget: "hitDirty",
-  rules: HIT_VIEW_RULES,
+  spec: HIT_VIEW_SYNC_SPEC,
   project: hitViewBinding,
 });

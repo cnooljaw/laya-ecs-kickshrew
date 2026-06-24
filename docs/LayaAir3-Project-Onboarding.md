@@ -282,9 +282,9 @@ Entity eid
   -> channel 声明 dirtyTarget/watchedBits/project
 ```
 
-每条 dirty binding 链路都有一张更好读的表：`src/sync/rules/*ViewRules.ts`。它把 dirty 检测和 view 投影放在同一行配置里。rules 依赖 `src/sync/contracts/*ViewContract.ts` 的表现接口，不直接依赖 binding 文件：
+每条 dirty binding 链路都有一张更好读的表：`src/sync/viewSync/specs/*ViewSyncSpec.ts`。它把 dirty 检测和 view contract 投影放在同一行配置里。spec 依赖 `src/sync/contracts/*ViewContract.ts` 的表现接口，不直接依赖 binding 文件或 Laya 节点：
 
-`fields` 是 DirtyMarkSystem 要比较的 ECS 字段，`apply` 是对应 `*ViewBinding` 命中 dirty bit 后真正调用的函数，`allBits` 由 `bitsOf(rules)` 自动得到。`noView` 表示字段只参与 dirty 记录，不直接调用 view。
+`fields` 是 DirtyMarkSystem 要比较的 ECS 字段，`apply` 是对应 `*ViewBinding` 命中 dirty bit 后真正调用的函数，`allBits` 由 `bitsOf(spec)` 自动得到。`noProjection` 表示字段只参与 dirty 记录，不直接调用 view。
 
 ### 第 40-50 分钟：dirty binding 怎么把 ECS 显示出来
 
@@ -338,7 +338,7 @@ registerPlayerHUD(playerEid, playerHUD);
 
 这套结构的代价：
 
-- 新增字段时，要同时考虑组件、dirty bit、dirty mark、binding、node 方法；优先改对应 `*ViewRules.ts` 这张表，再确认对应 `*ViewSync.ts` 已挂到 Feature。
+- 新增字段时，要同时考虑组件、dirty bit、dirty mark、binding、node 方法；优先改对应 `*ViewSyncSpec.ts` 这张表，再确认对应 `*ViewSync.ts` 已挂到 Feature。
 - 忘记标 dirty 时，ECS 数据变了但画面不变。
 - 忘记 unregister 时，可能保留旧节点引用。
 
@@ -599,8 +599,8 @@ GameScene.onTouch(x, y)
 2. 在 `src/ecs/world.ts` 初始化字段。
 3. 在 system 中修改字段。
 4. 在 `src/sync/DirtyFlags.ts` 增加 bit。
-5. 在对应 `src/sync/rules/*ViewRules.ts` 增加一行 `rule(bit, label, fields, apply)`；没有直接 view 投影时使用 `noView`。
-6. 在同一个 rules 文件增加或复用 `applyXxx` 函数；对应 `*ViewSync` 和 `*ViewBinding` 会共用这张表。
+5. 在对应 `src/sync/viewSync/specs/*ViewSyncSpec.ts` 增加一行 `syncRow(bit, label, fields, apply)`；没有直接 view 投影时使用 `noProjection`。
+6. 在同一个 spec 文件增加或复用 `applyXxx` 函数；对应 `*ViewSync` 和 `*ViewBinding` 会共用这张表。
 7. 在 `src/view/*Node.ts` 实现表现。
 8. 补 `src/tests/ecs/*.test.ts`。
 
@@ -608,7 +608,7 @@ GameScene.onTouch(x, y)
 
 ### 新增一种非地鼠怪物
 
-独立怪物采用“ECS gameplay + 薄 Feature”边界，不混进地鼠状态机。Rhino 的 ECS 规则在 `src/ecs/gameplay/monster/`，配置在 `src/config/MonsterConfig.ts`，同步规则在 `src/sync/rules/MonsterSyncRules.ts`，装配入口在 `src/features/MonsterFeature.ts`。当前 Rhino 资源：
+独立怪物采用“ECS gameplay + 薄 Feature”边界，不混进地鼠状态机。Rhino 的 ECS 规则在 `src/ecs/gameplay/monster/`，配置在 `src/config/MonsterConfig.ts`，同步规格在 `src/sync/viewSync/specs/MonsterViewSyncSpec.ts`，装配入口在 `src/features/MonsterFeature.ts`。当前 Rhino 资源：
 
 ```text
 assets/resources/monster/rhino.sk
@@ -664,7 +664,7 @@ Feature 装配层
 
 表现同步层
   sync/contracts/*ViewContract.ts
-  sync/rules/*ViewRules.ts
+  sync/viewSync/specs/*ViewSyncSpec.ts
   sync/dirty/*
   binding/SyncView.ts
   binding/*ViewBinding.ts
@@ -724,7 +724,7 @@ A: 按 `Component -> Dirty -> Binding -> View` 顺序排查，不要先去 Laya 
 
 - 代码入口：`src/sync/dirty/DirtyMarkSystem.ts`、`src/binding/SyncView.ts`、对应 `src/binding/*ViewBinding.ts`。
 - 数据流：system 修改 component，`dirtyMarkSystem` 对比快照写 `DirtyComponent.xxxDirty`，`SyncView.sync()` 命中 `ViewSyncChannel.project`，binding 读取 component 更新 view node。
-- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `*ViewRules` 没比较这个字段；Feature 没声明对应 `viewSyncs`；节点没有注册或已销毁但注册表还留着旧引用。
+- 常见坑：字段写进了 component 但 `DirtyFlags` 没有 bit；对应 `*ViewSyncSpec` 没比较这个字段；Feature 没声明对应 `viewSyncs`；节点没有注册或已销毁但注册表还留着旧引用。
 - 验证方式：先跑 `npx vitest run src/tests/ecs/DirtyMarkSystem.test.ts`，再在相关 system 后打印 component 和 dirty bit。
 
 ### Q: 地鼠 Up/Down 状态有了，为什么 0.31 秒内没有真正上下移动？

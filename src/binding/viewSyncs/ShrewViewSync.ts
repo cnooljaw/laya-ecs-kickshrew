@@ -1,9 +1,9 @@
 import { AnimationComponent, DirtyComponent, ShrewComponent } from "../../ecs/components";
 import { defineViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 import {
-  SHREW_ANIMATION_RULES,
-  SHREW_COMPONENT_RULES,
-} from "../../sync/rules/ShrewViewRules";
+  SHREW_ANIMATION_SYNC_SPEC,
+  SHREW_COMPONENT_SYNC_SPEC,
+} from "../../sync/viewSync/specs/ShrewViewSyncSpec";
 import {
   shrewAnimationViewBinding,
   shrewViewBinding,
@@ -20,7 +20,7 @@ export const ShrewViewSync = defineViewSyncModule({
   components: shrewComponents,
   storeKey: "shrew",
   dirtyTarget: "shrewDirty",
-  rules: SHREW_COMPONENT_RULES,
+  spec: SHREW_COMPONENT_SYNC_SPEC,
   project: shrewViewBinding,
 });
 
@@ -32,6 +32,6 @@ export const ShrewAnimationViewSync = defineViewSyncModule({
   components: shrewComponents,
   storeKey: "anim",
   dirtyTarget: "animDirty",
-  rules: SHREW_ANIMATION_RULES,
+  spec: SHREW_ANIMATION_SYNC_SPEC,
   project: shrewAnimationViewBinding,
 });

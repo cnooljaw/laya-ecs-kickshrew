@@ -1,5 +1,5 @@
 import { DirtyComponent, PlayerComponent } from "../../ecs/components";
-import { PLAYER_VIEW_RULES } from "../../sync/rules/PlayerViewRules";
+import { PLAYER_VIEW_SYNC_SPEC } from "../../sync/viewSync/specs/PlayerViewSyncSpec";
 import { defineViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 import { playerViewBinding } from "../PlayerViewBinding";
 
@@ -11,6 +11,6 @@ export const PlayerViewSync = defineViewSyncModule({
   components: [PlayerComponent, DirtyComponent],
   storeKey: "player",
   dirtyTarget: "playerDirty",
-  rules: PLAYER_VIEW_RULES,
+  spec: PLAYER_VIEW_SYNC_SPEC,
   project: playerViewBinding,
 });

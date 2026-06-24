@@ -14,14 +14,14 @@ import {
 } from '../../ecs/components';
 import { ShrewType, ShrewAction, MapType } from '../../ecs/types';
 import { dirtyMarkSystem, getDirtySnapshotForTest } from '../../sync/dirty/DirtyMarkSystem';
-import { SHREW_COMPONENT_RULES, SHREW_ANIMATION_RULES } from '../../sync/rules/ShrewViewRules';
-import { HOLE_VIEW_RULES } from '../../sync/rules/HoleViewRules';
-import { HAMMER_VIEW_RULES } from '../../sync/rules/HammerViewRules';
-import { SCENE_VIEW_RULES } from '../../sync/rules/SceneViewRules';
-import { PLAYER_VIEW_RULES } from '../../sync/rules/PlayerViewRules';
-import { HIT_VIEW_RULES } from '../../sync/rules/HitViewRules';
-import { PERF_HERO_VIEW_RULES } from '../../sync/rules/PerfHeroViewRules';
-import { MONSTER_SYNC_RULES } from '../../sync/rules/MonsterSyncRules';
+import { SHREW_COMPONENT_SYNC_SPEC, SHREW_ANIMATION_SYNC_SPEC } from '../../sync/viewSync/specs/ShrewViewSyncSpec';
+import { HOLE_VIEW_SYNC_SPEC } from '../../sync/viewSync/specs/HoleViewSyncSpec';
+import { HAMMER_VIEW_SYNC_SPEC } from '../../sync/viewSync/specs/HammerViewSyncSpec';
+import { SCENE_VIEW_SYNC_SPEC } from '../../sync/viewSync/specs/SceneViewSyncSpec';
+import { PLAYER_VIEW_SYNC_SPEC } from '../../sync/viewSync/specs/PlayerViewSyncSpec';
+import { HIT_VIEW_SYNC_SPEC } from '../../sync/viewSync/specs/HitViewSyncSpec';
+import { PERF_HERO_VIEW_SYNC_SPEC } from '../../sync/viewSync/specs/PerfHeroViewSyncSpec';
+import { MONSTER_VIEW_SYNC_SPEC } from '../../sync/viewSync/specs/MonsterViewSyncSpec';
 import { GAME_FEATURE_REGISTRY } from '../../features/GameFeatures';
 import {
   HammerViewSync,
@@ -34,7 +34,7 @@ import {
   ShrewAnimationViewSync,
   ShrewViewSync,
 } from '../../binding/viewSyncs';
-import { bitsOf } from '../../sync/rules/ViewBindingRule';
+import { bitsOf } from '../../sync/viewSync/ViewSyncSpec';
 import {
   BIT_HOLE_POS,
   BIT_HOLE_SHREW,
@@ -68,7 +68,7 @@ describe('DirtyMarkSystem', () => {
     dirtyMarkSystem(world, GAME_FEATURE_REGISTRY.dirtyAspects());
   }
 
-  it('Shrew ViewSyncModule 由表格式 ShrewViewRules 派生 dirty marks', () => {
+  it('Shrew ViewSyncModule 由表格式 ViewSyncSpec 派生 dirty marks', () => {
     expect(ShrewViewSync.dirtyAspect.requires).toEqual([
       'ShrewComponent',
       'AnimationComponent',
@@ -81,10 +81,10 @@ describe('DirtyMarkSystem', () => {
     const progressMark = animChannel?.marks.find(mark => mark.bit === BIT_ANIM_PROGRESS);
 
     expect(shrewChannel?.marks.map(mark => mark.bit)).toEqual(
-      SHREW_COMPONENT_RULES.map(rule => rule.bit),
+      SHREW_COMPONENT_SYNC_SPEC.map(rule => rule.bit),
     );
     expect(animChannel?.marks.map(mark => mark.bit)).toEqual(
-      SHREW_ANIMATION_RULES.map(rule => rule.bit),
+      SHREW_ANIMATION_SYNC_SPEC.map(rule => rule.bit),
     );
     expect(actionMark?.fields.map(field => field.path)).toEqual(['ShrewComponent.actionState']);
     expect(actionMark?.label).toBe('动作状态');
@@ -101,45 +101,45 @@ describe('DirtyMarkSystem', () => {
     );
   });
 
-  it('所有 ViewSyncModule dirtyAspect 都由对应 ViewRules 派生，并且不再携带 viewTarget 字符串', () => {
+  it('所有 ViewSyncModule dirtyAspect 都由对应 ViewSyncSpec 派生，并且不再携带 viewTarget 字符串', () => {
     const cases = [
-      { aspect: ShrewViewSync.dirtyAspect, dirtyTarget: 'shrewDirty', rules: SHREW_COMPONENT_RULES },
-      { aspect: ShrewAnimationViewSync.dirtyAspect, dirtyTarget: 'animDirty', rules: SHREW_ANIMATION_RULES },
-      { aspect: HoleViewSync.dirtyAspect, dirtyTarget: 'holeDirty', rules: HOLE_VIEW_RULES },
-      { aspect: HammerViewSync.dirtyAspect, dirtyTarget: 'hammerDirty', rules: HAMMER_VIEW_RULES },
-      { aspect: SceneViewSync.dirtyAspect, dirtyTarget: 'sceneDirty', rules: SCENE_VIEW_RULES },
-      { aspect: PlayerViewSync.dirtyAspect, dirtyTarget: 'playerDirty', rules: PLAYER_VIEW_RULES },
-      { aspect: HitViewSync.dirtyAspect, dirtyTarget: 'hitDirty', rules: HIT_VIEW_RULES },
-      { aspect: PerfHeroViewSync.dirtyAspect, dirtyTarget: 'perfHeroDirty', rules: PERF_HERO_VIEW_RULES },
-      { aspect: MonsterViewSync.dirtyAspect, dirtyTarget: 'monsterDirty', rules: MONSTER_SYNC_RULES },
+      { aspect: ShrewViewSync.dirtyAspect, dirtyTarget: 'shrewDirty', spec: SHREW_COMPONENT_SYNC_SPEC },
+      { aspect: ShrewAnimationViewSync.dirtyAspect, dirtyTarget: 'animDirty', spec: SHREW_ANIMATION_SYNC_SPEC },
+      { aspect: HoleViewSync.dirtyAspect, dirtyTarget: 'holeDirty', spec: HOLE_VIEW_SYNC_SPEC },
+      { aspect: HammerViewSync.dirtyAspect, dirtyTarget: 'hammerDirty', spec: HAMMER_VIEW_SYNC_SPEC },
+      { aspect: SceneViewSync.dirtyAspect, dirtyTarget: 'sceneDirty', spec: SCENE_VIEW_SYNC_SPEC },
+      { aspect: PlayerViewSync.dirtyAspect, dirtyTarget: 'playerDirty', spec: PLAYER_VIEW_SYNC_SPEC },
+      { aspect: HitViewSync.dirtyAspect, dirtyTarget: 'hitDirty', spec: HIT_VIEW_SYNC_SPEC },
+      { aspect: PerfHeroViewSync.dirtyAspect, dirtyTarget: 'perfHeroDirty', spec: PERF_HERO_VIEW_SYNC_SPEC },
+      { aspect: MonsterViewSync.dirtyAspect, dirtyTarget: 'monsterDirty', spec: MONSTER_VIEW_SYNC_SPEC },
     ];
 
-    for (const { aspect, dirtyTarget, rules } of cases) {
+    for (const { aspect, dirtyTarget, spec } of cases) {
       const channel = aspect.channels.find(channel => channel.dirtyTarget === dirtyTarget);
-      expect(channel?.marks.map(mark => mark.bit)).toEqual(rules.map(rule => rule.bit));
+      expect(channel?.marks.map(mark => mark.bit)).toEqual(spec.map(row => row.bit));
       expect(channel?.marks.map(mark => mark.fields.map(field => field.path))).toEqual(
-        rules.map(rule => rule.dirtyFields.map(field => field.path)),
+        spec.map(row => row.dirtyFields.map(field => field.path)),
       );
       expect(channel?.marks.every(mark => !('viewTarget' in mark))).toBe(true);
     }
   });
 
-  it('每个 DirtyChannel 的 allBits 必须覆盖对应 ViewRules 的全部 bit', () => {
+  it('每个 DirtyChannel 的 allBits 必须覆盖对应 ViewSyncSpec 的全部 bit', () => {
     const cases = [
-      { aspect: ShrewViewSync.dirtyAspect, dirtyTarget: 'shrewDirty', rules: SHREW_COMPONENT_RULES },
-      { aspect: ShrewAnimationViewSync.dirtyAspect, dirtyTarget: 'animDirty', rules: SHREW_ANIMATION_RULES },
-      { aspect: HoleViewSync.dirtyAspect, dirtyTarget: 'holeDirty', rules: HOLE_VIEW_RULES },
-      { aspect: HammerViewSync.dirtyAspect, dirtyTarget: 'hammerDirty', rules: HAMMER_VIEW_RULES },
-      { aspect: SceneViewSync.dirtyAspect, dirtyTarget: 'sceneDirty', rules: SCENE_VIEW_RULES },
-      { aspect: PlayerViewSync.dirtyAspect, dirtyTarget: 'playerDirty', rules: PLAYER_VIEW_RULES },
-      { aspect: HitViewSync.dirtyAspect, dirtyTarget: 'hitDirty', rules: HIT_VIEW_RULES },
-      { aspect: PerfHeroViewSync.dirtyAspect, dirtyTarget: 'perfHeroDirty', rules: PERF_HERO_VIEW_RULES },
-      { aspect: MonsterViewSync.dirtyAspect, dirtyTarget: 'monsterDirty', rules: MONSTER_SYNC_RULES },
+      { aspect: ShrewViewSync.dirtyAspect, dirtyTarget: 'shrewDirty', spec: SHREW_COMPONENT_SYNC_SPEC },
+      { aspect: ShrewAnimationViewSync.dirtyAspect, dirtyTarget: 'animDirty', spec: SHREW_ANIMATION_SYNC_SPEC },
+      { aspect: HoleViewSync.dirtyAspect, dirtyTarget: 'holeDirty', spec: HOLE_VIEW_SYNC_SPEC },
+      { aspect: HammerViewSync.dirtyAspect, dirtyTarget: 'hammerDirty', spec: HAMMER_VIEW_SYNC_SPEC },
+      { aspect: SceneViewSync.dirtyAspect, dirtyTarget: 'sceneDirty', spec: SCENE_VIEW_SYNC_SPEC },
+      { aspect: PlayerViewSync.dirtyAspect, dirtyTarget: 'playerDirty', spec: PLAYER_VIEW_SYNC_SPEC },
+      { aspect: HitViewSync.dirtyAspect, dirtyTarget: 'hitDirty', spec: HIT_VIEW_SYNC_SPEC },
+      { aspect: PerfHeroViewSync.dirtyAspect, dirtyTarget: 'perfHeroDirty', spec: PERF_HERO_VIEW_SYNC_SPEC },
+      { aspect: MonsterViewSync.dirtyAspect, dirtyTarget: 'monsterDirty', spec: MONSTER_VIEW_SYNC_SPEC },
     ];
 
-    for (const { aspect, dirtyTarget, rules } of cases) {
+    for (const { aspect, dirtyTarget, spec } of cases) {
       const channel = aspect.channels.find(channel => channel.dirtyTarget === dirtyTarget);
-      expect(channel?.allBits).toBe(bitsOf(rules));
+      expect(channel?.allBits).toBe(bitsOf(spec));
     }
   });
 
