@@ -29,6 +29,7 @@ import {
   type ProjectionRuntime,
 } from "../sync/projection/ProjectionRuntime";
 import { HammerEntity } from "../ecs/gameplay/hammer/HammerEntity";
+import { SceneEntity } from "../ecs/gameplay/core/CoreEntities";
 
 /** 音效路径 */
 const SND = {
@@ -67,7 +68,10 @@ export class GameScene {
     );
     this._entityRuntime.bootstrapSingletons();
     const hammerEid = this._entityRuntime.one(HammerEntity);
-    this._singletons = createSingletonEntities(this._world, { hammer: hammerEid });
+    this._singletons = createSingletonEntities(this._world, {
+      hammer: hammerEid,
+      scene: this._entityRuntime.one(SceneEntity),
+    });
     this._projectionRuntime = createProjectionRuntime(
       GAME_FEATURE_REGISTRY.projections(),
     );

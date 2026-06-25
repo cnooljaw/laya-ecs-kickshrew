@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createGameWorld, createShrewEntity, createSingletonEntities } from '../../ecs/world';
+import { createGameWorld, createSingletonEntities } from '../../ecs/world';
+import { createShrewEntity } from '../helpers/CoreTestEntities';
 import { AnimationComponent, SceneComponent } from '../../ecs/components';
 import { ShrewType, MapType, AnimType } from '../../ecs/types';
 import { animationTimerSystem } from '../../ecs/gameplay/core/AnimationTimerSystem';

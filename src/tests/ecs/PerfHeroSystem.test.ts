@@ -1,10 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createGameWorld, createPerfHeroEntities } from "../../ecs/world";
+import { createGameWorld } from "../../ecs/world";
 import { PerfHeroComponent } from "../../ecs/components";
 import { perfHeroSystem } from "../../ecs/gameplay/perfHero/PerfHeroSystem";
 import { PERF_HERO_VIEW_LAYOUT, PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
 import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
 import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
+
+function createPerfHeroEntities(world: any, count: number): number[] {
+  const runtime = createEntityRuntime(world, [PerfHeroEntity]);
+  return runtime.createMany(
+    PerfHeroEntity,
+    Array.from({ length: Math.max(0, Math.floor(count)) }, (_, index) => index),
+  );
+}
 
 describe("PerfHeroSystem", () => {
   afterEach(() => {

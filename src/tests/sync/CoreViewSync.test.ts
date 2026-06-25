@@ -1,300 +1,170 @@
 import { describe, expect, it } from "vitest";
-import { SyncView } from "../../binding/SyncView";
-import { createViewSyncRuntime } from "../../binding/ViewSyncRuntime";
-import {
-  HammerViewSync,
-  HoleViewSync,
-  SceneViewSync,
-  ShrewAnimationViewSync,
-  ShrewViewSync,
-} from "../../binding/viewSyncs";
 import {
   AnimationComponent,
-  DirtyComponent,
-  HammerComponent,
   HoleComponent,
   SceneComponent,
   ShrewComponent,
 } from "../../ecs/components";
-import { AnimType, HammerType, MapType, ShrewAction, ShrewType } from "../../ecs/types";
 import {
-  createGameWorld,
-  createHoleEntities,
-  createShrewEntity,
-  createSingletonEntities,
-} from "../../ecs/world";
-import {
-  BIT_ANIM_PROGRESS,
-  BIT_HAMMER_HIT_FEEDBACK,
-  BIT_HAMMER_HITTABLE,
-  BIT_HAMMER_THUNDER,
-  BIT_HAMMER_TYPE,
-  BIT_HOLE_POS,
-  BIT_HOLE_SHREW,
-  BIT_HOLE_ZORDER,
-  BIT_SCENE_MAP,
-  BIT_SCENE_TIMER,
-  BIT_SCENE_TRANSITION,
-  BIT_SHREW_HP,
-  BIT_SHREW_MAP,
-  BIT_SHREW_TIMER,
-  BIT_SHREW_TYPE,
-} from "../../sync/DirtyFlags";
-import type { IHammerNode } from "../../sync/contracts/HammerViewContract";
+  HoleEntity,
+  SceneEntity,
+  ShrewEntity,
+} from "../../ecs/gameplay/core/CoreEntities";
+import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { AnimType, MapType, ShrewAction, ShrewType } from "../../ecs/types";
+import { createGameWorld } from "../../ecs/world";
 import type { IHoleNode } from "../../sync/contracts/HoleViewContract";
 import type { ISceneLayer } from "../../sync/contracts/SceneViewContract";
 import type { IShrewNode } from "../../sync/contracts/ShrewViewContract";
-import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
-import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
-import { HammerProjection } from "../../sync/projections/HammerProjection";
 import { createProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
+import {
+  HoleProjection,
+  SceneProjection,
+  ShrewProjection,
+} from "../../sync/projections/CoreProjections";
 
 function createShrewNode(calls: {
-  spriteFrames?: Array<{ shrewType: number; mapType: number }>;
-  animations?: Array<{ actionState: number; animType: number; progress: number }>;
-  clickable?: boolean[];
-  hats?: boolean[];
-  props?: number[];
+  sprites: Array<[number, number]>;
+  animations: Array<[number, number, number]>;
+  clickables: boolean[];
+  hats: boolean[];
+  props: number[];
 }): IShrewNode {
   return {
-    setSpriteFrame: (shrewType, mapType) => calls.spriteFrames?.push({ shrewType, mapType }),
-    setAnimation: (actionState, animType, progress) => {
-      calls.animations?.push({ actionState, animType, progress });
+    setSpriteFrame: (type, map) => calls.sprites.push([type, map]),
+    setAnimation: (action, animation, progress) => {
+      calls.animations.push([action, animation, progress]);
     },
-    setClickable: (clickable) => calls.clickable?.push(clickable),
-    setHatVisible: (visible) => calls.hats?.push(visible),
-    setPropType: (propType) => calls.props?.push(propType),
+    setClickable: clickable => calls.clickables.push(clickable),
+    setHatVisible: visible => calls.hats.push(visible),
+    setPropType: propType => calls.props.push(propType),
   };
 }
 
-describe("core view sync", () => {
-  it("compiled hammer projection force-syncs state without playing an empty hit", () => {
+describe("compiled core projections", () => {
+  it("deduplicates shrew sprite and animation projection rows", () => {
     const world = createGameWorld();
-    const entities = createEntityRuntime(world, [HammerEntity]);
-    entities.bootstrapSingletons();
-    const hammer = entities.one(HammerEntity);
-    const calls = { types: [] as number[], thunder: [] as boolean[], hits: 0 };
-    const node: IHammerNode = {
-      setHammerType: value => calls.types.push(value),
-      setThunderActive: value => calls.thunder.push(value),
-      followTouch: () => {},
-      playHitAnimation: () => { calls.hits += 1; },
-    };
-    const runtime = createProjectionRuntime([HammerProjection]);
-    runtime.mount(HammerProjection, hammer, node);
-
-    runtime.mark(world);
-    runtime.sync(world);
-
-    expect(calls).toEqual({
-      types: [HammerType.Wood],
-      thunder: [false],
-      hits: 0,
+    const entities = createEntityRuntime(world, [ShrewEntity]);
+    const eid = entities.create(ShrewEntity, {
+      shrewType: ShrewType.Red,
+      mapType: MapType.Meadow,
     });
-  });
-
-  it("compiled hammer projection emits one hit feedback update", () => {
-    const world = createGameWorld();
-    const entities = createEntityRuntime(world, [HammerEntity]);
-    entities.bootstrapSingletons();
-    const hammer = entities.one(HammerEntity);
-    const calls = { positions: [] as Array<[number, number]>, hits: 0 };
-    const node: IHammerNode = {
-      setHammerType: () => {},
-      setThunderActive: () => {},
-      followTouch: (x, y) => calls.positions.push([x, y]),
-      playHitAnimation: () => { calls.hits += 1; },
-    };
-    const runtime = createProjectionRuntime([HammerProjection]);
-    runtime.mount(HammerProjection, hammer, node);
-    runtime.mark(world);
-    runtime.sync(world);
-
-    HammerComponent.touchX[hammer] = 123;
-    HammerComponent.touchY[hammer] = 456;
-    HammerComponent.hitSeq[hammer] = 1;
-    runtime.mark(world);
-    runtime.sync(world);
-
-    expect(calls).toEqual({
-      positions: [[123, 456]],
-      hits: 1,
-    });
-  });
-
-  it("deduplicates sprite projection when type and map change together", () => {
-    const world = createGameWorld();
-    const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-    const calls = { spriteFrames: [] as Array<{ shrewType: number; mapType: number }> };
-    const runtime = createViewSyncRuntime([ShrewViewSync, ShrewAnimationViewSync]);
-    runtime.registryFor(ShrewViewSync).register(eid, createShrewNode(calls));
-
-    ShrewComponent.shrewType[eid] = ShrewType.Blue;
-    ShrewComponent.mapType[eid] = MapType.Ship;
-    runtime.channelFor(ShrewViewSync).project(eid, BIT_SHREW_TYPE | BIT_SHREW_MAP, false);
-
-    expect(calls.spriteFrames).toEqual([{ shrewType: ShrewType.Blue, mapType: MapType.Ship }]);
-  });
-
-  it("allows dirty-only shrew fields without a view projection", () => {
-    const world = createGameWorld();
-    const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
     const calls = {
-      spriteFrames: [] as Array<{ shrewType: number; mapType: number }>,
-      animations: [] as Array<{ actionState: number; animType: number; progress: number }>,
-      clickable: [] as boolean[],
+      sprites: [] as Array<[number, number]>,
+      animations: [] as Array<[number, number, number]>,
+      clickables: [] as boolean[],
       hats: [] as boolean[],
       props: [] as number[],
     };
-    const runtime = createViewSyncRuntime([ShrewViewSync, ShrewAnimationViewSync]);
-    runtime.registryFor(ShrewViewSync).register(eid, createShrewNode(calls));
+    const runtime = createProjectionRuntime([ShrewProjection]);
+    runtime.mount(ShrewProjection, eid, createShrewNode(calls));
+    runtime.mark(world);
+    runtime.sync(world);
+    calls.sprites.length = 0;
+    calls.animations.length = 0;
 
-    runtime.channelFor(ShrewViewSync).project(eid, BIT_SHREW_HP | BIT_SHREW_TIMER, false);
+    ShrewComponent.shrewType[eid] = ShrewType.Blue;
+    ShrewComponent.mapType[eid] = MapType.Ship;
+    ShrewComponent.actionState[eid] = ShrewAction.Up;
+    AnimationComponent.animType[eid] = AnimType.Up;
+    AnimationComponent.progress[eid] = 0.5;
+    AnimationComponent.duration[eid] = 0.31;
+    runtime.mark(world);
+    runtime.sync(world);
+
+    expect(calls.sprites).toEqual([[ShrewType.Blue, MapType.Ship]]);
+    expect(calls.animations).toEqual([[ShrewAction.Up, AnimType.Up, 0.5]]);
+  });
+
+  it("keeps gameplay-only shrew fields out of the view contract", () => {
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, [ShrewEntity]);
+    const eid = entities.create(ShrewEntity, {
+      shrewType: ShrewType.Red,
+      mapType: MapType.Meadow,
+    });
+    const calls = {
+      sprites: [] as Array<[number, number]>,
+      animations: [] as Array<[number, number, number]>,
+      clickables: [] as boolean[],
+      hats: [] as boolean[],
+      props: [] as number[],
+    };
+    const runtime = createProjectionRuntime([ShrewProjection]);
+    runtime.mount(ShrewProjection, eid, createShrewNode(calls));
+    runtime.mark(world);
+    runtime.sync(world);
+    Object.values(calls).forEach(values => { values.length = 0; });
+
+    ShrewComponent.hp[eid] += 1;
+    ShrewComponent.animTimer[eid] += 1;
+    runtime.mark(world);
+    runtime.sync(world);
 
     expect(calls).toEqual({
-      spriteFrames: [],
+      sprites: [],
       animations: [],
-      clickable: [],
+      clickables: [],
       hats: [],
       props: [],
     });
   });
 
-  it("projects animation progress through dirty marking and SyncView", () => {
-    const world = createGameWorld();
-    const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-    const animations: Array<{ actionState: number; animType: number; progress: number }> = [];
-    const runtime = createViewSyncRuntime([ShrewViewSync, ShrewAnimationViewSync]);
-    runtime.registryFor(ShrewViewSync).register(eid, createShrewNode({ animations }));
-    const syncView = new SyncView();
-    syncView.registerChannels(runtime.channels());
-
-    ShrewComponent.actionState[eid] = ShrewAction.Up;
-    AnimationComponent.animType[eid] = AnimType.Up;
-    AnimationComponent.duration[eid] = 0.31;
-    dirtyMarkSystem(world, [ShrewViewSync.dirtyAspect, ShrewAnimationViewSync.dirtyAspect]);
-    syncView.sync(world);
-    animations.length = 0;
-
-    AnimationComponent.progress[eid] = 0.5;
-    dirtyMarkSystem(world, [ShrewViewSync.dirtyAspect, ShrewAnimationViewSync.dirtyAspect]);
-    syncView.sync(world);
-
-    expect(DirtyComponent.shrewDirty[eid]).toBe(0);
-    expect(animations).toEqual([
-      { actionState: ShrewAction.Up, animType: AnimType.Up, progress: 0.5 },
-    ]);
-  });
-
   it("projects hole position, occupant and z-order", () => {
     const world = createGameWorld();
-    const [eid] = createHoleEntities(world, MapType.Meadow);
+    const entities = createEntityRuntime(world, [HoleEntity]);
+    const eid = entities.create(HoleEntity, { index: 0, mapType: MapType.Meadow });
     const calls = {
-      positions: [] as Array<{ x: number; y: number }>,
+      positions: [] as Array<[number, number]>,
       shrews: [] as number[],
       zOrders: [] as number[],
     };
     const node: IHoleNode = {
-      setPosition: (x, y) => calls.positions.push({ x, y }),
-      setShrewVisible: (shrewEid) => calls.shrews.push(shrewEid),
-      setZOrder: (z) => calls.zOrders.push(z),
+      setPosition: (x, y) => calls.positions.push([x, y]),
+      setShrewVisible: shrewEid => calls.shrews.push(shrewEid),
+      setZOrder: z => calls.zOrders.push(z),
     };
-    const runtime = createViewSyncRuntime([HoleViewSync]);
-    runtime.registryFor(HoleViewSync).register(eid, node);
+    const runtime = createProjectionRuntime([HoleProjection]);
+    runtime.mount(HoleProjection, eid, node);
+    runtime.mark(world);
+    runtime.sync(world);
+    calls.positions.length = calls.shrews.length = calls.zOrders.length = 0;
 
     HoleComponent.posXRatio[eid] = 0.25;
     HoleComponent.posYRatio[eid] = 0.5;
     HoleComponent.shrewEid[eid] = 7;
     HoleComponent.zIndex[eid] = 3;
-    runtime.channelFor(HoleViewSync).project(
-      eid,
-      BIT_HOLE_POS | BIT_HOLE_SHREW | BIT_HOLE_ZORDER,
-      false,
-    );
+    runtime.mark(world);
+    runtime.sync(world);
 
     expect(calls).toEqual({
-      positions: [{ x: 0.25, y: 0.5 }],
+      positions: [[0.25, 0.5]],
       shrews: [7],
       zOrders: [3],
     });
   });
 
-  it("does not play an empty hammer hit during force-full-sync", () => {
+  it("projects scene map and transition while timer stays view-free", () => {
     const world = createGameWorld();
-    const { hammer } = createSingletonEntities(world);
-    let hits = 0;
-    const node: IHammerNode = {
-      setHammerType: () => {},
-      setThunderActive: () => {},
-      followTouch: () => {},
-      playHitAnimation: () => { hits += 1; },
-    };
-    const runtime = createViewSyncRuntime([HammerViewSync]);
-    runtime.registryFor(HammerViewSync).register(hammer, node);
-
-    runtime.channelFor(HammerViewSync).project(hammer, 0, true);
-
-    expect(hits).toBe(0);
-  });
-
-  it("projects hammer state and hit feedback while hitTable stays dirty-only", () => {
-    const world = createGameWorld();
-    const { hammer } = createSingletonEntities(world);
-    const calls = {
-      types: [] as number[],
-      thunder: [] as boolean[],
-      positions: [] as Array<[number, number]>,
-      hits: 0,
-    };
-    const node: IHammerNode = {
-      setHammerType: (hammerType) => calls.types.push(hammerType),
-      setThunderActive: (active) => calls.thunder.push(active),
-      followTouch: (x, y) => calls.positions.push([x, y]),
-      playHitAnimation: () => { calls.hits += 1; },
-    };
-    const runtime = createViewSyncRuntime([HammerViewSync]);
-    runtime.registryFor(HammerViewSync).register(hammer, node);
-
-    HammerComponent.selectedType[hammer] = 4;
-    HammerComponent.isThunderActive[hammer] = 1;
-    HammerComponent.hitTable[hammer] = 0;
-    HammerComponent.touchX[hammer] = 123;
-    HammerComponent.touchY[hammer] = 456;
-    HammerComponent.hitSeq[hammer] = 1;
-    runtime.channelFor(HammerViewSync).project(
-      hammer,
-      BIT_HAMMER_TYPE | BIT_HAMMER_THUNDER | BIT_HAMMER_HITTABLE | BIT_HAMMER_HIT_FEEDBACK,
-      false,
-    );
-
-    expect(calls).toEqual({
-      types: [4],
-      thunder: [true],
-      positions: [[123, 456]],
-      hits: 1,
-    });
-  });
-
-  it("projects scene map and transition while timer stays dirty-only", () => {
-    const world = createGameWorld();
-    const { scene } = createSingletonEntities(world);
+    const entities = createEntityRuntime(world, [SceneEntity]);
+    entities.bootstrapSingletons();
+    const scene = entities.one(SceneEntity);
     const calls = { maps: [] as number[], transitions: [] as boolean[] };
     const node: ISceneLayer = {
-      switchScene: (mapType) => calls.maps.push(mapType),
-      setTransitioning: (transitioning) => calls.transitions.push(transitioning),
+      switchScene: map => calls.maps.push(map),
+      setTransitioning: transitioning => calls.transitions.push(transitioning),
     };
-    const runtime = createViewSyncRuntime([SceneViewSync]);
-    runtime.registryFor(SceneViewSync).register(scene, node);
+    const runtime = createProjectionRuntime([SceneProjection]);
+    runtime.mount(SceneProjection, scene, node);
+    runtime.mark(world);
+    runtime.sync(world);
+    calls.maps.length = calls.transitions.length = 0;
 
     SceneComponent.currentMap[scene] = MapType.Space;
-    SceneComponent.transitioning[scene] = 1;
     SceneComponent.sceneTimer[scene] = 12;
-    runtime.channelFor(SceneViewSync).project(
-      scene,
-      BIT_SCENE_MAP | BIT_SCENE_TRANSITION | BIT_SCENE_TIMER,
-      false,
-    );
+    SceneComponent.transitioning[scene] = 1;
+    runtime.mark(world);
+    runtime.sync(world);
 
     expect(calls).toEqual({ maps: [MapType.Space], transitions: [true] });
   });

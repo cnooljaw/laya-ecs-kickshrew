@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getPerfTestRuntimeConfig } from "../../config/PerfTestConfig";
 import { MONSTER_SPAWN_RULES } from "../../config/MonsterConfig";
-import { DirtyComponent } from "../../ecs/components";
-import { SceneComponent } from "../../ecs/components";
+import { DirtyComponent, HoleComponent, SceneComponent } from "../../ecs/components";
 import { defineEntityType } from "../../ecs/runtime/EntityType";
 import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
 import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
@@ -26,8 +25,15 @@ import {
 import { HammerProjection } from "../../sync/projections/HammerProjection";
 import { MonsterEntity, MonsterTriggerEntity } from "../../ecs/gameplay/monster/MonsterEntity";
 import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
+import { HoleEntity, SceneEntity, ShrewEntity } from "../../ecs/gameplay/core/CoreEntities";
 import { MonsterProjection } from "../../sync/projections/MonsterProjection";
 import { PerfHeroProjection } from "../../sync/projections/PerfHeroProjection";
+import {
+  HoleProjection,
+  SceneProjection,
+  ShrewProjection,
+} from "../../sync/projections/CoreProjections";
+import { setupCoreGameplay } from "../../features/CoreGameplayFeature";
 
 const sceneAspect: DirtyAspect = {
   name: "sceneAspect",
@@ -144,13 +150,45 @@ describe("GameFeatureRegistry", () => {
     expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("monster");
     expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("perfHero");
     expect(registry.entityTypes()).toContain(HammerEntity);
+    expect(registry.entityTypes()).toContain(SceneEntity);
+    expect(registry.entityTypes()).toContain(HoleEntity);
+    expect(registry.entityTypes()).toContain(ShrewEntity);
     expect(registry.entityTypes()).toContain(MonsterEntity);
     expect(registry.entityTypes()).toContain(MonsterTriggerEntity);
     expect(registry.entityTypes()).toContain(PerfHeroEntity);
     expect(registry.projections()).toContain(HammerProjection);
+    expect(registry.projections()).toContain(SceneProjection);
+    expect(registry.projections()).toContain(HoleProjection);
+    expect(registry.projections()).toContain(ShrewProjection);
     expect(registry.projections()).toContain(MonsterProjection);
     expect(registry.projections()).toContain(PerfHeroProjection);
     expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("hammer");
+    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("scene");
+    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("hole");
+    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("shrew");
+  });
+
+  it("显式装配九组洞位和地鼠固定拓扑", () => {
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, [SceneEntity, HoleEntity, ShrewEntity]);
+    entities.bootstrapSingletons();
+    const context = {
+      world,
+      entities,
+      views: {
+        mount: ({ create }: any) => create(),
+        mountMany: (): any[] => [],
+      },
+      resources: {
+        own: <T>(resource: T) => resource,
+      },
+    } as any;
+
+    const result = setupCoreGameplay(context);
+
+    expect(result.holes).toHaveLength(9);
+    expect(result.shrews).toHaveLength(9);
+    expect(result.holes.map(eid => HoleComponent.shrewEid[eid])).toEqual(result.shrews);
   });
 
   it("真实 feature setup 按模块创建并挂载完整运行时对象", () => {
