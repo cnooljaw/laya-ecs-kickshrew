@@ -2,7 +2,7 @@ import type { EntityDefinition } from "../ecs/EntityDefinition";
 import type { ProjectionDefinition } from "../sync/ProjectionDefinition";
 import type { FeatureRuntimeContext } from "./FeatureRuntimeContext";
 import type {
-  GameFeature,
+  FeatureManifest,
   GameSystem,
   GameSystemPhase,
 } from "./FeatureManifest";
@@ -19,7 +19,7 @@ export interface GameFeatureRegistry {
   projections(): readonly ProjectionDefinition<any>[];
 }
 
-export function createGameFeatureRegistry(features: readonly GameFeature[]): GameFeatureRegistry {
+export function createGameFeatureRegistry(features: readonly FeatureManifest[]): GameFeatureRegistry {
   validateGameFeatures(features);
   const stateSystems = collectSystems(features, "state");
   const featureSystems = collectSystems(features, "feature");
@@ -36,7 +36,7 @@ export function createGameFeatureRegistry(features: readonly GameFeature[]): Gam
   };
 }
 
-export function validateGameFeatures(features: readonly GameFeature[]): void {
+export function validateGameFeatures(features: readonly FeatureManifest[]): void {
   const featureNames = new Set<string>();
   const systemNames = new Set<string>();
   const entityTypeNames = new Set<string>();
@@ -51,32 +51,27 @@ export function validateGameFeatures(features: readonly GameFeature[]): void {
     for (const projection of feature.projections ?? []) {
       assertUnique(projectionNames, projection.name, "Projection");
     }
-    for (const phase of ["state", "feature"] as const) {
-      for (const system of feature.systems?.[phase] ?? []) {
-        assertUnique(systemNames, systemName(feature.name, phase, system), "FeatureSystem");
-      }
+    for (const system of feature.systems ?? []) {
+      assertUnique(systemNames, system.name, "FeatureSystem");
     }
   }
 }
 
 function collectSystems(
-  features: readonly GameFeature[],
+  features: readonly FeatureManifest[],
   phase: GameSystemPhase,
 ): RegisteredGameSystem[] {
   const systems: RegisteredGameSystem[] = [];
   for (const feature of features) {
-    for (const run of feature.systems?.[phase] ?? []) {
+    for (const system of feature.systems ?? []) {
+      if (system.phase !== phase) continue;
       systems.push({
-        name: systemName(feature.name, phase, run),
-        run,
+        name: system.name,
+        run: system.run,
       });
     }
   }
   return systems;
-}
-
-function systemName(featureName: string, phase: GameSystemPhase, run: GameSystem): string {
-  return run.name || `${featureName}:${phase}`;
 }
 
 function assertUnique(names: Set<string>, name: string, kind: string): void {
@@ -85,8 +80,8 @@ function assertUnique(names: Set<string>, name: string, kind: string): void {
 }
 
 function collectFeatureItems<T>(
-  features: readonly GameFeature[],
-  select: (feature: GameFeature) => readonly T[] | undefined,
+  features: readonly FeatureManifest[],
+  select: (feature: FeatureManifest) => readonly T[] | undefined,
 ): T[] {
   const items: T[] = [];
   for (const feature of features) {

@@ -10,7 +10,11 @@ import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { defineEntity } from "../../framework/ecs/EntityDefinition";
 import { createGameWorld } from "../../ecs/world";
 import { setupCoreGameplay } from "../../features/CoreGameplayFeature";
-import { defineGameFeature, type GameFeature } from "../../framework/feature/FeatureManifest";
+import {
+  defineFeature,
+  defineSystem,
+  type FeatureManifest,
+} from "../../framework/feature/FeatureManifest";
 import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../features/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../framework/feature/FeatureRegistry";
 import {
@@ -38,11 +42,11 @@ const TestSceneProjection = defineProjection({
   rows: [watch(sceneSource, ["currentMap"], "current map", noProjection)],
 });
 
-function feature(name: string): GameFeature {
-  const run = Object.defineProperty(() => {}, "name", { value: `${name}System` });
-  return defineGameFeature({
+function feature(name: string): FeatureManifest {
+  const run = () => {};
+  return defineFeature({
     name,
-    systems: { feature: [run] },
+    systems: [defineSystem("feature", `${name}.system`, run)],
   });
 }
 
@@ -58,25 +62,21 @@ function createSetupContext(entities: ReturnType<typeof createEntityRuntime>) {
         on: () => {},
         emit: () => {},
       },
-      views: {
-        create: ({ create }: any) => {
-          resources++;
-          return create();
-        },
-        mount: ({ projection, create }: any) => {
-          mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
-          return create();
-        },
-        mountMany: ({ eids, projection, create }: any) => eids.map((eid: number, index: number) => {
-          mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
-          return create(eid, index);
-        }),
+      createView: ({ create }: any) => {
+        resources++;
+        return create();
       },
-      resources: {
-        own: <T>(resource: T) => {
-          resources++;
-          return resource;
-        },
+      mountOne: ({ projection, create }: any) => {
+        mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
+        return create();
+      },
+      mountPool: ({ eids, projection, create }: any) => eids.map((eid: number, index: number) => {
+        mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
+        return create(eid, index);
+      }),
+      own: <T>(resource: T) => {
+        resources++;
+        return resource;
       },
     } as any,
     resourceCount: () => resources,
@@ -88,11 +88,14 @@ describe("GameFeatureRegistry", () => {
     function updateState(): void {}
     function updateFeature(): void {}
     const registry = createGameFeatureRegistry([
-      defineGameFeature({
+      defineFeature({
         name: "compiled",
         entities: [TestSceneEntity],
         projections: [TestSceneProjection],
-        systems: { state: [updateState], feature: [updateFeature] },
+        systems: [
+          defineSystem("state", "compiled.state", updateState),
+          defineSystem("feature", "compiled.feature", updateFeature),
+        ],
       }),
     ]);
 
@@ -104,10 +107,10 @@ describe("GameFeatureRegistry", () => {
 
   it("keeps real feature contribution order stable", () => {
     expect(GAME_FEATURE_REGISTRY.systemsByPhase("state").map(item => item.name)).toEqual([
-      "animationTimerSystem",
-      "shrewStateSystem",
-      "sceneCycleSystem",
-      "hammerSystem",
+      "shrew.animationTimer",
+      "shrew.state",
+      "shrew.sceneCycle",
+      "hammer.state",
     ]);
     expect(GAME_FEATURE_REGISTRY.entityTypes()).toEqual(expect.arrayContaining([
       SceneEntity,
@@ -172,18 +175,24 @@ describe("GameFeatureRegistry", () => {
   it("rejects duplicate names", () => {
     const duplicateSystem = () => {};
     expect(() => validateGameFeatures([
-      defineGameFeature({ name: "a", systems: { state: [duplicateSystem] } }),
-      defineGameFeature({ name: "b", systems: { feature: [duplicateSystem] } }),
-    ])).toThrow("FeatureSystem name 重复: duplicateSystem");
+      defineFeature({
+        name: "a",
+        systems: [defineSystem("state", "duplicate.system", duplicateSystem)],
+      }),
+      defineFeature({
+        name: "b",
+        systems: [defineSystem("feature", "duplicate.system", duplicateSystem)],
+      }),
+    ])).toThrow("FeatureSystem name 重复: duplicate.system");
     expect(() => validateGameFeatures([feature("same"), feature("same")]))
       .toThrow("GameFeature name 重复: same");
     expect(() => validateGameFeatures([
-      defineGameFeature({ name: "a", entities: [TestSceneEntity] }),
-      defineGameFeature({ name: "b", entities: [TestSceneEntity] }),
+      defineFeature({ name: "a", entities: [TestSceneEntity] }),
+      defineFeature({ name: "b", entities: [TestSceneEntity] }),
     ])).toThrow("EntityDefinition name 重复: testScene");
     expect(() => validateGameFeatures([
-      defineGameFeature({ name: "a", projections: [TestSceneProjection] }),
-      defineGameFeature({ name: "b", projections: [TestSceneProjection] }),
+      defineFeature({ name: "a", projections: [TestSceneProjection] }),
+      defineFeature({ name: "b", projections: [TestSceneProjection] }),
     ])).toThrow("Projection name 重复: testScene");
   });
 

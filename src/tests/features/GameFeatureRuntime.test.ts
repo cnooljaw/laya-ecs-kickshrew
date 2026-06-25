@@ -16,7 +16,15 @@ const CounterComponent = defineComponent({
   value: Types.ui32,
 });
 const counterSource = projectionSource("counter", CounterComponent);
-const CounterProjection = defineProjection<{ setValue(value: number): void }>({
+interface CounterView {
+  readonly eid?: number;
+  readonly index?: number;
+  create(parent?: any): void;
+  setValue(value: number): void;
+  destroy(): void;
+}
+
+const CounterProjection = defineProjection<CounterView>({
   name: "counter",
   components: [CounterComponent],
   rows: [
@@ -27,7 +35,7 @@ const CounterProjection = defineProjection<{ setValue(value: number): void }>({
 });
 
 describe("GameFeatureRuntime", () => {
-  it("views.mount creates, registers and owns projection nodes", () => {
+  it("mountOne creates, registers and owns projection nodes", () => {
     const world = createGameWorld();
     const eid = addEntity(world);
     addComponent(world, CounterComponent, eid);
@@ -54,7 +62,7 @@ describe("GameFeatureRuntime", () => {
       effectRuntime: createEffectRuntime(),
     });
 
-    context.views.mount({
+    context.mountOne({
       eid,
       projection: CounterProjection,
       create: () => node,
@@ -68,7 +76,7 @@ describe("GameFeatureRuntime", () => {
     expect(lifecycle).toEqual(["create:root", "destroy"]);
   });
 
-  it("views.create and resources.own share lifecycle cleanup", () => {
+  it("createView and own share lifecycle cleanup", () => {
     const world = createGameWorld();
     const viewRegistry = new ViewRegistry();
     const destroyed: string[] = [];
@@ -92,11 +100,42 @@ describe("GameFeatureRuntime", () => {
       effectRuntime: createEffectRuntime(),
     });
 
-    context.views.create({ create: () => node });
-    context.resources.own(owned);
+    context.createView({ create: () => node });
+    context.own(owned);
 
     viewRegistry.clear();
 
     expect(destroyed).toEqual(["owned", "node"]);
+  });
+
+  it("mountPool creates nodes in stable eid order", () => {
+    const world = createGameWorld();
+    const eids = [addEntity(world), addEntity(world)];
+    for (const eid of eids) addComponent(world, CounterComponent, eid);
+    const context = createFeatureRuntimeContext({
+      world,
+      root: null,
+      entityRuntime: createEntityRuntime(world, []),
+      projectionRuntime: createProjectionRuntime([CounterProjection]),
+      viewRegistry: new ViewRegistry(),
+      effectRuntime: createEffectRuntime(),
+    });
+
+    const nodes = context.mountPool({
+      eids,
+      projection: CounterProjection,
+      create: (eid, index) => ({
+        eid,
+        index,
+        create(): void {},
+        setValue(): void {},
+        destroy(): void {},
+      }),
+    });
+
+    expect(nodes.map(node => [node.eid, node.index])).toEqual([
+      [eids[0], 0],
+      [eids[1], 1],
+    ]);
   });
 });

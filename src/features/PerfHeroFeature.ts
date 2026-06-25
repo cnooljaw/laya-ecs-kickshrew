@@ -3,16 +3,14 @@ import { PerfHeroEntity } from "../ecs/gameplay/perfHero/PerfHeroEntity";
 import { perfHeroSystem } from "../ecs/gameplay/perfHero/PerfHeroSystem";
 import { PerfHeroProjection } from "../sync/projections/PerfHeroProjection";
 import { PerfHeroNode, PerfHeroSpinePoolGroup } from "../view/PerfHeroNode";
-import { defineGameFeature } from "../framework/feature/FeatureManifest";
+import { defineFeature, defineSystem } from "../framework/feature/FeatureManifest";
 
-export const PerfHeroFeature = defineGameFeature({
+export const PerfHeroFeature = defineFeature({
   name: "perfHero",
   entities: [PerfHeroEntity],
   projections: [PerfHeroProjection],
-  systems: {
-    feature: [perfHeroSystem],
-  },
-  setup: ({ entities, views, resources }) => {
+  systems: [defineSystem("feature", "perfHero.state", perfHeroSystem)],
+  setup: ({ entities, mountPool, own }) => {
     const config = getPerfTestRuntimeConfig();
     if (config.heroCount <= 0) return;
 
@@ -20,8 +18,8 @@ export const PerfHeroFeature = defineGameFeature({
       PerfHeroEntity,
       Array.from({ length: config.heroCount }, (_, index) => index),
     );
-    const pool = resources.own(new PerfHeroSpinePoolGroup());
-    views.mountMany({
+    const pool = own(new PerfHeroSpinePoolGroup());
+    mountPool({
       eids,
       projection: PerfHeroProjection,
       create: () => new PerfHeroNode(pool),

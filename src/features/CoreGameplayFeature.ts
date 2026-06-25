@@ -13,7 +13,7 @@ import { HoleNode } from "../view/HoleNode";
 import { SceneLayer } from "../view/SceneLayer";
 import { ShrewNode } from "../view/ShrewNode";
 import type { FeatureRuntimeContext } from "../framework/feature/FeatureRuntimeContext";
-import { defineGameFeature } from "../framework/feature/FeatureManifest";
+import { defineFeature, defineSystem } from "../framework/feature/FeatureManifest";
 
 export interface CoreGameplaySetupResult {
   scene: number;
@@ -23,10 +23,10 @@ export interface CoreGameplaySetupResult {
 
 export function setupCoreGameplay({
   entities,
-  views,
+  mountOne,
 }: FeatureRuntimeContext): CoreGameplaySetupResult {
   const scene = entities.one(SceneEntity);
-  views.mount({
+  mountOne({
     eid: scene,
     projection: SceneProjection,
     create: () => new SceneLayer(),
@@ -47,12 +47,12 @@ export function setupCoreGameplay({
     holes.push(holeEid);
     shrews.push(shrewEid);
 
-    const holeNode = views.mount({
+    const holeNode = mountOne({
       eid: holeEid,
       projection: HoleProjection,
       create: () => new HoleNode(),
     });
-    views.mount({
+    mountOne({
       eid: shrewEid,
       projection: ShrewProjection,
       parent: holeNode.getContainer(),
@@ -63,13 +63,15 @@ export function setupCoreGameplay({
   return { scene, holes, shrews };
 }
 
-export const CoreGameplayFeature = defineGameFeature({
+export const CoreGameplayFeature = defineFeature({
   name: "coreGameplay",
   entities: [SceneEntity, HoleEntity, ShrewEntity],
   projections: [SceneProjection, HoleProjection, ShrewProjection],
-  systems: {
-    state: [animationTimerSystem, shrewStateSystem, sceneCycleSystem],
-  },
+  systems: [
+    defineSystem("state", "shrew.animationTimer", animationTimerSystem),
+    defineSystem("state", "shrew.state", shrewStateSystem),
+    defineSystem("state", "shrew.sceneCycle", sceneCycleSystem),
+  ],
   setup: setupCoreGameplay,
 });
 

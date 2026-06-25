@@ -7,20 +7,21 @@ import {
 import { monsterLifetimeSystem, monsterSpawnSystem } from "../ecs/gameplay/monster/MonsterSystem";
 import { MonsterProjection } from "../sync/projections/MonsterProjection";
 import { MonsterNode } from "../view/MonsterNode";
-import { defineGameFeature } from "../framework/feature/FeatureManifest";
+import { defineFeature, defineSystem } from "../framework/feature/FeatureManifest";
 
-export const MonsterFeature = defineGameFeature({
+export const MonsterFeature = defineFeature({
   name: "monster",
   entities: [MonsterEntity, MonsterTriggerEntity],
   projections: [MonsterProjection],
-  systems: {
-    feature: [monsterLifetimeSystem, monsterSpawnSystem],
-  },
-  setup: ({ entities, views }) => {
+  systems: [
+    defineSystem("feature", "monster.lifetime", monsterLifetimeSystem),
+    defineSystem("feature", "monster.spawn", monsterSpawnSystem),
+  ],
+  setup: ({ entities, mountPool }) => {
     assertValidMonsterConfig();
     createMonsterTriggerEntities(entities, MONSTER_SPAWN_RULES);
     const eids = createMonsterPool(entities, MONSTER_SPAWN_RULES);
-    views.mountMany({
+    mountPool({
       eids,
       projection: MonsterProjection,
       create: () => new MonsterNode(),

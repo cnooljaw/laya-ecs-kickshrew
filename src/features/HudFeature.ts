@@ -3,19 +3,19 @@ import { HitMissEffect, HitRewardEffect } from "../effects/HitEffects";
 import { PlayerProjection } from "../sync/projections/HudProjection";
 import { HitEffectNode } from "../view/HitEffectNode";
 import { PlayerHUD } from "../view/PlayerHUD";
-import { defineGameFeature } from "../framework/feature/FeatureManifest";
+import { defineFeature } from "../framework/feature/FeatureManifest";
 
-export const HudFeature = defineGameFeature({
+export const HudFeature = defineFeature({
   name: "hud",
   entities: [PlayerEntity],
   projections: [PlayerProjection],
-  setup: ({ entities, effects, views }) => {
-    views.mount({
+  setup: ({ entities, effects, mountOne, createView }) => {
+    mountOne({
       eid: entities.one(PlayerEntity),
       projection: PlayerProjection,
       create: () => new PlayerHUD(),
     });
-    const hitEffectNode = views.create({
+    const hitEffectNode = createView({
       create: () => new HitEffectNode(),
     });
     effects.on(HitRewardEffect, payload => {
