@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MonsterNode } from "../../view/MonsterNode";
+import { MonsterNode } from "../../../../game/features/monster/MonsterNode";
 
 class FakeSprite {
   name = "";

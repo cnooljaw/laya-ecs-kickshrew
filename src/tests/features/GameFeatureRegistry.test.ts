@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { MONSTER_SPAWN_RULES } from "../../config/MonsterConfig";
+import { MONSTER_SPAWN_RULES } from "../../game/features/monster";
 import { HoleComponent, SceneComponent } from "../../ecs/components";
 import { HoleEntity, SceneEntity, ShrewEntity } from "../../ecs/gameplay/core/CoreEntities";
 import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
 import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
-import { MonsterEntity, MonsterTriggerEntity } from "../../ecs/gameplay/monster/MonsterEntity";
+import { MonsterEntity, MonsterTriggerEntity } from "../../game/features/monster";
 import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { defineEntity } from "../../framework/ecs/EntityDefinition";
@@ -26,7 +26,7 @@ import {
 import { HoleProjection, SceneProjection, ShrewProjection } from "../../sync/projections/CoreProjections";
 import { HammerProjection } from "../../sync/projections/HammerProjection";
 import { PlayerProjection } from "../../sync/projections/HudProjection";
-import { MonsterProjection } from "../../sync/projections/MonsterProjection";
+import { MonsterProjection } from "../../game/features/monster";
 import { PerfHeroProjection } from "../../sync/projections/PerfHeroProjection";
 
 const TestSceneEntity = defineEntity({

@@ -2,20 +2,31 @@ import { describe, expect, it } from "vitest";
 import { createGameWorld } from "../../../../ecs/world";
 import { createSingletonEntities } from "../../../helpers/SingletonTestEntities";
 import { PlayerComponent } from "../../../../ecs/components";
-import { MonsterComponent, MonsterSpawnComponent } from "../../../../ecs/gameplay/monster/MonsterComponent";
-import { MonsterType } from "../../../../ecs/gameplay/monster/MonsterTypes";
-import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../../ecs/gameplay/monster/MonsterSystem";
+import { MonsterComponent, MonsterSpawnComponent } from "../../../../game/features/monster/MonsterComponents";
+import { MonsterType } from "../../../../game/features/monster/MonsterTypes";
+import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../../game/features/monster/MonsterSystems";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 import {
   MonsterEntity,
   MonsterTriggerEntity,
-} from "../../../../ecs/gameplay/monster/MonsterEntity";
+  type MonsterEntityInput,
+} from "../../../../game/features/monster/MonsterEntities";
 import {
   createMonsterPool,
   createMonsterTriggerEntities,
-} from "../../../../ecs/gameplay/monster/MonsterFactory";
+} from "../../../../game/features/monster/MonsterPool";
 
 describe("MonsterSystem", () => {
+  function monsterInput(monsterType = MonsterType.Rhino): MonsterEntityInput {
+    return {
+      monsterType,
+      posX: 480,
+      posY: 352,
+      scale: 1,
+      durationSec: 10,
+    };
+  }
+
   function createMonsterRuntime(world: any) {
     return createEntityRuntime(world, [MonsterEntity, MonsterTriggerEntity]);
   }
@@ -31,7 +42,10 @@ describe("MonsterSystem", () => {
     }));
 
     const trackers = createMonsterTriggerEntities(runtime, rules);
-    const monsters = createMonsterPool(runtime, rules);
+    const monsters = createMonsterPool(
+      runtime,
+      rules.map(rule => monsterInput(rule.monsterType)),
+    );
 
     expect(trackers).toHaveLength(5);
     expect(trackers.map((eid) => MonsterSpawnComponent.ruleIndex[eid])).toEqual([0, 1, 2, 3, 4]);
@@ -44,7 +58,7 @@ describe("MonsterSystem", () => {
     const { player } = createSingletonEntities(world);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
-    const monster = runtime.create(MonsterEntity, MonsterType.Rhino);
+    const monster = runtime.create(MonsterEntity, monsterInput());
 
     PlayerComponent.money[player] = 99;
     monsterSpawnSystem(world);
@@ -70,7 +84,7 @@ describe("MonsterSystem", () => {
   it("隐藏策略下 Rhino 出现 10 秒后只设置 visible=0，不删除实体", () => {
     const world = createGameWorld();
     createSingletonEntities(world);
-    const monster = createMonsterRuntime(world).create(MonsterEntity, MonsterType.Rhino);
+    const monster = createMonsterRuntime(world).create(MonsterEntity, monsterInput());
 
     MonsterComponent.monsterType[monster] = MonsterType.Rhino;
     MonsterComponent.visible[monster] = 1;
@@ -90,7 +104,7 @@ describe("MonsterSystem", () => {
     const { player } = createSingletonEntities(world);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
-    const monster = runtime.create(MonsterEntity, MonsterType.Rhino);
+    const monster = runtime.create(MonsterEntity, monsterInput());
 
     PlayerComponent.money[player] = 350;
     monsterSpawnSystem(world);
@@ -105,7 +119,7 @@ describe("MonsterSystem", () => {
     const { player } = createSingletonEntities(world);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
-    const monster = runtime.create(MonsterEntity, MonsterType.Rhino);
+    const monster = runtime.create(MonsterEntity, monsterInput());
 
     PlayerComponent.money[player] = 100;
     monsterSpawnSystem(world);
@@ -133,18 +147,9 @@ describe("MonsterSystem", () => {
     const world = createGameWorld();
     const runtime = createMonsterRuntime(world);
     const entities = createMonsterPool(runtime, [
-      {
-        slot: 0,
-        monsterType: MonsterType.Rhino,
-        maxActiveCount: 1,
-        trigger: { source: "money", mode: "multiple", interval: 100, catchUp: false },
-      },
-      {
-        slot: 1,
-        monsterType: MonsterType.Rhino,
-        maxActiveCount: 2,
-        trigger: { source: "money", mode: "multiple", interval: 500, catchUp: false },
-      },
+      monsterInput(),
+      monsterInput(),
+      monsterInput(),
     ]);
 
     expect(entities).toHaveLength(3);

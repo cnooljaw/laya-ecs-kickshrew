@@ -3,7 +3,7 @@ import type { FeatureManifest } from "../framework/feature/FeatureManifest";
 import { createGameFeatureRegistry } from "../framework/feature/FeatureRegistry";
 import { HammerFeature } from "../features/HammerFeature";
 import { HudFeature as PlayerHudFeature } from "../features/HudFeature";
-import { MonsterFeature } from "../features/MonsterFeature";
+import { MonsterFeature } from "./features/monster";
 import { PerfHeroFeature } from "../features/PerfHeroFeature";
 
 export const GAME_FEATURES: readonly FeatureManifest[] = [

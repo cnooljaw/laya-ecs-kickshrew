@@ -1,10 +1,10 @@
-import type { IMonsterNode } from "../sync/contracts/MonsterViewContract";
-import { MONSTER_CONFIG } from "../config/MonsterConfig";
-import { MonsterType } from "../ecs/gameplay/monster/MonsterTypes";
-import { destroyNode } from "../framework/view/LayaLifecycle";
-import { loadSpineTemplate } from "../framework/view/LayaLoader";
-import { getLaya } from "../framework/view/LayaRuntime";
-import { createSkeleton } from "../framework/view/LayaSpine";
+import { destroyNode } from "../../../framework/view/LayaLifecycle";
+import { loadSpineTemplate } from "../../../framework/view/LayaLoader";
+import { getLaya } from "../../../framework/view/LayaRuntime";
+import { createSkeleton } from "../../../framework/view/LayaSpine";
+import { MonsterType } from "./MonsterTypes";
+import { MONSTER_VIEW_CONFIG } from "./MonsterViewConfig";
+import type { IMonsterNode } from "./MonsterViewContract";
 
 interface MonsterPlayRequest {
   monsterType: number;
@@ -36,7 +36,8 @@ export class MonsterNode implements IMonsterNode {
   spawn(monsterType: number, spawnSeq: number): void {
     if (!this._container || spawnSeq === this._lastSpawnSeq) return;
     this._lastSpawnSeq = spawnSeq;
-    const config = MONSTER_CONFIG[monsterType as MonsterType] ?? MONSTER_CONFIG[MonsterType.Rhino];
+    const config = MONSTER_VIEW_CONFIG[monsterType as MonsterType]
+      ?? MONSTER_VIEW_CONFIG[MonsterType.Rhino];
     this._loadAndPlay({ monsterType, skUrl: config.skUrl, spawnSeq });
   }
 

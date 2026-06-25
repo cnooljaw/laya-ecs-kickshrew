@@ -1,21 +1,27 @@
-import { MONSTER_CONFIG } from "../../../config/MonsterConfig";
 import { defineEntity } from "../../../framework/ecs/EntityDefinition";
-import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponent";
+import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponents";
 import type { MonsterType } from "./MonsterTypes";
 
-export const MonsterEntity = defineEntity<MonsterType>({
+export interface MonsterEntityInput {
+  readonly monsterType: MonsterType;
+  readonly posX: number;
+  readonly posY: number;
+  readonly scale: number;
+  readonly durationSec: number;
+}
+
+export const MonsterEntity = defineEntity<MonsterEntityInput>({
   name: "monster",
   components: [MonsterComponent],
   cardinality: "many",
-  initialize: (eid, monsterType) => {
-    const config = MONSTER_CONFIG[monsterType];
-    MonsterComponent.monsterType[eid] = monsterType;
-    MonsterComponent.posX[eid] = config.posX;
-    MonsterComponent.posY[eid] = config.posY;
-    MonsterComponent.scale[eid] = config.scale;
+  initialize: (eid, input) => {
+    MonsterComponent.monsterType[eid] = input.monsterType;
+    MonsterComponent.posX[eid] = input.posX;
+    MonsterComponent.posY[eid] = input.posY;
+    MonsterComponent.scale[eid] = input.scale;
     MonsterComponent.visible[eid] = 0;
     MonsterComponent.ageSec[eid] = 0;
-    MonsterComponent.durationSec[eid] = config.durationSec;
+    MonsterComponent.durationSec[eid] = input.durationSec;
     MonsterComponent.spawnSeq[eid] = 0;
   },
 });

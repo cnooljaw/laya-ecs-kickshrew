@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { MonsterComponent } from "../../ecs/gameplay/monster/MonsterComponent";
-import { MonsterEntity } from "../../ecs/gameplay/monster/MonsterEntity";
-import { MonsterType } from "../../ecs/gameplay/monster/MonsterTypes";
+import { MonsterComponent } from "../../game/features/monster";
+import { MonsterEntity } from "../../game/features/monster";
+import { MonsterType } from "../../game/features/monster";
 import { PerfHeroComponent } from "../../ecs/components";
 import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../ecs/world";
-import type { IMonsterNode } from "../../sync/contracts/MonsterViewContract";
+import type { IMonsterNode } from "../../game/features/monster/MonsterViewContract";
 import type { IPerfHeroNode } from "../../sync/contracts/PerfHeroViewContract";
-import { MonsterProjection } from "../../sync/projections/MonsterProjection";
+import { MonsterProjection } from "../../game/features/monster";
 import { PerfHeroProjection } from "../../sync/projections/PerfHeroProjection";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 
@@ -16,7 +16,13 @@ describe("feature projections", () => {
   it("projects monster identity, transform and visibility without resource URLs", () => {
     const world = createGameWorld();
     const entities = createEntityRuntime(world, [MonsterEntity]);
-    const monster = entities.create(MonsterEntity, MonsterType.Rhino);
+    const monster = entities.create(MonsterEntity, {
+      monsterType: MonsterType.Rhino,
+      posX: 480,
+      posY: 352,
+      scale: 1,
+      durationSec: 10,
+    });
     const calls = {
       spawns: [] as Array<{ monsterType: number; spawnSeq: number }>,
       positions: [] as Array<[number, number]>,

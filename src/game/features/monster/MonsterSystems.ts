@@ -1,8 +1,8 @@
 import { defineQuery } from "bitecs";
-import { PlayerComponent } from "../../components";
-import { MONSTER_SPAWN_RULES, type MonsterSpawnRule } from "../../../config/MonsterConfig";
-import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponent";
-import { spawnMonster } from "./MonsterFactory";
+import { PlayerComponent } from "../../../ecs/components";
+import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponents";
+import { spawnMonster } from "./MonsterPool";
+import { MONSTER_SPAWN_RULES, type MonsterSpawnRule } from "./MonsterRules";
 import { MonsterType } from "./MonsterTypes";
 
 const playerQuery = defineQuery([PlayerComponent]);
