@@ -12,10 +12,10 @@
  * - Dizzy → Wait: 被击中后短暂停留，直接重置到下一轮等待
  */
 import { defineQuery } from "bitecs";
-import { ShrewComponent, AnimationComponent } from "../../components";
-import { ShrewAction, AnimType } from "../../types";
+import { ShrewComponent, AnimationComponent } from "./ShrewComponents";
 import { resetShrewForNextCycle } from "./ShrewLifecycle";
-import { getShrewTiming } from "../../../config/GameTuning";
+import { getShrewTiming } from "./ShrewRules";
+import { ShrewAction, AnimType } from "./ShrewTypes";
 
 const shrewQuery = defineQuery([ShrewComponent, AnimationComponent]);
 

@@ -4,24 +4,24 @@ import {
   HoleComponent,
   SceneComponent,
   ShrewComponent,
-} from "../../ecs/components";
+} from "../../game/features/shrew";
 import {
   HoleEntity,
   SceneEntity,
   ShrewEntity,
-} from "../../ecs/gameplay/core/CoreEntities";
+} from "../../game/features/shrew";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { AnimType, MapType, ShrewAction, ShrewType } from "../../ecs/types";
+import { AnimType, MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
 import { createGameWorld } from "../../ecs/world";
-import type { IHoleNode } from "../../sync/contracts/HoleViewContract";
-import type { ISceneLayer } from "../../sync/contracts/SceneViewContract";
-import type { IShrewNode } from "../../sync/contracts/ShrewViewContract";
+import type { IHoleNode } from "../../game/features/shrew";
+import type { ISceneLayer } from "../../game/features/shrew";
+import type { IShrewNode } from "../../game/features/shrew";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import {
   HoleProjection,
   SceneProjection,
   ShrewProjection,
-} from "../../sync/projections/CoreProjections";
+} from "../../game/features/shrew";
 
 function createShrewNode(calls: {
   sprites: Array<[number, number]>;

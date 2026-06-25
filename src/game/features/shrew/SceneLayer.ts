@@ -17,10 +17,13 @@
  *   Laya 中将 cover 压缩到 960px 宽度，但高度必须保持自然值，
  *   否则 cover 过短无法正确遮挡洞口区域。
  */
-import type { ISceneLayer } from "../sync/contracts/SceneViewContract";
-import { MapType } from "../ecs/types";
-import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
-import { SCENE_LAYOUT, VIEWPORT } from "../config/ViewLayoutConfig";
+import { SCENE_LAYOUT, VIEWPORT } from "../../../config/ViewLayoutConfig";
+import { destroyNode } from "../../../framework/view/LayaLifecycle";
+import { loadResource } from "../../../framework/view/LayaLoader";
+import { getLaya } from "../../../framework/view/LayaRuntime";
+import { getAtlasPath, getFrameTexture } from "../../../resource/AtlasConfig";
+import type { ISceneLayer } from "./SceneViewContract";
+import { MapType } from "./ShrewTypes";
 
 /** 地图类型 → 背景 atlas 逻辑名 */
 const MAP_BG_ATLAS: Record<number, string> = {
@@ -82,7 +85,7 @@ export class SceneLayer implements ISceneLayer {
   private _currentMap: number = -1;
 
   create(parent: any): void {
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (Laya) {
       this._parent = parent;
 
@@ -98,7 +101,7 @@ export class SceneLayer implements ISceneLayer {
     if (this._currentMap === mapType) return;
     this._currentMap = mapType;
 
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (!Laya || !this._bgSprite) return;
 
     // 清除旧 cover
@@ -119,7 +122,7 @@ export class SceneLayer implements ISceneLayer {
     const atlasPath = getAtlasPath(atlasName);
     const atlasUrl = `resources/${atlasPath}.atlas`;
 
-    Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
+    loadResource(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
       if (!this._bgSprite || this._currentMap !== mapType) return;
       if (!atlasRes) {
         console.error(`[SceneLayer] bg atlas load failed: ${atlasUrl}`);
@@ -144,7 +147,7 @@ export class SceneLayer implements ISceneLayer {
     const atlasPath = getAtlasPath(coverAtlasName);
     const atlasUrl = `resources/${atlasPath}.atlas`;
 
-    Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
+    loadResource(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
       if (!this._parent || this._currentMap !== mapType) return;
       if (!atlasRes) {
         console.error(`[SceneLayer] cover atlas load failed: ${atlasUrl}`);
@@ -188,7 +191,7 @@ export class SceneLayer implements ISceneLayer {
       if (sp) {
         Laya.timer?.clearAll?.(sp);
         Laya.Tween?.clearAll?.(sp);
-        sp.destroy();
+        destroyNode(sp);
       }
     }
     this._coverSprites = [];
@@ -196,7 +199,7 @@ export class SceneLayer implements ISceneLayer {
 
   setTransitioning(transitioning: boolean): void {
     if (transitioning && this._parent) {
-      const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+      const Laya = getLaya();
       if (Laya) {
         const mask = new Laya.Sprite();
         mask.graphics.drawRect(0, 0, VIEWPORT.width, VIEWPORT.height, SCENE_LAYOUT.transitionMaskColor);
@@ -207,7 +210,7 @@ export class SceneLayer implements ISceneLayer {
         Laya.Tween.to(mask, { alpha: 1 }, SCENE_LAYOUT.transitionFadeInMs).then(() => {
           Laya.Tween.to(mask, { alpha: 0 }, SCENE_LAYOUT.transitionFadeOutMs).then(() => {
             this._removeTransitionMask(mask);
-            mask.destroy();
+            destroyNode(mask);
           });
         });
       }
@@ -215,11 +218,11 @@ export class SceneLayer implements ISceneLayer {
   }
 
   destroy(): void {
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (Laya) this._clearCovers(Laya);
     this._clearTransitionMasks(Laya);
     if (this._bgSprite) {
-      this._bgSprite.destroy();
+      destroyNode(this._bgSprite);
       this._bgSprite = null;
     }
     this._parent = null;
@@ -230,7 +233,7 @@ export class SceneLayer implements ISceneLayer {
       if (!mask) continue;
       Laya?.timer?.clearAll?.(mask);
       Laya?.Tween?.clearAll?.(mask);
-      mask.destroy();
+      destroyNode(mask);
     }
     this._transitionMasks = [];
   }

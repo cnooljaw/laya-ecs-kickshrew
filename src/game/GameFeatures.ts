@@ -1,4 +1,4 @@
-import { CoreGameplayFeature as ShrewFeature } from "../features/CoreGameplayFeature";
+import { ShrewFeature } from "./features/shrew";
 import type { FeatureManifest } from "../framework/feature/FeatureManifest";
 import { createGameFeatureRegistry } from "../framework/feature/FeatureRegistry";
 import { HammerFeature } from "../features/HammerFeature";

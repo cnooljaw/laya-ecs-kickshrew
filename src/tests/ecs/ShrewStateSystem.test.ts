@@ -2,10 +2,19 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld } from '../../ecs/world';
 import { createSingletonEntities } from '../helpers/SingletonTestEntities';
 import { createHoleEntities, createShrewEntity } from '../helpers/CoreTestEntities';
-import { ShrewComponent, AnimationComponent, HammerComponent, HoleComponent } from '../../ecs/components';
-import { ShrewType, ShrewAction, MapType, AnimType } from '../../ecs/types';
-import { shrewStateSystem } from '../../ecs/gameplay/core/ShrewStateSystem';
-import { resetShrewTimingOverride, setShrewTimingOverride } from '../../config/GameTuning';
+import { HammerComponent } from "../../ecs/components";
+import {
+  AnimationComponent,
+  AnimType,
+  HoleComponent,
+  MapType,
+  ShrewAction,
+  ShrewComponent,
+  ShrewType,
+  resetShrewTimingOverride,
+  setShrewTimingOverride,
+  shrewStateSystem,
+} from "../../game/features/shrew";
 
 const FRAME_DELTA = 1 / 60;
 

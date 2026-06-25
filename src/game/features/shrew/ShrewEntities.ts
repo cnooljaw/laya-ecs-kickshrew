@@ -1,8 +1,8 @@
-import { HolePositions, getHoleGrid, getHoleZOrder } from "../../../config/HolePositions";
-import { SCENE_CYCLE_INTERVAL } from "../../../config/SceneConfig";
-import { AnimationComponent, HoleComponent, SceneComponent, ShrewComponent } from "../../components";
 import { defineEntity } from "../../../framework/ecs/EntityDefinition";
-import { MapType, type ShrewType } from "../../types";
+import { HolePositions, getHoleGrid, getHoleZOrder } from "./HolePositions";
+import { SCENE_CYCLE_INTERVAL } from "./SceneConfig";
+import { AnimationComponent, HoleComponent, SceneComponent, ShrewComponent } from "./ShrewComponents";
+import { MapType, type ShrewType } from "./ShrewTypes";
 import { resetShrewForNextCycle } from "./ShrewLifecycle";
 
 export interface HoleEntityInput {

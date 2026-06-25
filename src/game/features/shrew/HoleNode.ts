@@ -2,8 +2,10 @@
  * HoleNode — 洞位容器节点
  * 含裁剪遮罩 + ShrewNode 子节点
  */
-import type { IHoleNode } from "../sync/contracts/HoleViewContract";
-import { VIEWPORT } from "../config/ViewLayoutConfig";
+import { VIEWPORT } from "../../../config/ViewLayoutConfig";
+import { destroyNode } from "../../../framework/view/LayaLifecycle";
+import { getLaya } from "../../../framework/view/LayaRuntime";
+import type { IHoleNode } from "./HoleViewContract";
 
 export class HoleNode implements IHoleNode {
   private _container: any = null;
@@ -11,7 +13,7 @@ export class HoleNode implements IHoleNode {
   private _mask: any = null;
 
   create(parent: any): void {
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (Laya) {
       this._container = new Laya.Sprite();
       this._container.name = "HoleNode";
@@ -50,7 +52,7 @@ export class HoleNode implements IHoleNode {
 
   destroy(): void {
     if (this._container) {
-      this._container.destroy();
+      destroyNode(this._container);
       this._container = null;
     }
     this._mask = null;

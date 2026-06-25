@@ -1,4 +1,4 @@
-import { MapType } from "../ecs/types";
+import { MapType } from "./ShrewTypes";
 
 export interface SceneConfig {
   mapType: MapType;

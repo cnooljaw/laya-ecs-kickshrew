@@ -1,27 +1,5 @@
 import { defineComponent, Types } from "bitecs";
 
-/** 地鼠组件 */
-export const ShrewComponent = defineComponent({
-  shrewType: Types.f32,
-  hp: Types.f32,
-  actionState: Types.f32,
-  hasHat: Types.f32,
-  mapType: Types.f32,
-  isClickable: Types.f32,
-  animTimer: Types.f32,
-  propType: Types.f32,
-});
-
-/** 洞位组件 */
-export const HoleComponent = defineComponent({
-  gridRow: Types.f32,
-  gridCol: Types.f32,
-  posXRatio: Types.f32,
-  posYRatio: Types.f32,
-  shrewEid: Types.f32,
-  zIndex: Types.f32,
-});
-
 /** 锤子组件(单例) */
 export const HammerComponent = defineComponent({
   selectedType: Types.f32,
@@ -33,14 +11,6 @@ export const HammerComponent = defineComponent({
   hitSeq: Types.ui32,
 });
 
-/** 场景组件(单例) */
-export const SceneComponent = defineComponent({
-  currentMap: Types.f32,
-  sceneTimer: Types.f32,
-  cycleInterval: Types.f32,
-  transitioning: Types.f32,
-});
-
 /** 玩家组件(单例) */
 export const PlayerComponent = defineComponent({
   money: Types.f32,
@@ -48,11 +18,4 @@ export const PlayerComponent = defineComponent({
   power: Types.f32,
   powerTop: Types.f32,
   level: Types.f32,
-});
-
-/** 动画组件 */
-export const AnimationComponent = defineComponent({
-  animType: Types.f32,
-  progress: Types.f32,
-  duration: Types.f32,
 });

@@ -2,10 +2,19 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld } from '../../ecs/world';
 import { createSingletonEntities } from '../helpers/SingletonTestEntities';
 import { createHoleEntities, createShrewEntity } from '../helpers/CoreTestEntities';
-import { ShrewComponent, HoleComponent, HammerComponent } from '../../ecs/components';
-import { ShrewType, ShrewAction, MapType, HammerType, HOLE_COUNT } from '../../ecs/types';
+import { HammerComponent } from "../../ecs/components";
+import { HammerType } from "../../ecs/types";
+import {
+  HOLE_COUNT,
+  HoleComponent,
+  MapType,
+  SHREW_TIMING,
+  ShrewAction,
+  ShrewComponent,
+  ShrewType,
+} from "../../game/features/shrew";
 import { hitDetectionSystem, HitResult } from '../../ecs/gameplay/core/HitDetectionSystem';
-import { HAMMER_RULES, SHREW_TIMING } from '../../config/GameTuning';
+import { HAMMER_RULES } from "../../config/GameTuning";
 
 describe('HitDetectionSystem', () => {
   let world: ReturnType<typeof createGameWorld>;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MONSTER_SPAWN_RULES } from "../../game/features/monster";
-import { HoleComponent, SceneComponent } from "../../ecs/components";
-import { HoleEntity, SceneEntity, ShrewEntity } from "../../ecs/gameplay/core/CoreEntities";
+import { HoleComponent, SceneComponent } from "../../game/features/shrew";
+import { HoleEntity, SceneEntity, ShrewEntity } from "../../game/features/shrew";
 import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
 import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
 import { MonsterEntity, MonsterTriggerEntity } from "../../game/features/monster";
@@ -9,7 +9,7 @@ import { PerfHeroEntity } from "../../game/features/perfHero";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { defineEntity } from "../../framework/ecs/EntityDefinition";
 import { createGameWorld } from "../../ecs/world";
-import { setupCoreGameplay } from "../../features/CoreGameplayFeature";
+import { setupCoreGameplay } from "../../game/features/shrew";
 import {
   defineFeature,
   defineSystem,
@@ -23,7 +23,7 @@ import {
   projectionSource,
   watch,
 } from "../../framework/sync/ProjectionDefinition";
-import { HoleProjection, SceneProjection, ShrewProjection } from "../../sync/projections/CoreProjections";
+import { HoleProjection, SceneProjection, ShrewProjection } from "../../game/features/shrew";
 import { HammerProjection } from "../../sync/projections/HammerProjection";
 import { PlayerProjection } from "../../sync/projections/HudProjection";
 import { MonsterProjection } from "../../game/features/monster";

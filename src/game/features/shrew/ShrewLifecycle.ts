@@ -1,6 +1,6 @@
-import { AnimationComponent, ShrewComponent } from "../../components";
-import { AnimType, ShrewAction, ShrewType } from "../../types";
-import { getShrewTiming } from "../../../config/GameTuning";
+import { AnimationComponent, ShrewComponent } from "./ShrewComponents";
+import { getShrewTiming } from "./ShrewRules";
+import { AnimType, ShrewAction, ShrewType } from "./ShrewTypes";
 
 export function resetShrewForNextCycle(eid: number): void {
   const timing = getShrewTiming();

@@ -2,9 +2,14 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld } from '../../ecs/world';
 import { createSingletonEntities } from '../helpers/SingletonTestEntities';
 import { createShrewEntity } from '../helpers/CoreTestEntities';
-import { AnimationComponent, SceneComponent } from '../../ecs/components';
-import { ShrewType, MapType, AnimType } from '../../ecs/types';
-import { animationTimerSystem } from '../../ecs/gameplay/core/AnimationTimerSystem';
+import {
+  AnimationComponent,
+  AnimType,
+  MapType,
+  SceneComponent,
+  ShrewType,
+  animationTimerSystem,
+} from "../../game/features/shrew";
 
 describe('AnimationTimerSystem', () => {
   let world: ReturnType<typeof createGameWorld>;

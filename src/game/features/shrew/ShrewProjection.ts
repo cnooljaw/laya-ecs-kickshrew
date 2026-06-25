@@ -1,20 +1,20 @@
-import {
-  AnimationComponent,
-  HoleComponent,
-  SceneComponent,
-  ShrewComponent,
-} from "../../ecs/components";
-import { AnimType, ShrewAction } from "../../ecs/types";
-import { animTypeName, consoleHitTraceLogger } from "../../debug/HitTraceLogger";
-import type { IHoleNode } from "../contracts/HoleViewContract";
-import type { ISceneLayer } from "../contracts/SceneViewContract";
-import type { IShrewNode } from "../contracts/ShrewViewContract";
+import { animTypeName, consoleHitTraceLogger } from "../../../debug/HitTraceLogger";
 import {
   defineProjection,
   noProjection,
   projectionSource,
   watch,
-} from "../../framework/sync/ProjectionDefinition";
+} from "../../../framework/sync/ProjectionDefinition";
+import type { IHoleNode } from "./HoleViewContract";
+import type { ISceneLayer } from "./SceneViewContract";
+import {
+  AnimationComponent,
+  HoleComponent,
+  SceneComponent,
+  ShrewComponent,
+} from "./ShrewComponents";
+import { AnimType, ShrewAction } from "./ShrewTypes";
+import type { IShrewNode } from "./ShrewViewContract";
 
 const sceneSource = projectionSource("scene", SceneComponent);
 const holeSource = projectionSource("hole", HoleComponent);

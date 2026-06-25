@@ -1,19 +1,19 @@
-import { HoleComponent } from "../ecs/components";
-import { animationTimerSystem } from "../ecs/gameplay/core/AnimationTimerSystem";
-import { HoleEntity, SceneEntity, ShrewEntity } from "../ecs/gameplay/core/CoreEntities";
-import { sceneCycleSystem } from "../ecs/gameplay/core/SceneCycleSystem";
-import { shrewStateSystem } from "../ecs/gameplay/core/ShrewStateSystem";
-import { HOLE_COUNT, MapType, ShrewType } from "../ecs/types";
+import { defineFeature, defineSystem } from "../../../framework/feature/FeatureManifest";
+import type { FeatureRuntimeContext } from "../../../framework/feature/FeatureRuntimeContext";
+import { animationTimerSystem } from "./AnimationTimerSystem";
+import { HoleComponent } from "./ShrewComponents";
+import { HoleEntity, SceneEntity, ShrewEntity } from "./ShrewEntities";
+import { HoleNode } from "./HoleNode";
+import { SceneLayer } from "./SceneLayer";
+import { sceneCycleSystem } from "./SceneCycleSystem";
 import {
   HoleProjection,
   SceneProjection,
   ShrewProjection,
-} from "../sync/projections/CoreProjections";
-import { HoleNode } from "../view/HoleNode";
-import { SceneLayer } from "../view/SceneLayer";
-import { ShrewNode } from "../view/ShrewNode";
-import type { FeatureRuntimeContext } from "../framework/feature/FeatureRuntimeContext";
-import { defineFeature, defineSystem } from "../framework/feature/FeatureManifest";
+} from "./ShrewProjection";
+import { ShrewNode } from "./ShrewNode";
+import { shrewStateSystem } from "./ShrewStateSystem";
+import { HOLE_COUNT, MapType, ShrewType } from "./ShrewTypes";
 
 export interface CoreGameplaySetupResult {
   scene: number;
@@ -63,8 +63,8 @@ export function setupCoreGameplay({
   return { scene, holes, shrews };
 }
 
-export const CoreGameplayFeature = defineFeature({
-  name: "coreGameplay",
+export const ShrewFeature = defineFeature({
+  name: "shrew",
   entities: [SceneEntity, HoleEntity, ShrewEntity],
   projections: [SceneProjection, HoleProjection, ShrewProjection],
   systems: [

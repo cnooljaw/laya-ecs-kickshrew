@@ -1,9 +1,9 @@
 import {
   HoleEntity,
   ShrewEntity,
-} from "../../ecs/gameplay/core/CoreEntities";
+} from "../../game/features/shrew";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { HOLE_COUNT, type MapType, type ShrewType } from "../../ecs/types";
+import { HOLE_COUNT, type MapType, type ShrewType } from "../../game/features/shrew";
 
 export function createShrewEntity(
   world: any,

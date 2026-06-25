@@ -22,14 +22,17 @@
  *
  * ZOrder（参考 ShrewData.lua）：hand=0, ear=1, body=3, face=6
  */
-import type { IShrewNode } from "../sync/contracts/ShrewViewContract";
-import { ShrewType, ShrewAction } from "../ecs/types";
-import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
-import { SHREW_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
+import { clearTweens, destroyChildren, destroyNode } from "../../../framework/view/LayaLifecycle";
+import { loadResource } from "../../../framework/view/LayaLoader";
+import { getLaya } from "../../../framework/view/LayaRuntime";
+import { getAtlasPath, getFrameTexture } from "../../../resource/AtlasConfig";
+import { ShrewType, ShrewAction } from "./ShrewTypes";
+import { SHREW_VIEW_CONFIG } from "./ShrewViewConfig";
+import type { IShrewNode } from "./ShrewViewContract";
 
 export function getShrewMainLayerY(actionState: number, bodyH: number, progress: number): number {
   const standY = -bodyH * 0.5;
-  const hiddenY = bodyH * SHREW_VIEW_LAYOUT.hiddenOffsetRatio;
+  const hiddenY = bodyH * SHREW_VIEW_CONFIG.hiddenOffsetRatio;
 
   switch (actionState) {
     case ShrewAction.Up:
@@ -120,7 +123,7 @@ export class ShrewNode implements IShrewNode {
   private _isDizzyVisible: boolean = false;
 
   create(parent: any): void {
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (!Laya) { this._container = parent; return; }
 
     // 外层容器（定位用）
@@ -141,7 +144,7 @@ export class ShrewNode implements IShrewNode {
     this._dizzyLayer = new Laya.Sprite();
     this._dizzyLayer.name = "ShrewDizzyLayer";
     this._dizzyLayer.visible = false;
-    this._dizzyLayer.zOrder = SHREW_VIEW_LAYOUT.dizzyStarZOrder;
+    this._dizzyLayer.zOrder = SHREW_VIEW_CONFIG.dizzyStarZOrder;
     this._container.addChild(this._dizzyLayer);
 
     // 初始藏在洞中心下方（HIDDEN_Y = bh * hiddenOffsetRatio）
@@ -157,13 +160,13 @@ export class ShrewNode implements IShrewNode {
     const def = SHREW_FRAMES[shrewType];
     if (!def) return;
 
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (!Laya || !this._mainLayer) return;
 
     const atlasPath = getAtlasPath(def.atlas);
     const atlasUrl = `resources/${atlasPath}.atlas`;
 
-    Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
+    loadResource(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
       if (!this._mainLayer || this._currentShrewType !== shrewType || this._currentMapType !== mapType) return;
       if (!atlasRes) {
         console.error(`[ShrewNode] atlas load failed: ${atlasUrl}`);
@@ -171,7 +174,7 @@ export class ShrewNode implements IShrewNode {
       }
 
       // 清除旧部件
-      this._mainLayer.removeChildren?.(0, -1, true);
+      destroyChildren(this._mainLayer);
 
       const bodyTex = getFrameTexture(atlasRes, def.body);
       if (!bodyTex) {
@@ -282,7 +285,7 @@ export class ShrewNode implements IShrewNode {
   }
 
   setAnimation(actionState: number, _animType: number, progress: number): void {
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (!Laya || !this._container) return;
 
     switch (actionState) {
@@ -352,8 +355,8 @@ export class ShrewNode implements IShrewNode {
   private _layoutDizzyLayer(): void {
     if (!this._dizzyLayer) return;
     this._dizzyLayer.x = 0;
-    this._dizzyLayer.y = -this._bodyH * SHREW_VIEW_LAYOUT.dizzyStarYOffsetRatio;
-    this._dizzyLayer.zOrder = SHREW_VIEW_LAYOUT.dizzyStarZOrder;
+    this._dizzyLayer.y = -this._bodyH * SHREW_VIEW_CONFIG.dizzyStarYOffsetRatio;
+    this._dizzyLayer.zOrder = SHREW_VIEW_CONFIG.dizzyStarZOrder;
   }
 
   private _setDizzyVisible(Laya: any, visible: boolean): void {
@@ -363,9 +366,9 @@ export class ShrewNode implements IShrewNode {
 
     this._dizzyLayer.visible = visible;
     if (!visible) {
-      Laya.Tween?.clearAll?.(this._dizzyLayer);
+      clearTweens(this._dizzyLayer);
       if (this._mainLayer) {
-        Laya.Tween?.clearAll?.(this._mainLayer);
+        clearTweens(this._mainLayer);
         this._mainLayer.rotation = 0;
       }
       return;
@@ -379,7 +382,7 @@ export class ShrewNode implements IShrewNode {
   private _drawDizzyStars(): void {
     if (!this._dizzyLayer) return;
     this._dizzyLayer.graphics.clear();
-    const radius = SHREW_VIEW_LAYOUT.dizzyStarRadius;
+    const radius = SHREW_VIEW_CONFIG.dizzyStarRadius;
     const points = [
       { x: -radius, y: 0, size: 7 },
       { x: 0, y: -8, size: 9 },
@@ -394,8 +397,8 @@ export class ShrewNode implements IShrewNode {
 
   private _playDizzyLoop(Laya: any): void {
     if (!this._dizzyLayer) return;
-    const swing = SHREW_VIEW_LAYOUT.dizzySwingDeg;
-    const duration = SHREW_VIEW_LAYOUT.dizzyTweenMs;
+    const swing = SHREW_VIEW_CONFIG.dizzySwingDeg;
+    const duration = SHREW_VIEW_CONFIG.dizzyTweenMs;
     const loop = () => {
       if (!this._dizzyLayer || !this._isDizzyVisible) return;
       Laya.Tween.to(this._dizzyLayer, { rotation: 18 }, duration).then(() => {
@@ -416,12 +419,9 @@ export class ShrewNode implements IShrewNode {
 
   destroy(): void {
     if (this._container) {
-      const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
-      if (Laya) {
-        if (this._dizzyLayer) Laya.Tween?.clearAll?.(this._dizzyLayer);
-        if (this._mainLayer) Laya.Tween?.clearAll?.(this._mainLayer);
-      }
-      this._container.destroy();
+      clearTweens(this._dizzyLayer);
+      clearTweens(this._mainLayer);
+      destroyNode(this._container);
       this._container = null;
     }
     this._clipLayer = null;

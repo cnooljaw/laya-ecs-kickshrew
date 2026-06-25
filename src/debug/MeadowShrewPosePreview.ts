@@ -1,9 +1,17 @@
-import { HolePositions, getHoleGrid, getHoleZOrder } from "../config/HolePositions";
 import { VIEWPORT } from "../config/ViewLayoutConfig";
-import { AnimType, HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../ecs/types";
-import { HoleNode } from "../view/HoleNode";
-import { SceneLayer } from "../view/SceneLayer";
-import { ShrewNode } from "../view/ShrewNode";
+import {
+  AnimType,
+  HOLE_COUNT,
+  HolePositions,
+  MapType,
+  ShrewAction,
+  ShrewType,
+  getHoleGrid,
+  getHoleZOrder,
+} from "../game/features/shrew";
+import { HoleNode } from "../game/features/shrew/HoleNode";
+import { SceneLayer } from "../game/features/shrew/SceneLayer";
+import { ShrewNode } from "../game/features/shrew/ShrewNode";
 
 type PreviewPose = "up0" | "stand";
 type PreviewMapKey = "meadow" | "ship" | "space";

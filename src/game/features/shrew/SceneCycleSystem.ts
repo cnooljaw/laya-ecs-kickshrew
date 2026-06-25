@@ -8,11 +8,11 @@
  * 4. 切换时所有地鼠重置为 Wait 状态
  */
 import { defineQuery } from "bitecs";
-import { SceneComponent, ShrewComponent, HoleComponent } from "../../components";
-import { MapType } from "../../types";
-import { SCENE_CYCLE } from "../../../config/SceneConfig";
-import { HolePositions, getHoleZOrder } from "../../../config/HolePositions";
+import { HolePositions, getHoleZOrder } from "./HolePositions";
+import { SCENE_CYCLE } from "./SceneConfig";
+import { SceneComponent, ShrewComponent, HoleComponent } from "./ShrewComponents";
 import { resetShrewForNextCycle } from "./ShrewLifecycle";
+import { MapType } from "./ShrewTypes";
 
 const sceneQuery = defineQuery([SceneComponent]);
 const shrewQuery = defineQuery([ShrewComponent]);

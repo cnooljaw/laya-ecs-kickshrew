@@ -1,8 +1,12 @@
 import { hitDetectionSystem } from "../ecs/gameplay/core/HitDetectionSystem";
-import { AnimationComponent, HammerComponent, ShrewComponent } from "../ecs/components";
+import { HammerComponent } from "../ecs/components";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../config/GameTuning";
-import { ShrewAction } from "../ecs/types";
+import {
+  AnimationComponent,
+  ShrewAction,
+  ShrewComponent,
+} from "../game/features/shrew";
 import {
   actionStateName,
   animTypeName,

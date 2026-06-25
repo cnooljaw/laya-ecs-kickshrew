@@ -1,4 +1,4 @@
-import { ShrewType, MapType } from "../ecs/types";
+import { ShrewType, MapType } from "./ShrewTypes";
 
 /** 地鼠资源映射 — shrewType+mapType → 各部件精灵帧名 */
 export interface ShrewResMap {

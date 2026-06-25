@@ -8,7 +8,7 @@
  * 4. duration=0 时跳过该实体（防止除零）
  */
 import { defineQuery, enterQuery } from "bitecs";
-import { AnimationComponent, SceneComponent } from "../../components";
+import { AnimationComponent, SceneComponent } from "./ShrewComponents";
 
 const animationQuery = defineQuery([AnimationComponent]);
 const sceneQuery = defineQuery([SceneComponent]);

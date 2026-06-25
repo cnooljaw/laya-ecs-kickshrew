@@ -1,4 +1,4 @@
-import { PERF_SHREW_TIMING } from "../../../config/GameTuning";
+import { PERF_SHREW_TIMING } from "../shrew/index";
 import { PERF_HERO_VIEW_CONFIG } from "./PerfHeroViewConfig";
 
 export interface PerfTestRuntimeConfig {

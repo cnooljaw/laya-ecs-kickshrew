@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { HolePositions, getHoleZOrder } from "../../config/HolePositions";
-import { SCENE_CYCLE_INTERVAL } from "../../config/SceneConfig";
-import { HoleComponent, SceneComponent, ShrewComponent } from "../../ecs/components";
-import { HoleEntity, SceneEntity, ShrewEntity } from "../../ecs/gameplay/core/CoreEntities";
-import { sceneCycleSystem } from "../../ecs/gameplay/core/SceneCycleSystem";
+import { HolePositions, getHoleZOrder } from "../../game/features/shrew";
+import { SCENE_CYCLE_INTERVAL } from "../../game/features/shrew";
+import { HoleComponent, SceneComponent, ShrewComponent } from "../../game/features/shrew";
+import { HoleEntity, SceneEntity, ShrewEntity } from "../../game/features/shrew";
+import { sceneCycleSystem } from "../../game/features/shrew";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../ecs/types";
+import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
 import { createGameWorld } from "../../ecs/world";
 
 describe("SceneCycleSystem", () => {
