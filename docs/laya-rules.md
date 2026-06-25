@@ -49,7 +49,7 @@ MonsterNode         独立怪物的 Laya Spine 节点，例如 Rhino
 - `Main`：frameLoop、stage event、脚本生命周期。
 - `GameScene`：world、network callback、runtime adapter、ViewRegistry、FeatureRegistry 调用。
 - `Feature`：创建本模块的 view node，通过 `mount()` 声明 eid/viewSync/node 关系，通过 `own()` 声明共享资源。
-- `ViewSyncRuntime`：初始化时创建实例级 eid/node registry 和 channel。
+- `ProjectionRuntime`：初始化时编译 query、字段快照和实例级 eid/node registry。
 - `ViewRegistry`：统一反注册和销毁 mount/own 的对象。
 - view node：自己创建的 Laya 子节点、局部 timer/tween/异步回调保护。
 

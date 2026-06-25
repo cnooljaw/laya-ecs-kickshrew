@@ -1,7 +1,7 @@
 {
   "name": "laya-ecs-kickshrew",
   "version": "1.0.0",
-  "description": "Kick Shrew game with bitECS + Dirty Binding + Laya rendering",
+  "description": "Kick Shrew game with bitECS + compiled projections + Laya rendering",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",

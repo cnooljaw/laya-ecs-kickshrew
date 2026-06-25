@@ -1,361 +1,173 @@
-# ECS 与 Dirty Binding
-
-本文说明 bitecs 数据建模、dirty 标记和 binding 投影链路。改 ECS 字段、画面同步、dirty 漏标、地鼠状态机时优先读这里。
+# ECS、Projection 与 Effect
 
 ## 权威状态
 
-本项目把游戏状态放在 bitecs component 数组中，Laya 节点只是表现层。
+权威游戏数据保存在 bitecs component typed arrays 中。主要组件：
 
-核心组件：
+- `ShrewComponent` / `AnimationComponent`
+- `HoleComponent`
+- `SceneComponent`
+- `HammerComponent`
+- `PlayerComponent`
+- `MonsterComponent` / `MonsterSpawnComponent`
+- `PerfHeroComponent`
 
-```text
-ShrewComponent       地鼠类型、血量、状态、帽子、地图、可点击、动画计时、道具
-HoleComponent        洞位行列、位置比例、绑定的地鼠 eid、zIndex
-HammerComponent      当前锤子、雷神锤状态、是否可击打 hitTable
-SceneComponent       当前地图、场景计时、循环间隔、切换状态
-PlayerComponent      金币、怒气、体力、等级
-AnimationComponent   动画类型、进度、时长
-HitComponent         击中结果表现数据
-NetworkComponent     网络连接/击打 pending 状态
-DirtyComponent       各组件 dirty bitmask + forceFullSync
-```
+Laya 节点只实现 `src/sync/contracts/*ViewContract.ts`。
 
-重要枚举：
+## EntityType
 
-- `ShrewType`：红、蓝、黄、绿。
-- `ShrewAction`：`Wait/Up/Stand/Down/Dizzy`。
-- `MapType`：草地、船、太空。
-- `HammerType`：木、石、铜、银、金、神、雷神锤。
-- `AnimType`：Idle、Up、Stand、Down、Dizzy。
-
-实体工厂：
-
-- `createGameWorld()`
-- `createShrewEntity(world, shrewType, mapType)`
-- `createHoleEntities(world, mapType)`
-- `createSingletonEntities(world)`
-
-## Dirty Binding 数据流
-
-```text
-System 修改 Component
-  -> DirtyMarkSystem 对比上一帧快照
-  -> DirtyComponent.xxxDirty 写 bitmask
-  -> SyncView 遍历 DirtyComponent 实体
-  -> 命中 ViewSyncChannel
-  -> 调用对应 project/binding
-  -> binding 读取 component
-  -> 调用 view node 接口
-  -> SyncView 清除 dirty bits
-```
-
-`forceFullSync` 独立于 dirty bit，通常用于首次同步或场景切换。
-
-## DirtyFlags
-
-`src/sync/DirtyFlags.ts` 是 DirtyMarkSystem 和 Binding 的共同协议。新增需要显示的字段时，先确认是否已经有合适 bit。
-
-命名保持一一对应：
-
-```text
-BIT_SHREW_ACTION -> ShrewComponent.actionState -> shrewViewBinding
-BIT_ANIM_PROGRESS -> AnimationComponent.progress -> shrewAnimationViewBinding
-BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding
-```
-
-## ViewSyncModule
-
-`src/binding/viewSyncs/*ViewSync.ts` 是一条视图同步链路的阅读入口。它把同一份 `ViewSyncSpec` 接到 dirty 标记，并声明实例级 registry 的分组。初始化时 `createViewSyncRuntime()` 把静态 `ViewSyncModule` 编译成 runtime channel；`DirtyMarkSystem` 遍历 `GameFeatureRegistry` 汇总出来的 aspect，通用比较逻辑在 `src/sync/dirty/DirtySchemaRunner.ts`。
-
-核心角色：
-
-```text
-Entity = 权威数据身份，一个数字 eid
-Component = 挂到 eid 上的数据切片
-System = 修改/计算 ECS 数据的规则
-DirtyComponent = ECS 到 View 的变化信号
-ShrewNode = Laya 画面对象，只负责表现
-Binding = 把 ECS 数据翻译成 ShrewNode 方法调用
-```
-
-ViewSyncModule 分五层：
-
-```text
-ViewSyncModule 一条完整视图同步链路，例如 ShrewViewSync
-DirtyAspect   某类实体的组件组合，例如 ShrewComponent + AnimationComponent + DirtyComponent
-DirtyChannel  写到 DirtyComponent 的哪一列，例如 shrewDirty 或 animDirty
-ViewSyncSpec  表格式同步规格，声明 bit、说明、字段和 apply/noProjection
-DirtyField    一个可比较的 component 字段，例如 ShrewComponent.actionState
-```
-
-每条 view 同步链路都有一张表格式同步规格，放在 `src/sync/viewSync/specs/*ViewSyncSpec.ts`。ViewSyncSpec 同时服务 dirty 标记和 view contract 投影：
+EntityType 声明组件组合、基数和初始化：
 
 ```ts
-const syncRow = createSyncRow<IHoleNode, HoleField>();
+export const PlayerEntity = defineEntityType({
+  name: "player",
+  components: [PlayerComponent],
+  cardinality: "one",
+  initialize(eid) {
+    PlayerComponent.money[eid] = 0;
+  },
+});
+```
 
-const HOLE_VIEW_SYNC_SPEC = defineViewSyncSpec<IHoleNode, HoleField>(
-  "HoleComponent",
-  HoleComponent,
-  [
-    // bit               label            fields                    apply
-    syncRow(BIT_HOLE_POS,    "洞位坐标",      ["posXRatio", "posYRatio"], applyPosition),
-    syncRow(BIT_HOLE_SHREW,  "洞位绑定地鼠",  ["shrewEid"],               applyShrewVisible),
-    syncRow(BIT_HOLE_ZORDER, "洞位层级",      ["zIndex"],                 applyZOrder),
+- `one`：由 `bootstrapSingletons()` 创建并通过 `entities.one(type)` 获取。
+- `many`：通过 `create/createMany` 创建固定拓扑或池。
+- 初始化发生在进场阶段，可以优先可读性和封装，不为这段代码牺牲边界。
+
+## ProjectionDefinition
+
+Projection 声明“哪些字段变化时调用哪个 view contract 方法”：
+
+```ts
+const source = projectionSource("player", PlayerComponent);
+
+export const PlayerProjection = defineProjection<IPlayerHUD>({
+  name: "player",
+  components: [PlayerComponent],
+  rows: [
+    watch(source, ["money"], "player money", ({ eid, node }) => {
+      node.setMoney(PlayerComponent.money[eid]);
+    }),
+    watch(source, ["power", "powerTop"], "player power", ({ eid, node }) => {
+      node.setPower(PlayerComponent.power[eid], PlayerComponent.powerTop[eid]);
+    }),
   ],
-);
+});
 ```
 
-这里 `fields` 决定 DirtyMarkSystem 比较哪些 ECS 字段，`apply` 是真正的 view contract 投影函数。ViewSyncSpec 依赖 `src/sync/contracts/*ViewContract.ts` 的表现契约，不直接依赖 binding 文件或 Laya 节点。`*ViewSync` 从 spec 派生 `dirtyAspect` 和 `ViewSyncChannel`，`*ViewBinding` 从同一份 spec 执行 `apply`，`allBits/watchedBits` 也由 `bitsOf(spec)` 计算。`noProjection` 表示这个字段只参与 dirty 记录，不直接调用 view，例如 `SceneComponent.sceneTimer`。
+规则：
 
-记忆顺序：
+- `components` 决定 bitecs query。
+- `watch` 字段决定 snapshot 比较范围。
+- row bit 由框架自动分配，业务不可见。
+- 规则字段需要被比较但不直接更新 view 时使用 `noProjection`。
+- 多行共用同一个 apply 函数时，单帧会去重。
+- 单个 Projection 最多 32 rows。
 
-```text
-Component 字段
-  -> DirtyFlags bit
-  -> ViewSyncSpec syncRow(bit, label, fields, apply/noProjection)
-  -> ViewSyncModule.dirtyAspect DirtyMark（由 ViewSyncSpec 派生）
-  -> DirtyComponent.xxxDirty
-  -> ViewSyncRuntime.channel.project
-  -> ViewSyncBinding 执行 spec.apply
-  -> ViewNode 方法
-```
+## ProjectionRuntime
 
-新增可视字段时，先写出这一行再改代码：
+`mark(world)`：
 
-```text
-Component.field -> BIT_组件_字段 -> DirtyComponent.xxxDirty -> xxxViewBinding -> XxxNode.setXxx(...)
-```
+1. 遍历预编译 query。
+2. 首次创建 eid snapshot，并标记全部 rows。
+3. 后续只比较 flattened fields。
+4. 把变化记录到 runtime 私有 `Uint32Array`。
 
-示意：
+`sync(world)`：
 
-```text
-ShrewComponent.actionState
-  -> BIT_SHREW_ACTION
-  -> DirtyComponent.shrewDirty
-  -> shrewViewBinding
-  -> ShrewNode.setAnimation(...)
-```
+1. 查 eid 对应 node。
+2. 执行变化 rows。
+3. 清零 runtime 私有 dirty/full arrays。
 
-`requires` 是给人看的组件组合说明，真正决定 bitecs 遍历范围的仍然是 `defineQuery([...])`。例如：
+初始化 mount 会设置 runtime 私有 full sync。业务不写 `forceFullSync`。
 
-```text
-requires: ["ShrewComponent", "AnimationComponent", "DirtyComponent"]
-query: defineQuery([ShrewComponent, AnimationComponent, DirtyComponent])
-```
+## EffectRuntime
 
-这表示同时拥有这三个 component 的 eid 会被视为地鼠 dirty aspect 的实体。
-
-多字段共用一个 dirty bit 时，把多个字段放进同一行 `fields`。例如洞位位置：
-
-```text
-BIT_HOLE_POS -> HoleComponent.posXRatio/posYRatio -> holeViewBinding -> HoleNode.setPosition(...)
-```
-
-这表示 X 或 Y 任一变化都触发同一个位置更新 bit。
-
-多个 dirty bit 共用一个表现更新时，让多行指向同一个 `apply`。`applyMatchedViewSyncSpec` 会按函数引用去重，同一帧只调用一次。
-
-## ViewSyncSpec 设计约定
-
-`ViewSyncSpec` 不是普通 UI 规则表，它同时承担两层语义：
-
-```text
-dirty 规则：ECS fields -> dirty bit
-view 投影：dirty bit -> I*Node contract apply
-```
-
-因此 spec 文件可以读取 ECS component 和 `src/sync/contracts/*ViewContract.ts`，但不要引入具体 Laya 节点、loader、tween、timer 或资源生命周期代码。`applyXxx()` 的职责是从 ECS 取数据并调用 contract，例如 `node.showReward(...)`；真正的 Laya 表现由 `view/*Node.ts` 实现。
-
-命名上优先使用本地 helper 隐藏泛型，让表看起来像配置：
+持久状态使用 Projection；瞬时事实使用 Effect：
 
 ```ts
-const syncRow = createSyncRow<IShrewNode, ComponentField>();
-
-export const SHREW_COMPONENT_SYNC_SPEC = defineShrewComponentSyncSpec([
-  // bit                  label         fields          apply
-  syncRow(BIT_SHREW_TYPE, "地鼠类型",   ["shrewType"],  applySpriteFrame),
-  syncRow(BIT_SHREW_MAP,  "地图类型",   ["mapType"],    applySpriteFrame),
-  syncRow(BIT_SHREW_HAT,  "帽子显示",   ["hasHat"],     applyHatVisible),
-]);
+export const HitRewardEffect = defineEffect<{
+  shrewIndex: number;
+  reward: number;
+}>("hitReward");
 ```
-
-新增或 review 一条同步链路时，用这条完整路径读代码：
-
-```text
-System 改 Component
-  -> ViewSyncSpec.fields 命中变化字段
-  -> DirtySchemaRunner 写 DirtyComponent.xxxDirty
-  -> SyncView 命中 ViewSyncChannel.watchedBits
-  -> ViewSyncBinding 调 applyMatchedViewSyncSpec
-  -> applyXxx 调 I*Node contract
-  -> view/*Node.ts 实现 Laya 表现
-```
-
-## SyncView 和 Binding
-
-`SyncView.sync(world)` 负责：
-
-1. 遍历所有带 `DirtyComponent` 的实体。
-2. 遍历已注册的 `ViewSyncChannel` 表。
-3. 按 channel 的 `dirtyTarget + watchedBits` 判断 dirty bit 和 `forceFullSync`。
-4. 调对应 `project`，也就是 binding 投影函数。
-5. 统一清除所有 dirty bit。
-
-主要投影规格：
-
-```text
-ShrewViewSyncSpec            ShrewComponent/AnimationComponent -> ShrewNode
-HoleViewSyncSpec             HoleComponent -> HoleNode
-HammerViewSyncSpec           HammerComponent -> HammerNode
-SceneViewSyncSpec            SceneComponent -> SceneLayer
-PlayerViewSyncSpec           PlayerComponent -> PlayerHUD
-HitViewSyncSpec              HitComponent -> HitEffectNode
-MonsterViewSyncSpec          MonsterComponent -> MonsterNode
-```
-
-ECS eid 和 Laya node 的映射由初始化期 `ViewSyncRuntime` 的实例级 registry 建立，不由 view node 自己查 ECS。Feature 只调用 `mount(viewSync, eid, node)`；框架负责注册、反注册、首次 full sync 和节点销毁。
-
-新增独立实体类型时，不再优先修改 `SyncView`。Feature 只需要声明自己的 `viewSyncs`，`GameFeatureRegistry` 会自动展开 dirty aspects 和 sync channels：
 
 ```ts
-export const MonsterFeature: GameFeature = {
+effects.emit(HitRewardEffect, payload);
+effects.on(HitRewardEffect, payload => hitNode.showReward(...));
+```
+
+Effect 按 definition 对象身份隔离。`emit` 不立即执行 handler，主循环最后 `flush()`。
+
+## Feature 装配
+
+```ts
+export const MonsterFeature = defineGameFeature({
   name: "monster",
-  viewSyncs: [MonsterViewSync],
-};
+  entities: [MonsterEntity, MonsterTriggerEntity],
+  projections: [MonsterProjection],
+  systems: { feature: [monsterLifetimeSystem, monsterSpawnSystem] },
+  setup: ({ entities, views }) => {
+    const eids = createMonsterPool(entities, MONSTER_SPAWN_RULES);
+    views.mountMany({
+      eids,
+      projection: MonsterProjection,
+      create: () => new MonsterNode(),
+    });
+  },
+});
 ```
 
-## 新增 ECS 字段并显示到 Laya
+Feature 不维护 registry、unsubscribe 数组或销毁列表。runtime context 统一处理。
 
-按这个清单走：
+## 新增可见字段
 
-1. `src/ecs/components/index.ts` 增加字段。
-2. `src/ecs/world.ts` 初始化字段。
-3. 对应 system 或 helper 修改字段。
-4. `src/sync/DirtyFlags.ts` 增加 bit。
-5. 在对应 `src/sync/viewSync/specs/*ViewSyncSpec.ts` 增加一行 `syncRow(bit, label, fields, apply)`；没有直接 view 投影时使用 `noProjection`。
-6. 在同一个 spec 文件增加或复用 `applyXxx` 函数；`*ViewSync` 和 `*ViewBinding` 会共用这张表。
-7. 对应 `src/view/*Node.ts` 实现表现。
-8. 补 `src/tests/**/*.test.ts`。
+1. 在 component 增加字段并在 EntityType 初始化。
+2. 由 system/helper 修改字段。
+3. 在 view contract 增加方法。
+4. 在对应 Projection 增加/修改 `watch` row。
+5. 在 view node 实现方法。
+6. 补 ProjectionRuntime/业务投影测试。
 
-## 新增独立实体类型
+## 新增独立玩法
 
-如果是“非地鼠怪物”这类独立玩法对象，不建议塞进 `ShrewComponent`。采用“ECS gameplay + 薄 Feature”组织：
+推荐结构：
 
 ```text
-src/ecs/gameplay/monster/
-  MonsterComponent.ts
-  MonsterFactory.ts
-  MonsterSystem.ts
-
-src/config/
-  MonsterConfig.ts
-
-src/sync/viewSync/specs/
-  MonsterViewSyncSpec.ts
-
-src/binding/viewSyncs/
-  MonsterViewSync.ts
-
-src/view/
-  MonsterNode.ts
-
-src/features/
-  MonsterFeature.ts
+src/ecs/gameplay/foo/FooComponent.ts
+src/ecs/gameplay/foo/FooEntity.ts
+src/ecs/gameplay/foo/FooSystem.ts
+src/sync/contracts/FooViewContract.ts
+src/sync/projections/FooProjection.ts
+src/view/FooNode.ts
+src/features/FooFeature.ts
 ```
 
-Rhino 是当前第一种怪物，资源配置在 `MonsterConfig.ts`：
+运行期实体优先预创建并通过 `visible/state/ageSec` 复用。Monster 和 PerfHero 都使用该策略。
 
-```text
-MonsterType.Rhino -> resources/monster/rhino.sk
-```
+## 排查
 
-默认触发规则是 `PlayerComponent.money` 跨过 100 的新倍数时出现一次，同屏最多 1 个，10 秒后只把 `MonsterComponent.visible` 设为 0，不删除 ECS entity。如果达到新的 100 倍数时 Rhino 仍在场，本次触发直接丢弃，不在隐藏后补发。后续新增同类怪物优先改 `MonsterType`、`MONSTER_CONFIG`、`MONSTER_SPAWN_RULES` 和资源文件，不应再修改 `SyncView`、`DirtyMarkSystem` 或 `GameScene` 的固定分支。
+ECS 数据变了但画面不变：
 
-Monster 配置有护栏：
+1. system 是否改了正确 component/eid。
+2. Projection 是否包含该 component 和字段。
+3. Feature 是否声明该 Projection。
+4. Feature setup 是否 mount 正确 eid/node。
+5. view contract 方法是否被具体 Node 正确实现。
+6. 异步资源回调是否被 stale guard 拦截。
 
-```text
-validateMonsterConfig()
-  -> slot 不能重复
-  -> maxActiveCount 必须大于 0
-  -> trigger.interval 必须大于 0
-  -> 每个 monsterType 必须有 MONSTER_CONFIG 资源配置
-```
+瞬时效果不显示：
 
-Monster 槽位按规则合计创建，而不是取最大值。例如同一种怪物有两条规则 `maxActiveCount=1` 和 `maxActiveCount=2`，会创建 3 个槽位，避免后续多规则或多怪物互相抢池。
+1. adapter 是否 emit 正确 EffectDefinition。
+2. Feature 是否对同一个 definition identity 注册 handler。
+3. GameLoopPipeline 是否执行 `effects.flush()`。
+4. effect node 是否已由 `views.create` 创建并归 ViewRegistry 所有。
 
-## 排查：ECS 数据变了但画面没变
-
-按顺序查：
-
-```text
-Component 是否真的变了
-ViewSyncModule.dirtyAspect 是否比较了这个字段
-DirtyComponent.xxxDirty 是否有对应 bit
-SyncView 是否注册了对应 ViewSyncChannel
-binding/project 是否处理了对应 bit
-view node 是否注册到正确 eid
-view node 方法是否真的更新了 Laya 节点
-```
-
-常见坑：
-
-- 字段写进 component，但 `DirtyFlags` 没有 bit。
-- 对应 `ViewSyncSpec` 漏了字段或 bit。
-- binding/spec apply 没处理这个 bit。
-- `shrewAnimationViewBinding` 没注册，导致 Up/Down 只有状态没有中间位移。
-- 节点已销毁但旧引用仍留在注册表。
-
-验证入口：
+## 测试
 
 ```bash
-npm test -- --run src/tests/ecs/DirtyMarkSystem.test.ts
-npm test -- --run src/tests/sync/CoreViewSync.test.ts
+npm test -- --run src/tests/ecs/EntityRuntime.test.ts
+npm test -- --run src/tests/sync/ProjectionDefinition.test.ts src/tests/sync/ProjectionRuntime.test.ts
+npm test -- --run src/tests/sync/CoreViewSync.test.ts src/tests/sync/FeatureViewSync.test.ts
+npm test -- --run src/tests/effects
+npm test -- --run src/tests/architecture/FrameworkBoundary.test.ts
 ```
-
-## 地鼠状态机 Q&A
-
-### Q: 为什么状态是 Wait/Up/Stand/Down/Dizzy？
-
-A: 当前状态已经从旧的 `None/Refresh/Delay` 精简过：
-
-- `Wait` 同时承担隐藏等待和下一轮入口。
-- `Down` 只表示自然入洞动画。
-- `Dizzy` 表示被击中短暂停留，结束后直接进入下一轮 `Wait`。
-- `resetShrewForNextCycle()` 是统一重置入口。
-
-自然循环：
-
-```text
-Wait -> Up -> Stand -> Down -> resetShrewForNextCycle -> Wait
-```
-
-命中循环：
-
-```text
-HitDetectionSystem -> startShrewDizzyHold -> Dizzy -> resetShrewForNextCycle -> Wait
-```
-
-### Q: 为什么命中后 Dizzy 不进入 Down？
-
-A: `Down` 是自然入洞动画，`Dizzy` 是被击中后的短暂停留和重置。命中后再走 `Down` 会混淆“自然离场”和“被击中离场”，还会让 Down 期间再次被击中的语义复杂化。
-
-### Q: Up/Down 状态有了，为什么画面没有上下移动？
-
-A: `Up/Down` 只切换阶段，真正位移来自 `AnimationComponent.progress`。dirty 链路必须包含：
-
-```text
-AnimationComponent.progress
-  -> DirtyComponent.animDirty
-  -> shrewAnimationViewBinding
-  -> ShrewNode.setAnimation(...)
-  -> mainLayer.y
-```
-
-## ECS 使用风险
-
-- 状态分散：新增字段前先判断是否已有合适 component。
-- 样板膨胀：dirty bit、ViewSyncSpec、binding、node 方法要命名一致。
-- 调试困难：复杂 system 要能通过测试重放。
-- 同步遗漏：不要用 `forceFullSync` 掩盖常规 dirty 漏标。
-- 生命周期不清：world、view node、timer、stage event、network callback 都要有 owner。
-- 过度 ECS 化：纯视觉 hover、一次性粒子、局部 tween 不一定进入 ECS。

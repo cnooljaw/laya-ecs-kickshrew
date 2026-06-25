@@ -48,7 +48,7 @@ resources/heros/beila_girl.sk
 3. 先记录 FPS、FrameTime、DrawCall、Triangle、Sprite2DCount；不要只凭体感判断。
 4. 分层定位：
    - ECS：数量、计时、随机重生、初始打散。
-   - dirty/binding：`spawnSeq`、位置、缩放、资源投影。
+   - projection：`spawnSeq`、位置、缩放、资源投影。
    - view：Skeleton 池、STOPPED、pending 请求、visible 状态、async loader。
    - 发布：debug 构建、静态服务绑定、浏览器缓存。
 5. 行为 bug 先补测试：`PerfHeroNode.test.ts` 测池化/隐藏/瞬移，`PerfHeroSystem.test.ts` 测生命周期，`FeatureViewSync.test.ts` 测投影。
@@ -60,10 +60,10 @@ resources/heros/beila_girl.sk
 URL query
   -> getPerfTestRuntimeConfig()
   -> PerfHeroFeature.setup()
-  -> createPerfHeroEntities()
+  -> PerfHeroEntity / EntityRuntime.createMany()
   -> perfHeroSystem(delta)
-  -> DirtyMarkSystem 标记 BIT_PERF_HERO_*
-  -> perfHeroViewBinding
+  -> ProjectionRuntime.mark/sync
+  -> PerfHeroProjection
   -> PerfHeroNode / PerfHeroSpinePoolGroup
   -> Laya Skeleton
 ```
@@ -72,12 +72,12 @@ URL query
 
 - `src/config/PerfTestConfig.ts`：读取 URL 参数。
 - `src/config/ViewLayoutConfig.ts`：资源、数量上限、边缘分布、缩放、循环时间。
-- `src/ecs/world.ts`：创建压测实体、随机边缘位置、随机英雄类型。
+- `src/ecs/gameplay/perfHero/PerfHeroEntity.ts`：创建稳定槽位、随机边缘位置和英雄类型。
 - `src/ecs/gameplay/perfHero/PerfHeroSystem.ts`：推进压测英雄生命周期。
-- `src/sync/viewSync/specs/PerfHeroViewSyncSpec.ts`：声明 ECS 到 view contract 的投影。
-- `src/binding/ViewSyncRuntime.ts`：初始化实例级 registry 和 channel。
+- `src/sync/projections/PerfHeroProjection.ts`：声明 ECS 到 view contract 的投影。
+- `src/sync/projection/ProjectionRuntime.ts`：预编译 query、snapshot 和 eid/node registry。
 - `src/view/PerfHeroNode.ts`：Spine 资源池、节点复用、进退场显示顺序。
-- `src/features/PerfHeroFeature.ts`：声明系统和 `PerfHeroViewSync`，创建压测节点并持有共享池引用。
+- `src/features/PerfHeroFeature.ts`：声明实体、系统和 Projection，创建压测节点并持有共享池引用。
 
 ECS 侧只承载权威状态和随机重生，不直接操作 Laya。Spine/Skeleton 的创建、播放、隐藏、池化都属于 view 层。
 
@@ -187,7 +187,7 @@ heroes=200&shrewFast=0
    创建压测实体时把初始 `ageSec` 随机打散，避免 200 个槽位在 1-2 秒内集中重生。循环间隔不要过短，当前压测英雄使用 3-6 秒一轮。
 
 7. **压测要区分“真实动画压力”和“游戏系统压力”。**  
-   如果目标是测 ECS/dirty，同步对象可以更轻；如果目标是测 Laya Spine 渲染，就保留真实 Skeleton。不要把 Spine 压测结果误解成 ECS 性能瓶颈。
+   如果目标是测 ECS/Projection，同步对象可以更轻；如果目标是测 Laya Spine 渲染，就保留真实 Skeleton。不要把 Spine 压测结果误解成 ECS 性能瓶颈。
 
 ## 常见问题和修法
 
@@ -239,7 +239,7 @@ heroes=200&shrewFast=0
 npm test -- --run src/tests/ecs/PerfHeroSystem.test.ts
 ```
 
-dirty/binding：
+projection：
 
 ```bash
 npm test -- --run src/tests/sync/FeatureViewSync.test.ts
@@ -258,6 +258,34 @@ npm test
 npx tsc --noEmit
 npm run build:debug
 ```
+
+## 2026-06-25 编译式 Runtime 迁移验证
+
+验证配置：
+
+```text
+目标 URL: http://localhost:8080/debug-tsc.html?perf=1&heroes=200
+计划时长: 5 分钟
+hero 数量: 200
+```
+
+已完成：
+
+- `42/42` Vitest 文件、`176/176` 用例通过。
+- `npx tsc --noEmit` 通过。
+- `npm run debug:ready` 构建成功，vendor、hero 和 monster 资源复制成功。
+- `EffectRuntime.flush()` 在 pending 为空时直接返回，不创建队列对象。
+- `ProjectionRuntime` 的 query、fields、row offsets、dirty/full typed arrays 在初始化期编译。
+- snapshot 只在第一次看到 eid 时创建；后续 mark/sync 不创建 row 或 registry 对象。
+- PerfHero/Monster 由初始化期创建固定池，运行期只修改字段，不删除 entity。
+
+未完成：
+
+- 当前 8080 已被另一个工作区的旧静态服务占用；它返回的不是本分支构建。
+- 为本 worktree 启动的隔离端口被本地浏览器安全策略拒绝访问，因此没有生成可信的 5 分钟 FPS、FrameTime、Sprite2DCount、DrawCall 和 GPU 指标。
+- 不记录或推断“迁移前后性能相同”的结论。待 8080 指向本分支 `bin/` 后，按本文矩阵补采样。
+
+本次结论只覆盖分配路径的代码/测试约束与 debug 构建完整性，不替代真实 Laya 渲染压测。
 
 如果要发布给局域网设备验证，确认静态服务监听 `*:端口`，并用本机 `curl -I` 先确认页面返回 200。
 
