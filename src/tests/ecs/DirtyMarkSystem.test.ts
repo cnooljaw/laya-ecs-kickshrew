@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   AnimationComponent,
   DirtyComponent,
-  HammerComponent,
   HitComponent,
   HoleComponent,
   PerfHeroComponent,
@@ -22,10 +21,6 @@ import {
 import { GAME_FEATURE_REGISTRY } from "../../features/GameFeatures";
 import {
   BIT_ANIM_TYPE,
-  BIT_HAMMER_HIT_FEEDBACK,
-  BIT_HAMMER_HITTABLE,
-  BIT_HAMMER_THUNDER,
-  BIT_HAMMER_TYPE,
   BIT_HIT_INDEX,
   BIT_HIT_REWARD,
   BIT_HIT_WASHIT,
@@ -128,26 +123,6 @@ describe("DirtyMarkSystem", () => {
     markDirty();
 
     expect(DirtyComponent.holeDirty[eid]).toBe(BIT_HOLE_POS | BIT_HOLE_SHREW | BIT_HOLE_ZORDER);
-  });
-
-  it("combines hammer state and hit-feedback changes", () => {
-    const { hammer } = createSingletonEntities(world);
-    markDirty();
-
-    HammerComponent.selectedType[hammer] += 1;
-    HammerComponent.isThunderActive[hammer] = 1;
-    HammerComponent.hitTable[hammer] = 0;
-    HammerComponent.touchX[hammer] = 100;
-    HammerComponent.touchY[hammer] = 200;
-    HammerComponent.hitSeq[hammer] += 1;
-    markDirty();
-
-    expect(DirtyComponent.hammerDirty[hammer]).toBe(
-      BIT_HAMMER_TYPE
-      | BIT_HAMMER_THUNDER
-      | BIT_HAMMER_HITTABLE
-      | BIT_HAMMER_HIT_FEEDBACK,
-    );
   });
 
   it("combines scene and player field changes without clearing force-full-sync", () => {

@@ -1,21 +1,25 @@
-import { HammerViewSync } from "../binding/viewSyncs";
-import { hammerSystem } from "../ecs/gameplay/hammer/HammerSystem";
+import { HammerEntity } from "../ecs/gameplay/hammer/HammerEntity";
+import { hammerSystem as runHammerSystem } from "../ecs/gameplay/hammer/HammerSystem";
+import { HammerProjection } from "../sync/projections/HammerProjection";
 import { HammerNode } from "../view/HammerNode";
-import { system, type GameFeature } from "./GameFeature";
+import { defineGameFeature } from "./GameFeature";
 
-export const HammerFeature: GameFeature = {
+function hammerSystem(world: any, deltaSec: number): void {
+  runHammerSystem(world, undefined, false, false, deltaSec);
+}
+
+export const HammerFeature = defineGameFeature({
   name: "hammer",
-  systems: [
-    system("state", "hammerSystem", (world, deltaSec) => {
-      hammerSystem(world, undefined, false, false, deltaSec);
-    }),
-  ],
-  viewSyncs: [
-    HammerViewSync,
-  ],
-  setup: ({ root, singletons, mount }) => {
-    const hammerNode = new HammerNode();
-    hammerNode.create(root);
-    mount(HammerViewSync, singletons.hammer, hammerNode);
+  entities: [HammerEntity],
+  projections: [HammerProjection],
+  systems: {
+    state: [hammerSystem],
   },
-};
+  setup: ({ entities, views }) => {
+    views.mount({
+      eid: entities.one(HammerEntity),
+      projection: HammerProjection,
+      create: () => new HammerNode(),
+    });
+  },
+});

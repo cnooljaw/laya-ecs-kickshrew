@@ -112,20 +112,25 @@ export interface SingletonEntities {
 }
 
 /** 创建单例实体 */
-export function createSingletonEntities(world: ReturnType<typeof createWorld>): SingletonEntities {
+export function createSingletonEntities(
+  world: ReturnType<typeof createWorld>,
+  existing: Partial<SingletonEntities> = {},
+): SingletonEntities {
   // Hammer
-  const hammer = addEntity(world);
-  addComponent(world, HammerComponent, hammer);
-  addComponent(world, DirtyComponent, hammer);
-  HammerComponent.selectedType[hammer] = HammerType.Wood;
-  HammerComponent.isThunderActive[hammer] = 0;
-  HammerComponent.hitTable[hammer] = 1;
-  HammerComponent.hitCooldownSec[hammer] = 0;
-  HammerComponent.touchX[hammer] = 0;
-  HammerComponent.touchY[hammer] = 0;
-  HammerComponent.hitSeq[hammer] = 0;
-  DirtyComponent.hammerDirty[hammer] = 0;
-  DirtyComponent.forceFullSync[hammer] = 0;
+  const hammer = existing.hammer ?? addEntity(world);
+  if (existing.hammer === undefined) {
+    addComponent(world, HammerComponent, hammer);
+    addComponent(world, DirtyComponent, hammer);
+    HammerComponent.selectedType[hammer] = HammerType.Wood;
+    HammerComponent.isThunderActive[hammer] = 0;
+    HammerComponent.hitTable[hammer] = 1;
+    HammerComponent.hitCooldownSec[hammer] = 0;
+    HammerComponent.touchX[hammer] = 0;
+    HammerComponent.touchY[hammer] = 0;
+    HammerComponent.hitSeq[hammer] = 0;
+    DirtyComponent.hammerDirty[hammer] = 0;
+    DirtyComponent.forceFullSync[hammer] = 0;
+  }
 
   // Scene
   const scene = addEntity(world);

@@ -3,12 +3,18 @@ import type { ViewSyncRuntime } from "../../binding/ViewSyncRuntime";
 import { GameScene } from "../../view/GameScene";
 import type { GameLoopPipeline } from "../../view/GameLoopPipeline";
 import type { KickInputAdapter } from "../../view/KickInputAdapter";
+import type { EntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import type { ProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
+import { defineQuery } from "bitecs";
+import { HammerComponent } from "../../ecs/components";
 
 interface GameSceneInternals {
   _world: object | null;
   _viewSyncRuntime: ViewSyncRuntime | null;
   _loopPipeline: GameLoopPipeline | null;
   _kickInput: KickInputAdapter | null;
+  _entityRuntime: EntityRuntime | null;
+  _projectionRuntime: ProjectionRuntime | null;
 }
 
 describe("GameScene lifecycle", () => {
@@ -42,6 +48,9 @@ describe("GameScene lifecycle", () => {
     expect(internals._viewSyncRuntime).not.toBeNull();
     expect(internals._loopPipeline).not.toBeNull();
     expect(internals._kickInput).not.toBeNull();
+    expect(internals._entityRuntime).not.toBeNull();
+    expect(internals._projectionRuntime).not.toBeNull();
+    expect(Array.from(defineQuery([HammerComponent])(internals._world))).toHaveLength(1);
 
     scene.destroy();
 
@@ -49,6 +58,8 @@ describe("GameScene lifecycle", () => {
     expect(internals._viewSyncRuntime).toBeNull();
     expect(internals._loopPipeline).toBeNull();
     expect(internals._kickInput).toBeNull();
+    expect(internals._entityRuntime).toBeNull();
+    expect(internals._projectionRuntime).toBeNull();
     expect(() => scene.destroy()).not.toThrow();
   });
 

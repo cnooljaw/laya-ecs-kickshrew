@@ -23,6 +23,12 @@ import { resetShrewTimingOverride, setShrewTimingOverride } from "../config/Game
 import { GAME_FEATURE_REGISTRY } from "../features/GameFeatures";
 import { releaseDirtyWorld } from "../sync/dirty/DirtyMarkSystem";
 import { createFeatureSetupContext } from "../features/GameFeatureRuntime";
+import { createEntityRuntime, type EntityRuntime } from "../ecs/runtime/EntityRuntime";
+import {
+  createProjectionRuntime,
+  type ProjectionRuntime,
+} from "../sync/projection/ProjectionRuntime";
+import { HammerEntity } from "../ecs/gameplay/hammer/HammerEntity";
 
 /** 音效路径 */
 const SND = {
@@ -39,6 +45,8 @@ export class GameScene {
   private _running: boolean = false;
   private _root: any = null;
   private _viewSyncRuntime: ViewSyncRuntime | null = null;
+  private _entityRuntime: EntityRuntime | null = null;
+  private _projectionRuntime: ProjectionRuntime | null = null;
   private _loopPipeline: GameLoopPipeline | null = null;
   private _kickInput: KickInputAdapter | null = null;
 
@@ -53,7 +61,16 @@ export class GameScene {
   init(): void {
     // 1. 创建 ECS 世界
     this._world = createGameWorld();
-    this._singletons = createSingletonEntities(this._world);
+    this._entityRuntime = createEntityRuntime(
+      this._world,
+      GAME_FEATURE_REGISTRY.entityTypes(),
+    );
+    this._entityRuntime.bootstrapSingletons();
+    const hammerEid = this._entityRuntime.one(HammerEntity);
+    this._singletons = createSingletonEntities(this._world, { hammer: hammerEid });
+    this._projectionRuntime = createProjectionRuntime(
+      GAME_FEATURE_REGISTRY.projections(),
+    );
     if (this._perfConfig.shrewFast) {
       setShrewTimingOverride(getPerfShrewTiming());
     } else {
@@ -80,6 +97,8 @@ export class GameScene {
       perfConfig: this._perfConfig,
       viewRegistry: this._viewRegistry,
       viewSyncRuntime: this._viewSyncRuntime,
+      entityRuntime: this._entityRuntime,
+      projectionRuntime: this._projectionRuntime,
     }));
 
     // 3. 设置网络回调
@@ -92,11 +111,12 @@ export class GameScene {
       network: this._network,
       syncView: this._syncView,
       featureRegistry: GAME_FEATURE_REGISTRY,
+      projectionRuntime: this._projectionRuntime,
     });
 
     this._kickInput = new KickInputAdapter({
       world: this._world,
-      singletons: this._singletons,
+      hammerEid,
       network: this._network,
       playSound: (url: string) => {
         const RuntimeLaya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
@@ -106,6 +126,8 @@ export class GameScene {
 
     // 4. mount 已设置 forceFullSync，统一执行首次同步。
     this._syncView.sync(this._world);
+    this._projectionRuntime.mark(this._world);
+    this._projectionRuntime.sync(this._world);
   }
 
   /** 启动帧循环 */
@@ -126,8 +148,12 @@ export class GameScene {
     this._kickInput = null;
     this._loopPipeline = null;
     this._viewRegistry.clear();
+    this._projectionRuntime?.clear();
+    this._projectionRuntime = null;
     this._viewSyncRuntime?.clear();
     this._viewSyncRuntime = null;
+    this._entityRuntime?.clear();
+    this._entityRuntime = null;
     this._syncView.clear();
     if (this._world) {
       releaseDirtyWorld(this._world);

@@ -1,6 +1,5 @@
 import { hitDetectionSystem } from "../ecs/gameplay/core/HitDetectionSystem";
 import { AnimationComponent, HammerComponent, ShrewComponent } from "../ecs/components";
-import { SingletonEntities } from "../ecs/world";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../config/GameTuning";
 import { ShrewAction } from "../ecs/types";
@@ -20,7 +19,7 @@ export const KICK_INPUT_SOUNDS = {
 
 interface KickInputAdapterDeps {
   world: any;
-  singletons: SingletonEntities;
+  hammerEid: number;
   network: NetworkAdapter;
   playSound: (url: string) => void;
   traceLogger?: HitTraceLogger;
@@ -30,16 +29,16 @@ export class KickInputAdapter {
   constructor(private readonly _deps: KickInputAdapterDeps) {}
 
   handleTouch(x: number, y: number): void {
-    const { world, singletons, network, playSound } = this._deps;
+    const { world, hammerEid, network, playSound } = this._deps;
     const traceLogger = this._deps.traceLogger ?? consoleHitTraceLogger;
     const { xRatio, yRatio } = normalizeTouch(x, y);
-    const hitTable = HammerComponent.hitTable[singletons.hammer];
+    const hitTable = HammerComponent.hitTable[hammerEid];
     traceLogger.log("input.touch", {
       x,
       y,
       xRatio,
       yRatio,
-      hammerType: HammerComponent.selectedType[singletons.hammer],
+      hammerType: HammerComponent.selectedType[hammerEid],
       hitTable,
     });
 
@@ -50,14 +49,14 @@ export class KickInputAdapter {
         xRatio,
         yRatio,
         hitTable,
-        hitCooldownSec: HammerComponent.hitCooldownSec[singletons.hammer],
+        hitCooldownSec: HammerComponent.hitCooldownSec[hammerEid],
       });
       playSound(KICK_INPUT_SOUNDS.hitNull);
       return;
     }
 
     const result = hitDetectionSystem(world, xRatio, yRatio);
-    recordHammerFeedback(singletons.hammer, x, y);
+    recordHammerFeedback(hammerEid, x, y);
 
     if (result.bKickShrew === 1) {
       const actionState = ShrewComponent.actionState[result.hitShrewEid];
@@ -79,7 +78,7 @@ export class KickInputAdapter {
       playSound(KICK_INPUT_SOUNDS.hitOne);
       playSound(KICK_INPUT_SOUNDS.mouse1);
 
-      const request = createKickRequest(singletons.hammer, result);
+      const request = createKickRequest(hammerEid, result);
       traceLogger.log("network.requestQueued", {
         hitHoleIndex: result.hitHoleIndex,
         hitShrewEid: result.hitShrewEid,
@@ -100,7 +99,7 @@ export class KickInputAdapter {
       y,
       xRatio,
       yRatio,
-      hitTable: HammerComponent.hitTable[singletons.hammer],
+      hitTable: HammerComponent.hitTable[hammerEid],
     });
     playSound(KICK_INPUT_SOUNDS.hitNull);
   }

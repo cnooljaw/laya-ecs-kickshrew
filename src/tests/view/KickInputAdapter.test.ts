@@ -21,7 +21,7 @@ describe("KickInputAdapter", () => {
 
     const adapter = new KickInputAdapter({
       world,
-      singletons,
+      hammerEid: singletons.hammer,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
       playSound: url => playedSounds.push(url),
       traceLogger: {
@@ -66,7 +66,7 @@ describe("KickInputAdapter", () => {
 
     const adapter = new KickInputAdapter({
       world,
-      singletons,
+      hammerEid: singletons.hammer,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
       playSound: url => playedSounds.push(url),
     });
@@ -91,7 +91,7 @@ describe("KickInputAdapter", () => {
 
     const adapter = new KickInputAdapter({
       world,
-      singletons,
+      hammerEid: singletons.hammer,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
       playSound: url => playedSounds.push(url),
       traceLogger: {
@@ -120,7 +120,7 @@ describe("KickInputAdapter", () => {
 
     const adapter = new KickInputAdapter({
       world,
-      singletons,
+      hammerEid: singletons.hammer,
       network: {
         sendKick: () => Promise.reject(new Error("offline")),
       } as any,

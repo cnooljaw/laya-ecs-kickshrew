@@ -4,6 +4,8 @@ import { MONSTER_SPAWN_RULES } from "../../config/MonsterConfig";
 import { DirtyComponent } from "../../ecs/components";
 import { SceneComponent } from "../../ecs/components";
 import { defineEntityType } from "../../ecs/runtime/EntityType";
+import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
+import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
 import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 import type { DirtyAspect } from "../../sync/dirty/DirtySchemaTypes";
 import {
@@ -21,6 +23,7 @@ import {
   projectionSource,
   watch,
 } from "../../sync/projection/ProjectionDefinition";
+import { HammerProjection } from "../../sync/projections/HammerProjection";
 
 const sceneAspect: DirtyAspect = {
   name: "sceneAspect",
@@ -135,6 +138,9 @@ describe("GameFeatureRegistry", () => {
       "hammerSystem",
     ]);
     expect(registry.viewSyncs().map(sync => sync.name)).toContain("monster");
+    expect(registry.entityTypes()).toContain(HammerEntity);
+    expect(registry.projections()).toContain(HammerProjection);
+    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("hammer");
   });
 
   it("真实 feature setup 按模块创建并挂载完整运行时对象", () => {
@@ -144,7 +150,11 @@ describe("GameFeatureRegistry", () => {
       value: {},
     });
     const world = createGameWorld();
-    const singletons = createSingletonEntities(world);
+    const entities = createEntityRuntime(world, GAME_FEATURE_REGISTRY.entityTypes());
+    entities.bootstrapSingletons();
+    const singletons = createSingletonEntities(world, {
+      hammer: entities.one(HammerEntity),
+    });
     const mounts = new Map<string, number>();
     const owned: object[] = [];
     const context = {
@@ -152,6 +162,20 @@ describe("GameFeatureRegistry", () => {
       root: null,
       singletons,
       perfConfig: getPerfTestRuntimeConfig(""),
+      entities,
+      views: {
+        mount: ({ projection, create }: any) => {
+          mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
+          return create();
+        },
+        mountMany: () => [],
+      },
+      resources: {
+        own: <T extends object>(resource: T) => {
+          owned.push(resource);
+          return resource;
+        },
+      },
       mount: (sync: ViewSyncModule, _eid: number, node: any) => {
         mounts.set(sync.name, (mounts.get(sync.name) ?? 0) + 1);
         return node;

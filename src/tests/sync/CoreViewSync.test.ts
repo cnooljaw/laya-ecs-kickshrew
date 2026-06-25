@@ -16,7 +16,7 @@ import {
   SceneComponent,
   ShrewComponent,
 } from "../../ecs/components";
-import { AnimType, MapType, ShrewAction, ShrewType } from "../../ecs/types";
+import { AnimType, HammerType, MapType, ShrewAction, ShrewType } from "../../ecs/types";
 import {
   createGameWorld,
   createHoleEntities,
@@ -45,6 +45,10 @@ import type { IHoleNode } from "../../sync/contracts/HoleViewContract";
 import type { ISceneLayer } from "../../sync/contracts/SceneViewContract";
 import type { IShrewNode } from "../../sync/contracts/ShrewViewContract";
 import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
+import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
+import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { HammerProjection } from "../../sync/projections/HammerProjection";
+import { createProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
 
 function createShrewNode(calls: {
   spriteFrames?: Array<{ shrewType: number; mapType: number }>;
@@ -65,6 +69,60 @@ function createShrewNode(calls: {
 }
 
 describe("core view sync", () => {
+  it("compiled hammer projection force-syncs state without playing an empty hit", () => {
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, [HammerEntity]);
+    entities.bootstrapSingletons();
+    const hammer = entities.one(HammerEntity);
+    const calls = { types: [] as number[], thunder: [] as boolean[], hits: 0 };
+    const node: IHammerNode = {
+      setHammerType: value => calls.types.push(value),
+      setThunderActive: value => calls.thunder.push(value),
+      followTouch: () => {},
+      playHitAnimation: () => { calls.hits += 1; },
+    };
+    const runtime = createProjectionRuntime([HammerProjection]);
+    runtime.mount(HammerProjection, hammer, node);
+
+    runtime.mark(world);
+    runtime.sync(world);
+
+    expect(calls).toEqual({
+      types: [HammerType.Wood],
+      thunder: [false],
+      hits: 0,
+    });
+  });
+
+  it("compiled hammer projection emits one hit feedback update", () => {
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, [HammerEntity]);
+    entities.bootstrapSingletons();
+    const hammer = entities.one(HammerEntity);
+    const calls = { positions: [] as Array<[number, number]>, hits: 0 };
+    const node: IHammerNode = {
+      setHammerType: () => {},
+      setThunderActive: () => {},
+      followTouch: (x, y) => calls.positions.push([x, y]),
+      playHitAnimation: () => { calls.hits += 1; },
+    };
+    const runtime = createProjectionRuntime([HammerProjection]);
+    runtime.mount(HammerProjection, hammer, node);
+    runtime.mark(world);
+    runtime.sync(world);
+
+    HammerComponent.touchX[hammer] = 123;
+    HammerComponent.touchY[hammer] = 456;
+    HammerComponent.hitSeq[hammer] = 1;
+    runtime.mark(world);
+    runtime.sync(world);
+
+    expect(calls).toEqual({
+      positions: [[123, 456]],
+      hits: 1,
+    });
+  });
+
   it("deduplicates sprite projection when type and map change together", () => {
     const world = createGameWorld();
     const eid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);

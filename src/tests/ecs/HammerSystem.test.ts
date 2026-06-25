@@ -1,7 +1,10 @@
+import { defineQuery } from "bitecs";
 import { beforeEach, describe, expect, it } from "vitest";
 import { HAMMER_RULES } from "../../config/GameTuning";
 import { HammerComponent, PlayerComponent } from "../../ecs/components";
+import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
 import { hammerSystem } from "../../ecs/gameplay/hammer/HammerSystem";
+import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
 import { HammerType } from "../../ecs/types";
 import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 
@@ -12,6 +15,43 @@ describe("HammerSystem", () => {
   beforeEach(() => {
     world = createGameWorld();
     singletons = createSingletonEntities(world);
+  });
+
+  it("bootstraps one hammer entity with complete defaults", () => {
+    const runtimeWorld = createGameWorld();
+    const runtime = createEntityRuntime(runtimeWorld, [HammerEntity]);
+    runtime.bootstrapSingletons();
+    const hammer = runtime.one(HammerEntity);
+
+    expect({
+      selectedType: HammerComponent.selectedType[hammer],
+      isThunderActive: HammerComponent.isThunderActive[hammer],
+      hitTable: HammerComponent.hitTable[hammer],
+      hitCooldownSec: HammerComponent.hitCooldownSec[hammer],
+      touchX: HammerComponent.touchX[hammer],
+      touchY: HammerComponent.touchY[hammer],
+      hitSeq: HammerComponent.hitSeq[hammer],
+    }).toEqual({
+      selectedType: HammerType.Wood,
+      isThunderActive: 0,
+      hitTable: 1,
+      hitCooldownSec: 0,
+      touchX: 0,
+      touchY: 0,
+      hitSeq: 0,
+    });
+  });
+
+  it("reuses the runtime hammer when creating legacy singleton references", () => {
+    const runtimeWorld = createGameWorld();
+    const runtime = createEntityRuntime(runtimeWorld, [HammerEntity]);
+    runtime.bootstrapSingletons();
+    const hammer = runtime.one(HammerEntity);
+
+    const refs = createSingletonEntities(runtimeWorld, { hammer });
+
+    expect(refs.hammer).toBe(hammer);
+    expect(Array.from(defineQuery([HammerComponent])(runtimeWorld))).toEqual([hammer]);
   });
 
   it("switches the selected hammer outside thunder mode", () => {
