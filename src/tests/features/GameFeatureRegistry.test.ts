@@ -5,7 +5,7 @@ import { HoleEntity, SceneEntity, ShrewEntity } from "../../ecs/gameplay/core/Co
 import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
 import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
 import { MonsterEntity, MonsterTriggerEntity } from "../../game/features/monster";
-import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
+import { PerfHeroEntity } from "../../game/features/perfHero";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { defineEntity } from "../../framework/ecs/EntityDefinition";
 import { createGameWorld } from "../../ecs/world";
@@ -27,7 +27,7 @@ import { HoleProjection, SceneProjection, ShrewProjection } from "../../sync/pro
 import { HammerProjection } from "../../sync/projections/HammerProjection";
 import { PlayerProjection } from "../../sync/projections/HudProjection";
 import { MonsterProjection } from "../../game/features/monster";
-import { PerfHeroProjection } from "../../sync/projections/PerfHeroProjection";
+import { PerfHeroProjection } from "../../game/features/perfHero";
 
 const TestSceneEntity = defineEntity({
   name: "testScene",

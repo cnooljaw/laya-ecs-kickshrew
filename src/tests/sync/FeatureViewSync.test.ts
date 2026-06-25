@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import { MonsterComponent } from "../../game/features/monster";
 import { MonsterEntity } from "../../game/features/monster";
 import { MonsterType } from "../../game/features/monster";
-import { PerfHeroComponent } from "../../ecs/components";
-import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
+import { PerfHeroComponent } from "../../game/features/perfHero";
+import { PerfHeroEntity } from "../../game/features/perfHero";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../ecs/world";
 import type { IMonsterNode } from "../../game/features/monster/MonsterViewContract";
-import type { IPerfHeroNode } from "../../sync/contracts/PerfHeroViewContract";
+import type { IPerfHeroNode } from "../../game/features/perfHero/PerfHeroViewContract";
 import { MonsterProjection } from "../../game/features/monster";
-import { PerfHeroProjection } from "../../sync/projections/PerfHeroProjection";
+import { PerfHeroProjection } from "../../game/features/perfHero";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 
 describe("feature projections", () => {

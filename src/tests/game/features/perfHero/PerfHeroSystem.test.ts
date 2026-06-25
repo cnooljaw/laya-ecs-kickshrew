@@ -1,10 +1,14 @@
+import { defineQuery } from "bitecs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createGameWorld } from "../../ecs/world";
-import { PerfHeroComponent } from "../../ecs/components";
-import { perfHeroSystem } from "../../ecs/gameplay/perfHero/PerfHeroSystem";
-import { PERF_HERO_VIEW_LAYOUT, PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
-import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
+import { createGameWorld } from "../../../../ecs/world";
+import {
+  PerfHeroComponent,
+  PerfHeroEntity,
+  PERF_HERO_RESOURCES,
+  PERF_HERO_VIEW_CONFIG,
+  perfHeroSystem,
+} from "../../../../game/features/perfHero";
+import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 
 function createPerfHeroEntities(world: any, count: number): number[] {
   const runtime = createEntityRuntime(world, [PerfHeroEntity]);
@@ -67,12 +71,24 @@ describe("PerfHeroSystem", () => {
     expect(PerfHeroComponent.heroType[eid]).toBeLessThan(PERF_HERO_RESOURCES.length);
     expect(isNearScreenEdge(PerfHeroComponent.posX[eid], PerfHeroComponent.posY[eid])).toBe(true);
   });
+
+  it("长时间重生只复用初始化槽位，不增加实体数量", () => {
+    const world = createGameWorld();
+    const eids = createPerfHeroEntities(world, 12);
+    const query = defineQuery([PerfHeroComponent]);
+
+    for (let frame = 0; frame < 500; frame++) {
+      perfHeroSystem(world, 1);
+    }
+
+    expect(Array.from(query(world))).toEqual(eids);
+  });
 });
 
 function isNearScreenEdge(x: number, y: number): boolean {
-  const edge = PERF_HERO_VIEW_LAYOUT.edgeBandSize;
-  const marginX = PERF_HERO_VIEW_LAYOUT.marginX;
-  const marginY = PERF_HERO_VIEW_LAYOUT.marginY;
+  const edge = PERF_HERO_VIEW_CONFIG.edgeBandSize;
+  const marginX = PERF_HERO_VIEW_CONFIG.marginX;
+  const marginY = PERF_HERO_VIEW_CONFIG.marginY;
   const width = 960;
   const height = 640;
   return (

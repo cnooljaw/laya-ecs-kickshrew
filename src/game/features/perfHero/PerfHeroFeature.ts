@@ -1,9 +1,9 @@
-import { getPerfTestRuntimeConfig } from "../config/PerfTestConfig";
-import { PerfHeroEntity } from "../ecs/gameplay/perfHero/PerfHeroEntity";
-import { perfHeroSystem } from "../ecs/gameplay/perfHero/PerfHeroSystem";
-import { PerfHeroProjection } from "../sync/projections/PerfHeroProjection";
-import { PerfHeroNode, PerfHeroSpinePoolGroup } from "../view/PerfHeroNode";
-import { defineFeature, defineSystem } from "../framework/feature/FeatureManifest";
+import { defineFeature, defineSystem } from "../../../framework/feature/FeatureManifest";
+import { PerfHeroEntity } from "./PerfHeroEntities";
+import { PerfHeroNode, PerfHeroSpinePoolGroup } from "./PerfHeroNode";
+import { PerfHeroProjection } from "./PerfHeroProjection";
+import { perfHeroSystem } from "./PerfHeroSystems";
+import { getPerfTestRuntimeConfig } from "./PerfTestConfig";
 
 export const PerfHeroFeature = defineFeature({
   name: "perfHero",

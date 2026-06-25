@@ -1,6 +1,6 @@
 import { defineQuery } from "bitecs";
-import { PerfHeroComponent } from "../../components";
-import { respawnPerfHero } from "./PerfHeroEntity";
+import { PerfHeroComponent } from "./PerfHeroComponents";
+import { respawnPerfHero } from "./PerfHeroEntities";
 
 const perfHeroQuery = defineQuery([PerfHeroComponent]);
 

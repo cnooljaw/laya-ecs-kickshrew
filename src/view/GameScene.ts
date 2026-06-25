@@ -15,7 +15,7 @@ import type { KickResponse } from "../network/ProtocolTypes";
 import { GameLoopPipeline } from "./GameLoopPipeline";
 import { KickInputAdapter } from "./KickInputAdapter";
 import { ViewRegistry } from "../framework/view/ViewRegistry";
-import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../config/PerfTestConfig";
+import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../game/features/perfHero";
 import { resetShrewTimingOverride, setShrewTimingOverride } from "../config/GameTuning";
 import { GAME_FEATURE_REGISTRY } from "../features/GameFeatures";
 import { createFeatureRuntimeContext } from "../framework/feature/FeatureRuntimeContext";

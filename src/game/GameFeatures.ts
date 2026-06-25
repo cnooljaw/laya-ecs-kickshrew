@@ -4,7 +4,7 @@ import { createGameFeatureRegistry } from "../framework/feature/FeatureRegistry"
 import { HammerFeature } from "../features/HammerFeature";
 import { HudFeature as PlayerHudFeature } from "../features/HudFeature";
 import { MonsterFeature } from "./features/monster";
-import { PerfHeroFeature } from "../features/PerfHeroFeature";
+import { PerfHeroFeature } from "./features/perfHero";
 
 export const GAME_FEATURES: readonly FeatureManifest[] = [
   ShrewFeature,

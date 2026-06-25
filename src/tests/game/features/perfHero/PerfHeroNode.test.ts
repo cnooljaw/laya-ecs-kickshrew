@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
-import { PerfHeroNode } from "../../view/PerfHeroNode";
+import {
+  PERF_HERO_RESOURCES,
+  PerfHeroNode,
+} from "../../../../game/features/perfHero";
 
 class FakeSprite {
   name = "";

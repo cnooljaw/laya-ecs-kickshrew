@@ -1,5 +1,9 @@
-import type { IPerfHeroNode } from "../sync/contracts/PerfHeroViewContract";
-import { PERF_HERO_RESOURCES, PERF_HERO_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
+import { destroyNode } from "../../../framework/view/LayaLifecycle";
+import { loadSpineTemplate } from "../../../framework/view/LayaLoader";
+import { getLaya } from "../../../framework/view/LayaRuntime";
+import { createSkeleton } from "../../../framework/view/LayaSpine";
+import { PERF_HERO_RESOURCES, PERF_HERO_VIEW_CONFIG } from "./PerfHeroViewConfig";
+import type { IPerfHeroNode } from "./PerfHeroViewContract";
 
 interface PerfHeroResource {
   name: string;
@@ -68,7 +72,7 @@ export class PerfHeroNode implements IPerfHeroNode {
   }
 
   create(parent: any): void {
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (!Laya) {
       this._container = parent;
       return;
@@ -76,7 +80,7 @@ export class PerfHeroNode implements IPerfHeroNode {
 
     this._container = new Laya.Sprite();
     this._container.name = "PerfHeroNode";
-    this._container.zOrder = PERF_HERO_VIEW_LAYOUT.zOrder;
+    this._container.zOrder = PERF_HERO_VIEW_CONFIG.zOrder;
     this._container.visible = false;
     if (parent) parent.addChild(this._container);
   }
@@ -130,7 +134,7 @@ export class PerfHeroNode implements IPerfHeroNode {
     this._pendingPlay = null;
     this._releaseActiveHeroNode();
     if (this._container) {
-      this._container.destroy();
+      destroyNode(this._container);
       this._container = null;
     }
     if (this._ownsPoolGroup) {
@@ -147,7 +151,7 @@ export class PerfHeroNode implements IPerfHeroNode {
     this._container.scaleY = request.scale;
     this._container.visible = false;
 
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (!Laya) return;
 
     if (this._activeHeroNode?.skUrl === request.skUrl) {
@@ -195,13 +199,12 @@ export class PerfHeroNode implements IPerfHeroNode {
 }
 
 class PerfHeroSpinePool {
-  private static readonly _templetPromises = new Map<string, Promise<any>>();
   private readonly _idle: PooledPerfHeroNode[] = [];
   private _destroyed = false;
 
   constructor(private readonly _resource: PerfHeroResource) {}
 
-  async acquire(Laya: any, heroType: number): Promise<PooledPerfHeroNode> {
+  async acquire(_Laya: any, heroType: number): Promise<PooledPerfHeroNode> {
     if (this._destroyed) throw new Error(`Perf hero pool has been destroyed: ${this._resource.skUrl}`);
 
     const idle = this._idle.pop();
@@ -210,10 +213,9 @@ class PerfHeroSpinePool {
       return idle;
     }
 
-    const templet = await this._loadTemplet(Laya);
+    const templet = await loadSpineTemplate(this._resource.skUrl);
     if (this._destroyed) throw new Error(`Perf hero pool has been destroyed: ${this._resource.skUrl}`);
-    const skeleton = templet.buildArmature ? templet.buildArmature(0) : new Laya.Skeleton();
-    if (!templet.buildArmature) skeleton.templet = templet;
+    const skeleton = createSkeleton(templet);
     skeleton.name = `PerfHeroSkeleton:${this._resource.name}`;
     return new PooledPerfHeroNode(heroType, this._resource, skeleton);
   }
@@ -236,17 +238,6 @@ class PerfHeroSpinePool {
     this._idle.length = 0;
   }
 
-  private _loadTemplet(Laya: any): Promise<any> {
-    let promise = PerfHeroSpinePool._templetPromises.get(this._resource.skUrl);
-    if (!promise) {
-      promise = Laya.loader.load(this._resource.skUrl).catch((error: unknown) => {
-        PerfHeroSpinePool._templetPromises.delete(this._resource.skUrl);
-        throw error;
-      });
-      PerfHeroSpinePool._templetPromises.set(this._resource.skUrl, promise);
-    }
-    return promise;
-  }
 }
 
 class PooledPerfHeroNode {
@@ -288,8 +279,7 @@ class PooledPerfHeroNode {
   }
 
   destroy(): void {
-    this._skeleton.offAll?.();
-    this._skeleton.destroy();
+    destroyNode(this._skeleton);
   }
 
   private _resetLocalTransform(): void {

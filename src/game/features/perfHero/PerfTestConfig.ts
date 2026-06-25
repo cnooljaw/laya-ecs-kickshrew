@@ -1,5 +1,5 @@
-import { PERF_SHREW_TIMING } from "./GameTuning";
-import { PERF_HERO_VIEW_LAYOUT } from "./ViewLayoutConfig";
+import { PERF_SHREW_TIMING } from "../../../config/GameTuning";
+import { PERF_HERO_VIEW_CONFIG } from "./PerfHeroViewConfig";
 
 export interface PerfTestRuntimeConfig {
   enabled: boolean;
@@ -23,10 +23,10 @@ export function getPerfShrewTiming() {
 
 function readCount(params: URLSearchParams): number {
   const raw = params.get("heroes") ?? params.get("heroCount");
-  const fallback = PERF_HERO_VIEW_LAYOUT.defaultCount;
+  const fallback = PERF_HERO_VIEW_CONFIG.defaultCount;
   const parsed = raw ? Number.parseInt(raw, 10) : fallback;
   if (!Number.isFinite(parsed) || parsed < 0) return fallback;
-  return Math.min(parsed, PERF_HERO_VIEW_LAYOUT.maxCount);
+  return Math.min(parsed, PERF_HERO_VIEW_CONFIG.maxCount);
 }
 
 function getRuntimeSearch(): string {

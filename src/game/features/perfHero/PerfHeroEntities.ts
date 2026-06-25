@@ -1,7 +1,8 @@
 import { DESIGN_RESOLUTION } from "../../../config/GameTuning";
-import { PERF_HERO_RESOURCES, PERF_HERO_VIEW_LAYOUT } from "../../../config/ViewLayoutConfig";
-import { PerfHeroComponent } from "../../components";
 import { defineEntity } from "../../../framework/ecs/EntityDefinition";
+import { PerfHeroComponent } from "./PerfHeroComponents";
+import { PERF_HERO_RULES } from "./PerfHeroRules";
+import { PERF_HERO_VIEW_CONFIG } from "./PerfHeroViewConfig";
 
 export const PerfHeroEntity = defineEntity<number>({
   name: "perfHero",
@@ -18,23 +19,23 @@ export const PerfHeroEntity = defineEntity<number>({
 export function respawnPerfHero(eid: number): void {
   const edge = PerfHeroComponent.edge[eid];
   const pos = randomEdgePosition(edge);
-  PerfHeroComponent.heroType[eid] = Math.floor(Math.random() * PERF_HERO_RESOURCES.length);
+  PerfHeroComponent.heroType[eid] = Math.floor(Math.random() * PERF_HERO_RULES.heroTypeCount);
   PerfHeroComponent.posX[eid] = pos.x;
   PerfHeroComponent.posY[eid] = pos.y;
   PerfHeroComponent.scale[eid] = randomRange(
-    PERF_HERO_VIEW_LAYOUT.minScale,
-    PERF_HERO_VIEW_LAYOUT.maxScale,
+    PERF_HERO_VIEW_CONFIG.minScale,
+    PERF_HERO_VIEW_CONFIG.maxScale,
   );
   PerfHeroComponent.ageSec[eid] = 0;
   PerfHeroComponent.durationSec[eid] = randomRange(
-    PERF_HERO_VIEW_LAYOUT.minDurationSec,
-    PERF_HERO_VIEW_LAYOUT.maxDurationSec,
+    PERF_HERO_RULES.minDurationSec,
+    PERF_HERO_RULES.maxDurationSec,
   );
   PerfHeroComponent.spawnSeq[eid] += 1;
 }
 
 function randomEdgePosition(edge: number): { x: number; y: number } {
-  const layout = PERF_HERO_VIEW_LAYOUT;
+  const layout = PERF_HERO_VIEW_CONFIG;
   const minX = layout.marginX;
   const maxX = DESIGN_RESOLUTION.width - layout.marginX;
   const minY = layout.marginY;

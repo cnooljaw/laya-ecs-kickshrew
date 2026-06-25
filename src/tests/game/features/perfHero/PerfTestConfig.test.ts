@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPerfTestRuntimeConfig } from "../../config/PerfTestConfig";
+import { getPerfTestRuntimeConfig } from "../../../../game/features/perfHero";
 
 describe("PerfTestConfig", () => {
   it("perf=1 默认启用地鼠加速和英雄 Spine 压测", () => {
