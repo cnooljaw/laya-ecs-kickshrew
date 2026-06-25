@@ -57,13 +57,6 @@ export const AnimationComponent = defineComponent({
   duration: Types.f32,
 });
 
-/** 击中结果组件 */
-export const HitComponent = defineComponent({
-  shrewIndex: Types.f32,
-  reward: Types.f32,
-  wasHit: Types.f32,
-});
-
 /** 调试压测英雄 Spine 组件 */
 export const PerfHeroComponent = defineComponent({
   edge: Types.f32,
@@ -74,24 +67,4 @@ export const PerfHeroComponent = defineComponent({
   ageSec: Types.f32,
   durationSec: Types.f32,
   spawnSeq: Types.f32,
-});
-
-/** 网络组件(单例) */
-export const NetworkComponent = defineComponent({
-  connected: Types.f32,
-  pendingKick: Types.f32,
-});
-
-/** 脏标记组件 */
-export const DirtyComponent = defineComponent({
-  shrewDirty: Types.ui32,
-  holeDirty: Types.ui32,
-  hammerDirty: Types.ui32,
-  sceneDirty: Types.ui32,
-  playerDirty: Types.ui32,
-  animDirty: Types.ui32,
-  hitDirty: Types.ui32,
-  perfHeroDirty: Types.ui32,
-  monsterDirty: Types.ui32,
-  forceFullSync: Types.ui8,
 });

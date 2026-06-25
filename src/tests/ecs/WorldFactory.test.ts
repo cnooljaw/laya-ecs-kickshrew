@@ -5,7 +5,6 @@ import { SCENE_CYCLE_INTERVAL } from "../../config/SceneConfig";
 import {
   AnimationComponent,
   HoleComponent,
-  NetworkComponent,
   PlayerComponent,
   SceneComponent,
   ShrewComponent,
@@ -15,9 +14,10 @@ import {
   SceneEntity,
   ShrewEntity,
 } from "../../ecs/gameplay/core/CoreEntities";
+import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
 import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
 import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../ecs/types";
-import { createGameWorld, createSingletonEntities } from "../../ecs/world";
+import { createGameWorld } from "../../ecs/world";
 
 describe("world factory", () => {
   it.each([
@@ -87,9 +87,11 @@ describe("world factory", () => {
     });
   });
 
-  it("keeps player and network compatibility defaults until their feature migration", () => {
+  it("creates the player singleton with complete defaults", () => {
     const world = createGameWorld();
-    const { player, network } = createSingletonEntities(world);
+    const entities = createEntityRuntime(world, [PlayerEntity]);
+    entities.bootstrapSingletons();
+    const player = entities.one(PlayerEntity);
 
     expect({
       money: PlayerComponent.money[player],
@@ -103,13 +105,6 @@ describe("world factory", () => {
       power: 0,
       powerTop: 0,
       level: 0,
-    });
-    expect({
-      connected: NetworkComponent.connected[network],
-      pendingKick: NetworkComponent.pendingKick[network],
-    }).toEqual({
-      connected: 0,
-      pendingKick: 0,
     });
   });
 });

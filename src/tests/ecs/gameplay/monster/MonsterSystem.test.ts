@@ -1,13 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createGameWorld, createSingletonEntities } from "../../../../ecs/world";
+import { createGameWorld } from "../../../../ecs/world";
+import { createSingletonEntities } from "../../../helpers/SingletonTestEntities";
 import { PlayerComponent } from "../../../../ecs/components";
 import { MonsterComponent, MonsterSpawnComponent } from "../../../../ecs/gameplay/monster/MonsterComponent";
 import { MonsterType } from "../../../../ecs/gameplay/monster/MonsterTypes";
-import {
-  createMonsterEntities,
-  createMonsterEntitiesForRules,
-  createMonsterSpawnState,
-} from "../../../../ecs/gameplay/monster/MonsterFactory";
 import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../../ecs/gameplay/monster/MonsterSystem";
 import { createEntityRuntime } from "../../../../ecs/runtime/EntityRuntime";
 import {
@@ -20,6 +16,10 @@ import {
 } from "../../../../ecs/gameplay/monster/MonsterFactory";
 
 describe("MonsterSystem", () => {
+  function createMonsterRuntime(world: any) {
+    return createEntityRuntime(world, [MonsterEntity, MonsterTriggerEntity]);
+  }
+
   it("为每条规则创建独立 tracker，不受四槽字段限制", () => {
     const world = createGameWorld();
     const runtime = createEntityRuntime(world, [MonsterEntity, MonsterTriggerEntity]);
@@ -42,8 +42,9 @@ describe("MonsterSystem", () => {
   it("玩家金币跨过 100 倍数时生成一次 Rhino，重复帧不重复生成", () => {
     const world = createGameWorld();
     const { player } = createSingletonEntities(world);
-    const spawnState = createMonsterSpawnState(world);
-    const [monster] = createMonsterEntities(world, { count: 1 });
+    const runtime = createMonsterRuntime(world);
+    const spawnState = runtime.create(MonsterTriggerEntity, 0);
+    const monster = runtime.create(MonsterEntity, MonsterType.Rhino);
 
     PlayerComponent.money[player] = 99;
     monsterSpawnSystem(world);
@@ -69,7 +70,7 @@ describe("MonsterSystem", () => {
   it("隐藏策略下 Rhino 出现 10 秒后只设置 visible=0，不删除实体", () => {
     const world = createGameWorld();
     createSingletonEntities(world);
-    const [monster] = createMonsterEntities(world, { count: 1 });
+    const monster = createMonsterRuntime(world).create(MonsterEntity, MonsterType.Rhino);
 
     MonsterComponent.monsterType[monster] = MonsterType.Rhino;
     MonsterComponent.visible[monster] = 1;
@@ -87,8 +88,9 @@ describe("MonsterSystem", () => {
   it("一次跨过多个 100 倍数时默认只生成一次，并消费到最新里程碑", () => {
     const world = createGameWorld();
     const { player } = createSingletonEntities(world);
-    const spawnState = createMonsterSpawnState(world);
-    const [monster] = createMonsterEntities(world, { count: 1 });
+    const runtime = createMonsterRuntime(world);
+    const spawnState = runtime.create(MonsterTriggerEntity, 0);
+    const monster = runtime.create(MonsterEntity, MonsterType.Rhino);
 
     PlayerComponent.money[player] = 350;
     monsterSpawnSystem(world);
@@ -101,8 +103,9 @@ describe("MonsterSystem", () => {
   it("达到新 100 倍数时如果 Rhino 仍在场，则丢弃这次触发且隐藏后不补发", () => {
     const world = createGameWorld();
     const { player } = createSingletonEntities(world);
-    const spawnState = createMonsterSpawnState(world);
-    const [monster] = createMonsterEntities(world, { count: 1 });
+    const runtime = createMonsterRuntime(world);
+    const spawnState = runtime.create(MonsterTriggerEntity, 0);
+    const monster = runtime.create(MonsterEntity, MonsterType.Rhino);
 
     PlayerComponent.money[player] = 100;
     monsterSpawnSystem(world);
@@ -128,7 +131,8 @@ describe("MonsterSystem", () => {
 
   it("按规则合计创建怪物槽位，避免多个触发规则只拿到最大值数量", () => {
     const world = createGameWorld();
-    const entities = createMonsterEntitiesForRules(world, [
+    const runtime = createMonsterRuntime(world);
+    const entities = createMonsterPool(runtime, [
       {
         slot: 0,
         monsterType: MonsterType.Rhino,

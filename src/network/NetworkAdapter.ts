@@ -1,5 +1,5 @@
 /**
- * NetworkAdapter — Socket 事件 ↔ ECS NetworkComponent 桥梁
+ * NetworkAdapter — Socket 请求/回包生命周期适配器
  *
  * 职责:
  * 1. 持有 KickSocket 和 MockServer 实例

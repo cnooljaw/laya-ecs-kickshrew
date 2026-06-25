@@ -1,68 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { getPerfTestRuntimeConfig } from "../../config/PerfTestConfig";
 import { MONSTER_SPAWN_RULES } from "../../config/MonsterConfig";
-import { DirtyComponent, HoleComponent, SceneComponent } from "../../ecs/components";
-import { defineEntityType } from "../../ecs/runtime/EntityType";
+import { HoleComponent, SceneComponent } from "../../ecs/components";
+import { HoleEntity, SceneEntity, ShrewEntity } from "../../ecs/gameplay/core/CoreEntities";
 import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
+import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
+import { MonsterEntity, MonsterTriggerEntity } from "../../ecs/gameplay/monster/MonsterEntity";
+import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
 import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
-import { createGameWorld, createSingletonEntities } from "../../ecs/world";
-import type { DirtyAspect } from "../../sync/dirty/DirtySchemaTypes";
-import {
-  defineGameFeature,
-  system,
-  type FeatureSetupContext,
-  type GameFeature,
-} from "../../features/GameFeature";
+import { defineEntityType } from "../../ecs/runtime/EntityType";
+import { createGameWorld } from "../../ecs/world";
+import { setupCoreGameplay } from "../../features/CoreGameplayFeature";
+import { defineGameFeature, type GameFeature } from "../../features/GameFeature";
 import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../features/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../features/GameFeatureRegistry";
-import type { ViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
 import {
   defineProjection,
   noProjection,
   projectionSource,
   watch,
 } from "../../sync/projection/ProjectionDefinition";
+import { HoleProjection, SceneProjection, ShrewProjection } from "../../sync/projections/CoreProjections";
 import { HammerProjection } from "../../sync/projections/HammerProjection";
-import { MonsterEntity, MonsterTriggerEntity } from "../../ecs/gameplay/monster/MonsterEntity";
-import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
-import { HoleEntity, SceneEntity, ShrewEntity } from "../../ecs/gameplay/core/CoreEntities";
+import { PlayerProjection } from "../../sync/projections/HudProjection";
 import { MonsterProjection } from "../../sync/projections/MonsterProjection";
 import { PerfHeroProjection } from "../../sync/projections/PerfHeroProjection";
-import {
-  HoleProjection,
-  SceneProjection,
-  ShrewProjection,
-} from "../../sync/projections/CoreProjections";
-import { setupCoreGameplay } from "../../features/CoreGameplayFeature";
-import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
-import { PlayerProjection } from "../../sync/projections/HudProjection";
-
-const sceneAspect: DirtyAspect = {
-  name: "sceneAspect",
-  description: "test scene dirty aspect",
-  requires: [],
-  query: () => [],
-  channels: [
-    {
-      name: "scene",
-      dirtyTarget: "sceneDirty",
-      dirtyArray: DirtyComponent.sceneDirty,
-      allBits: 0x01,
-      marks: [],
-    },
-  ],
-};
-
-const sceneViewSync: ViewSyncModule = {
-  name: "sceneViewSync",
-  registryKey: "scene",
-  spec: [],
-  dirtyAspect: sceneAspect,
-  dirtyTarget: "sceneDirty",
-  dirtyArray: DirtyComponent.sceneDirty,
-  watchedBits: 0x01,
-  describe: () => [],
-};
 
 const TestSceneEntity = defineEntityType({
   name: "testScene",
@@ -74,65 +35,66 @@ const sceneSource = projectionSource("scene", SceneComponent);
 const TestSceneProjection = defineProjection({
   name: "testScene",
   components: [SceneComponent],
-  rows: [
-    watch(sceneSource, ["currentMap"], "current map", noProjection),
-  ],
+  rows: [watch(sceneSource, ["currentMap"], "current map", noProjection)],
 });
 
 function feature(name: string): GameFeature {
-  return {
+  const run = Object.defineProperty(() => {}, "name", { value: `${name}System` });
+  return defineGameFeature({
     name,
-    systems: [system("feature", `${name}:system`, () => {})],
-    viewSyncs: [
-      {
-        ...sceneViewSync,
-        name: `${name}:sceneViewSync`,
-        registryKey: `${name}:scene`,
+    systems: { feature: [run] },
+  });
+}
+
+function createSetupContext(entities: ReturnType<typeof createEntityRuntime>) {
+  const mounts = new Map<string, number>();
+  let resources = 0;
+  return {
+    mounts,
+    context: {
+      world: {},
+      entities,
+      effects: {
+        on: () => {},
+        emit: () => {},
       },
-    ],
+      views: {
+        create: ({ create }: any) => {
+          resources++;
+          return create();
+        },
+        mount: ({ projection, create }: any) => {
+          mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
+          return create();
+        },
+        mountMany: ({ eids, projection, create }: any) => eids.map((eid: number, index: number) => {
+          mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
+          return create(eid, index);
+        }),
+      },
+      resources: {
+        own: <T>(resource: T) => {
+          resources++;
+          return resource;
+        },
+      },
+    } as any,
+    resourceCount: () => resources,
   };
 }
 
 describe("GameFeatureRegistry", () => {
-  it("集中展开 feature systems、dirty aspects 和 view sync descriptions", () => {
-    const registry = createGameFeatureRegistry([feature("featureA")]);
-
-    expect(registry.systemsByPhase("feature")).toHaveLength(1);
-    expect(registry.systemsByPhase("state")).toEqual([]);
-    expect(registry.dirtyAspects()).toEqual([sceneAspect]);
-    expect(registry.viewSyncs().map(sync => sync.name)).toEqual(["featureA:sceneViewSync"]);
-  });
-
-  it("按 feature 声明顺序稳定展开 systems 和 view syncs", () => {
-    const registry = createGameFeatureRegistry([
-      feature("first"),
-      feature("second"),
-    ]);
-
-    expect(registry.systemsByPhase("feature").map(item => item.name)).toEqual([
-      "first:system",
-      "second:system",
-    ]);
-    expect(registry.viewSyncs().map(item => item.name)).toEqual([
-      "first:sceneViewSync",
-      "second:sceneViewSync",
-    ]);
-  });
-
-  it("展开新 feature manifest 的 entities、projections 和 system groups", () => {
+  it("expands entities, projections and phased systems", () => {
     function updateState(): void {}
     function updateFeature(): void {}
-    const manifest = defineGameFeature({
-      name: "compiled",
-      entities: [TestSceneEntity],
-      projections: [TestSceneProjection],
-      systems: {
-        state: [updateState],
-        feature: [updateFeature],
-      },
-    });
-
-    const registry = createGameFeatureRegistry([manifest]);
+    const registry = createGameFeatureRegistry([
+      defineGameFeature({
+        name: "compiled",
+        entities: [TestSceneEntity],
+        projections: [TestSceneProjection],
+        systems: { state: [updateState], feature: [updateFeature] },
+      }),
+    ]);
 
     expect(registry.entityTypes()).toEqual([TestSceneEntity]);
     expect(registry.projections()).toEqual([TestSceneProjection]);
@@ -140,56 +102,39 @@ describe("GameFeatureRegistry", () => {
     expect(registry.systemsByPhase("feature").map(item => item.run)).toEqual([updateFeature]);
   });
 
-  it("真实 GAME_FEATURES 表能通过注册校验", () => {
-    const registry = createGameFeatureRegistry(GAME_FEATURES);
-
-    expect(registry.systemsByPhase("state").map(system => system.name)).toEqual([
+  it("keeps real feature contribution order stable", () => {
+    expect(GAME_FEATURE_REGISTRY.systemsByPhase("state").map(item => item.name)).toEqual([
       "animationTimerSystem",
       "shrewStateSystem",
       "sceneCycleSystem",
       "hammerSystem",
     ]);
-    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("monster");
-    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("perfHero");
-    expect(registry.entityTypes()).toContain(HammerEntity);
-    expect(registry.entityTypes()).toContain(SceneEntity);
-    expect(registry.entityTypes()).toContain(HoleEntity);
-    expect(registry.entityTypes()).toContain(ShrewEntity);
-    expect(registry.entityTypes()).toContain(MonsterEntity);
-    expect(registry.entityTypes()).toContain(MonsterTriggerEntity);
-    expect(registry.entityTypes()).toContain(PerfHeroEntity);
-    expect(registry.entityTypes()).toContain(PlayerEntity);
-    expect(registry.projections()).toContain(HammerProjection);
-    expect(registry.projections()).toContain(SceneProjection);
-    expect(registry.projections()).toContain(HoleProjection);
-    expect(registry.projections()).toContain(ShrewProjection);
-    expect(registry.projections()).toContain(MonsterProjection);
-    expect(registry.projections()).toContain(PerfHeroProjection);
-    expect(registry.projections()).toContain(PlayerProjection);
-    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("hammer");
-    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("scene");
-    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("hole");
-    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("shrew");
-    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("player");
-    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("hit");
+    expect(GAME_FEATURE_REGISTRY.entityTypes()).toEqual(expect.arrayContaining([
+      SceneEntity,
+      HoleEntity,
+      ShrewEntity,
+      HammerEntity,
+      PlayerEntity,
+      PerfHeroEntity,
+      MonsterEntity,
+      MonsterTriggerEntity,
+    ]));
+    expect(GAME_FEATURE_REGISTRY.projections()).toEqual(expect.arrayContaining([
+      SceneProjection,
+      HoleProjection,
+      ShrewProjection,
+      HammerProjection,
+      PlayerProjection,
+      PerfHeroProjection,
+      MonsterProjection,
+    ]));
   });
 
-  it("显式装配九组洞位和地鼠固定拓扑", () => {
+  it("explicitly assembles nine hole-shrew pairs", () => {
     const world = createGameWorld();
     const entities = createEntityRuntime(world, [SceneEntity, HoleEntity, ShrewEntity]);
     entities.bootstrapSingletons();
-    const context = {
-      world,
-      entities,
-      views: {
-        create: ({ create }: any) => create(),
-        mount: ({ create }: any) => create(),
-        mountMany: (): any[] => [],
-      },
-      resources: {
-        own: <T>(resource: T) => resource,
-      },
-    } as any;
+    const { context } = createSetupContext(entities);
 
     const result = setupCoreGameplay(context);
 
@@ -198,71 +143,16 @@ describe("GameFeatureRegistry", () => {
     expect(result.holes.map(eid => HoleComponent.shrewEid[eid])).toEqual(result.shrews);
   });
 
-  it("真实 feature setup 按模块创建并挂载完整运行时对象", () => {
-    const originalWindow = globalThis.window;
-    Object.defineProperty(globalThis, "window", {
-      configurable: true,
-      value: {},
-    });
+  it("sets up the complete runtime through stable capabilities", () => {
     const world = createGameWorld();
     const entities = createEntityRuntime(world, GAME_FEATURE_REGISTRY.entityTypes());
     entities.bootstrapSingletons();
-    const singletons = createSingletonEntities(world, {
-      hammer: entities.one(HammerEntity),
-    });
-    const mounts = new Map<string, number>();
-    const owned: object[] = [];
-    const context = {
-      world,
-      root: null,
-      singletons,
-      perfConfig: getPerfTestRuntimeConfig(""),
-      entities,
-      effects: {
-        on: () => {},
-        emit: () => {},
-      },
-      views: {
-        create: ({ create }: any) => create(),
-        mount: ({ projection, create }: any) => {
-          mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
-          return create();
-        },
-        mountMany: ({ eids, projection, create }: any) => {
-          const nodes = [];
-          for (let index = 0; index < eids.length; index++) {
-            mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
-            nodes.push(create(eids[index], index));
-          }
-          return nodes;
-        },
-      },
-      resources: {
-        own: <T extends object>(resource: T) => {
-          owned.push(resource);
-          return resource;
-        },
-      },
-      mount: (sync: ViewSyncModule, _eid: number, node: any) => {
-        mounts.set(sync.name, (mounts.get(sync.name) ?? 0) + 1);
-        return node;
-      },
-      own: <T extends { destroy(): void }>(resource: T) => {
-        owned.push(resource);
-        return resource;
-      },
-    } as FeatureSetupContext;
+    const setup = createSetupContext(entities);
+    setup.context.world = world;
 
-    try {
-      GAME_FEATURE_REGISTRY.setupAll(context);
-    } finally {
-      Object.defineProperty(globalThis, "window", {
-        configurable: true,
-        value: originalWindow,
-      });
-    }
+    GAME_FEATURE_REGISTRY.setupAll(setup.context);
 
-    expect(Object.fromEntries(mounts)).toEqual({
+    expect(Object.fromEntries(setup.mounts)).toEqual({
       scene: 1,
       hole: 9,
       shrew: 9,
@@ -270,54 +160,34 @@ describe("GameFeatureRegistry", () => {
       player: 1,
       monster: MONSTER_SPAWN_RULES.reduce((count, rule) => count + rule.maxActiveCount, 0),
     });
-    expect(owned).toEqual([]);
+    expect(setup.resourceCount()).toBe(1);
   });
 
-  it("每帧查询复用预计算结果，避免 Registry 侧产生数组分配", () => {
+  it("reuses precomputed phase arrays", () => {
     const registry = createGameFeatureRegistry([feature("featureA")]);
-
     expect(registry.systemsByPhase("feature")).toBe(registry.systemsByPhase("feature"));
     expect(registry.systemsByPhase("state")).toBe(registry.systemsByPhase("state"));
-    expect(registry.dirtyAspects()).toBe(registry.dirtyAspects());
-    expect(registry.viewSyncs()).toBe(registry.viewSyncs());
   });
 
-  it("拒绝重复 system name，避免调试时难以定位顺序", () => {
-    const first = feature("featureA");
-    const second = feature("featureB");
-    second.systems = first.systems;
-
-    expect(() => validateGameFeatures([first, second]))
-      .toThrow("FeatureSystem name 重复: featureA:system");
-  });
-
-  it("拒绝重复 feature name", () => {
+  it("rejects duplicate names", () => {
+    const duplicateSystem = () => {};
+    expect(() => validateGameFeatures([
+      defineGameFeature({ name: "a", systems: { state: [duplicateSystem] } }),
+      defineGameFeature({ name: "b", systems: { feature: [duplicateSystem] } }),
+    ])).toThrow("FeatureSystem name 重复: duplicateSystem");
     expect(() => validateGameFeatures([feature("same"), feature("same")]))
       .toThrow("GameFeature name 重复: same");
+    expect(() => validateGameFeatures([
+      defineGameFeature({ name: "a", entities: [TestSceneEntity] }),
+      defineGameFeature({ name: "b", entities: [TestSceneEntity] }),
+    ])).toThrow("EntityType name 重复: testScene");
+    expect(() => validateGameFeatures([
+      defineGameFeature({ name: "a", projections: [TestSceneProjection] }),
+      defineGameFeature({ name: "b", projections: [TestSceneProjection] }),
+    ])).toThrow("Projection name 重复: testScene");
   });
 
-  it("拒绝重复 view sync name", () => {
-    const first = feature("featureA");
-    const second = feature("featureB");
-    second.viewSyncs = first.viewSyncs;
-
-    expect(() => validateGameFeatures([first, second]))
-      .toThrow("ViewSyncModule name 重复: featureA:sceneViewSync");
-  });
-
-  it("拒绝 ViewSyncModule 内部 dirtyTarget 不配对", () => {
-    const broken: GameFeature = {
-      name: "broken",
-      viewSyncs: [
-        {
-          ...sceneViewSync,
-          dirtyTarget: "playerDirty",
-          dirtyArray: DirtyComponent.playerDirty,
-        },
-      ],
-    };
-
-    expect(() => validateGameFeatures([broken]))
-      .toThrow("GameFeature broken 的 ViewSyncModule 未声明对应 dirtyTarget: sceneViewSync");
+  it("validates the real feature table", () => {
+    expect(() => validateGameFeatures(GAME_FEATURES)).not.toThrow();
   });
 });

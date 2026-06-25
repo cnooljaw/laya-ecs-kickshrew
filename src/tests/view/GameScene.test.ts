@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { ViewSyncRuntime } from "../../binding/ViewSyncRuntime";
 import { GameScene } from "../../view/GameScene";
 import type { GameLoopPipeline } from "../../view/GameLoopPipeline";
 import type { KickInputAdapter } from "../../view/KickInputAdapter";
@@ -11,7 +10,6 @@ import { HammerComponent } from "../../ecs/components";
 
 interface GameSceneInternals {
   _world: object | null;
-  _viewSyncRuntime: ViewSyncRuntime | null;
   _loopPipeline: GameLoopPipeline | null;
   _kickInput: KickInputAdapter | null;
   _entityRuntime: EntityRuntime | null;
@@ -47,7 +45,6 @@ describe("GameScene lifecycle", () => {
     scene.init();
 
     expect(internals._world).not.toBeNull();
-    expect(internals._viewSyncRuntime).not.toBeNull();
     expect(internals._loopPipeline).not.toBeNull();
     expect(internals._kickInput).not.toBeNull();
     expect(internals._entityRuntime).not.toBeNull();
@@ -58,7 +55,6 @@ describe("GameScene lifecycle", () => {
     scene.destroy();
 
     expect(internals._world).toBeNull();
-    expect(internals._viewSyncRuntime).toBeNull();
     expect(internals._loopPipeline).toBeNull();
     expect(internals._kickInput).toBeNull();
     expect(internals._entityRuntime).toBeNull();

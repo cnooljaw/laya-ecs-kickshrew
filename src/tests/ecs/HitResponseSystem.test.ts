@@ -6,7 +6,8 @@ import {
   type KickResponse,
 } from "../../ecs/gameplay/hud/HitResponseSystem";
 import { HammerType } from "../../ecs/types";
-import { createGameWorld, createSingletonEntities } from "../../ecs/world";
+import { createGameWorld } from "../../ecs/world";
+import { createSingletonEntities } from "../helpers/SingletonTestEntities";
 
 describe("HitResponseSystem", () => {
   let world: ReturnType<typeof createGameWorld>;

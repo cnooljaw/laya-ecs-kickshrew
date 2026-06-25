@@ -1,4 +1,3 @@
-import { defineQuery } from "bitecs";
 import { beforeEach, describe, expect, it } from "vitest";
 import { HAMMER_RULES } from "../../config/GameTuning";
 import { HammerComponent, PlayerComponent } from "../../ecs/components";
@@ -6,7 +5,8 @@ import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
 import { hammerSystem } from "../../ecs/gameplay/hammer/HammerSystem";
 import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
 import { HammerType } from "../../ecs/types";
-import { createGameWorld, createSingletonEntities } from "../../ecs/world";
+import { createGameWorld } from "../../ecs/world";
+import { createSingletonEntities } from "../helpers/SingletonTestEntities";
 
 describe("HammerSystem", () => {
   let world: ReturnType<typeof createGameWorld>;
@@ -40,18 +40,6 @@ describe("HammerSystem", () => {
       touchY: 0,
       hitSeq: 0,
     });
-  });
-
-  it("reuses the runtime hammer when creating legacy singleton references", () => {
-    const runtimeWorld = createGameWorld();
-    const runtime = createEntityRuntime(runtimeWorld, [HammerEntity]);
-    runtime.bootstrapSingletons();
-    const hammer = runtime.one(HammerEntity);
-
-    const refs = createSingletonEntities(runtimeWorld, { hammer });
-
-    expect(refs.hammer).toBe(hammer);
-    expect(Array.from(defineQuery([HammerComponent])(runtimeWorld))).toEqual([hammer]);
   });
 
   it("switches the selected hammer outside thunder mode", () => {

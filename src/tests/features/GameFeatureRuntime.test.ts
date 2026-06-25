@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createViewSyncRuntime } from "../../binding/ViewSyncRuntime";
-import { getPerfTestRuntimeConfig } from "../../config/PerfTestConfig";
-import { DirtyComponent } from "../../ecs/components";
-import { createGameWorld, createSingletonEntities } from "../../ecs/world";
-import { createFeatureSetupContext } from "../../features/GameFeatureRuntime";
-import { HammerViewSync } from "../../binding/viewSyncs";
+import { createGameWorld } from "../../ecs/world";
 import { ViewRegistry } from "../../view/ViewRegistry";
 import { addComponent, addEntity, defineComponent, Types } from "bitecs";
 import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
@@ -73,17 +68,12 @@ describe("GameFeatureRuntime", () => {
     expect(lifecycle).toEqual(["create:root", "destroy"]);
   });
 
-  it("mount 自动注册节点并设置首次 full sync，clear 统一销毁资源", () => {
+  it("views.create and resources.own share lifecycle cleanup", () => {
     const world = createGameWorld();
-    const singletons = createSingletonEntities(world);
-    const viewSyncRuntime = createViewSyncRuntime([HammerViewSync]);
     const viewRegistry = new ViewRegistry();
     const destroyed: string[] = [];
     const node = {
-      setHammerType(): void {},
-      setThunderActive(): void {},
-      followTouch(): void {},
-      playHitAnimation(): void {},
+      create(): void {},
       destroy(): void {
         destroyed.push("node");
       },
@@ -93,24 +83,20 @@ describe("GameFeatureRuntime", () => {
         destroyed.push("owned");
       },
     };
-    const context = createFeatureSetupContext({
+    const context = createFeatureRuntimeContext({
       world,
       root: null,
-      singletons,
-      perfConfig: getPerfTestRuntimeConfig(""),
+      entityRuntime: createEntityRuntime(world, []),
+      projectionRuntime: createProjectionRuntime([]),
       viewRegistry,
-      viewSyncRuntime,
+      effectRuntime: createEffectRuntime(),
     });
 
-    context.mount(HammerViewSync, singletons.hammer, node);
-    context.own(owned);
-
-    expect(viewSyncRuntime.registryFor(HammerViewSync).get(singletons.hammer)).toBe(node);
-    expect(DirtyComponent.forceFullSync[singletons.hammer]).toBe(1);
+    context.views.create({ create: () => node });
+    context.resources.own(owned);
 
     viewRegistry.clear();
 
-    expect(viewSyncRuntime.registryFor(HammerViewSync).get(singletons.hammer)).toBeUndefined();
     expect(destroyed).toEqual(["owned", "node"]);
   });
 });

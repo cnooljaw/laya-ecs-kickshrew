@@ -1,10 +1,9 @@
 /**
  * HitEffectNode — 击中特效节点（金币/宝箱/未命中）
  */
-import type { IHitEffectNode } from "../sync/contracts/HitViewContract";
 import { HIT_EFFECT_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
 
-export class HitEffectNode implements IHitEffectNode {
+export class HitEffectNode {
   private _container: any = null;
 
   create(parent: any): void {

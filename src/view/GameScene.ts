@@ -8,10 +8,8 @@
  * 4. 处理触摸事件
  * 5. 启动网络层
  */
-import { createGameWorld, createSingletonEntities, SingletonEntities } from "../ecs/world";
+import { createGameWorld } from "../ecs/world";
 import { deleteWorld } from "bitecs";
-import { SyncView } from "../binding/SyncView";
-import { createViewSyncRuntime, type ViewSyncRuntime } from "../binding/ViewSyncRuntime";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";
 import { GameLoopPipeline } from "./GameLoopPipeline";
@@ -20,16 +18,13 @@ import { ViewRegistry } from "./ViewRegistry";
 import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../config/PerfTestConfig";
 import { resetShrewTimingOverride, setShrewTimingOverride } from "../config/GameTuning";
 import { GAME_FEATURE_REGISTRY } from "../features/GameFeatures";
-import { releaseDirtyWorld } from "../sync/dirty/DirtyMarkSystem";
-import { createFeatureSetupContext } from "../features/GameFeatureRuntime";
+import { createFeatureRuntimeContext } from "../features/FeatureRuntimeContext";
 import { createEntityRuntime, type EntityRuntime } from "../ecs/runtime/EntityRuntime";
 import {
   createProjectionRuntime,
   type ProjectionRuntime,
 } from "../sync/projection/ProjectionRuntime";
 import { HammerEntity } from "../ecs/gameplay/hammer/HammerEntity";
-import { SceneEntity } from "../ecs/gameplay/core/CoreEntities";
-import { PlayerEntity } from "../ecs/gameplay/hud/PlayerEntity";
 import { createEffectRuntime, type EffectRuntime } from "../effects/EffectRuntime";
 import { routeKickResponse } from "./KickResponseAdapter";
 
@@ -40,14 +35,11 @@ const SND = {
 
 export class GameScene {
   private _world: any = null;
-  private _singletons!: SingletonEntities;
-  private _syncView: SyncView;
   private _network: NetworkAdapter;
   private _viewRegistry: ViewRegistry;
   private _perfConfig: PerfTestRuntimeConfig;
   private _running: boolean = false;
   private _root: any = null;
-  private _viewSyncRuntime: ViewSyncRuntime | null = null;
   private _entityRuntime: EntityRuntime | null = null;
   private _projectionRuntime: ProjectionRuntime | null = null;
   private _effectRuntime: EffectRuntime | null = null;
@@ -55,7 +47,6 @@ export class GameScene {
   private _kickInput: KickInputAdapter | null = null;
 
   constructor() {
-    this._syncView = new SyncView();
     this._network = new NetworkAdapter();
     this._viewRegistry = new ViewRegistry();
     this._perfConfig = getPerfTestRuntimeConfig();
@@ -71,11 +62,6 @@ export class GameScene {
     );
     this._entityRuntime.bootstrapSingletons();
     const hammerEid = this._entityRuntime.one(HammerEntity);
-    this._singletons = createSingletonEntities(this._world, {
-      hammer: hammerEid,
-      scene: this._entityRuntime.one(SceneEntity),
-      player: this._entityRuntime.one(PlayerEntity),
-    });
     this._projectionRuntime = createProjectionRuntime(
       GAME_FEATURE_REGISTRY.projections(),
     );
@@ -96,16 +82,10 @@ export class GameScene {
       Laya.SoundManager.playMusic(SND.bg, 0);
     }
 
-    this._viewSyncRuntime = createViewSyncRuntime(GAME_FEATURE_REGISTRY.viewSyncs());
-    this._syncView.registerChannels(this._viewSyncRuntime.channels());
-
-    GAME_FEATURE_REGISTRY.setupAll(createFeatureSetupContext({
+    GAME_FEATURE_REGISTRY.setupAll(createFeatureRuntimeContext({
       world: this._world,
       root: this._root,
-      singletons: this._singletons,
-      perfConfig: this._perfConfig,
       viewRegistry: this._viewRegistry,
-      viewSyncRuntime: this._viewSyncRuntime,
       entityRuntime: this._entityRuntime,
       projectionRuntime: this._projectionRuntime,
       effectRuntime: this._effectRuntime,
@@ -119,7 +99,6 @@ export class GameScene {
     this._loopPipeline = new GameLoopPipeline({
       world: this._world,
       network: this._network,
-      syncView: this._syncView,
       featureRegistry: GAME_FEATURE_REGISTRY,
       projectionRuntime: this._projectionRuntime,
       effects: this._effectRuntime,
@@ -136,8 +115,7 @@ export class GameScene {
       },
     });
 
-    // 4. mount 已设置 forceFullSync，统一执行首次同步。
-    this._syncView.sync(this._world);
+    // 4. 统一执行首次投影同步。
     this._projectionRuntime.mark(this._world);
     this._projectionRuntime.sync(this._world);
   }
@@ -164,13 +142,9 @@ export class GameScene {
     this._effectRuntime = null;
     this._projectionRuntime?.clear();
     this._projectionRuntime = null;
-    this._viewSyncRuntime?.clear();
-    this._viewSyncRuntime = null;
     this._entityRuntime?.clear();
     this._entityRuntime = null;
-    this._syncView.clear();
     if (this._world) {
-      releaseDirtyWorld(this._world);
       deleteWorld(this._world);
       this._world = null;
     }
