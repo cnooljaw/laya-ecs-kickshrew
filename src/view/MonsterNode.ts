@@ -1,14 +1,16 @@
 import type { IMonsterNode } from "../sync/contracts/MonsterViewContract";
 import { MONSTER_CONFIG } from "../config/MonsterConfig";
 import { MonsterType } from "../ecs/gameplay/monster/MonsterTypes";
+import { destroyNode } from "../framework/view/LayaLifecycle";
+import { loadSpineTemplate } from "../framework/view/LayaLoader";
+import { getLaya } from "../framework/view/LayaRuntime";
+import { createSkeleton } from "../framework/view/LayaSpine";
 
 interface MonsterPlayRequest {
   monsterType: number;
   skUrl: string;
   spawnSeq: number;
 }
-
-const templetPromises = new Map<string, Promise<any>>();
 
 export class MonsterNode implements IMonsterNode {
   private _container: any = null;
@@ -18,7 +20,7 @@ export class MonsterNode implements IMonsterNode {
   private _lastSpawnSeq = -1;
 
   create(parent: any): void {
-    const Laya = runtimeLaya();
+    const Laya = getLaya();
     if (!Laya) {
       this._container = parent;
       return;
@@ -65,25 +67,22 @@ export class MonsterNode implements IMonsterNode {
 
   destroy(): void {
     this._destroyed = true;
-    this._skeleton?.offAll?.();
-    this._skeleton?.destroy?.();
+    destroyNode(this._skeleton);
     this._skeleton = null;
-    this._container?.destroy?.();
+    destroyNode(this._container);
     this._container = null;
   }
 
   private async _loadAndPlay(request: MonsterPlayRequest): Promise<void> {
-    const Laya = runtimeLaya();
+    const Laya = getLaya();
     if (!Laya || !this._container) return;
 
     try {
-      const templet = await loadTemplet(Laya, request.skUrl);
+      const templet = await loadSpineTemplate(request.skUrl);
       if (this._destroyed || !this._container || request.spawnSeq !== this._lastSpawnSeq) return;
 
-      this._skeleton?.offAll?.();
-      this._skeleton?.destroy?.();
-      this._skeleton = templet.buildArmature ? templet.buildArmature(0) : new Laya.Skeleton();
-      if (!templet.buildArmature) this._skeleton.templet = templet;
+      destroyNode(this._skeleton);
+      this._skeleton = createSkeleton(templet);
       this._skeleton.name = `MonsterSkeleton:${request.monsterType}`;
       this._skeleton.visible = this._visible;
       this._container.addChild(this._skeleton);
@@ -92,20 +91,4 @@ export class MonsterNode implements IMonsterNode {
       this.setVisible(false);
     }
   }
-}
-
-function runtimeLaya(): any {
-  return (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
-}
-
-function loadTemplet(Laya: any, skUrl: string): Promise<any> {
-  let promise = templetPromises.get(skUrl);
-  if (!promise) {
-    promise = Laya.loader.load(skUrl).catch((error: unknown) => {
-      templetPromises.delete(skUrl);
-      throw error;
-    });
-    templetPromises.set(skUrl, promise);
-  }
-  return promise;
 }
