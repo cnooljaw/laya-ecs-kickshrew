@@ -1,8 +1,12 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 function readTypeScriptTree(root: string): string {
+  if (!existsSync(root)) {
+    return "";
+  }
+
   const chunks: string[] = [];
   for (const name of readdirSync(root)) {
     const path = join(root, name);
@@ -16,6 +20,12 @@ function readTypeScriptTree(root: string): string {
 }
 
 describe("framework boundaries", () => {
+  it("framework never imports game or app code", () => {
+    const framework = readTypeScriptTree("src/framework");
+
+    expect(framework).not.toMatch(/from\s+["'][^"']*(?:game|app)\//);
+  });
+
   it("business features and projections do not depend on legacy dirty binding APIs", () => {
     const sources = [
       readTypeScriptTree("src/features"),
