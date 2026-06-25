@@ -4,25 +4,22 @@
 
 ```text
 src/
-  ecs/components/       bitecs component schema
-  ecs/gameplay/         业务状态、EntityType、纯 systems
-  ecs/runtime/          EntityRuntime
-  sync/projection/      ProjectionDefinition / ProjectionRuntime
-  sync/projections/     业务投影声明
-  sync/contracts/       view contracts
-  effects/              typed EffectDefinition / EffectRuntime
-  features/             薄装配层
-  view/                 Laya 节点、输入、GameScene 和主循环
+  framework/            稳定 ECS / Feature / Sync / View 机制
+  game/features/        业务纵向切片
+  game/session/         跨 Feature 编排
+  game/GameFeatures.ts  显式组合根
+  app/                  Laya 应用壳和主循环
   network/              protobuf、socket、mock server
-  config/               静态配置
+  resource/             通用资源工具
+  config/               真正跨业务的少量配置
 ```
 
 ## 依赖方向
 
 ```text
 input/network
-  -> adapter
-  -> ECS system/domain helper
+  -> game/session
+  -> feature system/domain helper
   -> component
   -> projection
   -> view contract
@@ -41,7 +38,7 @@ ECS system 不操作 Laya。View node 不反查 ECS，也不决定规则。
 
 ### EntityRuntime
 
-- 初始化时编译 Feature 声明的 `EntityType[]`。
+- 初始化时编译 Feature 声明的 `EntityDefinition[]`。
 - `bootstrapSingletons()` 创建 Scene、Hammer、Player 等单例。
 - `create/createMany` 创建固定拓扑和池。
 - 运行期通常不删除 entity；退出 world 时整批释放。
@@ -64,18 +61,18 @@ ECS system 不操作 Laya。View node 不反查 ECS，也不决定规则。
 Feature 只声明：
 
 ```ts
-defineGameFeature({
+defineFeature({
   name,
   entities,
   projections,
-  systems: { state, feature },
+  systems: [defineSystem(phase, name, run)],
   setup(context) {},
 });
 ```
 
-`setup` 可以创建固定拓扑、池、节点和 effect handler。核心规则必须留在 `ecs/gameplay`。
+`setup` 可以创建固定拓扑、池、节点和 effect handler。核心规则保留在拥有它的业务切片。
 
-CoreGameplayFeature 显式保留：
+ShrewFeature 显式保留：
 
 1. mount Scene。
 2. 创建 9 个 Hole。
@@ -112,7 +109,7 @@ effectRuntime.flush
 点击：
 
 ```text
-Main -> GameScene -> KickInputAdapter
+Main -> GameScene -> KickInputController
   -> hitDetectionSystem
   -> NetworkAdapter.sendKick
 ```
@@ -121,14 +118,15 @@ Main -> GameScene -> KickInputAdapter
 
 ```text
 NetworkAdapter callback
-  -> KickResponseAdapter
-  -> hitResponseSystem updates Player/Hammer
+  -> KickResponseFlow
+  -> Player/Hammer public mutation helpers
+  -> ThunderSystem cross-feature orchestration
   -> HitRewardEffect emit
   -> frame flush
   -> HitEffectNode
 ```
 
-本地 miss 由 KickInputAdapter 显式 emit `HitMissEffect`。
+本地 miss 由 KickInputController 显式 emit `HitMissEffect`。
 
 ## 生命周期
 
@@ -138,7 +136,7 @@ Owner：
 - `GameScene`：world、三个 runtime、network 和 root。
 - `Feature`：本领域拓扑、池、节点和 effect handler。
 - `ViewRegistry`：集中 destroy 所有拥有的 view/resource。
-- `view/*Node`：自己的 children、timer、tween 和异步回调保护。
+- 各 Feature 的具体 Node：自己的 children、timer、tween 和异步回调保护。
 
 退出顺序：
 
@@ -155,11 +153,11 @@ deleteWorld
 
 ## 新增业务
 
-1. 定义 component。
-2. 定义 EntityType。
-3. 写纯 system。
-4. 持久可见状态定义 Projection；瞬时事实定义 Effect。
-5. 在 Feature 声明 entities/systems/projections 并装配真实拓扑。
+1. 创建 `src/game/features/foo`。
+2. 在切片内定义 Component、Entity、System、Projection、contract、Node 和配置。
+3. 在 `FooFeature` 使用小型装配原语。
+4. 只从 `index.ts` 暴露公开能力。
+5. 在 `src/game/GameFeatures.ts` 增加显式注册项。
 6. 补实体、规则、投影/effect 和生命周期测试。
 
 不要修改全局 registry，不要维护 dirty bit，不要依赖频繁 `removeEntity`。

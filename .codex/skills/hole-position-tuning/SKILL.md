@@ -13,7 +13,7 @@ Use this skill for visual tuning of `src/config/HolePositions.ts` and related sh
 
 ## Workflow
 
-1. Read `AGENTS.md`, `docs/laya-rules.md`, `src/config/HolePositions.ts`, `src/view/HoleNode.ts`, `src/view/ShrewNode.ts`, and the active debug preview under `src/debug/`.
+1. Read `AGENTS.md`, `docs/laya-rules.md`, `src/game/features/shrew/HolePositions.ts`, `HoleNode.ts`, `ShrewNode.ts`, and the active debug preview under `src/debug/`.
 2. Use `Stand` pages for hole center tuning. Treat the red marker as the desired shrew body center. Use `Up` pages only for clipping and hidden-offset checks.
 3. Keep zOrder relationships unchanged unless the visual layer contract is wrong:
    - row0 shrew/hole zOrder `2`, cover zOrder `3`

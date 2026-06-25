@@ -70,14 +70,15 @@ URL query
 
 职责边界：
 
-- `src/config/PerfTestConfig.ts`：读取 URL 参数。
-- `src/config/ViewLayoutConfig.ts`：资源、数量上限、边缘分布、缩放、循环时间。
-- `src/ecs/gameplay/perfHero/PerfHeroEntity.ts`：创建稳定槽位、随机边缘位置和英雄类型。
-- `src/ecs/gameplay/perfHero/PerfHeroSystem.ts`：推进压测英雄生命周期。
-- `src/sync/projections/PerfHeroProjection.ts`：声明 ECS 到 view contract 的投影。
-- `src/sync/projection/ProjectionRuntime.ts`：预编译 query、snapshot 和 eid/node registry。
-- `src/view/PerfHeroNode.ts`：Spine 资源池、节点复用、进退场显示顺序。
-- `src/features/PerfHeroFeature.ts`：声明实体、系统和 Projection，创建压测节点并持有共享池引用。
+- `src/game/features/perfHero/PerfTestConfig.ts`：读取 URL 参数。
+- `src/game/features/perfHero/PerfHeroViewConfig.ts`：资源、数量上限、边缘分布和缩放。
+- `src/game/features/perfHero/PerfHeroRules.ts`：循环时间和英雄类型数量。
+- `src/game/features/perfHero/PerfHeroEntities.ts`：创建稳定槽位、随机边缘位置和英雄类型。
+- `src/game/features/perfHero/PerfHeroSystems.ts`：推进压测英雄生命周期。
+- `src/game/features/perfHero/PerfHeroProjection.ts`：声明 ECS 到 view contract 的投影。
+- `src/framework/sync/ProjectionRuntime.ts`：预编译 query、snapshot 和 eid/node registry。
+- `src/game/features/perfHero/PerfHeroNode.ts`：Spine 资源池、节点复用、进退场显示顺序。
+- `src/game/features/perfHero/PerfHeroFeature.ts`：声明实体、系统和 Projection，创建压测节点并持有共享池引用。
 
 ECS 侧只承载权威状态和随机重生，不直接操作 Laya。Spine/Skeleton 的创建、播放、隐藏、池化都属于 view 层。
 

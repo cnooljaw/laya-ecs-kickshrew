@@ -22,8 +22,8 @@ Use this project skill for changes that touch Laya presentation or runtime owner
    - `ViewRegistry` for node/resource ownership and destroy
    - view node for local children, tweens, timers, and async load guards
 2. Keep rules out of view nodes. Convert input to adapter calls or ECS/system updates.
-3. Implement view contract methods in `view/*Node.ts`; do not make nodes inspect ECS components or ProjectionRuntime internals directly.
-4. Move new visual tuning numbers into `src/config/ViewLayoutConfig.ts` unless they are resource data.
+3. Implement view contract methods in `src/game/features/<name>/*Node.ts`; do not make nodes inspect ECS components or ProjectionRuntime internals directly.
+4. Keep feature-specific visual tuning beside the Node in `*ViewConfig.ts`.
 5. Guard async loader callbacks against destroyed nodes or stale scene state.
 6. Clear timers/tweens/events using the same owner that registered them.
 7. For runtime-visible changes, run related tests and then `npm run debug:ready` when practical.
@@ -42,6 +42,7 @@ Use this project skill for changes that touch Laya presentation or runtime owner
 npm test -- --run src/tests/view/KickInputAdapter.test.ts
 npm test -- --run src/tests/view/ViewRegistry.test.ts
 npm test -- --run src/tests/view/ShrewNode.test.ts
+npm test -- --run src/tests/framework/view
 npx tsc --noEmit
 npm run debug:ready
 ```

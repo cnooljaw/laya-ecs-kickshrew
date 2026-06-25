@@ -43,21 +43,23 @@ frame
 
 ## 强制边界
 
-- `src/ecs/**`：权威状态与纯规则，不使用 `Laya.*`。
-- `src/ecs/runtime/**`：EntityType 与 EntityRuntime。
-- `src/sync/projection/**`：通用投影定义和执行器。
-- `src/sync/projections/**`：业务 component 到 view contract 的声明式投影。
-- `src/effects/**`：按 definition identity 区分的 typed 瞬时事件。
-- `src/features/**`：薄装配层，只声明 entities、systems、projections 和真实业务拓扑。
-- `src/view/**`：Laya 表现、输入和运行时壳。
+- `src/framework/ecs/**`：EntityDefinition / EntityRuntime。
+- `src/framework/feature/**`：Feature Manifest、Registry、mount 原语。
+- `src/framework/sync/**`：Projection / Effect 定义和运行时。
+- `src/framework/view/**`：ViewRegistry 与容易随 Laya 版本变化的窄兼容层。
+- `src/game/features/<name>/**`：业务纵向切片，拥有 Component、Entity、System、Projection、contract、Node 和配置。
+- `src/game/session/**`：跨 Feature 规则与输入/回包编排，只依赖各 Feature 的公开 `index.ts`。
+- `src/app/**`：Laya 应用壳、world/runtime 组装和主循环。
 - `src/network/**`：协议、请求匹配和 transport；回包不得直接操作 view。
+
+`framework` 不得依赖 `game/app`；Feature 不得导入另一个 Feature 的内部文件。
 
 依赖方向：
 
 ```text
 input/network callback
-  -> adapter
-  -> ECS system/domain helper
+  -> game/session
+  -> Feature system/domain helper
   -> Component
   -> ProjectionRuntime
   -> view contract
@@ -72,14 +74,22 @@ transient result
 
 ## 常见入口
 
-- 状态机：`src/ecs/gameplay/core/ShrewStateSystem.ts`
-- 命中：`src/ecs/gameplay/core/HitDetectionSystem.ts`
-- Entity 声明：`src/ecs/gameplay/**/**Entity.ts`
-- 投影：`src/sync/projections/*.ts`
-- 瞬时效果：`src/effects/*.ts`
-- Feature 装配：`src/features/*Feature.ts`
-- Laya 表现：`src/view/*Node.ts`
-- 运行时：`src/view/GameScene.ts`、`src/view/GameLoopPipeline.ts`
+- 状态机：`src/game/features/shrew/ShrewStateSystem.ts`
+- 命中/输入：`src/game/session/KickDetection.ts`、`KickInputController.ts`
+- 回包：`src/game/session/KickResponseFlow.ts`
+- 业务切片：`src/game/features/{shrew,hammer,playerHud,monster,perfHero}`
+- Feature 注册：`src/game/GameFeatures.ts`
+- 运行时：`src/app/GameScene.ts`、`src/app/GameLoopPipeline.ts`
+
+## 新增 Feature
+
+1. 创建 `src/game/features/foo/`。
+2. 在目录内定义 Component、Entity、System、Projection、contract、Node、规则和表现配置。
+3. 用 `defineFeature`、`defineSystem`、`mountOne/mountPool/createView/own` 装配。
+4. 只从 `index.ts` 暴露外部真正需要的能力。
+5. 在 `src/game/GameFeatures.ts` 增加显式 import 和一个数组项。
+
+禁止 BaseFeature、目录自动扫描、反射注册、`mountTree` 和通用 UI DSL。
 
 ## 工作流
 

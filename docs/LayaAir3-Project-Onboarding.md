@@ -28,7 +28,7 @@ http://localhost:8080/debug-tsc.html
 
 ```text
 src/ecs/components       component schema
-src/ecs/gameplay         EntityType 和纯系统
+src/ecs/gameplay         EntityDefinition 和纯系统
 src/ecs/runtime          EntityRuntime
 src/sync/projection      通用投影框架
 src/sync/projections     业务投影
@@ -63,10 +63,10 @@ effect flush
 
 ## ECS
 
-Component 是结构化 typed arrays。EntityType 声明组件组合和初始化：
+Component 是结构化 typed arrays。EntityDefinition 声明组件组合和初始化：
 
 ```ts
-const SceneEntity = defineEntityType({
+const SceneEntity = defineEntity({
   name: "scene",
   components: [SceneComponent],
   cardinality: "one",
@@ -112,11 +112,11 @@ Feature 注册 handler，主循环帧末 flush。不要为 reward/miss 创建持
 Feature 是业务组装：
 
 ```ts
-defineGameFeature({
+defineFeature({
   name: "foo",
   entities: [FooEntity],
   projections: [FooProjection],
-  systems: { feature: [fooSystem] },
+  systems: [defineSystem("feature", "foo.update", fooSystem)],
   setup({ entities, views, effects }) {},
 });
 ```
@@ -127,12 +127,12 @@ CoreGameplayFeature 明确创建 9 个 Hole 和 9 个 Shrew，并写入一一对
 
 ```text
 touch
-  -> KickInputAdapter
+  -> KickInputController
   -> hitDetectionSystem
   -> NetworkAdapter.sendKick
 
 response
-  -> KickResponseAdapter
+  -> KickResponseFlow
   -> hitResponseSystem
   -> Player/Hammer component
   -> HitRewardEffect
@@ -141,7 +141,7 @@ response
 ## 新增 Monster 类业务
 
 1. 定义 component。
-2. 定义 many EntityType。
+2. 定义 many EntityDefinition。
 3. 在初始化阶段创建池。
 4. system 只修改状态、age、visible。
 5. 定义 Projection 和 Node。
@@ -153,7 +153,7 @@ response
 
 - Player 等持久数字：Projection。
 - 金币飘字、miss、一次性动画：Effect。
-- Laya 节点通过 `views.mount` 或 `views.create` 创建，统一由 ViewRegistry 销毁。
+- Laya 节点通过 `mountOne` 或 `createView` 创建，统一由 ViewRegistry 销毁。
 
 ## 排查顺序
 
@@ -182,3 +182,15 @@ emit -> definition identity -> flush -> handler -> node
 - 新业务不修改全局 registry。
 - 无业务 dirty bit/full-sync。
 - 生命周期测试与浏览器 destroy/re-entry 验证通过。
+# 当前目录说明
+
+当前代码采用“稳定横向 framework + 业务纵向切片”：
+
+```text
+src/framework/{ecs,feature,sync,view}
+src/game/features/{shrew,hammer,playerHud,monster,perfHero}
+src/game/session
+src/app
+```
+
+本文后续若出现历史 `src/ecs/gameplay`、`src/features`、`src/sync/projections` 或 `src/view` 路径，以当前目录和 `docs/architecture.md` 为准。

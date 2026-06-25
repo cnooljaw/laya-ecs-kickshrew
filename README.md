@@ -43,12 +43,15 @@ VS Code 推荐使用 `tsc Debug` 配置，sourceMap 可以直接命中 TS 源码
 
 ```text
 src/
-  Main.ts                 Laya 脚本入口
-  ecs/                    bitecs world、components、systems
-  sync/projection/        通用投影定义与运行时
-  sync/projections/       业务投影
-  effects/                typed 瞬时效果
-  view/                   Laya 表现层、运行时装配、输入适配
+  app/                    Main、Bootstrap、GameScene、GameLoopPipeline
+  framework/ecs/          EntityDefinition / EntityRuntime
+  framework/feature/      Feature Manifest、Registry、mount 原语
+  framework/sync/         Projection / Effect 运行时
+  framework/view/         ViewRegistry 与 Laya 版本兼容层
+  game/features/          shrew、hammer、playerHud、monster、perfHero
+  game/session/           跨 Feature 输入、回包和 Thunder 编排
+  game/GameFeatures.ts    显式 Feature 注册
+  ecs/world.ts            bitecs world 创建
   network/                KickSocket、NetworkAdapter、MockServer
   resource/               atlas/plist 转换与资源路径映射
   config/                 地图、洞位、规则和表现配置
@@ -65,7 +68,7 @@ docs/                     项目知识库
 
 - `AGENTS.md`：给 Codex/Agent 的极简必读规则和索引。
 - `docs/architecture.md`：架构边界、运行流、模块职责和生命周期 owner。
-- `docs/ecs-binding.md`：bitecs、EntityType、ProjectionRuntime 和 EffectRuntime。
+- `docs/ecs-binding.md`：bitecs、EntityDefinition、ProjectionRuntime 和 EffectRuntime。
 - `docs/laya-rules.md`：Laya 生命周期、资源加载、坐标转换、atlas 迁移注意事项。
 - `docs/test-guide.md`：TDD、测试命令、debug 构建、提交规范。
 - `docs/LayaAir3-Project-Onboarding.md`：给开发者的完整一小时入门教程。
@@ -80,7 +83,7 @@ Input / Network / Resource callback
   -> Laya view node
 ```
 
-权威游戏状态在 `src/ecs/**`。Laya 节点只负责表现，不作为规则判断来源。
+权威游戏状态在各 `src/game/features/*` 切片的 Component 中。Laya 节点只负责表现，不作为规则判断来源。
 
 ## 当前重点
 

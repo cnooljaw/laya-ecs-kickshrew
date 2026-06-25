@@ -1,11 +1,13 @@
 # LayaAir 约定
 
-本文说明 Laya 运行时、视图节点、资源、坐标和生命周期规则。改 `src/view/**`、资源加载、动画、timer/tween、场景切换时优先读这里。
+本文说明 Laya 运行时、视图节点、资源、坐标和生命周期规则。改 `src/game/features/*/*Node.ts`、`src/app/**` 或 `src/framework/view/**` 时优先读这里。
 
 ## 基本边界
 
-- `src/view/**` 可以使用 `Laya.*`。
-- `src/ecs/**` 默认不直接使用 `Laya.*`。
+- 具体 Node 保留在 `src/game/features/<name>`，可以使用 `Laya.*`。
+- Component、Entity、System、Projection 默认不直接使用 `Laya.*`。
+- `src/framework/view` 只封装容易随 Laya 版本变化的 runtime lookup、loader、Spine 构造和生命周期清理。
+- 不封装普通 `x/y/visible/zOrder/scale/addChild`，避免制造影子 UI 框架。
 - view node 只表现当前 ECS 状态，不保存权威规则状态。
 - socket 回包不能直接操作 view，必须先更新 ECS。
 - 异步资源加载、timer、tween、event 都要有 owner 和 teardown。
@@ -48,7 +50,7 @@ MonsterNode         独立怪物的 Laya Spine 节点，例如 Rhino
 
 - `Main`：frameLoop、stage event、脚本生命周期。
 - `GameScene`：world、network callback、runtime adapter、ViewRegistry、FeatureRegistry 调用。
-- `Feature`：创建本模块的 view node，通过 `mount()` 声明 eid/viewSync/node 关系，通过 `own()` 声明共享资源。
+- `Feature`：创建本模块的 view node，通过 `mountOne/mountPool/createView/own` 声明关系和所有权。
 - `ProjectionRuntime`：初始化时编译 query、字段快照和实例级 eid/node registry。
 - `ViewRegistry`：统一反注册和销毁 mount/own 的对象。
 - view node：自己创建的 Laya 子节点、局部 timer/tween/异步回调保护。
@@ -68,11 +70,12 @@ MonsterFeature 第一版同屏默认只有 1 个 Rhino，`MonsterNode` 负责 `.
 
 ## 配置和调参入口
 
-- 规则常量：`src/config/GameTuning.ts`
-- 表现布局和动画参数：`src/config/ViewLayoutConfig.ts`
-- 洞位比例坐标：`src/config/HolePositions.ts`
-- 场景顺序和 zOrder：`src/config/SceneConfig.ts`
-- 锤子配置：`src/config/HammerConfig.ts`
+- 跨业务规则：`src/config/GameTuning.ts`
+- Shrew：`src/game/features/shrew/{ShrewRules,ShrewViewConfig,HolePositions,SceneConfig}.ts`
+- Hammer：`src/game/features/hammer/{HammerConfig,HammerViewConfig}.ts`
+- Player HUD：`src/game/features/playerHud/PlayerHudViewConfig.ts`
+- Monster：`src/game/features/monster/{MonsterRules,MonsterViewConfig}.ts`
+- PerfHero：`src/game/features/perfHero/{PerfHeroRules,PerfHeroViewConfig}.ts`
 - atlas 逻辑名：`src/resource/AtlasConfig.ts`
 
 不要在 view 或 system 里重新散落 `960/640`、`0.31`、命中半径、zOrder、HUD 坐标等数字。先看是否已有配置。
@@ -110,7 +113,7 @@ touchYRatio = stage.mouseY / DESIGN_RESOLUTION.height
 - 部分 atlas 帧有 `rotated=true`，Laya AtlasLoader 不自动补偿，需要手动 `rotation = -90`。
 - 出洞/入洞通过移动 `_mainLayer.y` 实现。
 - `HolePositions` 表示地鼠出洞视觉锚点；地鼠 `Stand` 时 body 中心对齐该点，`Up/Down` 在该点与本地裁剪窗口下方之间插值。
-- `hiddenOffsetRatio` 在 `ViewLayoutConfig`。
+- `hiddenOffsetRatio` 在 `ShrewViewConfig`。
 - 重建地鼠部件时必须销毁旧子节点，不能只 `removeChildren()`。否则 `Sprite2DCount` 可能稳定，但旧部件相关的贴图/GPU buffer 仍会在长时间运行中累积。
 
 调地鼠表现前先读 `ShrewNode.ts` 注释和 `SHREW_FRAMES`，不要直接改状态机来修视觉问题。
@@ -125,10 +128,21 @@ touchYRatio = stage.mouseY / DESIGN_RESOLUTION.height
 
 cover 需要盖住地鼠行，zOrder 与洞位行相关。修改地图、洞位、cover 资源时同时看：
 
-- `src/config/HolePositions.ts`
-- `src/config/SceneConfig.ts`
-- `src/view/SceneLayer.ts`
-- `src/ecs/gameplay/core/SceneCycleSystem.ts`
+- `src/game/features/shrew/HolePositions.ts`
+- `src/game/features/shrew/SceneConfig.ts`
+- `src/game/features/shrew/SceneLayer.ts`
+- `src/game/features/shrew/SceneCycleSystem.ts`
+
+## Laya 升级检查
+
+升级 LayaAir 版本时先运行 `src/tests/framework/view`。优先检查：
+
+- `getLaya()` 的全局运行时获取。
+- `loadResource/loadSpineTemplate` 的参数和 Promise 行为。
+- `createSkeleton` 的 `buildArmature` / `Laya.Skeleton` 分支。
+- timer、tween、event、children 和 destroy 清理语义。
+
+业务 Node 的普通布局属性不应因升级而进入 framework wrapper。
 
 ## 资源路径
 

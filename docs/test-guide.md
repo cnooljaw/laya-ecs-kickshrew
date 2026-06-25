@@ -36,7 +36,8 @@ npm test -- --run src/tests/effects
 ```bash
 npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts
 npm test -- --run src/tests/ecs/HitDetectionSystem.test.ts src/tests/ecs/HitResponseSystem.test.ts
-npm test -- --run src/tests/ecs/gameplay/monster/MonsterSystem.test.ts
+npm test -- --run src/tests/game/features/monster
+npm test -- --run src/tests/game/features/perfHero
 ```
 
 架构边界与生命周期：
@@ -48,7 +49,7 @@ npm test -- --run src/tests/features src/tests/view/GameScene.test.ts
 
 ## 覆盖重点
 
-- EntityType 基数、默认值和固定 topology。
+- EntityDefinition 基数、默认值和固定 topology。
 - state/network/feature/projection/effect 顺序。
 - Projection 初次同步、差量比较和 apply 去重。
 - typed Effect 的 enqueue/flush/clear。
@@ -75,7 +76,7 @@ http://localhost:8080/debug-tsc.html?perf=1&heroes=200
 
 改动以下区域必须优先做浏览器验证：
 
-- GameScene / GameLoopPipeline
+- `src/app/GameScene.ts` / `src/app/GameLoopPipeline.ts`
 - Feature setup
 - Projection 或 Effect 到具体 Laya 节点
 - 输入、网络回包、资源、timer/tween、destroy

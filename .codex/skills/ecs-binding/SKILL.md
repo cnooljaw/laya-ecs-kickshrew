@@ -1,6 +1,6 @@
 ---
 name: ecs-binding
-description: Use when changing ECS components, EntityType definitions, systems, ProjectionDefinition mappings, ProjectionRuntime behavior, typed effects, or view synchronization in this project.
+description: Use when changing ECS components, EntityDefinition definitions, systems, ProjectionDefinition mappings, ProjectionRuntime behavior, typed effects, or view synchronization in this project.
 ---
 
 # ECS Projection Workflow
@@ -14,14 +14,14 @@ description: Use when changing ECS components, EntityType definitions, systems, 
 ## Workflow
 
 1. Identify the authoritative component and the system/helper that owns writes.
-2. Define or update the `EntityType` initialization contract.
+2. Define or update the slice-local `EntityDefinition` initialization contract.
 3. Keep systems pure: no Laya nodes, registries, resource loading, or view callbacks.
 4. For persistent visible state:
    - update the view contract;
-   - add a row in `src/sync/projections/*Projection.ts`;
+   - add a row in the owning `src/game/features/<name>/*Projection.ts`;
    - mount the node from the owning Feature.
 5. For transient facts such as reward/miss:
-   - define a typed effect in `src/effects`;
+   - define a typed effect in the owning feature;
    - emit from an adapter;
    - register the view handler in the owning Feature.
 6. Keep Feature setup explicit for real topology such as one Hole owning one Shrew. Do not hide domain relationships in generic framework helpers.
@@ -31,7 +31,7 @@ description: Use when changing ECS components, EntityType definitions, systems, 
 ## Mental Model
 
 ```text
-EntityType -> EntityRuntime -> Component
+Feature EntityDefinition -> framework EntityRuntime -> Component
 System changes Component
 ProjectionRuntime.mark -> ProjectionRuntime.sync
 View contract -> Laya node
