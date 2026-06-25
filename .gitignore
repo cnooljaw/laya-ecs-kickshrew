@@ -6,6 +6,7 @@ local
 release
 node_modules
 .codegraph/
+.worktrees/
 bin/js/bundles
 bin/js/game.js
 bin/js/game.js.map
