@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GameFeatureRegistry } from "../../framework/feature/FeatureRegistry";
-import { GameLoopPipeline } from "../../view/GameLoopPipeline";
+import { GameLoopPipeline } from "../../app/GameLoopPipeline";
 
 describe("GameLoopPipeline", () => {
   it("固定执行 state -> network -> feature -> projection sync -> effects", () => {

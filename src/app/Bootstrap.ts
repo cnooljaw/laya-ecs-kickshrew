@@ -1,5 +1,5 @@
 import { Main } from "./Main";
-import { DESIGN_RESOLUTION } from "./config/GameTuning";
+import { DESIGN_RESOLUTION } from "../config/GameTuning";
 
 // ES module 入口：Laya 运行库已通过 <script> 全局加载，window.Laya 可用
 // <script type="module"> 是延迟执行的，Laya 运行库先完成加载

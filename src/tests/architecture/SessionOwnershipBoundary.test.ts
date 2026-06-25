@@ -17,7 +17,7 @@ describe("session ownership boundaries", () => {
   });
 
   it("keeps concrete entity definitions out of GameScene", () => {
-    const scene = readFileSync("src/view/GameScene.ts", "utf8");
+    const scene = readFileSync("src/app/GameScene.ts", "utf8");
     expect(scene).not.toMatch(/HammerEntity|PlayerEntity|ShrewEntity/);
   });
 });

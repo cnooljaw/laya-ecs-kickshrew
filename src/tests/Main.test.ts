@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Main } from "../Main";
+import { Main } from "../app/Main";
 
 const mocks = vi.hoisted(() => {
   const frameLoop = vi.fn();
@@ -29,7 +29,7 @@ const mocks = vi.hoisted(() => {
   return { frameLoop, clear, stageOn, stageOff, destroy };
 });
 
-vi.mock("../view/GameScene", () => ({
+vi.mock("../app/GameScene", () => ({
   GameScene: class {
     init = vi.fn();
     start = vi.fn();

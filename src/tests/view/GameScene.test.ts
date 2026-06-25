@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { GameScene } from "../../view/GameScene";
-import type { GameLoopPipeline } from "../../view/GameLoopPipeline";
+import { GameScene } from "../../app/GameScene";
+import type { GameLoopPipeline } from "../../app/GameLoopPipeline";
 import type { KickInputAdapter } from "../../game/session";
 import type { EntityRuntime } from "../../framework/ecs/EntityRuntime";
 import type { ProjectionRuntime } from "../../framework/sync/ProjectionRuntime";

@@ -19,7 +19,7 @@ import {
   resetShrewTimingOverride,
   setShrewTimingOverride,
 } from "../game/features/shrew";
-import { GAME_FEATURE_REGISTRY } from "../features/GameFeatures";
+import { GAME_FEATURE_REGISTRY } from "../game/GameFeatures";
 import { createFeatureRuntimeContext } from "../framework/feature/FeatureRuntimeContext";
 import { createEntityRuntime, type EntityRuntime } from "../framework/ecs/EntityRuntime";
 import {

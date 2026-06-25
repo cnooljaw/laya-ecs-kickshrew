@@ -15,7 +15,7 @@ import {
   defineSystem,
   type FeatureManifest,
 } from "../../framework/feature/FeatureManifest";
-import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../features/GameFeatures";
+import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../game/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../framework/feature/FeatureRegistry";
 import {
   defineProjection,

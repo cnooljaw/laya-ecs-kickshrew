@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const outDir = path.resolve(__dirname, "..", "bin", "js", "debug", "src");
+const debugHtml = path.resolve(__dirname, "..", "bin", "debug-tsc.html");
 
 function processFile(filePath) {
   let content = fs.readFileSync(filePath, "utf8");
@@ -50,4 +51,17 @@ if (!fs.existsSync(outDir)) {
 }
 
 walkDir(outDir);
+
+if (fs.existsSync(debugHtml)) {
+  const html = fs.readFileSync(debugHtml, "utf8");
+  fs.writeFileSync(
+    debugHtml,
+    html.replace(
+      "./js/debug/src/Bootstrap.js",
+      "./js/debug/src/app/Bootstrap.js",
+    ),
+    "utf8",
+  );
+}
+
 console.log("ESM extensions fixed.");

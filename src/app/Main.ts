@@ -1,5 +1,5 @@
-import { GameScene } from "./view/GameScene";
-import { MemoryStatsPanel } from "./debug/MemoryStatsPanel";
+import { MemoryStatsPanel } from "../debug/MemoryStatsPanel";
+import { GameScene } from "./GameScene";
 
 const { regClass } = Laya;
 
