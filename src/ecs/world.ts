@@ -57,16 +57,18 @@ export function createSingletonEntities(
   }
 
   // Player
-  const player = addEntity(world);
-  addComponent(world, PlayerComponent, player);
-  addComponent(world, DirtyComponent, player);
-  PlayerComponent.money[player] = 0;
-  PlayerComponent.angry[player] = 0;
-  PlayerComponent.power[player] = 0;
-  PlayerComponent.powerTop[player] = 0;
-  PlayerComponent.level[player] = 0;
-  DirtyComponent.playerDirty[player] = 0;
-  DirtyComponent.forceFullSync[player] = 0;
+  const player = existing.player ?? addEntity(world);
+  if (existing.player === undefined) {
+    addComponent(world, PlayerComponent, player);
+    addComponent(world, DirtyComponent, player);
+    PlayerComponent.money[player] = 0;
+    PlayerComponent.angry[player] = 0;
+    PlayerComponent.power[player] = 0;
+    PlayerComponent.powerTop[player] = 0;
+    PlayerComponent.level[player] = 0;
+    DirtyComponent.playerDirty[player] = 0;
+    DirtyComponent.forceFullSync[player] = 0;
+  }
 
   // Network
   const network = addEntity(world);

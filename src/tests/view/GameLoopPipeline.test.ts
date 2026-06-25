@@ -4,7 +4,7 @@ import type { GameFeatureRegistry } from "../../features/GameFeatureRegistry";
 import { GameLoopPipeline } from "../../view/GameLoopPipeline";
 
 describe("GameLoopPipeline", () => {
-  it("固定执行 state -> network -> feature -> legacy sync -> projection sync", () => {
+  it("固定执行 state -> network -> feature -> legacy sync -> projection sync -> effects", () => {
     const order: string[] = [];
     const aspect: DirtyAspect = {
       name: "test",
@@ -35,6 +35,9 @@ describe("GameLoopPipeline", () => {
         mark: () => order.push("projectionMark"),
         sync: () => order.push("projectionSync"),
       },
+      effects: {
+        flush: () => order.push("effects"),
+      },
     });
 
     pipeline.update(1 / 60);
@@ -47,6 +50,7 @@ describe("GameLoopPipeline", () => {
       "viewSync",
       "projectionMark",
       "projectionSync",
+      "effects",
     ]);
   });
 });

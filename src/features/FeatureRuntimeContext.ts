@@ -1,4 +1,5 @@
 import type { EntityRuntime } from "../ecs/runtime/EntityRuntime";
+import type { EffectRuntime } from "../effects/EffectRuntime";
 import type { ProjectionDefinition } from "../sync/projection/ProjectionDefinition";
 import type { ProjectionRuntime } from "../sync/projection/ProjectionRuntime";
 import type { Destroyable, ViewRegistry } from "../view/ViewRegistry";
@@ -10,7 +11,12 @@ export interface MountableView extends Destroyable {
 export interface FeatureRuntimeContext {
   readonly world: any;
   readonly entities: EntityRuntime;
+  readonly effects: Pick<EffectRuntime, "on" | "emit">;
   readonly views: {
+    create<TNode extends MountableView>(options: {
+      parent?: any;
+      create: () => TNode;
+    }): TNode;
     mount<TNode extends MountableView>(options: {
       eid: number;
       projection: ProjectionDefinition<TNode>;
@@ -35,6 +41,7 @@ interface FeatureRuntimeContextDeps {
   entityRuntime: EntityRuntime;
   projectionRuntime: ProjectionRuntime;
   viewRegistry: ViewRegistry;
+  effectRuntime: EffectRuntime;
 }
 
 export function createFeatureRuntimeContext(
@@ -55,7 +62,13 @@ export function createFeatureRuntimeContext(
   return {
     world: deps.world,
     entities: deps.entityRuntime,
+    effects: deps.effectRuntime,
     views: {
+      create: options => {
+        const node = options.create();
+        node.create(options.parent ?? deps.root);
+        return deps.viewRegistry.own(node);
+      },
       mount,
       mountMany: options => {
         const nodes: MountableView[] = [];

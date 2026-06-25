@@ -1,5 +1,6 @@
 import type { PerfTestRuntimeConfig } from "../config/PerfTestConfig";
 import { createEntityRuntime, type EntityRuntime } from "../ecs/runtime/EntityRuntime";
+import { createEffectRuntime, type EffectRuntime } from "../effects/EffectRuntime";
 import { DirtyComponent } from "../ecs/components";
 import type { SingletonEntities } from "../ecs/world";
 import type { ViewSyncRuntime } from "../binding/ViewSyncRuntime";
@@ -20,6 +21,7 @@ interface FeatureSetupRuntimeDeps {
   viewSyncRuntime: ViewSyncRuntime;
   entityRuntime?: EntityRuntime;
   projectionRuntime?: ProjectionRuntime;
+  effectRuntime?: EffectRuntime;
 }
 
 export function createFeatureSetupContext(deps: FeatureSetupRuntimeDeps): FeatureSetupContext {
@@ -29,6 +31,7 @@ export function createFeatureSetupContext(deps: FeatureSetupRuntimeDeps): Featur
     entityRuntime: deps.entityRuntime ?? createEntityRuntime(deps.world, []),
     projectionRuntime: deps.projectionRuntime ?? createProjectionRuntime([]),
     viewRegistry: deps.viewRegistry,
+    effectRuntime: deps.effectRuntime ?? createEffectRuntime(),
   });
 
   return {

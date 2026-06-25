@@ -15,6 +15,7 @@ import {
   watch,
 } from "../../sync/projection/ProjectionDefinition";
 import { createFeatureRuntimeContext } from "../../features/FeatureRuntimeContext";
+import { createEffectRuntime } from "../../effects/EffectRuntime";
 
 const CounterComponent = defineComponent({
   value: Types.ui32,
@@ -55,6 +56,7 @@ describe("GameFeatureRuntime", () => {
       entityRuntime,
       projectionRuntime,
       viewRegistry,
+      effectRuntime: createEffectRuntime(),
     });
 
     context.views.mount({

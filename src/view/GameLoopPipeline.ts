@@ -3,6 +3,7 @@ import { dirtyMarkSystem } from "../sync/dirty/DirtyMarkSystem";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { GameFeatureRegistry } from "../features/GameFeatureRegistry";
 import type { ProjectionRuntime } from "../sync/projection/ProjectionRuntime";
+import type { EffectRuntime } from "../effects/EffectRuntime";
 
 interface GameLoopPipelineDeps {
   world: any;
@@ -10,6 +11,7 @@ interface GameLoopPipelineDeps {
   syncView: SyncView;
   featureRegistry: GameFeatureRegistry;
   projectionRuntime?: Pick<ProjectionRuntime, "mark" | "sync">;
+  effects?: Pick<EffectRuntime, "flush">;
 }
 
 export class GameLoopPipeline {
@@ -29,5 +31,6 @@ export class GameLoopPipeline {
     syncView.sync(world);
     this._deps.projectionRuntime?.mark(world);
     this._deps.projectionRuntime?.sync(world);
+    this._deps.effects?.flush();
   }
 }

@@ -5,6 +5,7 @@ import { HammerComponent, HoleComponent, ShrewComponent } from "../../ecs/compon
 import { MapType, ShrewAction, ShrewType } from "../../ecs/types";
 import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../config/GameTuning";
 import { KickInputAdapter, KICK_INPUT_SOUNDS } from "../../view/KickInputAdapter";
+import { HitMissEffect } from "../../effects/HitEffects";
 
 describe("KickInputAdapter", () => {
   it("点中可点击地鼠时播放命中音效并发送击打请求", () => {
@@ -24,6 +25,7 @@ describe("KickInputAdapter", () => {
       world,
       hammerEid: singletons.hammer,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
+      effects: { emit: () => {} },
       playSound: url => playedSounds.push(url),
       traceLogger: {
         log: (event: string, payload: Record<string, unknown>) => traceEvents.push({ event, payload }),
@@ -64,11 +66,15 @@ describe("KickInputAdapter", () => {
     createHoleEntities(world, MapType.Meadow);
     const sentRequests: any[] = [];
     const playedSounds: string[] = [];
+    const effects: unknown[] = [];
 
     const adapter = new KickInputAdapter({
       world,
       hammerEid: singletons.hammer,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
+      effects: {
+        emit: (definition, payload) => effects.push([definition, payload]),
+      },
       playSound: url => playedSounds.push(url),
     });
 
@@ -77,6 +83,7 @@ describe("KickInputAdapter", () => {
     expect(playedSounds).toEqual([KICK_INPUT_SOUNDS.hitNull]);
     expect(sentRequests).toHaveLength(0);
     expect(HammerComponent.hitSeq[singletons.hammer]).toBe(1);
+    expect(effects).toEqual([[HitMissEffect, undefined]]);
   });
 
   it("锤子冷却中时记录 blocked 而不是 miss", () => {
@@ -94,6 +101,7 @@ describe("KickInputAdapter", () => {
       world,
       hammerEid: singletons.hammer,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
+      effects: { emit: () => {} },
       playSound: url => playedSounds.push(url),
       traceLogger: {
         log: (event: string, payload: Record<string, unknown>) => traceEvents.push({ event, payload }),
@@ -125,6 +133,7 @@ describe("KickInputAdapter", () => {
       network: {
         sendKick: () => Promise.reject(new Error("offline")),
       } as any,
+      effects: { emit: () => {} },
       playSound: () => {},
       traceLogger: {
         log: (event: string, payload: Record<string, unknown>) => traceEvents.push({ event, payload }),

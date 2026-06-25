@@ -34,6 +34,8 @@ import {
   ShrewProjection,
 } from "../../sync/projections/CoreProjections";
 import { setupCoreGameplay } from "../../features/CoreGameplayFeature";
+import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
+import { PlayerProjection } from "../../sync/projections/HudProjection";
 
 const sceneAspect: DirtyAspect = {
   name: "sceneAspect",
@@ -156,16 +158,20 @@ describe("GameFeatureRegistry", () => {
     expect(registry.entityTypes()).toContain(MonsterEntity);
     expect(registry.entityTypes()).toContain(MonsterTriggerEntity);
     expect(registry.entityTypes()).toContain(PerfHeroEntity);
+    expect(registry.entityTypes()).toContain(PlayerEntity);
     expect(registry.projections()).toContain(HammerProjection);
     expect(registry.projections()).toContain(SceneProjection);
     expect(registry.projections()).toContain(HoleProjection);
     expect(registry.projections()).toContain(ShrewProjection);
     expect(registry.projections()).toContain(MonsterProjection);
     expect(registry.projections()).toContain(PerfHeroProjection);
+    expect(registry.projections()).toContain(PlayerProjection);
     expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("hammer");
     expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("scene");
     expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("hole");
     expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("shrew");
+    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("player");
+    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("hit");
   });
 
   it("显式装配九组洞位和地鼠固定拓扑", () => {
@@ -176,6 +182,7 @@ describe("GameFeatureRegistry", () => {
       world,
       entities,
       views: {
+        create: ({ create }: any) => create(),
         mount: ({ create }: any) => create(),
         mountMany: (): any[] => [],
       },
@@ -211,7 +218,12 @@ describe("GameFeatureRegistry", () => {
       singletons,
       perfConfig: getPerfTestRuntimeConfig(""),
       entities,
+      effects: {
+        on: () => {},
+        emit: () => {},
+      },
       views: {
+        create: ({ create }: any) => create(),
         mount: ({ projection, create }: any) => {
           mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
           return create();
@@ -256,7 +268,6 @@ describe("GameFeatureRegistry", () => {
       shrew: 9,
       hammer: 1,
       player: 1,
-      hit: 1,
       monster: MONSTER_SPAWN_RULES.reduce((count, rule) => count + rule.maxActiveCount, 0),
     });
     expect(owned).toEqual([]);

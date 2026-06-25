@@ -5,6 +5,7 @@ import type { GameLoopPipeline } from "../../view/GameLoopPipeline";
 import type { KickInputAdapter } from "../../view/KickInputAdapter";
 import type { EntityRuntime } from "../../ecs/runtime/EntityRuntime";
 import type { ProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
+import type { EffectRuntime } from "../../effects/EffectRuntime";
 import { defineQuery } from "bitecs";
 import { HammerComponent } from "../../ecs/components";
 
@@ -15,6 +16,7 @@ interface GameSceneInternals {
   _kickInput: KickInputAdapter | null;
   _entityRuntime: EntityRuntime | null;
   _projectionRuntime: ProjectionRuntime | null;
+  _effectRuntime: EffectRuntime | null;
 }
 
 describe("GameScene lifecycle", () => {
@@ -50,6 +52,7 @@ describe("GameScene lifecycle", () => {
     expect(internals._kickInput).not.toBeNull();
     expect(internals._entityRuntime).not.toBeNull();
     expect(internals._projectionRuntime).not.toBeNull();
+    expect(internals._effectRuntime).not.toBeNull();
     expect(Array.from(defineQuery([HammerComponent])(internals._world))).toHaveLength(1);
 
     scene.destroy();
@@ -60,6 +63,7 @@ describe("GameScene lifecycle", () => {
     expect(internals._kickInput).toBeNull();
     expect(internals._entityRuntime).toBeNull();
     expect(internals._projectionRuntime).toBeNull();
+    expect(internals._effectRuntime).toBeNull();
     expect(() => scene.destroy()).not.toThrow();
   });
 

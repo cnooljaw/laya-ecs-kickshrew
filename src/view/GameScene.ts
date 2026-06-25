@@ -10,7 +10,6 @@
  */
 import { createGameWorld, createSingletonEntities, SingletonEntities } from "../ecs/world";
 import { deleteWorld } from "bitecs";
-import { hitResponseSystem } from "../ecs/gameplay/hud/HitResponseSystem";
 import { SyncView } from "../binding/SyncView";
 import { createViewSyncRuntime, type ViewSyncRuntime } from "../binding/ViewSyncRuntime";
 import { NetworkAdapter } from "../network/NetworkAdapter";
@@ -30,6 +29,9 @@ import {
 } from "../sync/projection/ProjectionRuntime";
 import { HammerEntity } from "../ecs/gameplay/hammer/HammerEntity";
 import { SceneEntity } from "../ecs/gameplay/core/CoreEntities";
+import { PlayerEntity } from "../ecs/gameplay/hud/PlayerEntity";
+import { createEffectRuntime, type EffectRuntime } from "../effects/EffectRuntime";
+import { routeKickResponse } from "./KickResponseAdapter";
 
 /** 音效路径 */
 const SND = {
@@ -48,6 +50,7 @@ export class GameScene {
   private _viewSyncRuntime: ViewSyncRuntime | null = null;
   private _entityRuntime: EntityRuntime | null = null;
   private _projectionRuntime: ProjectionRuntime | null = null;
+  private _effectRuntime: EffectRuntime | null = null;
   private _loopPipeline: GameLoopPipeline | null = null;
   private _kickInput: KickInputAdapter | null = null;
 
@@ -71,10 +74,12 @@ export class GameScene {
     this._singletons = createSingletonEntities(this._world, {
       hammer: hammerEid,
       scene: this._entityRuntime.one(SceneEntity),
+      player: this._entityRuntime.one(PlayerEntity),
     });
     this._projectionRuntime = createProjectionRuntime(
       GAME_FEATURE_REGISTRY.projections(),
     );
+    this._effectRuntime = createEffectRuntime();
     if (this._perfConfig.shrewFast) {
       setShrewTimingOverride(getPerfShrewTiming());
     } else {
@@ -103,11 +108,12 @@ export class GameScene {
       viewSyncRuntime: this._viewSyncRuntime,
       entityRuntime: this._entityRuntime,
       projectionRuntime: this._projectionRuntime,
+      effectRuntime: this._effectRuntime,
     }));
 
     // 3. 设置网络回调
     this._network.onResponse((resp: KickResponse) => {
-      hitResponseSystem(this._world, resp);
+      routeKickResponse(this._world, this._effectRuntime!, resp);
     });
 
     this._loopPipeline = new GameLoopPipeline({
@@ -116,12 +122,14 @@ export class GameScene {
       syncView: this._syncView,
       featureRegistry: GAME_FEATURE_REGISTRY,
       projectionRuntime: this._projectionRuntime,
+      effects: this._effectRuntime,
     });
 
     this._kickInput = new KickInputAdapter({
       world: this._world,
       hammerEid,
       network: this._network,
+      effects: this._effectRuntime,
       playSound: (url: string) => {
         const RuntimeLaya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
         if (RuntimeLaya) RuntimeLaya.SoundManager.playSound(url);
@@ -152,6 +160,8 @@ export class GameScene {
     this._kickInput = null;
     this._loopPipeline = null;
     this._viewRegistry.clear();
+    this._effectRuntime?.clear();
+    this._effectRuntime = null;
     this._projectionRuntime?.clear();
     this._projectionRuntime = null;
     this._viewSyncRuntime?.clear();

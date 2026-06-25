@@ -1,25 +1,18 @@
-import { addComponent, addEntity } from "bitecs";
 import { describe, expect, it } from "vitest";
-import { createViewSyncRuntime } from "../../binding/ViewSyncRuntime";
-import { HitViewSync, PlayerViewSync } from "../../binding/viewSyncs";
-import { HitComponent, PlayerComponent } from "../../ecs/components";
-import { createGameWorld, createSingletonEntities } from "../../ecs/world";
-import {
-  BIT_HIT_INDEX,
-  BIT_HIT_REWARD,
-  BIT_HIT_WASHIT,
-  BIT_PLAYER_ANGRY,
-  BIT_PLAYER_LEVEL,
-  BIT_PLAYER_MONEY,
-  BIT_PLAYER_POWER,
-} from "../../sync/DirtyFlags";
-import type { IHitEffectNode } from "../../sync/contracts/HitViewContract";
+import { PlayerComponent } from "../../ecs/components";
+import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
+import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createGameWorld } from "../../ecs/world";
 import type { IPlayerHUD } from "../../sync/contracts/PlayerViewContract";
+import { createProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
+import { PlayerProjection } from "../../sync/projections/HudProjection";
 
-describe("HUD view sync", () => {
-  it("projects player HUD values", () => {
+describe("HUD projection", () => {
+  it("projects player values and deduplicates power fields", () => {
     const world = createGameWorld();
-    const { player } = createSingletonEntities(world);
+    const entities = createEntityRuntime(world, [PlayerEntity]);
+    entities.bootstrapSingletons();
+    const player = entities.one(PlayerEntity);
     const calls = {
       money: [] as number[],
       angry: [] as number[],
@@ -27,60 +20,30 @@ describe("HUD view sync", () => {
       level: [] as number[],
     };
     const node: IPlayerHUD = {
-      setMoney: (value) => calls.money.push(value),
-      setAngry: (value) => calls.angry.push(value),
+      setMoney: value => calls.money.push(value),
+      setAngry: value => calls.angry.push(value),
       setPower: (value, max) => calls.power.push({ value, max }),
-      setLevel: (value) => calls.level.push(value),
+      setLevel: value => calls.level.push(value),
     };
-    const runtime = createViewSyncRuntime([PlayerViewSync]);
-    runtime.registryFor(PlayerViewSync).register(player, node);
+    const runtime = createProjectionRuntime([PlayerProjection]);
+    runtime.mount(PlayerProjection, player, node);
+    runtime.mark(world);
+    runtime.sync(world);
+    Object.values(calls).forEach(values => { values.length = 0; });
 
     PlayerComponent.money[player] = 100;
     PlayerComponent.angry[player] = 50;
     PlayerComponent.power[player] = 5;
     PlayerComponent.powerTop[player] = 10;
     PlayerComponent.level[player] = 2;
-    runtime.channelFor(PlayerViewSync).project(
-      player,
-      BIT_PLAYER_MONEY | BIT_PLAYER_ANGRY | BIT_PLAYER_POWER | BIT_PLAYER_LEVEL,
-      false,
-    );
+    runtime.mark(world);
+    runtime.sync(world);
 
     expect(calls).toEqual({
       money: [100],
       angry: [50],
       power: [{ value: 5, max: 10 }],
       level: [2],
-    });
-  });
-
-  it("deduplicates hit fields into one reward projection", () => {
-    const world = createGameWorld();
-    const eid = addEntity(world);
-    addComponent(world, HitComponent, eid);
-    const calls = {
-      rewards: [] as Array<{ shrewIndex: number; reward: number }>,
-      misses: 0,
-    };
-    const node: IHitEffectNode = {
-      showReward: (shrewIndex, reward) => calls.rewards.push({ shrewIndex, reward }),
-      showMiss: () => { calls.misses += 1; },
-    };
-    const runtime = createViewSyncRuntime([HitViewSync]);
-    runtime.registryFor(HitViewSync).register(eid, node);
-
-    HitComponent.shrewIndex[eid] = 4;
-    HitComponent.reward[eid] = 80;
-    HitComponent.wasHit[eid] = 1;
-    runtime.channelFor(HitViewSync).project(
-      eid,
-      BIT_HIT_INDEX | BIT_HIT_REWARD | BIT_HIT_WASHIT,
-      false,
-    );
-
-    expect(calls).toEqual({
-      rewards: [{ shrewIndex: 4, reward: 80 }],
-      misses: 0,
     });
   });
 });

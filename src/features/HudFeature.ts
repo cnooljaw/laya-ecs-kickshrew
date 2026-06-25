@@ -1,21 +1,28 @@
-import { HitViewSync, PlayerViewSync } from "../binding/viewSyncs";
+import { PlayerEntity } from "../ecs/gameplay/hud/PlayerEntity";
+import { HitMissEffect, HitRewardEffect } from "../effects/HitEffects";
+import { PlayerProjection } from "../sync/projections/HudProjection";
 import { HitEffectNode } from "../view/HitEffectNode";
 import { PlayerHUD } from "../view/PlayerHUD";
-import type { GameFeature } from "./GameFeature";
+import { defineGameFeature } from "./GameFeature";
 
-export const HudFeature: GameFeature = {
+export const HudFeature = defineGameFeature({
   name: "hud",
-  viewSyncs: [
-    PlayerViewSync,
-    HitViewSync,
-  ],
-  setup: ({ root, singletons, mount }) => {
-    const playerHUD = new PlayerHUD();
-    playerHUD.create(root);
-    mount(PlayerViewSync, singletons.player, playerHUD);
-
-    const hitEffectNode = new HitEffectNode();
-    hitEffectNode.create(root);
-    mount(HitViewSync, singletons.player, hitEffectNode);
+  entities: [PlayerEntity],
+  projections: [PlayerProjection],
+  setup: ({ entities, effects, views }) => {
+    views.mount({
+      eid: entities.one(PlayerEntity),
+      projection: PlayerProjection,
+      create: () => new PlayerHUD(),
+    });
+    const hitEffectNode = views.create({
+      create: () => new HitEffectNode(),
+    });
+    effects.on(HitRewardEffect, payload => {
+      hitEffectNode.showReward(payload.shrewIndex, payload.reward);
+    });
+    effects.on(HitMissEffect, () => {
+      hitEffectNode.showMiss();
+    });
   },
-};
+});

@@ -10,6 +10,8 @@ import {
   HitTraceLogger,
 } from "../debug/HitTraceLogger";
 import type { KickRequest } from "../network/ProtocolTypes";
+import type { EffectRuntime } from "../effects/EffectRuntime";
+import { HitMissEffect } from "../effects/HitEffects";
 
 export const KICK_INPUT_SOUNDS = {
   hitOne:  "resources/sound/sound_shrew/Hit_One.wav",
@@ -21,6 +23,7 @@ interface KickInputAdapterDeps {
   world: any;
   hammerEid: number;
   network: NetworkAdapter;
+  effects: Pick<EffectRuntime, "emit">;
   playSound: (url: string) => void;
   traceLogger?: HitTraceLogger;
 }
@@ -29,7 +32,7 @@ export class KickInputAdapter {
   constructor(private readonly _deps: KickInputAdapterDeps) {}
 
   handleTouch(x: number, y: number): void {
-    const { world, hammerEid, network, playSound } = this._deps;
+    const { world, hammerEid, network, effects, playSound } = this._deps;
     const traceLogger = this._deps.traceLogger ?? consoleHitTraceLogger;
     const { xRatio, yRatio } = normalizeTouch(x, y);
     const hitTable = HammerComponent.hitTable[hammerEid];
@@ -101,6 +104,7 @@ export class KickInputAdapter {
       yRatio,
       hitTable: HammerComponent.hitTable[hammerEid],
     });
+    effects.emit(HitMissEffect, undefined);
     playSound(KICK_INPUT_SOUNDS.hitNull);
   }
 }
