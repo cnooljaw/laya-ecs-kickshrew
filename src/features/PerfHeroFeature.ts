@@ -3,7 +3,7 @@ import { PerfHeroEntity } from "../ecs/gameplay/perfHero/PerfHeroEntity";
 import { perfHeroSystem } from "../ecs/gameplay/perfHero/PerfHeroSystem";
 import { PerfHeroProjection } from "../sync/projections/PerfHeroProjection";
 import { PerfHeroNode, PerfHeroSpinePoolGroup } from "../view/PerfHeroNode";
-import { defineGameFeature } from "./GameFeature";
+import { defineGameFeature } from "../framework/feature/FeatureManifest";
 
 export const PerfHeroFeature = defineGameFeature({
   name: "perfHero",

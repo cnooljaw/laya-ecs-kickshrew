@@ -5,7 +5,7 @@ import {
   noProjection,
   projectionSource,
   watch,
-} from "../projection/ProjectionDefinition";
+} from "../../framework/sync/ProjectionDefinition";
 
 const source = projectionSource("hammer", HammerComponent);
 

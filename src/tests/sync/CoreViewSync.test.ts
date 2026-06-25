@@ -10,13 +10,13 @@ import {
   SceneEntity,
   ShrewEntity,
 } from "../../ecs/gameplay/core/CoreEntities";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { AnimType, MapType, ShrewAction, ShrewType } from "../../ecs/types";
 import { createGameWorld } from "../../ecs/world";
 import type { IHoleNode } from "../../sync/contracts/HoleViewContract";
 import type { ISceneLayer } from "../../sync/contracts/SceneViewContract";
 import type { IShrewNode } from "../../sync/contracts/ShrewViewContract";
-import { createProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
+import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import {
   HoleProjection,
   SceneProjection,

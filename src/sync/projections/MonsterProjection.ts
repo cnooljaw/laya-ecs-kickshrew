@@ -1,6 +1,6 @@
 import { MonsterComponent } from "../../ecs/gameplay/monster/MonsterComponent";
 import type { IMonsterNode } from "../contracts/MonsterViewContract";
-import { defineProjection, projectionSource, watch } from "../projection/ProjectionDefinition";
+import { defineProjection, projectionSource, watch } from "../../framework/sync/ProjectionDefinition";
 
 const source = projectionSource("monster", MonsterComponent);
 

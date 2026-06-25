@@ -1,11 +1,11 @@
-import type { EntityType } from "../ecs/runtime/EntityType";
-import type { ProjectionDefinition } from "../sync/projection/ProjectionDefinition";
+import type { EntityDefinition } from "../ecs/EntityDefinition";
+import type { ProjectionDefinition } from "../sync/ProjectionDefinition";
 import type { FeatureRuntimeContext } from "./FeatureRuntimeContext";
 import type {
   GameFeature,
   GameSystem,
   GameSystemPhase,
-} from "./GameFeature";
+} from "./FeatureManifest";
 
 export interface RegisteredGameSystem {
   readonly name: string;
@@ -15,7 +15,7 @@ export interface RegisteredGameSystem {
 export interface GameFeatureRegistry {
   setupAll(ctx: FeatureRuntimeContext): void;
   systemsByPhase(phase: GameSystemPhase): readonly RegisteredGameSystem[];
-  entityTypes(): readonly EntityType<any>[];
+  entityTypes(): readonly EntityDefinition<any>[];
   projections(): readonly ProjectionDefinition<any>[];
 }
 
@@ -46,7 +46,7 @@ export function validateGameFeatures(features: readonly GameFeature[]): void {
     assertUnique(featureNames, feature.name, "GameFeature");
 
     for (const entityType of feature.entities ?? []) {
-      assertUnique(entityTypeNames, entityType.name, "EntityType");
+      assertUnique(entityTypeNames, entityType.name, "EntityDefinition");
     }
     for (const projection of feature.projections ?? []) {
       assertUnique(projectionNames, projection.name, "Projection");

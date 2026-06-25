@@ -1,7 +1,7 @@
 import { NetworkAdapter } from "../network/NetworkAdapter";
-import type { GameFeatureRegistry } from "../features/GameFeatureRegistry";
-import type { ProjectionRuntime } from "../sync/projection/ProjectionRuntime";
-import type { EffectRuntime } from "../effects/EffectRuntime";
+import type { GameFeatureRegistry } from "../framework/feature/FeatureRegistry";
+import type { ProjectionRuntime } from "../framework/sync/ProjectionRuntime";
+import type { EffectRuntime } from "../framework/sync/EffectRuntime";
 
 interface GameLoopPipelineDeps {
   world: any;

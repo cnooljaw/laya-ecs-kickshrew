@@ -3,7 +3,7 @@ import { HitMissEffect, HitRewardEffect } from "../effects/HitEffects";
 import { PlayerProjection } from "../sync/projections/HudProjection";
 import { HitEffectNode } from "../view/HitEffectNode";
 import { PlayerHUD } from "../view/PlayerHUD";
-import { defineGameFeature } from "./GameFeature";
+import { defineGameFeature } from "../framework/feature/FeatureManifest";
 
 export const HudFeature = defineGameFeature({
   name: "hud",

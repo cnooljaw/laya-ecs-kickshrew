@@ -1,7 +1,7 @@
 import { MONSTER_CONFIG, type MonsterSpawnRule } from "../../../config/MonsterConfig";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponent";
 import { MonsterType } from "./MonsterTypes";
-import type { EntityRuntime } from "../../runtime/EntityRuntime";
+import type { EntityRuntime } from "../../../framework/ecs/EntityRuntime";
 import { MonsterEntity, MonsterTriggerEntity } from "./MonsterEntity";
 
 export function createMonsterTriggerEntities(

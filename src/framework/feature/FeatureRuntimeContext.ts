@@ -1,7 +1,7 @@
-import type { EntityRuntime } from "../ecs/runtime/EntityRuntime";
-import type { EffectRuntime } from "../effects/EffectRuntime";
-import type { ProjectionDefinition } from "../sync/projection/ProjectionDefinition";
-import type { ProjectionRuntime } from "../sync/projection/ProjectionRuntime";
+import type { EntityRuntime } from "../ecs/EntityRuntime";
+import type { EffectRuntime } from "../sync/EffectRuntime";
+import type { ProjectionDefinition } from "../sync/ProjectionDefinition";
+import type { ProjectionRuntime } from "../sync/ProjectionRuntime";
 import type { Destroyable, ViewRegistry } from "../view/ViewRegistry";
 
 export interface MountableView extends Destroyable {

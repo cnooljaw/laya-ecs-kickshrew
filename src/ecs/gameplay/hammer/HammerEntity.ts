@@ -1,8 +1,8 @@
 import { HammerComponent } from "../../components";
-import { defineEntityType } from "../../runtime/EntityType";
+import { defineEntity } from "../../../framework/ecs/EntityDefinition";
 import { HammerType } from "../../types";
 
-export const HammerEntity = defineEntityType({
+export const HammerEntity = defineEntity({
   name: "hammer",
   components: [HammerComponent],
   cardinality: "one",

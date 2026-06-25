@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GameFeatureRegistry } from "../../features/GameFeatureRegistry";
+import type { GameFeatureRegistry } from "../../framework/feature/FeatureRegistry";
 import { GameLoopPipeline } from "../../view/GameLoopPipeline";
 
 describe("GameLoopPipeline", () => {

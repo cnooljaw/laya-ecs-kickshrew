@@ -1,9 +1,9 @@
 import { DESIGN_RESOLUTION } from "../../../config/GameTuning";
 import { PERF_HERO_RESOURCES, PERF_HERO_VIEW_LAYOUT } from "../../../config/ViewLayoutConfig";
 import { PerfHeroComponent } from "../../components";
-import { defineEntityType } from "../../runtime/EntityType";
+import { defineEntity } from "../../../framework/ecs/EntityDefinition";
 
-export const PerfHeroEntity = defineEntityType<number>({
+export const PerfHeroEntity = defineEntity<number>({
   name: "perfHero",
   components: [PerfHeroComponent],
   cardinality: "many",

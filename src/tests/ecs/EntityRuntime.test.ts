@@ -1,13 +1,15 @@
 import { defineComponent, defineQuery, Types, createWorld } from "bitecs";
 import { describe, expect, it } from "vitest";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
-import { defineEntityType } from "../../ecs/runtime/EntityType";
+import {
+  createEntityRuntime,
+  defineEntity,
+} from "../../framework/ecs";
 
 const CounterComponent = defineComponent({
   value: Types.ui32,
 });
 
-const CounterSingleton = defineEntityType({
+const CounterSingleton = defineEntity({
   name: "counterSingleton",
   components: [CounterComponent],
   cardinality: "one",
@@ -16,7 +18,7 @@ const CounterSingleton = defineEntityType({
   },
 });
 
-const CounterPoolEntity = defineEntityType<number>({
+const CounterPoolEntity = defineEntity<number>({
   name: "counterPool",
   components: [CounterComponent],
   cardinality: "many",
@@ -54,10 +56,10 @@ describe("EntityRuntime", () => {
     const runtime = createEntityRuntime(world, [CounterSingleton, CounterPoolEntity]);
 
     expect(() => runtime.create(CounterSingleton, undefined)).toThrow(
-      "EntityType counterSingleton is singleton-only",
+      "EntityDefinition counterSingleton is singleton-only",
     );
     expect(() => runtime.one(CounterPoolEntity)).toThrow(
-      "EntityType counterPool is not a singleton",
+      "EntityDefinition counterPool is not a singleton",
     );
   });
 
@@ -70,7 +72,7 @@ describe("EntityRuntime", () => {
     runtime.clear();
 
     expect(() => runtime.one(CounterSingleton)).toThrow(
-      "EntityType counterSingleton singleton is not initialized",
+      "EntityDefinition counterSingleton singleton is not initialized",
     );
     expect(Array.from(defineQuery([CounterComponent])(world))).toEqual([eid]);
   });

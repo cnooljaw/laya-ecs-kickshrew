@@ -7,7 +7,7 @@ import {
 import { monsterLifetimeSystem, monsterSpawnSystem } from "../ecs/gameplay/monster/MonsterSystem";
 import { MonsterProjection } from "../sync/projections/MonsterProjection";
 import { MonsterNode } from "../view/MonsterNode";
-import { defineGameFeature } from "./GameFeature";
+import { defineGameFeature } from "../framework/feature/FeatureManifest";
 
 export const MonsterFeature = defineGameFeature({
   name: "monster",

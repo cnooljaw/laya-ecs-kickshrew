@@ -1,9 +1,9 @@
 import { MONSTER_CONFIG } from "../../../config/MonsterConfig";
-import { defineEntityType } from "../../runtime/EntityType";
+import { defineEntity } from "../../../framework/ecs/EntityDefinition";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponent";
 import type { MonsterType } from "./MonsterTypes";
 
-export const MonsterEntity = defineEntityType<MonsterType>({
+export const MonsterEntity = defineEntity<MonsterType>({
   name: "monster",
   components: [MonsterComponent],
   cardinality: "many",
@@ -20,7 +20,7 @@ export const MonsterEntity = defineEntityType<MonsterType>({
   },
 });
 
-export const MonsterTriggerEntity = defineEntityType<number>({
+export const MonsterTriggerEntity = defineEntity<number>({
   name: "monsterTrigger",
   components: [MonsterSpawnComponent],
   cardinality: "many",

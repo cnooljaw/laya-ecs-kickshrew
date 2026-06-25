@@ -14,18 +14,18 @@ import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";
 import { GameLoopPipeline } from "./GameLoopPipeline";
 import { KickInputAdapter } from "./KickInputAdapter";
-import { ViewRegistry } from "./ViewRegistry";
+import { ViewRegistry } from "../framework/view/ViewRegistry";
 import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../config/PerfTestConfig";
 import { resetShrewTimingOverride, setShrewTimingOverride } from "../config/GameTuning";
 import { GAME_FEATURE_REGISTRY } from "../features/GameFeatures";
-import { createFeatureRuntimeContext } from "../features/FeatureRuntimeContext";
-import { createEntityRuntime, type EntityRuntime } from "../ecs/runtime/EntityRuntime";
+import { createFeatureRuntimeContext } from "../framework/feature/FeatureRuntimeContext";
+import { createEntityRuntime, type EntityRuntime } from "../framework/ecs/EntityRuntime";
 import {
   createProjectionRuntime,
   type ProjectionRuntime,
-} from "../sync/projection/ProjectionRuntime";
+} from "../framework/sync/ProjectionRuntime";
 import { HammerEntity } from "../ecs/gameplay/hammer/HammerEntity";
-import { createEffectRuntime, type EffectRuntime } from "../effects/EffectRuntime";
+import { createEffectRuntime, type EffectRuntime } from "../framework/sync/EffectRuntime";
 import { routeKickResponse } from "./KickResponseAdapter";
 
 /** 音效路径 */

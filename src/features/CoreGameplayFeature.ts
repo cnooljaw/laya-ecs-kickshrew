@@ -12,8 +12,8 @@ import {
 import { HoleNode } from "../view/HoleNode";
 import { SceneLayer } from "../view/SceneLayer";
 import { ShrewNode } from "../view/ShrewNode";
-import type { FeatureRuntimeContext } from "./FeatureRuntimeContext";
-import { defineGameFeature } from "./GameFeature";
+import type { FeatureRuntimeContext } from "../framework/feature/FeatureRuntimeContext";
+import { defineGameFeature } from "../framework/feature/FeatureManifest";
 
 export interface CoreGameplaySetupResult {
   scene: number;

@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { createGameWorld } from "../../ecs/world";
-import { ViewRegistry } from "../../view/ViewRegistry";
+import { ViewRegistry } from "../../framework/view/ViewRegistry";
 import { addComponent, addEntity, defineComponent, Types } from "bitecs";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
-import { createProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
+import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import {
   defineProjection,
   projectionSource,
   watch,
-} from "../../sync/projection/ProjectionDefinition";
-import { createFeatureRuntimeContext } from "../../features/FeatureRuntimeContext";
-import { createEffectRuntime } from "../../effects/EffectRuntime";
+} from "../../framework/sync/ProjectionDefinition";
+import { createFeatureRuntimeContext } from "../../framework/feature/FeatureRuntimeContext";
+import { createEffectRuntime } from "../../framework/sync/EffectRuntime";
 
 const CounterComponent = defineComponent({
   value: Types.ui32,

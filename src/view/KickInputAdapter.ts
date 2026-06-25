@@ -10,7 +10,7 @@ import {
   HitTraceLogger,
 } from "../debug/HitTraceLogger";
 import type { KickRequest } from "../network/ProtocolTypes";
-import type { EffectRuntime } from "../effects/EffectRuntime";
+import type { EffectRuntime } from "../framework/sync/EffectRuntime";
 import { HitMissEffect } from "../effects/HitEffects";
 
 export const KICK_INPUT_SOUNDS = {

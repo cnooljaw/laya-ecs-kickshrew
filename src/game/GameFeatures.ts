@@ -1,6 +1,6 @@
 import { CoreGameplayFeature as ShrewFeature } from "../features/CoreGameplayFeature";
-import type { GameFeature } from "../features/GameFeature";
-import { createGameFeatureRegistry } from "../features/GameFeatureRegistry";
+import type { GameFeature } from "../framework/feature/FeatureManifest";
+import { createGameFeatureRegistry } from "../framework/feature/FeatureRegistry";
 import { HammerFeature } from "../features/HammerFeature";
 import { HudFeature as PlayerHudFeature } from "../features/HudFeature";
 import { MonsterFeature } from "../features/MonsterFeature";

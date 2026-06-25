@@ -5,7 +5,7 @@ import {
   noProjection,
   projectionSource,
   watch,
-} from "../../sync/projection/ProjectionDefinition";
+} from "../../framework/sync/ProjectionDefinition";
 
 const CounterComponent = defineComponent({
   value: Types.ui32,

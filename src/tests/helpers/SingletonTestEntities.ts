@@ -1,7 +1,7 @@
 import { SceneEntity } from "../../ecs/gameplay/core/CoreEntities";
 import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
 import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 
 export function createSingletonEntities(world: any): {
   hammer: number;

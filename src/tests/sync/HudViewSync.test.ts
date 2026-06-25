@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { PlayerComponent } from "../../ecs/components";
 import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../ecs/world";
 import type { IPlayerHUD } from "../../sync/contracts/PlayerViewContract";
-import { createProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
+import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import { PlayerProjection } from "../../sync/projections/HudProjection";
 
 describe("HUD projection", () => {

@@ -3,7 +3,7 @@ import { HAMMER_RULES } from "../../config/GameTuning";
 import { HammerComponent, PlayerComponent } from "../../ecs/components";
 import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
 import { hammerSystem } from "../../ecs/gameplay/hammer/HammerSystem";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HammerType } from "../../ecs/types";
 import { createGameWorld } from "../../ecs/world";
 import { createSingletonEntities } from "../helpers/SingletonTestEntities";

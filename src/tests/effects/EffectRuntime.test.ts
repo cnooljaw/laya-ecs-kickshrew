@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { defineEffect } from "../../effects/EffectDefinition";
-import { createEffectRuntime } from "../../effects/EffectRuntime";
+import { defineEffect } from "../../framework/sync/EffectDefinition";
+import { createEffectRuntime } from "../../framework/sync/EffectRuntime";
 
 describe("EffectRuntime", () => {
   it("queues typed effects until flush", () => {

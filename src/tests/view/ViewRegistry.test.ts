@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ViewRegistry } from "../../view/ViewRegistry";
+import { ViewRegistry } from "../../framework/view/ViewRegistry";
 
 describe("ViewRegistry", () => {
   it("clear destroys owned resources in reverse order and is idempotent", () => {

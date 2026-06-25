@@ -1,7 +1,7 @@
 import { PlayerComponent } from "../../components";
-import { defineEntityType } from "../../runtime/EntityType";
+import { defineEntity } from "../../../framework/ecs/EntityDefinition";
 
-export const PlayerEntity = defineEntityType({
+export const PlayerEntity = defineEntity({
   name: "player",
   components: [PlayerComponent],
   cardinality: "one",

@@ -15,7 +15,7 @@ import {
   ShrewEntity,
 } from "../../ecs/gameplay/core/CoreEntities";
 import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../ecs/types";
 import { createGameWorld } from "../../ecs/world";
 

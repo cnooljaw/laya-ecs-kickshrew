@@ -2,7 +2,7 @@ import {
   hitResponseSystem,
   type KickResponse,
 } from "../ecs/gameplay/hud/HitResponseSystem";
-import type { EffectRuntime } from "../effects/EffectRuntime";
+import type { EffectRuntime } from "../framework/sync/EffectRuntime";
 import { HitRewardEffect } from "../effects/HitEffects";
 
 export function routeKickResponse(

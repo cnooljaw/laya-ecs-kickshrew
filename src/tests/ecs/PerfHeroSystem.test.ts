@@ -3,7 +3,7 @@ import { createGameWorld } from "../../ecs/world";
 import { PerfHeroComponent } from "../../ecs/components";
 import { perfHeroSystem } from "../../ecs/gameplay/perfHero/PerfHeroSystem";
 import { PERF_HERO_VIEW_LAYOUT, PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
 
 function createPerfHeroEntities(world: any, count: number): number[] {

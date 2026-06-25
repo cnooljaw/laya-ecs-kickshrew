@@ -1,7 +1,7 @@
 import { HolePositions, getHoleGrid, getHoleZOrder } from "../../../config/HolePositions";
 import { SCENE_CYCLE_INTERVAL } from "../../../config/SceneConfig";
 import { AnimationComponent, HoleComponent, SceneComponent, ShrewComponent } from "../../components";
-import { defineEntityType } from "../../runtime/EntityType";
+import { defineEntity } from "../../../framework/ecs/EntityDefinition";
 import { MapType, type ShrewType } from "../../types";
 import { resetShrewForNextCycle } from "./ShrewLifecycle";
 
@@ -15,7 +15,7 @@ export interface ShrewEntityInput {
   mapType: MapType;
 }
 
-export const SceneEntity = defineEntityType({
+export const SceneEntity = defineEntity({
   name: "scene",
   components: [SceneComponent],
   cardinality: "one",
@@ -27,7 +27,7 @@ export const SceneEntity = defineEntityType({
   },
 });
 
-export const HoleEntity = defineEntityType<HoleEntityInput>({
+export const HoleEntity = defineEntity<HoleEntityInput>({
   name: "hole",
   components: [HoleComponent],
   cardinality: "many",
@@ -50,7 +50,7 @@ export const HoleEntity = defineEntityType<HoleEntityInput>({
   },
 });
 
-export const ShrewEntity = defineEntityType<ShrewEntityInput>({
+export const ShrewEntity = defineEntity<ShrewEntityInput>({
   name: "shrew",
   components: [ShrewComponent, AnimationComponent],
   cardinality: "many",

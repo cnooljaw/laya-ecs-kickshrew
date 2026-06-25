@@ -14,7 +14,7 @@ import {
   noProjection,
   projectionSource,
   watch,
-} from "../projection/ProjectionDefinition";
+} from "../../framework/sync/ProjectionDefinition";
 
 const sceneSource = projectionSource("scene", SceneComponent);
 const holeSource = projectionSource("hole", HoleComponent);

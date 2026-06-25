@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
 import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HammerType } from "../../ecs/types";
 import { createGameWorld } from "../../ecs/world";
-import { createEffectRuntime } from "../../effects/EffectRuntime";
+import { createEffectRuntime } from "../../framework/sync/EffectRuntime";
 import { HitRewardEffect } from "../../effects/HitEffects";
 import { routeKickResponse } from "../../view/KickResponseAdapter";
 

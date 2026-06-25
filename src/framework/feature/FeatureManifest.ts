@@ -1,5 +1,5 @@
-import type { EntityType } from "../ecs/runtime/EntityType";
-import type { ProjectionDefinition } from "../sync/projection/ProjectionDefinition";
+import type { EntityDefinition } from "../ecs/EntityDefinition";
+import type { ProjectionDefinition } from "../sync/ProjectionDefinition";
 import type { FeatureRuntimeContext } from "./FeatureRuntimeContext";
 
 export type GameSystem = (world: any, deltaSec: number) => void;
@@ -13,7 +13,7 @@ export interface FeatureSystemGroups {
 export interface GameFeature {
   readonly name: string;
   setup?: (ctx: FeatureRuntimeContext) => void;
-  entities?: readonly EntityType<any>[];
+  entities?: readonly EntityDefinition<any>[];
   projections?: readonly ProjectionDefinition<any>[];
   systems?: FeatureSystemGroups;
 }

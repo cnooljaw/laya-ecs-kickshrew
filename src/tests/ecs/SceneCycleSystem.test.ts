@@ -4,7 +4,7 @@ import { SCENE_CYCLE_INTERVAL } from "../../config/SceneConfig";
 import { HoleComponent, SceneComponent, ShrewComponent } from "../../ecs/components";
 import { HoleEntity, SceneEntity, ShrewEntity } from "../../ecs/gameplay/core/CoreEntities";
 import { sceneCycleSystem } from "../../ecs/gameplay/core/SceneCycleSystem";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../ecs/types";
 import { createGameWorld } from "../../ecs/world";
 

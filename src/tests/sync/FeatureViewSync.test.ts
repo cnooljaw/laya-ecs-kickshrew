@@ -4,13 +4,13 @@ import { MonsterEntity } from "../../ecs/gameplay/monster/MonsterEntity";
 import { MonsterType } from "../../ecs/gameplay/monster/MonsterTypes";
 import { PerfHeroComponent } from "../../ecs/components";
 import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../ecs/world";
 import type { IMonsterNode } from "../../sync/contracts/MonsterViewContract";
 import type { IPerfHeroNode } from "../../sync/contracts/PerfHeroViewContract";
 import { MonsterProjection } from "../../sync/projections/MonsterProjection";
 import { PerfHeroProjection } from "../../sync/projections/PerfHeroProjection";
-import { createProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
+import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 
 describe("feature projections", () => {
   it("projects monster identity, transform and visibility without resource URLs", () => {

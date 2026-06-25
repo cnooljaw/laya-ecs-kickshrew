@@ -6,26 +6,26 @@ import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
 import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
 import { MonsterEntity, MonsterTriggerEntity } from "../../ecs/gameplay/monster/MonsterEntity";
 import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
-import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
-import { defineEntityType } from "../../ecs/runtime/EntityType";
+import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
+import { defineEntity } from "../../framework/ecs/EntityDefinition";
 import { createGameWorld } from "../../ecs/world";
 import { setupCoreGameplay } from "../../features/CoreGameplayFeature";
-import { defineGameFeature, type GameFeature } from "../../features/GameFeature";
+import { defineGameFeature, type GameFeature } from "../../framework/feature/FeatureManifest";
 import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../features/GameFeatures";
-import { createGameFeatureRegistry, validateGameFeatures } from "../../features/GameFeatureRegistry";
+import { createGameFeatureRegistry, validateGameFeatures } from "../../framework/feature/FeatureRegistry";
 import {
   defineProjection,
   noProjection,
   projectionSource,
   watch,
-} from "../../sync/projection/ProjectionDefinition";
+} from "../../framework/sync/ProjectionDefinition";
 import { HoleProjection, SceneProjection, ShrewProjection } from "../../sync/projections/CoreProjections";
 import { HammerProjection } from "../../sync/projections/HammerProjection";
 import { PlayerProjection } from "../../sync/projections/HudProjection";
 import { MonsterProjection } from "../../sync/projections/MonsterProjection";
 import { PerfHeroProjection } from "../../sync/projections/PerfHeroProjection";
 
-const TestSceneEntity = defineEntityType({
+const TestSceneEntity = defineEntity({
   name: "testScene",
   components: [SceneComponent],
   cardinality: "one",
@@ -180,7 +180,7 @@ describe("GameFeatureRegistry", () => {
     expect(() => validateGameFeatures([
       defineGameFeature({ name: "a", entities: [TestSceneEntity] }),
       defineGameFeature({ name: "b", entities: [TestSceneEntity] }),
-    ])).toThrow("EntityType name 重复: testScene");
+    ])).toThrow("EntityDefinition name 重复: testScene");
     expect(() => validateGameFeatures([
       defineGameFeature({ name: "a", projections: [TestSceneProjection] }),
       defineGameFeature({ name: "b", projections: [TestSceneProjection] }),

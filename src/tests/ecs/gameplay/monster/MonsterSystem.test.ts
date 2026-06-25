@@ -5,7 +5,7 @@ import { PlayerComponent } from "../../../../ecs/components";
 import { MonsterComponent, MonsterSpawnComponent } from "../../../../ecs/gameplay/monster/MonsterComponent";
 import { MonsterType } from "../../../../ecs/gameplay/monster/MonsterTypes";
 import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../../ecs/gameplay/monster/MonsterSystem";
-import { createEntityRuntime } from "../../../../ecs/runtime/EntityRuntime";
+import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 import {
   MonsterEntity,
   MonsterTriggerEntity,

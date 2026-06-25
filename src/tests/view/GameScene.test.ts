@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { GameScene } from "../../view/GameScene";
 import type { GameLoopPipeline } from "../../view/GameLoopPipeline";
 import type { KickInputAdapter } from "../../view/KickInputAdapter";
-import type { EntityRuntime } from "../../ecs/runtime/EntityRuntime";
-import type { ProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
-import type { EffectRuntime } from "../../effects/EffectRuntime";
+import type { EntityRuntime } from "../../framework/ecs/EntityRuntime";
+import type { ProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
+import type { EffectRuntime } from "../../framework/sync/EffectRuntime";
 import { defineQuery } from "bitecs";
 import { HammerComponent } from "../../ecs/components";
 
