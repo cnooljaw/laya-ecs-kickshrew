@@ -8,13 +8,13 @@ import {
   SceneComponent,
   ShrewComponent,
 } from "../../game/features/shrew";
-import { PlayerComponent } from "../../ecs/components";
+import { PlayerComponent } from "../../game/features/playerHud";
 import {
   HoleEntity,
   SceneEntity,
   ShrewEntity,
 } from "../../game/features/shrew";
-import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
+import { PlayerEntity } from "../../game/features/playerHud";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
 import { createGameWorld } from "../../ecs/world";

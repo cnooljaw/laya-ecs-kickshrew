@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { createGameWorld } from "../../ecs/world";
 import { createSingletonEntities } from "../helpers/SingletonTestEntities";
 import { createHoleEntities, createShrewEntity } from "../helpers/CoreTestEntities";
-import { HammerComponent } from "../../ecs/components";
+import { HammerComponent } from "../../game/features/hammer";
 import { HoleComponent, ShrewComponent } from "../../game/features/shrew";
 import { MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
 import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../config/GameTuning";
-import { KickInputAdapter, KICK_INPUT_SOUNDS } from "../../view/KickInputAdapter";
-import { HitMissEffect } from "../../effects/HitEffects";
+import { KickInputAdapter, KICK_INPUT_SOUNDS } from "../../game/session";
+import { HitMissEffect } from "../../game/features/playerHud";
 
 describe("KickInputAdapter", () => {
   it("点中可点击地鼠时播放命中音效并发送击打请求", () => {

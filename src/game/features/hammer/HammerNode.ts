@@ -3,9 +3,12 @@
  *
  * Laya 实现：锤子中心点对齐点击点，避免点击位置与锤子视觉中心错位。
  */
-import type { IHammerNode } from "../sync/contracts/HammerViewContract";
-import { getAtlasPath, getFrameTexture } from "../resource/AtlasConfig";
-import { HAMMER_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
+import { clearTweens, destroyNode } from "../../../framework/view/LayaLifecycle";
+import { loadResource } from "../../../framework/view/LayaLoader";
+import { getLaya } from "../../../framework/view/LayaRuntime";
+import { getAtlasPath, getFrameTexture } from "../../../resource/AtlasConfig";
+import { HAMMER_VIEW_CONFIG } from "./HammerViewConfig";
+import type { IHammerNode } from "./HammerViewContract";
 
 /** 锤子类型 → atlas 中的帧名（game_view.atlas 内的大图锤子帧）*/
 const HAMMER_FRAME_MAP: Record<number, string> = {
@@ -36,11 +39,11 @@ export class HammerNode implements IHammerNode {
   private _baseRotation: number = 0;
 
   create(parent: any): void {
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (Laya) {
       this._sprite = new Laya.Sprite();
       this._sprite.name = "HammerNode";
-      this._sprite.zOrder = HAMMER_VIEW_LAYOUT.zOrder;
+      this._sprite.zOrder = HAMMER_VIEW_CONFIG.zOrder;
       this._parent = parent;
       if (parent) {
         parent.addChild(this._sprite);
@@ -57,13 +60,13 @@ export class HammerNode implements IHammerNode {
     const frameName = HAMMER_FRAME_MAP[hammerType];
     if (!frameName) return;
 
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (!Laya) return;
 
     const atlasPath = getAtlasPath(HAMMER_ATLAS_NAME);
     const atlasUrl = `resources/${atlasPath}.atlas`;
 
-    Laya.loader.load(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
+    loadResource(atlasUrl, Laya.Loader.ATLAS).then((atlasRes: any) => {
       if (!this._sprite) return;
       const tex = getFrameTexture(atlasRes, frameName);
       if (tex) {
@@ -84,23 +87,23 @@ export class HammerNode implements IHammerNode {
 
   playHitAnimation(): void {
     if (!this._sprite) return;
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (Laya) {
-      const swing = HAMMER_VIEW_LAYOUT.hitSwingDeg;
-      const duration = HAMMER_VIEW_LAYOUT.hitTweenMs;
-      Laya.Tween?.clearAll?.(this._sprite);
+      const swing = HAMMER_VIEW_CONFIG.hitSwingDeg;
+      const duration = HAMMER_VIEW_CONFIG.hitTweenMs;
+      clearTweens(this._sprite);
       // 锤子击打动画: 正向摆动 → 反向摆动 → 复位
       Laya.Tween.to(this._sprite, { rotation: this._baseRotation + swing }, duration);
       Laya.Tween.to(this._sprite, { rotation: this._baseRotation - swing }, duration, null, Laya.Handler.create(this, () => {
         Laya.Tween.to(this._sprite, { rotation: this._baseRotation }, duration);
-      }), HAMMER_VIEW_LAYOUT.hitSecondTweenDelayMs);
+      }), HAMMER_VIEW_CONFIG.hitSecondTweenDelayMs);
     }
   }
 
   followTouch(x: number, y: number): void {
     if (this._sprite) {
       this._sprite.pos(x, y);
-      this._sprite.zOrder = HAMMER_VIEW_LAYOUT.zOrder;
+      this._sprite.zOrder = HAMMER_VIEW_CONFIG.zOrder;
       if (this._parent) {
         this._parent.setChildIndex?.(this._sprite, this._parent.numChildren - 1);
       }
@@ -109,9 +112,8 @@ export class HammerNode implements IHammerNode {
 
   destroy(): void {
     if (this._sprite) {
-      const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
-      Laya?.Tween?.clearAll?.(this._sprite);
-      this._sprite.destroy();
+      clearTweens(this._sprite);
+      destroyNode(this._sprite);
       this._sprite = null;
     }
     this._parent = null;

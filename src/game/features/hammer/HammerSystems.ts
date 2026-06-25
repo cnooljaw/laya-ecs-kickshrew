@@ -8,12 +8,10 @@
  * 4. 锤子动画结束后恢复 hitTable=1
  */
 import { defineQuery } from "bitecs";
-import { HammerComponent, PlayerComponent } from "../../components";
-import { HammerType } from "../../types";
-import { HAMMER_RULES } from "../../../config/GameTuning";
+import { HammerComponent } from "./HammerComponents";
+import { HammerType } from "./HammerTypes";
 
 const hammerQuery = defineQuery([HammerComponent]);
-const playerQuery = defineQuery([PlayerComponent]);
 
 /**
  * 锤子系统
@@ -53,18 +51,6 @@ export function hammerSystem(
     }
   }
 
-  // 检查雷神锤触发
-  const playerEntities = playerQuery(world);
-  if (playerEntities.length > 0 && HammerComponent.isThunderActive[hammerEid] !== 1) {
-    const playerEid = playerEntities[0];
-    if (PlayerComponent.angry[playerEid] >= HAMMER_RULES.thunderAngryThreshold) {
-      HammerComponent.isThunderActive[hammerEid] = 1;
-      HammerComponent.selectedType[hammerEid] = HammerType.Thunder;
-      HammerComponent.hitTable[hammerEid] = 0;
-      HammerComponent.hitCooldownSec[hammerEid] = 0;
-    }
-  }
-
   // 雷神锤动画完成 → 恢复
   if (thunderAnimDone && HammerComponent.isThunderActive[hammerEid] === 1) {
     HammerComponent.isThunderActive[hammerEid] = 0;
@@ -75,4 +61,15 @@ export function hammerSystem(
     HammerComponent.hitTable[hammerEid] = 1;
     HammerComponent.hitCooldownSec[hammerEid] = 0;
   }
+}
+
+export function findHammer(world: any): number | undefined {
+  return hammerQuery(world)[0];
+}
+
+export function applyHammerKickResponse(
+  hammerEid: number,
+  response: { readonly hammerId: number },
+): void {
+  HammerComponent.selectedType[hammerEid] = response.hammerId;
 }

@@ -13,7 +13,6 @@ import { deleteWorld } from "bitecs";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";
 import { GameLoopPipeline } from "./GameLoopPipeline";
-import { KickInputAdapter } from "./KickInputAdapter";
 import { ViewRegistry } from "../framework/view/ViewRegistry";
 import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../game/features/perfHero";
 import {
@@ -27,9 +26,12 @@ import {
   createProjectionRuntime,
   type ProjectionRuntime,
 } from "../framework/sync/ProjectionRuntime";
-import { HammerEntity } from "../ecs/gameplay/hammer/HammerEntity";
 import { createEffectRuntime, type EffectRuntime } from "../framework/sync/EffectRuntime";
-import { routeKickResponse } from "./KickResponseAdapter";
+import {
+  KickInputController,
+  createKickInputController,
+  routeKickResponse,
+} from "../game/session";
 
 /** 音效路径 */
 const SND = {
@@ -47,7 +49,7 @@ export class GameScene {
   private _projectionRuntime: ProjectionRuntime | null = null;
   private _effectRuntime: EffectRuntime | null = null;
   private _loopPipeline: GameLoopPipeline | null = null;
-  private _kickInput: KickInputAdapter | null = null;
+  private _kickInput: KickInputController | null = null;
 
   constructor() {
     this._network = new NetworkAdapter();
@@ -64,7 +66,6 @@ export class GameScene {
       GAME_FEATURE_REGISTRY.entityTypes(),
     );
     this._entityRuntime.bootstrapSingletons();
-    const hammerEid = this._entityRuntime.one(HammerEntity);
     this._projectionRuntime = createProjectionRuntime(
       GAME_FEATURE_REGISTRY.projections(),
     );
@@ -107,9 +108,8 @@ export class GameScene {
       effects: this._effectRuntime,
     });
 
-    this._kickInput = new KickInputAdapter({
+    this._kickInput = createKickInputController({
       world: this._world,
-      hammerEid,
       network: this._network,
       effects: this._effectRuntime,
       playSound: (url: string) => {

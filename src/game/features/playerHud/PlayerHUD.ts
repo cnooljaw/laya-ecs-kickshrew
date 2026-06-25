@@ -2,8 +2,10 @@
  * PlayerHUD — 玩家信息面板
  * 显示金币、怒气值、体力、等级
  */
-import type { IPlayerHUD } from "../sync/contracts/PlayerViewContract";
-import { PLAYER_HUD_LAYOUT } from "../config/ViewLayoutConfig";
+import { destroyNode } from "../../../framework/view/LayaLifecycle";
+import { getLaya } from "../../../framework/view/LayaRuntime";
+import { PLAYER_HUD_VIEW_CONFIG } from "./PlayerHudViewConfig";
+import type { IPlayerHUD } from "./PlayerViewContract";
 
 export class PlayerHUD implements IPlayerHUD {
   private _container: any = null;
@@ -13,17 +15,17 @@ export class PlayerHUD implements IPlayerHUD {
   private _levelText: any = null;
 
   create(parent: any): void {
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (Laya) {
       this._container = new Laya.Sprite();
       this._container.name = "PlayerHUD";
-      this._container.zOrder = PLAYER_HUD_LAYOUT.zOrder;
+      this._container.zOrder = PLAYER_HUD_VIEW_CONFIG.zOrder;
       if (parent) {
         parent.addChild(this._container);
       }
 
       // 横版布局：左上角纵向排列，字体缩小
-      const { colors, fontSize, lineHeight, x, y } = PLAYER_HUD_LAYOUT;
+      const { colors, fontSize, lineHeight, x, y } = PLAYER_HUD_VIEW_CONFIG;
 
       // 金币
       this._moneyText = new Laya.Text();
@@ -89,7 +91,7 @@ export class PlayerHUD implements IPlayerHUD {
 
   destroy(): void {
     if (this._container) {
-      this._container.destroy();
+      destroyNode(this._container);
       this._container = null;
     }
     this._moneyText = null;

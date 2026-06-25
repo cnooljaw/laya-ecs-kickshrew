@@ -1,4 +1,4 @@
-import { HammerType } from "../ecs/types";
+import { HammerType } from "./HammerTypes";
 
 export interface HammerConfig {
   id: number;

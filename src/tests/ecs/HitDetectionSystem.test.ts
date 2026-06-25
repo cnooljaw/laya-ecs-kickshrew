@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld } from '../../ecs/world';
 import { createSingletonEntities } from '../helpers/SingletonTestEntities';
 import { createHoleEntities, createShrewEntity } from '../helpers/CoreTestEntities';
-import { HammerComponent } from "../../ecs/components";
+import { HammerComponent } from "../../game/features/hammer";
 import { HammerType } from "../../ecs/types";
 import {
   HOLE_COUNT,
@@ -13,7 +13,7 @@ import {
   ShrewComponent,
   ShrewType,
 } from "../../game/features/shrew";
-import { hitDetectionSystem, HitResult } from '../../ecs/gameplay/core/HitDetectionSystem';
+import { hitDetectionSystem, HitResult } from "../../game/session/KickDetection";
 import { HAMMER_RULES } from "../../config/GameTuning";
 
 describe('HitDetectionSystem', () => {

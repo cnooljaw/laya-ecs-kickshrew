@@ -10,15 +10,17 @@
  * 此系统由触摸事件异步触发，不在帧循环中。
  */
 import { defineQuery } from "bitecs";
-import { HammerComponent } from "../../components";
+import { HAMMER_RULES, HIT_DETECTION } from "../../config/GameTuning";
+import {
+  HammerComponent,
+} from "../features/hammer/index";
 import {
   HOLE_COUNT,
   HoleComponent,
   ShrewComponent,
   ShrewType,
   startShrewDizzyHold,
-} from "../../../game/features/shrew";
-import { HAMMER_RULES, HIT_DETECTION } from "../../../config/GameTuning";
+} from "../features/shrew/index";
 
 const holeQuery = defineQuery([HoleComponent]);
 const hammerQuery = defineQuery([HammerComponent]);

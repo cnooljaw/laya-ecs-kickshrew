@@ -1,5 +1,5 @@
-import { PlayerComponent } from "../../components";
 import { defineEntity } from "../../../framework/ecs/EntityDefinition";
+import { PlayerComponent } from "./PlayerComponents";
 
 export const PlayerEntity = defineEntity({
   name: "player",

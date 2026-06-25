@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld } from '../../ecs/world';
 import { createSingletonEntities } from '../helpers/SingletonTestEntities';
 import { createHoleEntities, createShrewEntity } from '../helpers/CoreTestEntities';
-import { HammerComponent } from "../../ecs/components";
+import { HammerComponent } from "../../game/features/hammer";
 import {
   AnimationComponent,
   AnimType,

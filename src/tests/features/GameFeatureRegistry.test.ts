@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { MONSTER_SPAWN_RULES } from "../../game/features/monster";
 import { HoleComponent, SceneComponent } from "../../game/features/shrew";
 import { HoleEntity, SceneEntity, ShrewEntity } from "../../game/features/shrew";
-import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
-import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
+import { HammerEntity } from "../../game/features/hammer";
+import { PlayerEntity } from "../../game/features/playerHud";
 import { MonsterEntity, MonsterTriggerEntity } from "../../game/features/monster";
 import { PerfHeroEntity } from "../../game/features/perfHero";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
@@ -24,8 +24,8 @@ import {
   watch,
 } from "../../framework/sync/ProjectionDefinition";
 import { HoleProjection, SceneProjection, ShrewProjection } from "../../game/features/shrew";
-import { HammerProjection } from "../../sync/projections/HammerProjection";
-import { PlayerProjection } from "../../sync/projections/HudProjection";
+import { HammerProjection } from "../../game/features/hammer";
+import { PlayerProjection } from "../../game/features/playerHud";
 import { MonsterProjection } from "../../game/features/monster";
 import { PerfHeroProjection } from "../../game/features/perfHero";
 
@@ -111,6 +111,7 @@ describe("GameFeatureRegistry", () => {
       "shrew.state",
       "shrew.sceneCycle",
       "hammer.state",
+      "session.thunder",
     ]);
     expect(GAME_FEATURE_REGISTRY.entityTypes()).toEqual(expect.arrayContaining([
       SceneEntity,

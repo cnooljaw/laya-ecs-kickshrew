@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HammerNode } from "../../view/HammerNode";
+import { HammerNode } from "../../game/features/hammer/HammerNode";
 
 class FakeSprite {
   name = "";

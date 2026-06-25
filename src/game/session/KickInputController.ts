@@ -1,21 +1,24 @@
-import { hitDetectionSystem } from "../ecs/gameplay/core/HitDetectionSystem";
-import { HammerComponent } from "../ecs/components";
-import { NetworkAdapter } from "../network/NetworkAdapter";
-import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../config/GameTuning";
-import {
-  AnimationComponent,
-  ShrewAction,
-  ShrewComponent,
-} from "../game/features/shrew";
+import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../config/GameTuning";
 import {
   actionStateName,
   animTypeName,
   consoleHitTraceLogger,
   HitTraceLogger,
-} from "../debug/HitTraceLogger";
-import type { KickRequest } from "../network/ProtocolTypes";
-import type { EffectRuntime } from "../framework/sync/EffectRuntime";
-import { HitMissEffect } from "../effects/HitEffects";
+} from "../../debug/HitTraceLogger";
+import type { EffectRuntime } from "../../framework/sync/EffectRuntime";
+import { NetworkAdapter } from "../../network/NetworkAdapter";
+import type { KickRequest } from "../../network/ProtocolTypes";
+import {
+  HammerComponent,
+  findHammer,
+} from "../features/hammer/index";
+import { HitMissEffect } from "../features/playerHud/index";
+import {
+  AnimationComponent,
+  ShrewAction,
+  ShrewComponent,
+} from "../features/shrew/index";
+import { hitDetectionSystem } from "./KickDetection";
 
 export const KICK_INPUT_SOUNDS = {
   hitOne:  "resources/sound/sound_shrew/Hit_One.wav",
@@ -23,7 +26,7 @@ export const KICK_INPUT_SOUNDS = {
   mouse1:  "resources/sound/sound_shrew/mouse_1.wav",
 } as const;
 
-interface KickInputAdapterDeps {
+interface KickInputControllerDeps {
   world: any;
   hammerEid: number;
   network: NetworkAdapter;
@@ -32,8 +35,8 @@ interface KickInputAdapterDeps {
   traceLogger?: HitTraceLogger;
 }
 
-export class KickInputAdapter {
-  constructor(private readonly _deps: KickInputAdapterDeps) {}
+export class KickInputController {
+  constructor(private readonly _deps: KickInputControllerDeps) {}
 
   handleTouch(x: number, y: number): void {
     const { world, hammerEid, network, effects, playSound } = this._deps;
@@ -111,6 +114,16 @@ export class KickInputAdapter {
     effects.emit(HitMissEffect, undefined);
     playSound(KICK_INPUT_SOUNDS.hitNull);
   }
+}
+
+export function createKickInputController(
+  deps: Omit<KickInputControllerDeps, "hammerEid">,
+): KickInputController {
+  const hammerEid = findHammer(deps.world);
+  if (hammerEid === undefined) {
+    throw new Error("Hammer singleton is not initialized");
+  }
+  return new KickInputController({ ...deps, hammerEid });
 }
 
 export function normalizeTouch(x: number, y: number): { xRatio: number; yRatio: number } {

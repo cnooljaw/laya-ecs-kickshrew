@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { HAMMER_RULES } from "../../config/GameTuning";
-import { HammerComponent, PlayerComponent } from "../../ecs/components";
-import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
-import { hammerSystem } from "../../ecs/gameplay/hammer/HammerSystem";
+import { HammerComponent } from "../../game/features/hammer";
+import { PlayerComponent } from "../../game/features/playerHud";
+import { HammerEntity } from "../../game/features/hammer";
+import { hammerSystem } from "../../game/features/hammer";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HammerType } from "../../ecs/types";
 import { createGameWorld } from "../../ecs/world";
+import { thunderSystem } from "../../game/session";
 import { createSingletonEntities } from "../helpers/SingletonTestEntities";
 
 describe("HammerSystem", () => {
@@ -55,7 +57,7 @@ describe("HammerSystem", () => {
   ])("applies the thunder threshold at angry=$angry", ({ angry, active }) => {
     PlayerComponent.angry[singletons.player] = angry;
 
-    hammerSystem(world);
+    thunderSystem(world);
 
     expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(active);
     expect(HammerComponent.selectedType[singletons.hammer]).toBe(
@@ -66,7 +68,7 @@ describe("HammerSystem", () => {
 
   it("restores the normal hammer after the thunder animation", () => {
     PlayerComponent.angry[singletons.player] = HAMMER_RULES.thunderAngryThreshold;
-    hammerSystem(world);
+    thunderSystem(world);
 
     hammerSystem(world, undefined, true);
 

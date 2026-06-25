@@ -1,4 +1,4 @@
-import { defineEffect } from "../framework/sync/EffectDefinition";
+import { defineEffect } from "../../../framework/sync/EffectDefinition";
 
 export interface HitRewardPayload {
   shrewIndex: number;

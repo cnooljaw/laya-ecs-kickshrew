@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGameWorld } from "../../../../ecs/world";
 import { createSingletonEntities } from "../../../helpers/SingletonTestEntities";
-import { PlayerComponent } from "../../../../ecs/components";
+import { PlayerComponent } from "../../../../game/features/playerHud";
 import { MonsterComponent, MonsterSpawnComponent } from "../../../../game/features/monster/MonsterComponents";
 import { MonsterType } from "../../../../game/features/monster/MonsterTypes";
 import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../../game/features/monster/MonsterSystems";

@@ -1,17 +1,19 @@
 /**
  * HitEffectNode — 击中特效节点（金币/宝箱/未命中）
  */
-import { HIT_EFFECT_VIEW_LAYOUT } from "../config/ViewLayoutConfig";
+import { destroyNode } from "../../../framework/view/LayaLifecycle";
+import { getLaya } from "../../../framework/view/LayaRuntime";
+import { HIT_EFFECT_VIEW_CONFIG } from "./PlayerHudViewConfig";
 
 export class HitEffectNode {
   private _container: any = null;
 
   create(parent: any): void {
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+    const Laya = getLaya();
     if (Laya) {
       this._container = new Laya.Sprite();
       this._container.name = "HitEffectNode";
-      this._container.zOrder = HIT_EFFECT_VIEW_LAYOUT.zOrder;
+      this._container.zOrder = HIT_EFFECT_VIEW_CONFIG.zOrder;
       if (parent) {
         parent.addChild(this._container);
         parent.setChildIndex?.(this._container, parent.numChildren - 1);
@@ -30,7 +32,7 @@ export class HitEffectNode {
 
   destroy(): void {
     if (this._container) {
-      this._container.destroy();
+      destroyNode(this._container);
       this._container = null;
     }
   }

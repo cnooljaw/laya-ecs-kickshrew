@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { PlayerComponent } from "../../ecs/components";
-import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
+import { PlayerComponent } from "../../game/features/playerHud";
+import { PlayerEntity } from "../../game/features/playerHud";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../ecs/world";
-import type { IPlayerHUD } from "../../sync/contracts/PlayerViewContract";
+import type { IPlayerHUD } from "../../game/features/playerHud/PlayerViewContract";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
-import { PlayerProjection } from "../../sync/projections/HudProjection";
+import { PlayerProjection } from "../../game/features/playerHud";
 
 describe("HUD projection", () => {
   it("projects player values and deduplicates power fields", () => {

@@ -9,28 +9,3 @@ export const SCENE_LAYOUT = {
   transitionFadeOutMs: 300,
   transitionMaskColor: "#FFFFFF",
 } as const;
-
-export const PLAYER_HUD_LAYOUT = {
-  zOrder: 100,
-  x: 10,
-  y: 10,
-  lineHeight: 26,
-  fontSize: 20,
-  colors: {
-    money: "#FFD700",
-    angry: "#FF4444",
-    power: "#44FF44",
-    level: "#FFFFFF",
-  },
-} as const;
-
-export const HAMMER_VIEW_LAYOUT = {
-  zOrder: 10000,
-  hitSwingDeg: 30,
-  hitTweenMs: 80,
-  hitSecondTweenDelayMs: 80,
-} as const;
-
-export const HIT_EFFECT_VIEW_LAYOUT = {
-  zOrder: 2100,
-} as const;

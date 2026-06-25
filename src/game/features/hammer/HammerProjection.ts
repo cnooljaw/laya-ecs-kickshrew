@@ -1,11 +1,11 @@
-import { HammerComponent } from "../../ecs/components";
-import type { IHammerNode } from "../contracts/HammerViewContract";
 import {
   defineProjection,
   noProjection,
   projectionSource,
   watch,
-} from "../../framework/sync/ProjectionDefinition";
+} from "../../../framework/sync/ProjectionDefinition";
+import { HammerComponent } from "./HammerComponents";
+import type { IHammerNode } from "./HammerViewContract";
 
 const source = projectionSource("hammer", HammerComponent);
 

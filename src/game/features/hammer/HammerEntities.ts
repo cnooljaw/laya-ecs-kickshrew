@@ -1,6 +1,6 @@
-import { HammerComponent } from "../../components";
 import { defineEntity } from "../../../framework/ecs/EntityDefinition";
-import { HammerType } from "../../types";
+import { HammerComponent } from "./HammerComponents";
+import { HammerType } from "./HammerTypes";
 
 export const HammerEntity = defineEntity({
   name: "hammer",

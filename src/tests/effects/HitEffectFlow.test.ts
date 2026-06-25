@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { HammerEntity } from "../../ecs/gameplay/hammer/HammerEntity";
-import { PlayerEntity } from "../../ecs/gameplay/hud/PlayerEntity";
+import { HammerEntity } from "../../game/features/hammer";
+import { PlayerEntity } from "../../game/features/playerHud";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HammerType } from "../../ecs/types";
 import { createGameWorld } from "../../ecs/world";
 import { createEffectRuntime } from "../../framework/sync/EffectRuntime";
-import { HitRewardEffect } from "../../effects/HitEffects";
-import { routeKickResponse } from "../../view/KickResponseAdapter";
+import { HitRewardEffect } from "../../game/features/playerHud";
+import { routeKickResponse } from "../../game/session";
 
 describe("hit effect flow", () => {
   it("emits successful rewards once during flush", () => {

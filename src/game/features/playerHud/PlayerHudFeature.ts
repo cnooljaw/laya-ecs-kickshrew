@@ -1,12 +1,12 @@
-import { PlayerEntity } from "../ecs/gameplay/hud/PlayerEntity";
-import { HitMissEffect, HitRewardEffect } from "../effects/HitEffects";
-import { PlayerProjection } from "../sync/projections/HudProjection";
-import { HitEffectNode } from "../view/HitEffectNode";
-import { PlayerHUD } from "../view/PlayerHUD";
-import { defineFeature } from "../framework/feature/FeatureManifest";
+import { defineFeature } from "../../../framework/feature/FeatureManifest";
+import { HitEffectNode } from "./HitEffectNode";
+import { HitMissEffect, HitRewardEffect } from "./HitEffects";
+import { PlayerEntity } from "./PlayerEntities";
+import { PlayerHUD } from "./PlayerHUD";
+import { PlayerProjection } from "./PlayerProjection";
 
-export const HudFeature = defineFeature({
-  name: "hud",
+export const PlayerHudFeature = defineFeature({
+  name: "playerHud",
   entities: [PlayerEntity],
   projections: [PlayerProjection],
   setup: ({ entities, effects, mountOne, createView }) => {

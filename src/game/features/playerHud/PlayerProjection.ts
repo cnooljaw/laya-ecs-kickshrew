@@ -1,6 +1,6 @@
-import { PlayerComponent } from "../../ecs/components";
-import type { IPlayerHUD } from "../contracts/PlayerViewContract";
-import { defineProjection, projectionSource, watch } from "../../framework/sync/ProjectionDefinition";
+import { defineProjection, projectionSource, watch } from "../../../framework/sync/ProjectionDefinition";
+import { PlayerComponent } from "./PlayerComponents";
+import type { IPlayerHUD } from "./PlayerViewContract";
 
 const source = projectionSource("player", PlayerComponent);
 

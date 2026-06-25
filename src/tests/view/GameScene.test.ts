@@ -1,12 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { GameScene } from "../../view/GameScene";
 import type { GameLoopPipeline } from "../../view/GameLoopPipeline";
-import type { KickInputAdapter } from "../../view/KickInputAdapter";
+import type { KickInputAdapter } from "../../game/session";
 import type { EntityRuntime } from "../../framework/ecs/EntityRuntime";
 import type { ProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import type { EffectRuntime } from "../../framework/sync/EffectRuntime";
 import { defineQuery } from "bitecs";
-import { HammerComponent } from "../../ecs/components";
+import { HammerComponent } from "../../game/features/hammer";
 
 interface GameSceneInternals {
   _world: object | null;
