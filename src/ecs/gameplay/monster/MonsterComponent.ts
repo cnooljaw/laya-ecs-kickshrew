@@ -12,8 +12,6 @@ export const MonsterComponent = defineComponent({
 });
 
 export const MonsterSpawnComponent = defineComponent({
-  lastTriggeredMilestone0: Types.f32,
-  lastTriggeredMilestone1: Types.f32,
-  lastTriggeredMilestone2: Types.f32,
-  lastTriggeredMilestone3: Types.f32,
+  ruleIndex: Types.ui16,
+  lastMilestone: Types.ui32,
 });

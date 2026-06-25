@@ -1,125 +1,82 @@
 import { describe, expect, it } from "vitest";
-import { SyncView } from "../../binding/SyncView";
-import { createViewSyncRuntime } from "../../binding/ViewSyncRuntime";
-import { MonsterViewSync, PerfHeroViewSync } from "../../binding/viewSyncs";
-import { MONSTER_CONFIG } from "../../config/MonsterConfig";
-import { PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
-import { DirtyComponent, PerfHeroComponent } from "../../ecs/components";
 import { MonsterComponent } from "../../ecs/gameplay/monster/MonsterComponent";
-import { createMonsterEntities } from "../../ecs/gameplay/monster/MonsterFactory";
+import { MonsterEntity } from "../../ecs/gameplay/monster/MonsterEntity";
 import { MonsterType } from "../../ecs/gameplay/monster/MonsterTypes";
-import { createGameWorld, createPerfHeroEntities } from "../../ecs/world";
-import {
-  BIT_MONSTER_SHOW,
-  BIT_MONSTER_SPAWN,
-  BIT_PERF_HERO_SPAWN,
-} from "../../sync/DirtyFlags";
+import { PerfHeroComponent } from "../../ecs/components";
+import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
+import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { createGameWorld } from "../../ecs/world";
 import type { IMonsterNode } from "../../sync/contracts/MonsterViewContract";
 import type { IPerfHeroNode } from "../../sync/contracts/PerfHeroViewContract";
-import { dirtyMarkSystem } from "../../sync/dirty/DirtyMarkSystem";
+import { MonsterProjection } from "../../sync/projections/MonsterProjection";
+import { PerfHeroProjection } from "../../sync/projections/PerfHeroProjection";
+import { createProjectionRuntime } from "../../sync/projection/ProjectionRuntime";
 
-describe("feature view sync", () => {
-  it("projects monster spawn and visibility", () => {
+describe("feature projections", () => {
+  it("projects monster identity, transform and visibility without resource URLs", () => {
     const world = createGameWorld();
-    const [eid] = createMonsterEntities(world, { count: 1 });
+    const entities = createEntityRuntime(world, [MonsterEntity]);
+    const monster = entities.create(MonsterEntity, MonsterType.Rhino);
     const calls = {
-      monsters: [] as Array<{ monsterType: number; skUrl: string; pngUrl: string; spawnSeq: number }>,
+      spawns: [] as Array<{ monsterType: number; spawnSeq: number }>,
+      positions: [] as Array<[number, number]>,
+      scales: [] as number[],
       visible: [] as boolean[],
     };
     const node: IMonsterNode = {
-      playMonster: (monsterType, skUrl, pngUrl, spawnSeq) => {
-        calls.monsters.push({ monsterType, skUrl, pngUrl, spawnSeq });
-      },
-      setPosition: () => {},
-      setScale: () => {},
-      setVisible: (visible) => calls.visible.push(visible),
+      spawn: (monsterType, spawnSeq) => calls.spawns.push({ monsterType, spawnSeq }),
+      setPosition: (x, y) => calls.positions.push([x, y]),
+      setScale: scale => calls.scales.push(scale),
+      setVisible: visible => calls.visible.push(visible),
     };
-    const runtime = createViewSyncRuntime([MonsterViewSync]);
-    runtime.registryFor(MonsterViewSync).register(eid, node);
+    const runtime = createProjectionRuntime([MonsterProjection]);
+    runtime.mount(MonsterProjection, monster, node);
 
-    MonsterComponent.monsterType[eid] = MonsterType.Rhino;
-    MonsterComponent.visible[eid] = 1;
-    MonsterComponent.spawnSeq[eid] = 1;
-    runtime.channelFor(MonsterViewSync).project(
-      eid,
-      BIT_MONSTER_SPAWN | BIT_MONSTER_SHOW,
-      false,
-    );
+    MonsterComponent.visible[monster] = 1;
+    MonsterComponent.spawnSeq[monster] = 1;
+    runtime.mark(world);
+    runtime.sync(world);
 
-    expect(calls).toEqual({
-      monsters: [{
-        monsterType: MonsterType.Rhino,
-        skUrl: MONSTER_CONFIG[MonsterType.Rhino].skUrl,
-        pngUrl: MONSTER_CONFIG[MonsterType.Rhino].pngUrl,
-        spawnSeq: 1,
-      }],
-      visible: [true],
-    });
+    expect(calls.spawns).toEqual([{ monsterType: MonsterType.Rhino, spawnSeq: 1 }]);
+    expect(calls.positions).toEqual([[MonsterComponent.posX[monster], MonsterComponent.posY[monster]]]);
+    expect(calls.scales).toEqual([MonsterComponent.scale[monster]]);
+    expect(calls.visible).toEqual([true]);
   });
 
-  it("connects monster dirty marking to SyncView", () => {
+  it("deduplicates perf hero transform rows and projects respawn identity", () => {
     const world = createGameWorld();
-    const [eid] = createMonsterEntities(world, { count: 1 });
-    const visible: boolean[] = [];
-    const node: IMonsterNode = {
-      playMonster: () => {},
-      setPosition: () => {},
-      setScale: () => {},
-      setVisible: (value) => visible.push(value),
+    const entities = createEntityRuntime(world, [PerfHeroEntity]);
+    const hero = entities.create(PerfHeroEntity, 0);
+    const calls = {
+      plays: [] as Array<{ heroType: number; spawnSeq: number }>,
+      transforms: [] as Array<[number, number, number]>,
     };
-    const runtime = createViewSyncRuntime([MonsterViewSync]);
-    runtime.registryFor(MonsterViewSync).register(eid, node);
-    const syncView = new SyncView();
-    syncView.registerChannels(runtime.channels());
-
-    dirtyMarkSystem(world, [MonsterViewSync.dirtyAspect]);
-    syncView.sync(world);
-    visible.length = 0;
-    MonsterComponent.visible[eid] = 1;
-    dirtyMarkSystem(world, [MonsterViewSync.dirtyAspect]);
-    syncView.sync(world);
-
-    expect(visible).toEqual([true]);
-    expect(DirtyComponent.monsterDirty[eid]).toBe(0);
-  });
-
-  it("projects perf hero respawn data", () => {
-    const world = createGameWorld();
-    const [eid] = createPerfHeroEntities(world, 1);
-    const plays: Array<{
-      heroType: number;
-      skUrl: string;
-      x: number;
-      y: number;
-      scale: number;
-      spawnSeq: number;
-    }> = [];
     const node: IPerfHeroNode = {
-      playHero: (heroType, skUrl, x, y, scale, spawnSeq) => {
-        plays.push({ heroType, skUrl, x, y, scale, spawnSeq });
-      },
+      playHero: (heroType, spawnSeq) => calls.plays.push({ heroType, spawnSeq }),
+      setTransform: (x, y, scale) => calls.transforms.push([x, y, scale]),
     };
-    const runtime = createViewSyncRuntime([PerfHeroViewSync]);
-    runtime.registryFor(PerfHeroViewSync).register(eid, node);
-    const syncView = new SyncView();
-    syncView.registerChannels(runtime.channels());
+    const runtime = createProjectionRuntime([PerfHeroProjection]);
+    runtime.mount(PerfHeroProjection, hero, node);
+    runtime.mark(world);
+    runtime.sync(world);
+    calls.plays.length = 0;
+    calls.transforms.length = 0;
 
-    dirtyMarkSystem(world, [PerfHeroViewSync.dirtyAspect]);
-    syncView.sync(world);
-    plays.length = 0;
-    PerfHeroComponent.heroType[eid] = 1;
-    PerfHeroComponent.spawnSeq[eid] += 1;
-    dirtyMarkSystem(world, [PerfHeroViewSync.dirtyAspect]);
-    expect(DirtyComponent.perfHeroDirty[eid] & BIT_PERF_HERO_SPAWN).toBeTruthy();
-    syncView.sync(world);
+    PerfHeroComponent.posX[hero] += 1;
+    PerfHeroComponent.posY[hero] += 2;
+    PerfHeroComponent.scale[hero] += 0.1;
+    PerfHeroComponent.spawnSeq[hero] += 1;
+    runtime.mark(world);
+    runtime.sync(world);
 
-    expect(plays).toEqual([{
-      heroType: 1,
-      skUrl: PERF_HERO_RESOURCES[1].skUrl,
-      x: PerfHeroComponent.posX[eid],
-      y: PerfHeroComponent.posY[eid],
-      scale: PerfHeroComponent.scale[eid],
-      spawnSeq: PerfHeroComponent.spawnSeq[eid],
+    expect(calls.plays).toEqual([{
+      heroType: PerfHeroComponent.heroType[hero],
+      spawnSeq: PerfHeroComponent.spawnSeq[hero],
     }]);
+    expect(calls.transforms).toEqual([[
+      PerfHeroComponent.posX[hero],
+      PerfHeroComponent.posY[hero],
+      PerfHeroComponent.scale[hero],
+    ]]);
   });
 });

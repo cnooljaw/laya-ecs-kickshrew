@@ -1,9 +1,10 @@
 import type { IMonsterNode } from "../sync/contracts/MonsterViewContract";
+import { MONSTER_CONFIG } from "../config/MonsterConfig";
+import { MonsterType } from "../ecs/gameplay/monster/MonsterTypes";
 
 interface MonsterPlayRequest {
   monsterType: number;
   skUrl: string;
-  pngUrl: string;
   spawnSeq: number;
 }
 
@@ -30,10 +31,18 @@ export class MonsterNode implements IMonsterNode {
     parent?.addChild?.(this._container);
   }
 
-  playMonster(monsterType: number, skUrl: string, pngUrl: string, spawnSeq: number): void {
+  spawn(monsterType: number, spawnSeq: number): void {
     if (!this._container || spawnSeq === this._lastSpawnSeq) return;
     this._lastSpawnSeq = spawnSeq;
-    this._loadAndPlay({ monsterType, skUrl, pngUrl, spawnSeq });
+    const config = MONSTER_CONFIG[monsterType as MonsterType] ?? MONSTER_CONFIG[MonsterType.Rhino];
+    this._loadAndPlay({ monsterType, skUrl: config.skUrl, spawnSeq });
+  }
+
+  /** @deprecated direct resource hook kept for node-level loader tests */
+  playMonster(monsterType: number, skUrl: string, _pngUrl: string, spawnSeq: number): void {
+    if (!this._container || spawnSeq === this._lastSpawnSeq) return;
+    this._lastSpawnSeq = spawnSeq;
+    this._loadAndPlay({ monsterType, skUrl, spawnSeq });
   }
 
   setPosition(x: number, y: number): void {

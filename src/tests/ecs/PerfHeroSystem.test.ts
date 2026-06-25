@@ -3,10 +3,23 @@ import { createGameWorld, createPerfHeroEntities } from "../../ecs/world";
 import { PerfHeroComponent } from "../../ecs/components";
 import { perfHeroSystem } from "../../ecs/gameplay/perfHero/PerfHeroSystem";
 import { PERF_HERO_VIEW_LAYOUT, PERF_HERO_RESOURCES } from "../../config/ViewLayoutConfig";
+import { createEntityRuntime } from "../../ecs/runtime/EntityRuntime";
+import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
 
 describe("PerfHeroSystem", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("通过 EntityRuntime 创建稳定英雄槽位", () => {
+    const world = createGameWorld();
+    const runtime = createEntityRuntime(world, [PerfHeroEntity]);
+
+    const eids = runtime.createMany(PerfHeroEntity, Array.from({ length: 8 }, (_, index) => index));
+
+    const counts = [0, 0, 0, 0];
+    for (const eid of eids) counts[PerfHeroComponent.edge[eid]]++;
+    expect(counts).toEqual([2, 2, 2, 2]);
   });
 
   it("创建的英雄槽位均匀分布在屏幕四周", () => {

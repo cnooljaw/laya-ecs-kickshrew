@@ -1,5 +1,4 @@
 import { PerfHeroComponent } from "../../../ecs/components";
-import { PERF_HERO_RESOURCES } from "../../../config/ViewLayoutConfig";
 import {
   BIT_PERF_HERO_POS,
   BIT_PERF_HERO_SCALE,
@@ -12,16 +11,12 @@ type PerfHeroField = Extract<keyof typeof PerfHeroComponent, string>;
 const syncRow = createSyncRow<IPerfHeroNode, PerfHeroField>();
 
 function applyHeroState({ eid, node }: { eid: number; node: IPerfHeroNode }): void {
-  const heroType = PerfHeroComponent.heroType[eid];
-  const resource = PERF_HERO_RESOURCES[heroType] ?? PERF_HERO_RESOURCES[0];
-  node.playHero(
-    heroType,
-    resource.skUrl,
+  node.setTransform(
     PerfHeroComponent.posX[eid],
     PerfHeroComponent.posY[eid],
     PerfHeroComponent.scale[eid],
-    PerfHeroComponent.spawnSeq[eid],
   );
+  node.playHero(PerfHeroComponent.heroType[eid], PerfHeroComponent.spawnSeq[eid]);
 }
 
 export const PERF_HERO_VIEW_SYNC_SPEC = defineViewSyncSpec<IPerfHeroNode, PerfHeroField>(

@@ -11,7 +11,7 @@ export interface MonsterResourceConfig {
 }
 
 export interface MonsterSpawnRule {
-  slot: 0 | 1 | 2 | 3;
+  slot: number;
   monsterType: MonsterType;
   maxActiveCount: number;
   trigger: {

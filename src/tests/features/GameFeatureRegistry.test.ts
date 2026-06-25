@@ -24,6 +24,10 @@ import {
   watch,
 } from "../../sync/projection/ProjectionDefinition";
 import { HammerProjection } from "../../sync/projections/HammerProjection";
+import { MonsterEntity, MonsterTriggerEntity } from "../../ecs/gameplay/monster/MonsterEntity";
+import { PerfHeroEntity } from "../../ecs/gameplay/perfHero/PerfHeroEntity";
+import { MonsterProjection } from "../../sync/projections/MonsterProjection";
+import { PerfHeroProjection } from "../../sync/projections/PerfHeroProjection";
 
 const sceneAspect: DirtyAspect = {
   name: "sceneAspect",
@@ -137,9 +141,15 @@ describe("GameFeatureRegistry", () => {
       "sceneCycleSystem",
       "hammerSystem",
     ]);
-    expect(registry.viewSyncs().map(sync => sync.name)).toContain("monster");
+    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("monster");
+    expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("perfHero");
     expect(registry.entityTypes()).toContain(HammerEntity);
+    expect(registry.entityTypes()).toContain(MonsterEntity);
+    expect(registry.entityTypes()).toContain(MonsterTriggerEntity);
+    expect(registry.entityTypes()).toContain(PerfHeroEntity);
     expect(registry.projections()).toContain(HammerProjection);
+    expect(registry.projections()).toContain(MonsterProjection);
+    expect(registry.projections()).toContain(PerfHeroProjection);
     expect(registry.viewSyncs().map(sync => sync.name)).not.toContain("hammer");
   });
 
@@ -168,7 +178,14 @@ describe("GameFeatureRegistry", () => {
           mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
           return create();
         },
-        mountMany: () => [],
+        mountMany: ({ eids, projection, create }: any) => {
+          const nodes = [];
+          for (let index = 0; index < eids.length; index++) {
+            mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
+            nodes.push(create(eids[index], index));
+          }
+          return nodes;
+        },
       },
       resources: {
         own: <T extends object>(resource: T) => {

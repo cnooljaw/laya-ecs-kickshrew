@@ -58,6 +58,9 @@ export class PerfHeroNode implements IPerfHeroNode {
   private _destroyed = false;
   private _isPlaying = false;
   private _lastSpawnSeq = -1;
+  private _nextX = 0;
+  private _nextY = 0;
+  private _nextScale = 1;
 
   constructor(poolGroup?: PerfHeroSpinePoolGroup) {
     this._poolGroup = poolGroup ?? new PerfHeroSpinePoolGroup();
@@ -78,9 +81,42 @@ export class PerfHeroNode implements IPerfHeroNode {
     if (parent) parent.addChild(this._container);
   }
 
-  playHero(heroType: number, skUrl: string, x: number, y: number, scale: number, spawnSeq: number): void {
+  setTransform(x: number, y: number, scale: number): void {
+    this._nextX = x;
+    this._nextY = y;
+    this._nextScale = scale;
+  }
+
+  playHero(heroType: number, spawnSeq: number): void;
+  /** @deprecated direct resource hook kept for node-level pool tests */
+  playHero(
+    heroType: number,
+    skUrl: string,
+    x: number,
+    y: number,
+    scale: number,
+    spawnSeq: number,
+  ): void;
+  playHero(
+    heroType: number,
+    spawnOrUrl: number | string,
+    x?: number,
+    y?: number,
+    scale?: number,
+    legacySpawnSeq?: number,
+  ): void {
+    const isLegacyCall = typeof spawnOrUrl === "string";
+    const spawnSeq = isLegacyCall ? legacySpawnSeq ?? 0 : spawnOrUrl;
     if (!this._container || spawnSeq === this._lastSpawnSeq || spawnSeq === this._pendingPlay?.spawnSeq) return;
-    const request = { heroType, skUrl, x, y, scale, spawnSeq };
+    const resource = PERF_HERO_RESOURCES[heroType] ?? PERF_HERO_RESOURCES[0];
+    const request = {
+      heroType,
+      skUrl: isLegacyCall ? spawnOrUrl : resource.skUrl,
+      x: isLegacyCall ? x ?? 0 : this._nextX,
+      y: isLegacyCall ? y ?? 0 : this._nextY,
+      scale: isLegacyCall ? scale ?? 1 : this._nextScale,
+      spawnSeq,
+    };
     if (this._isPlaying && this._container.visible) {
       this._pendingPlay = request;
       return;

@@ -6,17 +6,13 @@ import {
 } from "../../DirtyFlags";
 import type { IMonsterNode } from "../../contracts/MonsterViewContract";
 import { createSyncRow, defineViewSyncSpec } from "../ViewSyncSpec";
-import { MONSTER_CONFIG } from "../../../config/MonsterConfig";
 import { MonsterComponent } from "../../../ecs/gameplay/monster/MonsterComponent";
-import { MonsterType } from "../../../ecs/gameplay/monster/MonsterTypes";
 
 type MonsterField = Extract<keyof typeof MonsterComponent, string>;
 const syncRow = createSyncRow<IMonsterNode, MonsterField>();
 
 function applyMonster({ eid, node }: { eid: number; node: IMonsterNode }): void {
-  const monsterType = MonsterComponent.monsterType[eid] as MonsterType;
-  const config = MONSTER_CONFIG[monsterType] ?? MONSTER_CONFIG[MonsterType.Rhino];
-  node.playMonster(monsterType, config.skUrl, config.pngUrl, MonsterComponent.spawnSeq[eid]);
+  node.spawn(MonsterComponent.monsterType[eid], MonsterComponent.spawnSeq[eid]);
 }
 
 function applyPosition({ eid, node }: { eid: number; node: IMonsterNode }): void {

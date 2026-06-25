@@ -5,7 +5,6 @@ import {
   DirtyComponent,
   HitComponent,
   HoleComponent,
-  PerfHeroComponent,
   PlayerComponent,
   SceneComponent,
   ShrewComponent,
@@ -14,7 +13,6 @@ import { MapType, ShrewAction, ShrewType } from "../../ecs/types";
 import {
   createGameWorld,
   createHoleEntities,
-  createPerfHeroEntities,
   createShrewEntity,
   createSingletonEntities,
 } from "../../ecs/world";
@@ -27,9 +25,6 @@ import {
   BIT_HOLE_POS,
   BIT_HOLE_SHREW,
   BIT_HOLE_ZORDER,
-  BIT_PERF_HERO_POS,
-  BIT_PERF_HERO_SCALE,
-  BIT_PERF_HERO_SPAWN,
   BIT_PLAYER_ANGRY,
   BIT_PLAYER_LEVEL,
   BIT_PLAYER_MONEY,
@@ -159,19 +154,5 @@ describe("DirtyMarkSystem", () => {
     markDirty();
 
     expect(DirtyComponent.hitDirty[eid]).toBe(BIT_HIT_INDEX | BIT_HIT_REWARD | BIT_HIT_WASHIT);
-  });
-
-  it("combines perf hero projection changes", () => {
-    const [eid] = createPerfHeroEntities(world, 1);
-    markDirty();
-
-    PerfHeroComponent.posX[eid] += 1;
-    PerfHeroComponent.scale[eid] += 0.1;
-    PerfHeroComponent.spawnSeq[eid] += 1;
-    markDirty();
-
-    expect(DirtyComponent.perfHeroDirty[eid]).toBe(
-      BIT_PERF_HERO_POS | BIT_PERF_HERO_SCALE | BIT_PERF_HERO_SPAWN,
-    );
   });
 });

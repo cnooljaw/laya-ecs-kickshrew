@@ -3,6 +3,8 @@ import { DirtyComponent } from "../../components";
 import { MONSTER_CONFIG, type MonsterSpawnRule } from "../../../config/MonsterConfig";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponent";
 import { MonsterType } from "./MonsterTypes";
+import type { EntityRuntime } from "../../runtime/EntityRuntime";
+import { MonsterEntity, MonsterTriggerEntity } from "./MonsterEntity";
 
 type World = ReturnType<typeof createWorld>;
 
@@ -11,14 +13,22 @@ export interface CreateMonsterEntitiesOptions {
   monsterType?: MonsterType;
 }
 
-export function createMonsterSpawnState(world: World): number {
+export function createMonsterSpawnState(world: World, ruleIndex: number = 0): number {
   const entity = addEntity(world);
   addComponent(world, MonsterSpawnComponent, entity);
-  MonsterSpawnComponent.lastTriggeredMilestone0[entity] = 0;
-  MonsterSpawnComponent.lastTriggeredMilestone1[entity] = 0;
-  MonsterSpawnComponent.lastTriggeredMilestone2[entity] = 0;
-  MonsterSpawnComponent.lastTriggeredMilestone3[entity] = 0;
+  MonsterSpawnComponent.ruleIndex[entity] = ruleIndex;
+  MonsterSpawnComponent.lastMilestone[entity] = 0;
   return entity;
+}
+
+export function createMonsterTriggerEntities(
+  entities: EntityRuntime,
+  rules: readonly MonsterSpawnRule[],
+): number[] {
+  return entities.createMany(
+    MonsterTriggerEntity,
+    rules.map((_, index) => index),
+  );
 }
 
 export function createMonsterEntities(world: World, options: CreateMonsterEntitiesOptions): number[] {
@@ -66,6 +76,24 @@ export function createMonsterEntitiesForRules(
     entities.push(...createMonsterEntities(world, { monsterType, count }));
   }
   return entities;
+}
+
+export function createMonsterPool(
+  entities: EntityRuntime,
+  rules: readonly MonsterSpawnRule[],
+): number[] {
+  const inputs: MonsterType[] = [];
+  const countByType = new Map<MonsterType, number>();
+  for (const rule of rules) {
+    countByType.set(
+      rule.monsterType,
+      (countByType.get(rule.monsterType) ?? 0) + Math.max(0, Math.floor(rule.maxActiveCount)),
+    );
+  }
+  for (const [monsterType, count] of countByType) {
+    for (let index = 0; index < count; index++) inputs.push(monsterType);
+  }
+  return entities.createMany(MonsterEntity, inputs);
 }
 
 export function spawnMonster(eid: number, monsterType: MonsterType): void {

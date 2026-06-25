@@ -1,27 +1,30 @@
-import { PerfHeroViewSync } from "../binding/viewSyncs";
+import { getPerfTestRuntimeConfig } from "../config/PerfTestConfig";
+import { PerfHeroEntity } from "../ecs/gameplay/perfHero/PerfHeroEntity";
 import { perfHeroSystem } from "../ecs/gameplay/perfHero/PerfHeroSystem";
-import { createPerfHeroEntities } from "../ecs/world";
+import { PerfHeroProjection } from "../sync/projections/PerfHeroProjection";
 import { PerfHeroNode, PerfHeroSpinePoolGroup } from "../view/PerfHeroNode";
-import { system, type GameFeature } from "./GameFeature";
+import { defineGameFeature } from "./GameFeature";
 
-export const PerfHeroFeature: GameFeature = {
+export const PerfHeroFeature = defineGameFeature({
   name: "perfHero",
-  systems: [
-    system("feature", "perfHeroSystem", perfHeroSystem),
-  ],
-  viewSyncs: [
-    PerfHeroViewSync,
-  ],
-  setup: ({ world, root, perfConfig, mount, own }) => {
-    if (perfConfig.heroCount <= 0) return;
-
-    const entities = createPerfHeroEntities(world, perfConfig.heroCount);
-    const pool = own(new PerfHeroSpinePoolGroup());
-
-    for (const eid of entities) {
-      const node = new PerfHeroNode(pool);
-      node.create(root);
-      mount(PerfHeroViewSync, eid, node);
-    }
+  entities: [PerfHeroEntity],
+  projections: [PerfHeroProjection],
+  systems: {
+    feature: [perfHeroSystem],
   },
-};
+  setup: ({ entities, views, resources }) => {
+    const config = getPerfTestRuntimeConfig();
+    if (config.heroCount <= 0) return;
+
+    const eids = entities.createMany(
+      PerfHeroEntity,
+      Array.from({ length: config.heroCount }, (_, index) => index),
+    );
+    const pool = resources.own(new PerfHeroSpinePoolGroup());
+    views.mountMany({
+      eids,
+      projection: PerfHeroProjection,
+      create: () => new PerfHeroNode(pool),
+    });
+  },
+});

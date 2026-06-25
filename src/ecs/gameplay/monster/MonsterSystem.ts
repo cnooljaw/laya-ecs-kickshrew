@@ -19,13 +19,14 @@ export function monsterSpawnSystem(
   if (players.length === 0 || states.length === 0) return;
 
   const player = players[0];
-  const state = states[0];
-
-  for (const rule of rules) {
+  for (let stateIndex = 0; stateIndex < states.length; stateIndex++) {
+    const state = states[stateIndex];
+    const rule = rules[MonsterSpawnComponent.ruleIndex[state]];
+    if (!rule) continue;
     const milestone = currentMilestone(player, rule);
-    if (milestone <= getLastTriggeredMilestone(state, rule)) continue;
+    if (milestone <= MonsterSpawnComponent.lastMilestone[state]) continue;
 
-    setLastTriggeredMilestone(state, rule, milestone);
+    MonsterSpawnComponent.lastMilestone[state] = milestone;
     if (activeCount(world, rule.monsterType) >= rule.maxActiveCount) continue;
 
     const eid = findInactiveMonster(world, rule.monsterType);
@@ -53,32 +54,6 @@ function currentMilestone(player: number, rule: MonsterSpawnRule): number {
   const sourceValue = rule.trigger.source === "money" ? PlayerComponent.money[player] : 0;
   if (rule.trigger.mode !== "multiple" || rule.trigger.interval <= 0) return 0;
   return Math.floor(sourceValue / rule.trigger.interval);
-}
-
-function getLastTriggeredMilestone(state: number, rule: MonsterSpawnRule): number {
-  switch (rule.slot) {
-    case 1: return MonsterSpawnComponent.lastTriggeredMilestone1[state];
-    case 2: return MonsterSpawnComponent.lastTriggeredMilestone2[state];
-    case 3: return MonsterSpawnComponent.lastTriggeredMilestone3[state];
-    default: return MonsterSpawnComponent.lastTriggeredMilestone0[state];
-  }
-}
-
-function setLastTriggeredMilestone(state: number, rule: MonsterSpawnRule, milestone: number): void {
-  switch (rule.slot) {
-    case 1:
-      MonsterSpawnComponent.lastTriggeredMilestone1[state] = milestone;
-      break;
-    case 2:
-      MonsterSpawnComponent.lastTriggeredMilestone2[state] = milestone;
-      break;
-    case 3:
-      MonsterSpawnComponent.lastTriggeredMilestone3[state] = milestone;
-      break;
-    default:
-      MonsterSpawnComponent.lastTriggeredMilestone0[state] = milestone;
-      break;
-  }
 }
 
 function activeCount(world: any, monsterType: MonsterType): number {

@@ -1,25 +1,29 @@
-import { MonsterViewSync } from "../binding/viewSyncs";
 import { assertValidMonsterConfig, MONSTER_SPAWN_RULES } from "../config/MonsterConfig";
-import { createMonsterEntitiesForRules, createMonsterSpawnState } from "../ecs/gameplay/monster/MonsterFactory";
+import { MonsterEntity, MonsterTriggerEntity } from "../ecs/gameplay/monster/MonsterEntity";
+import {
+  createMonsterPool,
+  createMonsterTriggerEntities,
+} from "../ecs/gameplay/monster/MonsterFactory";
 import { monsterLifetimeSystem, monsterSpawnSystem } from "../ecs/gameplay/monster/MonsterSystem";
+import { MonsterProjection } from "../sync/projections/MonsterProjection";
 import { MonsterNode } from "../view/MonsterNode";
-import { system, type GameFeature } from "./GameFeature";
+import { defineGameFeature } from "./GameFeature";
 
-export const MonsterFeature: GameFeature = {
+export const MonsterFeature = defineGameFeature({
   name: "monster",
-  systems: [
-    system("feature", "monsterLifetimeSystem", monsterLifetimeSystem),
-    system("feature", "monsterSpawnSystem", monsterSpawnSystem),
-  ],
-  viewSyncs: [MonsterViewSync],
-  setup: ({ world, root, mount }) => {
-    assertValidMonsterConfig();
-    createMonsterSpawnState(world);
-    const entities = createMonsterEntitiesForRules(world, MONSTER_SPAWN_RULES);
-    for (const eid of entities) {
-      const node = new MonsterNode();
-      node.create(root);
-      mount(MonsterViewSync, eid, node);
-    }
+  entities: [MonsterEntity, MonsterTriggerEntity],
+  projections: [MonsterProjection],
+  systems: {
+    feature: [monsterLifetimeSystem, monsterSpawnSystem],
   },
-};
+  setup: ({ entities, views }) => {
+    assertValidMonsterConfig();
+    createMonsterTriggerEntities(entities, MONSTER_SPAWN_RULES);
+    const eids = createMonsterPool(entities, MONSTER_SPAWN_RULES);
+    views.mountMany({
+      eids,
+      projection: MonsterProjection,
+      create: () => new MonsterNode(),
+    });
+  },
+});

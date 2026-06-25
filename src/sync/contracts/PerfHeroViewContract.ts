@@ -1,3 +1,4 @@
 export interface IPerfHeroNode {
-  playHero(heroType: number, skUrl: string, x: number, y: number, scale: number, spawnSeq: number): void;
+  setTransform(x: number, y: number, scale: number): void;
+  playHero(heroType: number, spawnSeq: number): void;
 }
