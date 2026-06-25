@@ -4,7 +4,7 @@ import type { GameFeatureRegistry } from "../../features/GameFeatureRegistry";
 import { GameLoopPipeline } from "../../view/GameLoopPipeline";
 
 describe("GameLoopPipeline", () => {
-  it("固定执行 state -> network -> feature -> dirty -> view sync", () => {
+  it("固定执行 state -> network -> feature -> legacy sync -> projection sync", () => {
     const order: string[] = [];
     const aspect: DirtyAspect = {
       name: "test",
@@ -29,10 +29,22 @@ describe("GameLoopPipeline", () => {
       featureRegistry,
       network: { update: () => order.push("network") } as any,
       syncView: { sync: () => order.push("viewSync") } as any,
+      projectionRuntime: {
+        mark: () => order.push("projectionMark"),
+        sync: () => order.push("projectionSync"),
+      },
     });
 
     pipeline.update(1 / 60);
 
-    expect(order).toEqual(["state", "network", "feature", "dirty", "viewSync"]);
+    expect(order).toEqual([
+      "state",
+      "network",
+      "feature",
+      "dirty",
+      "viewSync",
+      "projectionMark",
+      "projectionSync",
+    ]);
   });
 });
