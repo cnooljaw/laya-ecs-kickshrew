@@ -60,6 +60,22 @@ describe("GameFeatureRegistry", () => {
     expect(registry.viewSyncs().map(sync => sync.name)).toEqual(["featureA:sceneViewSync"]);
   });
 
+  it("按 feature 声明顺序稳定展开 systems 和 view syncs", () => {
+    const registry = createGameFeatureRegistry([
+      feature("first"),
+      feature("second"),
+    ]);
+
+    expect(registry.systemsByPhase("feature").map(item => item.name)).toEqual([
+      "first:system",
+      "second:system",
+    ]);
+    expect(registry.viewSyncs().map(item => item.name)).toEqual([
+      "first:sceneViewSync",
+      "second:sceneViewSync",
+    ]);
+  });
+
   it("真实 GAME_FEATURES 表能通过注册校验", () => {
     const registry = createGameFeatureRegistry(GAME_FEATURES);
 
