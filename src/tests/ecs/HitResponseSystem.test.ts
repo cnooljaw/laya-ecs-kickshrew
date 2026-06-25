@@ -6,7 +6,7 @@ import {
   hitResponseSystem,
   type KickResponse,
 } from "../../game/session";
-import { HammerType } from "../../ecs/types";
+import { HammerType } from "../../game/features/hammer";
 import { createGameWorld } from "../../ecs/world";
 import { createSingletonEntities } from "../helpers/SingletonTestEntities";
 

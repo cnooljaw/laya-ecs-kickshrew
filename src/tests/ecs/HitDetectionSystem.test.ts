@@ -3,7 +3,7 @@ import { createGameWorld } from '../../ecs/world';
 import { createSingletonEntities } from '../helpers/SingletonTestEntities';
 import { createHoleEntities, createShrewEntity } from '../helpers/CoreTestEntities';
 import { HammerComponent } from "../../game/features/hammer";
-import { HammerType } from "../../ecs/types";
+import { HammerType } from "../../game/features/hammer";
 import {
   HOLE_COUNT,
   HoleComponent,

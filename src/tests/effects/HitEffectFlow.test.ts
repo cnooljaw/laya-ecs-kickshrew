@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { HammerEntity } from "../../game/features/hammer";
 import { PlayerEntity } from "../../game/features/playerHud";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { HammerType } from "../../ecs/types";
+import { HammerType } from "../../game/features/hammer";
 import { createGameWorld } from "../../ecs/world";
 import { createEffectRuntime } from "../../framework/sync/EffectRuntime";
 import { HitRewardEffect } from "../../game/features/playerHud";

@@ -20,6 +20,17 @@ function readTypeScriptTree(root: string): string {
 }
 
 describe("framework boundaries", () => {
+  it("removes obsolete horizontal business directories", () => {
+    for (const obsolete of [
+      "src/features",
+      "src/ecs/gameplay",
+      "src/ecs/components",
+      "src/sync/projections",
+    ]) {
+      expect(existsSync(obsolete)).toBe(false);
+    }
+  });
+
   it("framework never imports game or app code", () => {
     const framework = readTypeScriptTree("src/framework");
 
