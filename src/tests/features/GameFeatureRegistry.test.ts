@@ -2,12 +2,25 @@ import { describe, expect, it } from "vitest";
 import { getPerfTestRuntimeConfig } from "../../config/PerfTestConfig";
 import { MONSTER_SPAWN_RULES } from "../../config/MonsterConfig";
 import { DirtyComponent } from "../../ecs/components";
+import { SceneComponent } from "../../ecs/components";
+import { defineEntityType } from "../../ecs/runtime/EntityType";
 import { createGameWorld, createSingletonEntities } from "../../ecs/world";
 import type { DirtyAspect } from "../../sync/dirty/DirtySchemaTypes";
-import { system, type FeatureSetupContext, type GameFeature } from "../../features/GameFeature";
+import {
+  defineGameFeature,
+  system,
+  type FeatureSetupContext,
+  type GameFeature,
+} from "../../features/GameFeature";
 import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../features/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../features/GameFeatureRegistry";
 import type { ViewSyncModule } from "../../sync/viewSync/ViewSyncModule";
+import {
+  defineProjection,
+  noProjection,
+  projectionSource,
+  watch,
+} from "../../sync/projection/ProjectionDefinition";
 
 const sceneAspect: DirtyAspect = {
   name: "sceneAspect",
@@ -35,6 +48,21 @@ const sceneViewSync: ViewSyncModule = {
   watchedBits: 0x01,
   describe: () => [],
 };
+
+const TestSceneEntity = defineEntityType({
+  name: "testScene",
+  components: [SceneComponent],
+  cardinality: "one",
+  initialize: () => {},
+});
+const sceneSource = projectionSource("scene", SceneComponent);
+const TestSceneProjection = defineProjection({
+  name: "testScene",
+  components: [SceneComponent],
+  rows: [
+    watch(sceneSource, ["currentMap"], "current map", noProjection),
+  ],
+});
 
 function feature(name: string): GameFeature {
   return {
@@ -74,6 +102,27 @@ describe("GameFeatureRegistry", () => {
       "first:sceneViewSync",
       "second:sceneViewSync",
     ]);
+  });
+
+  it("展开新 feature manifest 的 entities、projections 和 system groups", () => {
+    function updateState(): void {}
+    function updateFeature(): void {}
+    const manifest = defineGameFeature({
+      name: "compiled",
+      entities: [TestSceneEntity],
+      projections: [TestSceneProjection],
+      systems: {
+        state: [updateState],
+        feature: [updateFeature],
+      },
+    });
+
+    const registry = createGameFeatureRegistry([manifest]);
+
+    expect(registry.entityTypes()).toEqual([TestSceneEntity]);
+    expect(registry.projections()).toEqual([TestSceneProjection]);
+    expect(registry.systemsByPhase("state").map(item => item.run)).toEqual([updateState]);
+    expect(registry.systemsByPhase("feature").map(item => item.run)).toEqual([updateFeature]);
   });
 
   it("真实 GAME_FEATURES 表能通过注册校验", () => {

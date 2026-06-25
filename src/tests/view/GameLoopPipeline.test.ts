@@ -21,6 +21,8 @@ describe("GameLoopPipeline", () => {
       systemsByPhase: phase => phase === "state"
         ? [{ phase: "state", name: "state", run: () => order.push("state") }]
         : [{ phase: "feature", name: "feature", run: () => order.push("feature") }],
+      entityTypes: () => [],
+      projections: () => [],
       dirtyAspects: () => [aspect],
       viewSyncs: () => [],
     };
