@@ -3,13 +3,14 @@ name: ecs-binding
 description: Use when changing ECS components, EntityDefinition definitions, systems, ProjectionDefinition mappings, ProjectionRuntime behavior, typed effects, or view synchronization in this project.
 ---
 
-# ECS Projection Workflow
+# ECS Binding
 
 ## Read First
 
 - `AGENTS.md`
 - `docs/ecs-binding.md`
 - `docs/architecture.md` for cross-module changes
+- Global skill `ecs-feature-assembly` for architecture judgment
 
 ## Workflow
 
@@ -27,19 +28,6 @@ description: Use when changing ECS components, EntityDefinition definitions, sys
 6. Keep Feature setup explicit for real topology such as one Hole owning one Shrew. Do not hide domain relationships in generic framework helpers.
 7. Prefer initialization-time pooling. Runtime state changes should reuse entities and nodes.
 8. Run the narrowest tests, then full tests and typecheck.
-
-## Mental Model
-
-```text
-Feature EntityDefinition -> framework EntityRuntime -> Component
-System changes Component
-ProjectionRuntime.mark -> ProjectionRuntime.sync
-View contract -> Laya node
-
-Transient response -> EffectRuntime.emit -> flush -> view handler
-```
-
-Projection rows receive automatic private bits. Business code must not know or maintain those bits.
 
 ## Common Tests
 

@@ -5,7 +5,7 @@ description: Use when tuning KickShrew HolePositions, hole center markers, Shrew
 
 # Hole Position Tuning
 
-Use this skill for visual tuning of `src/config/HolePositions.ts` and related shrew/hole preview pages.
+Use this skill for visual tuning of `src/game/features/shrew/HolePositions.ts` and related shrew/hole preview pages.
 
 ## Goal
 

@@ -1,13 +1,6 @@
 # LayaAir3 项目入门
 
-## 目标
-
-本项目用 bitecs 保存权威游戏状态，用 LayaAir3 表现画面。框架层提供：
-
-- `EntityRuntime`：创建单例、固定拓扑和对象池。
-- `ProjectionRuntime`：把 component 字段变化差量同步到 view contract。
-- `EffectRuntime`：派发 reward/miss 等瞬时表现事实。
-- `FeatureRuntimeContext`：隐藏 root、node ownership 和 runtime registry。
+本项目是 LayaAir3 + TypeScript + bitecs 打地鼠原型。权威状态在 ECS，Laya 只负责表现。
 
 ## 先跑起来
 
@@ -22,145 +15,68 @@ npm run debug:ready
 
 ```text
 http://localhost:8080/debug-tsc.html
+http://localhost:8080/debug-tsc.html?perf=1&heroes=200
 ```
 
-## 目录
+## 当前目录
 
 ```text
-src/ecs/components       component schema
-src/ecs/gameplay         EntityDefinition 和纯系统
-src/ecs/runtime          EntityRuntime
-src/sync/projection      通用投影框架
-src/sync/projections     业务投影
-src/sync/contracts       view contract
-src/effects              typed effects
-src/features             业务装配
-src/view                 Laya 节点和运行时
-src/network              protobuf/socket/mock
-src/config               配置
+src/framework/ecs       EntityDefinition / EntityRuntime
+src/framework/feature   Feature Manifest / Registry / mount primitives
+src/framework/sync      Projection / Effect definition and runtime
+src/framework/view      Laya version-sensitive adapters and ViewRegistry
+src/game/features       vertical business slices
+src/game/session        input, response and cross-feature orchestration
+src/game/GameFeatures.ts explicit composition root
+src/app                 Laya shell, GameScene and frame pipeline
+src/network             protobuf, socket, mock server
+src/resource            atlas and resource tools
+src/config              small truly shared config
 ```
 
-## 从入口读代码
+## Runtime Flow
 
 ```text
-Main
-  -> GameScene.init
-  -> compile runtimes
-  -> GAME_FEATURE_REGISTRY.setupAll
-  -> GameLoopPipeline.update
+GameScene.init
+  -> create world and runtimes
+  -> bootstrap singleton entities
+  -> feature setup creates topology, pools, views and handlers
+  -> initial projection sync
+
+frame
+  -> state systems
+  -> network.update
+  -> feature systems
+  -> projection mark/sync
+  -> effect flush
 ```
 
-每帧：
+退出场景时销毁 network、views、effect/projection/entity runtime 和 world；重新进入时整体重建。
+
+## Adding A Feature
+
+新增业务通常只改自己的切片和组合根：
 
 ```text
-state systems
-network
-feature systems
-projection mark
-projection sync
-effect flush
+src/game/features/foo/FooComponents.ts
+src/game/features/foo/FooEntities.ts
+src/game/features/foo/FooSystems.ts
+src/game/features/foo/FooProjection.ts
+src/game/features/foo/FooViewContract.ts
+src/game/features/foo/FooNode.ts
+src/game/features/foo/FooFeature.ts
+src/game/features/foo/index.ts
+src/game/GameFeatures.ts
 ```
 
-## ECS
+运行期优先复用固定 entity/node 槽位。初始化阶段可以用更厚的封装换取清晰边界。
 
-Component 是结构化 typed arrays。EntityDefinition 声明组件组合和初始化：
-
-```ts
-const SceneEntity = defineEntity({
-  name: "scene",
-  components: [SceneComponent],
-  cardinality: "one",
-  initialize(eid) {},
-});
-```
-
-游戏运行期优先修改 component 状态而不是删除 entity：
-
-- 地鼠循环重置同一个 Shrew eid。
-- Monster 到期设置 `visible=0`。
-- PerfHero 使用固定槽位和 Spine 池。
-
-退出 GameScene 时删除整个 world，重新进入时重新创建。
-
-## Projection
-
-Projection 将字段变化映射为 view contract：
-
-```ts
-watch(source, ["posX", "posY"], "position", ({ eid, node }) => {
-  node.setPosition(Component.posX[eid], Component.posY[eid]);
-});
-```
-
-ProjectionRuntime 私有维护 snapshot、row bits 和 eid/node 映射。业务不维护 dirty bit 或 full-sync 标志。
-
-ShrewProjection 同时 watch `ShrewComponent` 与 `AnimationComponent`，所以动作状态和动画 progress 会通过同一个 ShrewNode contract 连续更新。
-
-## Effect
-
-Effect 处理瞬时事实：
-
-```ts
-const HitRewardEffect = defineEffect<HitRewardPayload>("hitReward");
-effects.emit(HitRewardEffect, payload);
-```
-
-Feature 注册 handler，主循环帧末 flush。不要为 reward/miss 创建持久 component。
-
-## Feature
-
-Feature 是业务组装：
-
-```ts
-defineFeature({
-  name: "foo",
-  entities: [FooEntity],
-  projections: [FooProjection],
-  systems: [defineSystem("feature", "foo.update", fooSystem)],
-  setup({ entities, views, effects }) {},
-});
-```
-
-CoreGameplayFeature 明确创建 9 个 Hole 和 9 个 Shrew，并写入一一对应关系。这种 topology 不应藏在通用 helper 中。
-
-## 点击与回包
-
-```text
-touch
-  -> KickInputController
-  -> hitDetectionSystem
-  -> NetworkAdapter.sendKick
-
-response
-  -> KickResponseFlow
-  -> hitResponseSystem
-  -> Player/Hammer component
-  -> HitRewardEffect
-```
-
-## 新增 Monster 类业务
-
-1. 定义 component。
-2. 定义 many EntityDefinition。
-3. 在初始化阶段创建池。
-4. system 只修改状态、age、visible。
-5. 定义 Projection 和 Node。
-6. Feature 声明并 mount 池。
-
-新增同类怪物通常只改 `MonsterType`、`MONSTER_CONFIG`、`MONSTER_SPAWN_RULES` 和资源，不修改 GameScene。
-
-## 新增 HUD/瞬时效果
-
-- Player 等持久数字：Projection。
-- 金币飘字、miss、一次性动画：Effect。
-- Laya 节点通过 `mountOne` 或 `createView` 创建，统一由 ViewRegistry 销毁。
-
-## 排查顺序
+## Debug Order
 
 规则错误：
 
 ```text
-input/response -> system/helper -> component
+input/response -> session/system/helper -> component
 ```
 
 表现错误：
@@ -169,28 +85,15 @@ input/response -> system/helper -> component
 component -> projection -> contract -> node
 ```
 
-效果错误：
+瞬时效果错误：
 
 ```text
-emit -> definition identity -> flush -> handler -> node
+emit -> EffectDefinition identity -> flush -> handler -> node
 ```
 
-## 完成标准
+## Read Next
 
-- ECS 无 Laya 依赖。
-- Feature 不承载规则分支。
-- 新业务不修改全局 registry。
-- 无业务 dirty bit/full-sync。
-- 生命周期测试与浏览器 destroy/re-entry 验证通过。
-# 当前目录说明
-
-当前代码采用“稳定横向 framework + 业务纵向切片”：
-
-```text
-src/framework/{ecs,feature,sync,view}
-src/game/features/{shrew,hammer,playerHud,monster,perfHero}
-src/game/session
-src/app
-```
-
-本文后续若出现历史 `src/ecs/gameplay`、`src/features`、`src/sync/projections` 或 `src/view` 路径，以当前目录和 `docs/architecture.md` 为准。
+- 架构和边界：`docs/architecture.md`
+- ECS 绑定：`docs/ecs-binding.md`
+- Laya 生命周期：`docs/laya-rules.md`
+- 测试和调试：`docs/test-guide.md`

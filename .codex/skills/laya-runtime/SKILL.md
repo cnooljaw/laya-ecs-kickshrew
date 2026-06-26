@@ -3,15 +3,14 @@ name: laya-runtime
 description: Use when changing Laya view nodes, resource loading, scene switching, timers, tweens, input handling, lifecycle cleanup, or visual runtime behavior in this project.
 ---
 
-# Laya Runtime Workflow
-
-Use this project skill for changes that touch Laya presentation or runtime ownership.
+# Laya Runtime
 
 ## Read First
 
 - `AGENTS.md`
 - `docs/laya-rules.md`
 - `docs/architecture.md` when lifecycle or ownership changes
+- Global skill `layaair-developer` for general LayaAir lifecycle/resource rules
 
 ## Workflow
 
@@ -28,7 +27,7 @@ Use this project skill for changes that touch Laya presentation or runtime owner
 6. Clear timers/tweens/events using the same owner that registered them.
 7. For runtime-visible changes, run related tests and then `npm run debug:ready` when practical.
 
-## Runtime Debug Notes
+## Project Notes
 
 - Input logs with `hitTable=0` mean hammer cooldown/lock, not hole coordinate miss. Keep this distinct in logs (`hit.blocked` vs `hit.miss`).
 - If the Shrew projection logs Dizzy but the player cannot see it, fix `ShrewNode.setAnimation` and clear tweens on state exit/destroy.
@@ -36,7 +35,7 @@ Use this project skill for changes that touch Laya presentation or runtime owner
 - For long-run memory growth, compare `JS Heap Used`, `Peak`, `Sprite2DCount`, `GPUMemory`, `AllTexture`, and `GPUBuffer`. `Peak` is monotonic by design; stable sprite count with growing GPU memory points to resource/node destruction, not ECS entity growth.
 - Laya `removeChildren()` only removes by default. When rebuilding owned child sprites, pass `removeChildren(0, -1, true)` or explicitly destroy old children.
 
-## Common Test Commands
+## Tests
 
 ```bash
 npm test -- --run src/tests/view/KickInputAdapter.test.ts

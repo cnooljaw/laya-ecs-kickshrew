@@ -1,6 +1,7 @@
 # AGENTS.md
 
-本文件是 Agent 进入项目后的必读入口，只放硬规则和索引。
+本文件是 Agent 进入项目后的必读入口，只放本仓库硬规则和索引。
+通用工程判断使用全局 skills：`ecs-feature-assembly`、`layaair-developer`、`clean-coder-review`。
 
 ## 项目定位
 
@@ -10,19 +11,18 @@
 - 一般只有一个 world。退出场景时整批销毁 runtime/world，重新进入时重新创建。
 - 运行期通常不 `removeEntity`；Shrew、Monster、PerfHero 使用固定槽位或池，初始化阶段允许较厚封装。
 
-## 优先阅读
+## 文档索引
 
-1. `AGENTS.md`
-2. 按任务选择：
-   - 架构与运行流：`docs/architecture.md`
-   - ECS、Entity、Projection、Effect：`docs/ecs-binding.md`
-   - Laya 生命周期与资源：`docs/laya-rules.md`
-   - 性能压测：`docs/performance-tuning.md`
-   - 协议：`docs/protocol.md`
-   - 测试与调试：`docs/test-guide.md`
-3. 代码结构、调用链和 bug 优先用 codegraph。
+- 架构与目录：`docs/architecture.md`
+- ECS / Projection / Effect：`docs/ecs-binding.md`
+- Laya 运行时：`docs/laya-rules.md`
+- 性能压测：`docs/performance-tuning.md`
+- 协议：`docs/protocol.md`
+- 测试与调试：`docs/test-guide.md`
 
-## 核心运行流
+代码结构、调用链和 bug 优先用 codegraph。
+
+## 运行流
 
 ```text
 GameScene.init
@@ -41,7 +41,7 @@ frame
   -> effectRuntime.flush
 ```
 
-## 强制边界
+## 目录边界
 
 - `src/framework/ecs/**`：EntityDefinition / EntityRuntime。
 - `src/framework/feature/**`：Feature Manifest、Registry、mount 原语。
@@ -53,8 +53,6 @@ frame
 - `src/network/**`：协议、请求匹配和 transport；回包不得直接操作 view。
 
 `framework` 不得依赖 `game/app`；Feature 不得导入另一个 Feature 的内部文件。
-
-依赖方向：
 
 ```text
 input/network callback
