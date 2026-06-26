@@ -10,8 +10,7 @@ import type {
   MountPoolOptions,
 } from "./MountPrimitives";
 
-export interface FeatureRuntimeContext {
-  readonly world: any;
+export interface FeatureSetupContext {
   readonly entities: EntityRuntime;
   readonly effects: Pick<EffectRuntime, "on" | "emit">;
   createView<TNode extends MountableView>(options: CreateViewOptions<TNode>): TNode;
@@ -21,7 +20,6 @@ export interface FeatureRuntimeContext {
 }
 
 interface FeatureRuntimeContextDeps {
-  world: any;
   root: any;
   entityRuntime: EntityRuntime;
   projectionRuntime: ProjectionRuntime;
@@ -31,7 +29,7 @@ interface FeatureRuntimeContextDeps {
 
 export function createFeatureRuntimeContext(
   deps: FeatureRuntimeContextDeps,
-): FeatureRuntimeContext {
+): FeatureSetupContext {
   function mountOne<TNode extends MountableView>(
     options: MountOneOptions<TNode>,
   ): TNode {
@@ -42,7 +40,6 @@ export function createFeatureRuntimeContext(
   }
 
   return {
-    world: deps.world,
     entities: deps.entityRuntime,
     effects: deps.effectRuntime,
     createView: options => {

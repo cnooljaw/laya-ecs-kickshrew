@@ -111,7 +111,8 @@ describe("PerfHeroNode", () => {
     const rangerUrl = PERF_HERO_RESOURCES[1].skUrl;
 
     node.create(parent);
-    node.playHero(0, warlockUrl, 10, 20, 0.3, 1);
+    node.setTransform(10, 20, 0.3);
+    node.playHero(0, 1);
     await flushPromises();
 
     const warlock = created.get(warlockUrl)?.[0];
@@ -121,7 +122,8 @@ describe("PerfHeroNode", () => {
     expect(warlock?.parentVisibleWhenPlay).toEqual([false]);
 
     warlock?.emitStopped();
-    node.playHero(0, warlockUrl, 30, 40, 0.4, 2);
+    node.setTransform(30, 40, 0.4);
+    node.playHero(0, 2);
     await flushPromises();
 
     expect(created.get(warlockUrl)).toHaveLength(1);
@@ -130,7 +132,8 @@ describe("PerfHeroNode", () => {
     expect(warlock?.destroyCalls).toBe(0);
 
     warlock?.emitStopped();
-    node.playHero(1, rangerUrl, 50, 60, 0.5, 3);
+    node.setTransform(50, 60, 0.5);
+    node.playHero(1, 3);
     await flushPromises();
 
     const ranger = created.get(rangerUrl)?.[0];
@@ -141,7 +144,8 @@ describe("PerfHeroNode", () => {
     expect(ranger?.playCalls).toHaveLength(1);
 
     ranger?.emitStopped();
-    node.playHero(0, warlockUrl, 70, 80, 0.35, 4);
+    node.setTransform(70, 80, 0.35);
+    node.playHero(0, 4);
     await flushPromises();
 
     expect(created.get(warlockUrl)).toHaveLength(1);
@@ -181,7 +185,8 @@ describe("PerfHeroNode", () => {
 
     expect(container.visible).toBe(false);
 
-    node.playHero(0, skUrl, 10, 20, 0.3, 1);
+    node.setTransform(10, 20, 0.3);
+    node.playHero(2, 1);
     expect(container.visible).toBe(false);
     await flushPromises();
 
@@ -192,7 +197,8 @@ describe("PerfHeroNode", () => {
     skeleton.emitStopped();
     expect(container.visible).toBe(false);
 
-    node.playHero(0, skUrl, 30, 40, 0.4, 2);
+    node.setTransform(30, 40, 0.4);
+    node.playHero(2, 2);
     await flushPromises();
 
     expect(container.visible).toBe(true);
@@ -217,12 +223,15 @@ describe("PerfHeroNode", () => {
     };
     vi.stubGlobal("window", { Laya });
 
-    const node = new PerfHeroNode();
+    const node = new PerfHeroNode({
+      resources: [{ name: "test-no-teleport", skUrl }],
+    });
     const parent = new FakeSprite();
     node.create(parent);
     const container = parent.children[0] as FakeSprite;
 
-    node.playHero(0, skUrl, 10, 20, 0.3, 1);
+    node.setTransform(10, 20, 0.3);
+    node.playHero(0, 1);
     await flushPromises();
 
     const skeleton = created[0];
@@ -230,7 +239,8 @@ describe("PerfHeroNode", () => {
     expect(container.x).toBe(10);
     expect(container.y).toBe(20);
 
-    node.playHero(0, skUrl, 300, 400, 0.5, 2);
+    node.setTransform(300, 400, 0.5);
+    node.playHero(0, 2);
 
     expect(container.visible).toBe(true);
     expect(container.x).toBe(10);
@@ -265,14 +275,18 @@ describe("PerfHeroNode", () => {
     };
     vi.stubGlobal("window", { Laya });
 
-    const node = new PerfHeroNode();
+    const node = new PerfHeroNode({
+      resources: [{ name: "retry-after-failure", skUrl }],
+    });
     const parent = new FakeSprite();
     node.create(parent);
 
-    node.playHero(0, skUrl, 10, 20, 0.3, 1);
+    node.setTransform(10, 20, 0.3);
+    node.playHero(0, 1);
     await flushPromises();
 
-    node.playHero(0, skUrl, 10, 20, 0.3, 2);
+    node.setTransform(10, 20, 0.3);
+    node.playHero(0, 2);
     await flushPromises();
 
     expect(load).toHaveBeenCalledTimes(2);

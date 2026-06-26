@@ -12,12 +12,21 @@ interface MonsterPlayRequest {
   spawnSeq: number;
 }
 
+interface MonsterNodeOptions {
+  resolveSkUrl?: (monsterType: number) => string;
+}
+
 export class MonsterNode implements IMonsterNode {
+  private readonly _resolveSkUrl: (monsterType: number) => string;
   private _container: any = null;
   private _skeleton: any = null;
   private _destroyed = false;
   private _visible = false;
   private _lastSpawnSeq = -1;
+
+  constructor(options: MonsterNodeOptions = {}) {
+    this._resolveSkUrl = options.resolveSkUrl ?? resolveDefaultMonsterSkUrl;
+  }
 
   create(parent: any): void {
     const Laya = getLaya();
@@ -36,16 +45,7 @@ export class MonsterNode implements IMonsterNode {
   spawn(monsterType: number, spawnSeq: number): void {
     if (!this._container || spawnSeq === this._lastSpawnSeq) return;
     this._lastSpawnSeq = spawnSeq;
-    const config = MONSTER_VIEW_CONFIG[monsterType as MonsterType]
-      ?? MONSTER_VIEW_CONFIG[MonsterType.Rhino];
-    this._loadAndPlay({ monsterType, skUrl: config.skUrl, spawnSeq });
-  }
-
-  /** @deprecated direct resource hook kept for node-level loader tests */
-  playMonster(monsterType: number, skUrl: string, _pngUrl: string, spawnSeq: number): void {
-    if (!this._container || spawnSeq === this._lastSpawnSeq) return;
-    this._lastSpawnSeq = spawnSeq;
-    this._loadAndPlay({ monsterType, skUrl, spawnSeq });
+    this._loadAndPlay({ monsterType, skUrl: this._resolveSkUrl(monsterType), spawnSeq });
   }
 
   setPosition(x: number, y: number): void {
@@ -92,4 +92,10 @@ export class MonsterNode implements IMonsterNode {
       this.setVisible(false);
     }
   }
+}
+
+function resolveDefaultMonsterSkUrl(monsterType: number): string {
+  const config = MONSTER_VIEW_CONFIG[monsterType as MonsterType]
+    ?? MONSTER_VIEW_CONFIG[MonsterType.Rhino];
+  return config.skUrl;
 }

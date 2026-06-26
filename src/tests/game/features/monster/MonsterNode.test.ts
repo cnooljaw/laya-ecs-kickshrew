@@ -61,14 +61,16 @@ describe("MonsterNode", () => {
       },
     });
 
-    const node = new MonsterNode();
+    const node = new MonsterNode({
+      resolveSkUrl: () => "resources/monster/retry.sk",
+    });
     const parent = new FakeSprite();
     node.create(parent);
 
-    node.playMonster(1, "resources/monster/retry.sk", "resources/monster/retry.png", 1);
+    node.spawn(1, 1);
     await flushPromises();
 
-    node.playMonster(1, "resources/monster/retry.sk", "resources/monster/retry.png", 2);
+    node.spawn(1, 2);
     await flushPromises();
 
     expect(load).toHaveBeenCalledTimes(2);

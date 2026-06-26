@@ -10,6 +10,11 @@ interface PerfHeroResource {
   skUrl: string;
 }
 
+interface PerfHeroNodeOptions {
+  poolGroup?: PerfHeroSpinePoolGroup;
+  resources?: readonly PerfHeroResource[];
+}
+
 interface PerfHeroPlayRequest {
   heroType: number;
   skUrl: string;
@@ -56,6 +61,7 @@ export class PerfHeroSpinePoolGroup {
 export class PerfHeroNode implements IPerfHeroNode {
   private readonly _poolGroup: PerfHeroSpinePoolGroup;
   private readonly _ownsPoolGroup: boolean;
+  private readonly _resources: readonly PerfHeroResource[];
   private _container: any = null;
   private _activeHeroNode: PooledPerfHeroNode | null = null;
   private _pendingPlay: PerfHeroPlayRequest | null = null;
@@ -66,9 +72,15 @@ export class PerfHeroNode implements IPerfHeroNode {
   private _nextY = 0;
   private _nextScale = 1;
 
-  constructor(poolGroup?: PerfHeroSpinePoolGroup) {
-    this._poolGroup = poolGroup ?? new PerfHeroSpinePoolGroup();
-    this._ownsPoolGroup = !poolGroup;
+  constructor(poolGroup?: PerfHeroSpinePoolGroup);
+  constructor(options?: PerfHeroNodeOptions);
+  constructor(poolGroupOrOptions: PerfHeroSpinePoolGroup | PerfHeroNodeOptions = {}) {
+    const options = poolGroupOrOptions instanceof PerfHeroSpinePoolGroup
+      ? { poolGroup: poolGroupOrOptions }
+      : poolGroupOrOptions;
+    this._resources = options.resources ?? PERF_HERO_RESOURCES;
+    this._poolGroup = options.poolGroup ?? new PerfHeroSpinePoolGroup(this._resources);
+    this._ownsPoolGroup = !options.poolGroup;
   }
 
   create(parent: any): void {
@@ -91,34 +103,16 @@ export class PerfHeroNode implements IPerfHeroNode {
     this._nextScale = scale;
   }
 
-  playHero(heroType: number, spawnSeq: number): void;
-  /** @deprecated direct resource hook kept for node-level pool tests */
-  playHero(
-    heroType: number,
-    skUrl: string,
-    x: number,
-    y: number,
-    scale: number,
-    spawnSeq: number,
-  ): void;
-  playHero(
-    heroType: number,
-    spawnOrUrl: number | string,
-    x?: number,
-    y?: number,
-    scale?: number,
-    legacySpawnSeq?: number,
-  ): void {
-    const isLegacyCall = typeof spawnOrUrl === "string";
-    const spawnSeq = isLegacyCall ? legacySpawnSeq ?? 0 : spawnOrUrl;
+  playHero(heroType: number, spawnSeq: number): void {
     if (!this._container || spawnSeq === this._lastSpawnSeq || spawnSeq === this._pendingPlay?.spawnSeq) return;
-    const resource = PERF_HERO_RESOURCES[heroType] ?? PERF_HERO_RESOURCES[0];
+    const resource = this._resources[heroType] ?? this._resources[0];
+    if (!resource) return;
     const request = {
       heroType,
-      skUrl: isLegacyCall ? spawnOrUrl : resource.skUrl,
-      x: isLegacyCall ? x ?? 0 : this._nextX,
-      y: isLegacyCall ? y ?? 0 : this._nextY,
-      scale: isLegacyCall ? scale ?? 1 : this._nextScale,
+      skUrl: resource.skUrl,
+      x: this._nextX,
+      y: this._nextY,
+      scale: this._nextScale,
       spawnSeq,
     };
     if (this._isPlaying && this._container.visible) {

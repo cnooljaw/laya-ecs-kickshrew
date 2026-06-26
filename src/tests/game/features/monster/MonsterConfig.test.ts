@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  MONSTER_DURATION_SEC,
   MONSTER_SPAWN_RULES,
   validateMonsterRules,
   type MonsterSpawnRule,
 } from "../../../../game/features/monster/MonsterRules";
+import { createMonsterPoolInputs } from "../../../../game/features/monster/MonsterPool";
 import { MonsterType } from "../../../../game/features/monster/MonsterTypes";
 import {
   MONSTER_VIEW_CONFIG,
@@ -14,6 +16,38 @@ describe("Monster configuration", () => {
   it("validates the default rule and view configuration", () => {
     expect(validateMonsterRules(MONSTER_SPAWN_RULES)).toEqual([]);
     expect(validateMonsterViewConfig(MONSTER_VIEW_CONFIG)).toEqual([]);
+  });
+
+  it("expands spawn rules into fixed pool entity inputs", () => {
+    const inputs = createMonsterPoolInputs(
+      [
+        {
+          slot: 0,
+          monsterType: MonsterType.Rhino,
+          maxActiveCount: 2,
+          trigger: { source: "money", mode: "multiple", interval: 100, catchUp: false },
+        },
+      ],
+      MONSTER_VIEW_CONFIG,
+      MONSTER_DURATION_SEC,
+    );
+
+    expect(inputs).toEqual([
+      {
+        monsterType: MonsterType.Rhino,
+        posX: MONSTER_VIEW_CONFIG[MonsterType.Rhino].posX,
+        posY: MONSTER_VIEW_CONFIG[MonsterType.Rhino].posY,
+        scale: MONSTER_VIEW_CONFIG[MonsterType.Rhino].scale,
+        durationSec: MONSTER_DURATION_SEC[MonsterType.Rhino],
+      },
+      {
+        monsterType: MonsterType.Rhino,
+        posX: MONSTER_VIEW_CONFIG[MonsterType.Rhino].posX,
+        posY: MONSTER_VIEW_CONFIG[MonsterType.Rhino].posY,
+        scale: MONSTER_VIEW_CONFIG[MonsterType.Rhino].scale,
+        durationSec: MONSTER_DURATION_SEC[MonsterType.Rhino],
+      },
+    ]);
   });
 
   it("reports duplicate slots, invalid counts and invalid trigger intervals", () => {

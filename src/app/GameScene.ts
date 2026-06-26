@@ -87,7 +87,6 @@ export class GameScene {
     }
 
     GAME_FEATURE_REGISTRY.setupAll(createFeatureRuntimeContext({
-      world: this._world,
       root: this._root,
       viewRegistry: this._viewRegistry,
       entityRuntime: this._entityRuntime,

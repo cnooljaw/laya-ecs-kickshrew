@@ -54,7 +54,6 @@ describe("GameFeatureRuntime", () => {
       },
     };
     const context = createFeatureRuntimeContext({
-      world,
       root,
       entityRuntime,
       projectionRuntime,
@@ -92,7 +91,6 @@ describe("GameFeatureRuntime", () => {
       },
     };
     const context = createFeatureRuntimeContext({
-      world,
       root: null,
       entityRuntime: createEntityRuntime(world, []),
       projectionRuntime: createProjectionRuntime([]),
@@ -113,7 +111,6 @@ describe("GameFeatureRuntime", () => {
     const eids = [addEntity(world), addEntity(world)];
     for (const eid of eids) addComponent(world, CounterComponent, eid);
     const context = createFeatureRuntimeContext({
-      world,
       root: null,
       entityRuntime: createEntityRuntime(world, []),
       projectionRuntime: createProjectionRuntime([CounterProjection]),

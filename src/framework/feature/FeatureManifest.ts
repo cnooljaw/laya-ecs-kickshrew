@@ -1,6 +1,6 @@
 import type { EntityDefinition } from "../ecs/EntityDefinition";
 import type { ProjectionDefinition } from "../sync/ProjectionDefinition";
-import type { FeatureRuntimeContext } from "./FeatureRuntimeContext";
+import type { FeatureSetupContext } from "./FeatureRuntimeContext";
 
 export type GameSystem = (world: any, deltaSec: number) => void;
 export type GameSystemPhase = "state" | "feature";
@@ -13,7 +13,7 @@ export interface SystemDefinition {
 
 export interface FeatureManifest {
   readonly name: string;
-  setup?: (ctx: FeatureRuntimeContext) => void;
+  setup?: (ctx: FeatureSetupContext) => void;
   entities?: readonly EntityDefinition<any>[];
   projections?: readonly ProjectionDefinition<any>[];
   systems?: readonly SystemDefinition[];

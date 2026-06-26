@@ -1,5 +1,5 @@
 import { defineFeature, defineSystem } from "../../../framework/feature/FeatureManifest";
-import type { FeatureRuntimeContext } from "../../../framework/feature/FeatureRuntimeContext";
+import type { FeatureSetupContext } from "../../../framework/feature/FeatureRuntimeContext";
 import { animationTimerSystem } from "./AnimationTimerSystem";
 import { HoleComponent } from "./ShrewComponents";
 import { HoleEntity, SceneEntity, ShrewEntity } from "./ShrewEntities";
@@ -24,7 +24,7 @@ export interface CoreGameplaySetupResult {
 export function setupCoreGameplay({
   entities,
   mountOne,
-}: FeatureRuntimeContext): CoreGameplaySetupResult {
+}: FeatureSetupContext): CoreGameplaySetupResult {
   const scene = entities.one(SceneEntity);
   mountOne({
     eid: scene,

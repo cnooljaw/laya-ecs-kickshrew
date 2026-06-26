@@ -1,6 +1,6 @@
 import type { EntityDefinition } from "../ecs/EntityDefinition";
 import type { ProjectionDefinition } from "../sync/ProjectionDefinition";
-import type { FeatureRuntimeContext } from "./FeatureRuntimeContext";
+import type { FeatureSetupContext } from "./FeatureRuntimeContext";
 import type {
   FeatureManifest,
   GameSystem,
@@ -13,7 +13,7 @@ export interface RegisteredGameSystem {
 }
 
 export interface GameFeatureRegistry {
-  setupAll(ctx: FeatureRuntimeContext): void;
+  setupAll(ctx: FeatureSetupContext): void;
   systemsByPhase(phase: GameSystemPhase): readonly RegisteredGameSystem[];
   entityTypes(): readonly EntityDefinition<any>[];
   projections(): readonly ProjectionDefinition<any>[];

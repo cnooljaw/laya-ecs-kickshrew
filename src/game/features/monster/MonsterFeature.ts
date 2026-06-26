@@ -1,7 +1,11 @@
 import { defineFeature, defineSystem } from "../../../framework/feature/FeatureManifest";
-import { MonsterEntity, MonsterTriggerEntity, type MonsterEntityInput } from "./MonsterEntities";
+import { MonsterEntity, MonsterTriggerEntity } from "./MonsterEntities";
 import { MonsterNode } from "./MonsterNode";
-import { createMonsterPool, createMonsterTriggerEntities } from "./MonsterPool";
+import {
+  createMonsterPool,
+  createMonsterPoolInputs,
+  createMonsterTriggerEntities,
+} from "./MonsterPool";
 import { MonsterProjection } from "./MonsterProjection";
 import {
   MONSTER_DURATION_SEC,
@@ -22,20 +26,10 @@ export const MonsterFeature = defineFeature({
   setup: ({ entities, mountPool }) => {
     assertValidMonsterFeature();
     createMonsterTriggerEntities(entities, MONSTER_SPAWN_RULES);
-    const inputs: MonsterEntityInput[] = [];
-    for (const rule of MONSTER_SPAWN_RULES) {
-      const view = MONSTER_VIEW_CONFIG[rule.monsterType];
-      for (let index = 0; index < rule.maxActiveCount; index++) {
-        inputs.push({
-          monsterType: rule.monsterType,
-          posX: view.posX,
-          posY: view.posY,
-          scale: view.scale,
-          durationSec: MONSTER_DURATION_SEC[rule.monsterType],
-        });
-      }
-    }
-    const eids = createMonsterPool(entities, inputs);
+    const eids = createMonsterPool(
+      entities,
+      createMonsterPoolInputs(MONSTER_SPAWN_RULES, MONSTER_VIEW_CONFIG, MONSTER_DURATION_SEC),
+    );
     mountPool({
       eids,
       projection: MonsterProjection,

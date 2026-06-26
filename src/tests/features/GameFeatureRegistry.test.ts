@@ -17,6 +17,7 @@ import {
 } from "../../framework/feature/FeatureManifest";
 import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../game/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../framework/feature/FeatureRegistry";
+import type { FeatureSetupContext } from "../../framework/feature/FeatureRuntimeContext";
 import {
   defineProjection,
   noProjection,
@@ -53,32 +54,32 @@ function feature(name: string): FeatureManifest {
 function createSetupContext(entities: ReturnType<typeof createEntityRuntime>) {
   const mounts = new Map<string, number>();
   let resources = 0;
+  const context: FeatureSetupContext = {
+    entities,
+    effects: {
+      on: () => {},
+      emit: () => {},
+    },
+    createView: ({ create }: any) => {
+      resources++;
+      return create();
+    },
+    mountOne: ({ projection, create }: any) => {
+      mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
+      return create();
+    },
+    mountPool: ({ eids, projection, create }: any) => eids.map((eid: number, index: number) => {
+      mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
+      return create(eid, index);
+    }),
+    own: <T extends { destroy(): void }>(resource: T) => {
+      resources++;
+      return resource;
+    },
+  };
   return {
     mounts,
-    context: {
-      world: {},
-      entities,
-      effects: {
-        on: () => {},
-        emit: () => {},
-      },
-      createView: ({ create }: any) => {
-        resources++;
-        return create();
-      },
-      mountOne: ({ projection, create }: any) => {
-        mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
-        return create();
-      },
-      mountPool: ({ eids, projection, create }: any) => eids.map((eid: number, index: number) => {
-        mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
-        return create(eid, index);
-      }),
-      own: <T>(resource: T) => {
-        resources++;
-        return resource;
-      },
-    } as any,
+    context,
     resourceCount: () => resources,
   };
 }
@@ -152,7 +153,6 @@ describe("GameFeatureRegistry", () => {
     const entities = createEntityRuntime(world, GAME_FEATURE_REGISTRY.entityTypes());
     entities.bootstrapSingletons();
     const setup = createSetupContext(entities);
-    setup.context.world = world;
 
     GAME_FEATURE_REGISTRY.setupAll(setup.context);
 
