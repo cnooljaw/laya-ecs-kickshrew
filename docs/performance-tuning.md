@@ -1,8 +1,8 @@
 # 性能调教与压测
 
-本文记录本项目压测入口、PerfHero 链路和长时间内存排查经验。通用 Laya 性能判断使用全局 skill `layaair-developer`。
+本文记录本项目的压测入口、PerfHero 链路和长时间内存排查方法。通用 Laya 性能判断使用全局 skill `layaair-developer`。
 
-## Entry
+## 入口
 
 ```bash
 npm run debug:ready
@@ -23,7 +23,7 @@ http://<LAN-IP>:8080/debug-tsc.html?perf=1&heroes=200
 
 `debug:ready` 固定使用 `0.0.0.0:8080`。如果已有旧服务只监听 `127.0.0.1:8080`，脚本会拒绝继续。
 
-## PerfHero Chain
+## PerfHero 链路
 
 ```text
 URL query
@@ -48,9 +48,9 @@ URL query
 - `src/game/features/perfHero/PerfHeroNode.ts`
 - `src/game/features/perfHero/PerfHeroFeature.ts`
 
-ECS 侧只承载权威状态和随机重生，不直接操作 Laya。Skeleton 创建、播放、隐藏、池化属于 view 层。
+ECS 侧只承载权威状态和随机重生，不直接操作 Laya。Skeleton 创建、播放、隐藏和池化属于 view 层。
 
-## Metrics
+## 指标
 
 至少记录：
 
@@ -66,21 +66,21 @@ JS Heap Used / Peak / Limit
 
 - `Peak` 单调不降是正常统计，不等于泄漏。
 - `Sprite2DCount` 稳定但 GPU memory 增长：优先查被移出但未 destroy 的节点、Graphics、Texture、Skeleton。
-- `Sprite2DCount` 持续增长：优先查 ViewRegistry、对象池 release、scene switch、timer/tween/event。
+- `Sprite2DCount` 持续增长：优先查 ViewRegistry、对象池 release、scene switch、timer、tween、event。
 - DrawCall/Triangle 稳定但 FPS 下降：优先查 GC、GPU memory、动画重建和浏览器长期运行压力。
 
 已验证过的典型问题：`ShrewNode` 重建部件时只 `removeChildren()`，旧部件被移出显示树但没有销毁。修法是 `removeChildren(0, -1, true)` 并补回归测试。
 
-## Spine Rules
+## Spine 规则
 
 - 200 个 Spine 的主要压力通常在 Laya Skeleton 动画和渲染，不在 bitecs 遍历。
 - 不要在每次 respawn 时 `destroy + buildArmature`；按资源建池复用 Skeleton。
-- 共享池由 Feature 创建并交给运行时持有，slot node 只持有当前 active 实例。
+- 共享池由 Feature 创建并交给 runtime 持有，slot node 只持有当前 active 实例。
 - attach pooled Skeleton 前隐藏并重置 `x/y/scale/rotation/alpha`，`play()` 后再显示父容器。
 - 旧动画仍可见时不要立即更新父容器坐标；把新 respawn pending 到 STOPPED/隐藏后应用。
 - 初始 `ageSec` 打散，避免所有槽位同帧重生。
 
-## Reproduction Matrix
+## 复现矩阵
 
 ```text
 heroes=0
@@ -93,7 +93,7 @@ heroes=200&shrewFast=0
 
 不要只看单次 FPS。区分真实 Spine 压力、ECS/Projection 压力、资源首次加载和周期性重建。
 
-## Tests
+## 测试
 
 ```bash
 npm test -- --run src/tests/game/features/perfHero/PerfHeroSystem.test.ts

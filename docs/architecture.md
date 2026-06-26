@@ -1,20 +1,25 @@
-# 架构说明
+# 架构
 
-## 模块
+本文说明模块职责、依赖方向、运行流和生命周期 owner。具体 ECS API 看 `docs/ecs-binding.md`；Laya 细节看 `docs/laya-rules.md`。
+
+## 模块职责
 
 ```text
-src/
-  framework/            稳定 ECS / Feature / Sync / View 机制
-  game/features/        业务纵向切片
-  game/session/         跨 Feature 编排
-  game/GameFeatures.ts  显式组合根
-  app/                  Laya 应用壳和主循环
-  network/              protobuf、socket、mock server
-  resource/             通用资源工具
-  config/               真正跨业务的少量配置
+src/framework/            稳定的 ECS / Feature / Sync / View 机制
+src/game/features/        业务纵向切片
+src/game/session/         输入、回包和跨 Feature 编排
+src/game/GameFeatures.ts  显式 Feature 组合根
+src/app/                  Laya 应用壳和主循环
+src/network/              protobuf、socket、mock server
+src/resource/             atlas、plist 和资源路径工具
+src/config/               少量跨业务配置
 ```
 
+`framework` 提供机制。`game/features` 保存业务规则和表现绑定。`app` 负责把 world、runtime、network 和 Laya stage 组装起来。
+
 ## 依赖方向
+
+持久状态：
 
 ```text
 input/network
@@ -26,39 +31,48 @@ input/network
   -> Laya node
 ```
 
-瞬时表现走独立通道：
+瞬时事实：
 
 ```text
-adapter -> EffectRuntime.emit -> frame flush -> Feature handler -> Laya node
+adapter
+  -> EffectRuntime.emit
+  -> frame-end flush
+  -> Feature handler
+  -> Laya node
 ```
 
-ECS system 不操作 Laya。View node 不反查 ECS，也不决定规则。
+规则：
 
-## 三个运行时
+- ECS system 不操作 Laya。
+- Laya node 不反查 ECS。
+- socket 回包不直接操作 view。
+- Feature 不导入另一个 Feature 的内部文件。
+
+## 运行时
 
 ### EntityRuntime
 
 - 初始化时编译 Feature 声明的 `EntityDefinition[]`。
 - `bootstrapSingletons()` 创建 Scene、Hammer、Player 等单例。
-- `create/createMany` 创建固定拓扑和池。
+- `create/createMany` 创建固定拓扑和对象池。
 - 运行期通常不删除 entity；退出 world 时整批释放。
 
 ### ProjectionRuntime
 
-- 初始化时编译 query、watched fields、row offsets、typed dirty/full arrays 和 eid/node registry。
-- 第一次看到 eid 时建立一次 snapshot 并全量投影。
+- 初始化时编译 query、watched fields、row offsets、dirty/full arrays 和 eid/node registry。
+- 首次看到 eid 时创建 snapshot，并全量同步。
 - 后续只比较声明字段，按变化 row 调用 view contract。
-- 相同 apply 函数在同一轮只执行一次。
+- 同一轮内相同 apply 函数只执行一次。
 
 ### EffectRuntime
 
-- 用 `EffectDefinition` 对象身份区分 channel，不使用全局字符串总线。
+- 用 `EffectDefinition` 对象身份区分 channel。
 - `emit` 只入队；`flush` 在帧末派发。
 - 用于 reward、miss 等瞬时事实，不伪装成持久 ECS 状态。
 
 ## Feature
 
-Feature 只声明：
+Feature 声明自己贡献的实体、投影、系统和 setup：
 
 ```ts
 defineFeature({
@@ -70,19 +84,21 @@ defineFeature({
 });
 ```
 
-`setup` 可以创建固定拓扑、池、节点和 effect handler。核心规则保留在拥有它的业务切片。
+`setup` 可以创建固定拓扑、对象池、节点和 effect handler。核心规则保留在拥有它的业务切片。
 
-ShrewFeature 显式保留：
+`ShrewFeature` 显式保留业务拓扑：
 
 1. mount Scene。
 2. 创建 9 个 Hole。
 3. 每个 Hole 创建一个 Shrew。
-4. 写 `HoleComponent.shrewEid`。
+4. 写入 `HoleComponent.shrewEid`。
 5. ShrewNode 以 HoleNode container 为 parent。
 
-这个关系是业务，不进入通用 EntityRuntime helper。
+这个关系是玩法事实，不进入通用 EntityRuntime helper。
 
 ## 启动和主循环
+
+进场：
 
 ```text
 GameScene.init
@@ -122,21 +138,19 @@ NetworkAdapter callback
   -> Player/Hammer public mutation helpers
   -> ThunderSystem cross-feature orchestration
   -> HitRewardEffect emit
-  -> frame flush
+  -> frame-end flush
   -> HitEffectNode
 ```
 
-本地 miss 由 KickInputController 显式 emit `HitMissEffect`。
+本地 miss 由 `KickInputController` 显式 emit `HitMissEffect`。
 
-## 生命周期
-
-Owner：
+## 生命周期 owner
 
 - `Main`：frameLoop、stage event、背景音乐。
 - `GameScene`：world、三个 runtime、network 和 root。
-- `Feature`：本领域拓扑、池、节点和 effect handler。
-- `ViewRegistry`：集中 destroy 所有拥有的 view/resource。
-- 各 Feature 的具体 Node：自己的 children、timer、tween 和异步回调保护。
+- `Feature`：本业务的拓扑、对象池、节点和 effect handler。
+- `ViewRegistry`：集中 destroy 由 mount/own 注册的 view/resource。
+- 具体 Node：自己的 children、timer、tween 和 async callback guard。
 
 退出顺序：
 
@@ -149,10 +163,10 @@ EntityRuntime.clear
 deleteWorld
 ```
 
-下一次进入重新创建全部状态和快照。
+下一次进入重新创建全部状态、快照和 view。
 
 ## 扩展点
 
 新增业务采用纵向切片：Component、Entity、System、Projection、contract、Node 和配置放在 `src/game/features/foo`，只从 `index.ts` 暴露公开能力，并在 `src/game/GameFeatures.ts` 增加显式注册项。
 
-框架负责 registry、dirty bit、full sync 和 teardown；业务不维护这些机制，也不依赖运行期频繁 `removeEntity`。具体 API 写法见 `docs/ecs-binding.md`。
+框架负责 registry、dirty bit、full sync 和 teardown。业务不维护这些机制，也不依赖运行期频繁 `removeEntity`。具体写法见 `docs/ecs-binding.md`。

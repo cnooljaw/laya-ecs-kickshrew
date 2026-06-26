@@ -5,32 +5,32 @@ description: Use when adding tests, choosing verification commands, running debu
 
 # Test Workflow
 
-## Read First
+## 先读
 
 - `AGENTS.md`
 - `docs/test-guide.md`
 
-## Workflow
+## 工作流
 
-1. Check `git status --short` before edits.
-2. Run the smallest relevant test to establish the baseline when one exists.
-3. Add or update focused tests for behavior changes.
-4. Implement the minimal change.
-5. Run narrow tests, then `npx tsc --noEmit`.
-6. Run `npm test` when the change touches shared systems or multiple boundaries.
-7. Run `npm run debug:ready` when the change affects runtime visuals, input, resources, lifecycle, network, or debugging.
-8. Stage only related files and commit with TDD notes.
+1. 编辑前看 `git status --short`。
+2. 有窄测试时先跑基线。
+3. 行为变化先补或更新聚焦测试。
+4. 写最小实现。
+5. 跑窄测试，再跑 `npx tsc --noEmit`。
+6. 触及共享系统或多个边界时跑 `npm test`。
+7. 触及运行时、画面、输入、资源、生命周期、网络或 debug 时跑 `npm run debug:ready`。
+8. 只暂存本次改动文件；commit 描述尽量用中文。
 
-## Debug
+## 调试
 
-- `npm run debug:ready` is the single local/LAN debug entry. It must use port `8080` and bind all interfaces; do not introduce a second LAN port such as 8081.
-- If LAN devices cannot see the page, check `lsof -nP -iTCP:8080 -sTCP:LISTEN`. `*:8080` or `0.0.0.0:8080` is expected; `127.0.0.1:8080` is local-only.
-- If codegraph MCP returns `Transport closed`, check `codegraph status .`, `codegraph sync .`, and `.codegraph/daemon.log`. CLI success means the index is healthy; restart the Codex session/app to rebuild the stdio MCP connection, then verify with a real `codegraph_context` call.
+- `npm run debug:ready` 是唯一 local/LAN debug 入口，固定端口 `8080`，不要新增 8081。
+- LAN 访问失败时查 `lsof -nP -iTCP:8080 -sTCP:LISTEN`。期望监听 `*:8080` 或 `0.0.0.0:8080`。
+- codegraph MCP 返回 `Transport closed` 时，先查 `codegraph status .`、`codegraph sync .` 和 `.codegraph/daemon.log`。
 
-## Commit Template
+## Commit 模板
 
 ```text
-<type>: <简短描述>
+<type>: <中文简述>
 
 TDD Red: <先跑了什么测试，失败/基线是什么；没有测试时说明原因>
 
@@ -39,8 +39,8 @@ TDD Green: <做了什么让目标通过，或文档/配置完成了什么>
 TDD Refactor: <是否有重构；没有就写“无”>
 ```
 
-## Safety
+## 安全
 
-- Do not use `git reset --hard` or `git checkout -- <file>` unless explicitly requested.
-- Do not revert unrelated user changes.
-- Do not commit generated outputs such as `bin/js/debug/`, `bin/js/game.js`, or `node_modules/`.
+- 不使用 `git reset --hard` 或 `git checkout -- <file>`，除非用户明确要求。
+- 不回滚无关用户改动。
+- 不提交 `bin/js/debug/`、`bin/js/game.js`、`node_modules/` 等生成物。

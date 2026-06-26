@@ -1,6 +1,6 @@
-# 协议同步和更新
+# 协议同步
 
-本文说明客户端如何同步服务端 proto，并维护 protobuf 网络协议边界。改 `api/proto/kick.proto`、`src/network/**` 或真实 socket 接入时优先读这里。
+本文说明客户端如何同步服务端 proto，并维护 protobuf 网络协议边界。改 `api/proto/kick.proto`、`src/network/**` 或真实 socket 接入时先读这里。
 
 ## 权威来源
 
@@ -22,6 +22,12 @@
 ../GoServerActorFsm/internal/protocol/codec.go
 ```
 
+客户端只保留一份 proto：
+
+```text
+api/proto/kick.proto
+```
+
 当前客户端必须对齐这些 `MsgID`：
 
 ```text
@@ -32,12 +38,6 @@ KickRespID=2002
 ErrorRespID=9001
 ```
 
-客户端只保留一份对应 proto：
-
-```text
-api/proto/kick.proto
-```
-
 ## 手动同步
 
 ```bash
@@ -46,18 +46,19 @@ diff -u ../GoServerActorFsm/api/proto/kick.proto api/proto/kick.proto
 rg -n "PingReqID|PongRespID|KickReqID|KickRespID|ErrorRespID" ../GoServerActorFsm/internal/protocol/codec.go src/network/ProtocolTypes.ts
 ```
 
-`diff` 没有输出时，说明客户端 proto 和服务端权威 proto 一致。`rg` 输出中的协议号必须和 `src/network/ProtocolTypes.ts` 的 `PROTOCOL_MSG_IDS` 一致。
+`diff` 没有输出时，客户端 proto 与服务端权威 proto 一致。`rg` 输出中的协议号必须和 `src/network/ProtocolTypes.ts` 的 `PROTOCOL_MSG_IDS` 一致。
 
-## 客户端协议边界
+## 客户端边界
 
 同步 proto 后按字段更新：
 
-- `src/network/KickProtoCodec.ts`：protobuf wire 编解码和 proto snake_case ↔ 业务 camelCase/旧字段名映射。
-- `Envelope.seq_id` 是请求-回包匹配的唯一权威 seq，`Envelope.msg_id` 是消息类型权威协议号；业务 payload（如 `KickRequest`/`KickResponse`）不再携带 `seq_id` 或 `cmd`。
+- `src/network/KickProtoCodec.ts`：protobuf wire 编解码，以及 proto snake_case 到业务 camelCase/旧字段名映射。
 - `src/network/ProtocolTypes.ts`：业务侧请求/回包类型，保持 view/ECS 不直接依赖 proto 细节。
 - `src/network/KickSocket.ts`：只处理 `Uint8Array` protobuf 二进制收发和 `seqId` pending 匹配。
-- `src/network/NetworkAdapter.ts`：MockServer 链路也必须走 protobuf 编解码，不要退回 JSON。
-- `src/tests/network/KickProtoCodec.test.ts`、`src/tests/network/KickSocket.test.ts`、`src/tests/network/MockServer.test.ts`：同步协议测试。
+- `src/network/NetworkAdapter.ts`：MockServer 链路也必须走 protobuf 编解码，不退回 JSON。
+- `src/tests/network/KickProtoCodec.test.ts`、`KickSocket.test.ts`、`MockServer.test.ts`：同步协议测试。
+
+`Envelope.seq_id` 是请求-回包匹配的唯一权威 seq。`Envelope.msg_id` 是消息类型权威协议号。业务 payload 不再携带 `seq_id` 或 `cmd`。
 
 ## 防回退检查
 
@@ -67,9 +68,9 @@ rg -n "PingReqID|PongRespID|KickReqID|KickRespID|ErrorRespID" ../GoServerActorFs
 rg -n "JSON.stringify\\(fullReq|JSON.parse\\(data|send\\(data: string\\)|onMessage\\(data: string|failed to parse message" src src/tests
 ```
 
-## 验证命令
+## 验证
 
-协议相关最小验证：
+协议最小验证：
 
 ```bash
 npm test -- --run src/tests/network/KickProtoCodec.test.ts src/tests/network/KickSocket.test.ts src/tests/network/MockServer.test.ts

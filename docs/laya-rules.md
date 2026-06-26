@@ -1,8 +1,8 @@
-# LayaAir 约定
+# LayaAir 规则
 
-本文只记录本项目的 Laya 运行时规则。通用 Laya 生命周期判断使用全局 skill `layaair-developer`。
+本文记录本项目的 Laya 运行时规则。通用 Laya 生命周期判断使用全局 skill `layaair-developer`。
 
-## Boundaries
+## 边界
 
 - `src/game/features/<name>/*Node.ts` 可以使用 `Laya.*`。
 - Component、Entity、System、Projection 默认不使用 `Laya.*`。
@@ -11,31 +11,31 @@
 - socket 回包不能直接操作 view，必须先更新 ECS 或 emit typed effect。
 - async loader、timer、tween、event 必须有 owner 和 teardown。
 
-## Current Owners
+## 生命周期 owner
 
 - `Main`：frameLoop、stage event、脚本生命周期。
 - `GameScene`：world、network callback、runtime adapter、ViewRegistry、FeatureRegistry 调用。
 - `Feature`：创建本模块 view node，通过 `mountOne/mountPool/createView/own` 声明关系和所有权。
 - `ProjectionRuntime`：字段快照、eid/node registry 和 dirty arrays。
 - `ViewRegistry`：统一反注册和销毁 mount/own 的对象。
-- view node：自己的 children、timer、tween 和异步回调保护。
+- view node：自己的 children、timer、tween 和 async callback guard。
 
-## View Nodes
+## View 节点
 
 ```text
-shrew/SceneLayer       背景、cover、场景切换遮罩
-shrew/HoleNode         洞位容器
-shrew/ShrewNode        地鼠复合精灵和 Cocos -> Laya 坐标转换
-hammer/HammerNode      锤子光标和击打动画
-playerHud/PlayerHUD   金币/怒气/体力/等级
-playerHud/HitEffectNode 一次性击中特效
-perfHero/PerfHeroNode  压测英雄 Spine 槽位
-monster/MonsterNode    怪物 Spine 节点
+shrew/SceneLayer          背景、cover、场景切换遮罩
+shrew/HoleNode            洞位容器
+shrew/ShrewNode           地鼠复合精灵和 Cocos -> Laya 坐标转换
+hammer/HammerNode         锤子光标和击打动画
+playerHud/PlayerHUD      金币、怒气、体力、等级
+playerHud/HitEffectNode  一次性击中特效
+perfHero/PerfHeroNode    压测英雄 Spine 槽位
+monster/MonsterNode      怪物 Spine 节点
 ```
 
-如果 Node 里出现命中合法性、奖励计算、状态机、协议字段解析，通常是边界穿透。
+如果 Node 里出现命中合法性、奖励计算、状态机或协议字段解析，通常说明边界穿透。
 
-## Lifecycle Checklist
+## 生命周期检查
 
 - 事件在哪里注册，就在同一 owner 的 teardown 中注销。
 - `Laya.timer` 清理必须使用同一 caller/method。
@@ -45,7 +45,7 @@ monster/MonsterNode    怪物 Spine 节点
 - 对象池复用前隐藏、重置 transform，再播放和显示。
 - 场景切换和重复 `destroy()` 必须幂等。
 
-## Config Locations
+## 配置位置
 
 - 跨业务规则：`src/config/GameTuning.ts`
 - Shrew：`src/game/features/shrew/{ShrewRules,ShrewViewConfig,HolePositions,SceneConfig}.ts`
@@ -57,7 +57,7 @@ monster/MonsterNode    怪物 Spine 节点
 
 不要在 view 或 system 里散落 `960/640`、命中半径、zOrder、HUD 坐标等数字。
 
-## Coordinates And Shrew
+## 坐标与 Shrew
 
 设计分辨率在 `GameTuning.DESIGN_RESOLUTION`。洞位配置使用比例坐标，`HoleNode` 投影到设计分辨率。
 
@@ -66,9 +66,9 @@ monster/MonsterNode    怪物 Spine 节点
 - Cocos 是 Y-up，Laya 是 Y-down。
 - Laya AtlasResource 子帧不一定能通过 `Loader.getRes(frameUrl)` 拿到，本项目用 `getFrameTexture(atlasRes, frameName)` 按 url 后缀查找。
 - `rotated=true` 的 atlas 帧需要 `ShrewNode` 手动补偿。
-- cover zOrder 与洞位行绑定，改地图时同时看 `HolePositions`、`SceneConfig`、`SceneLayer`、`SceneCycleSystem`。
+- cover zOrder 与洞位行绑定。改地图时同时看 `HolePositions`、`SceneConfig`、`SceneLayer`、`SceneCycleSystem`。
 
-## Laya Upgrade Check
+## Laya 升级检查
 
 升级 LayaAir 版本先跑：
 

@@ -1,4 +1,6 @@
-# 测试、调试与提交指南
+# 测试、调试与提交
+
+本文说明如何选择测试命令、启动 debug 服务和提交改动。
 
 ## 默认 TDD
 
@@ -8,7 +10,7 @@
 4. 最小实现。
 5. 跑窄测试、类型检查和必要的全量测试。
 6. 运行时可见改动执行 `npm run debug:ready` 和浏览器验证。
-7. 提交相关文件。
+7. 提交本次改动文件。
 
 ## 常用命令
 
@@ -49,17 +51,17 @@ npm test -- --run src/tests/features src/tests/view/GameScene.test.ts
 
 ## 覆盖重点
 
-- EntityDefinition 基数、默认值和固定 topology。
+- EntityDefinition 基数、默认值、固定拓扑和对象池。
 - state/network/feature/projection/effect 顺序。
 - Projection 初次同步、差量比较和 apply 去重。
-- typed Effect 的 enqueue/flush/clear。
+- typed Effect 的 enqueue、flush、clear。
 - Shrew 状态机、命中、Hammer、Player 回包。
 - Monster 固定池、tracker 数量和不删除实体策略。
 - world 退出时 runtime、node、effect handler 和 snapshot 清理。
 - protobuf、seqId、超时与乱序回包。
-- Laya 节点池化、异步资源 stale guard 和 destroy。
+- Laya 节点池化、async resource stale guard 和 destroy。
 
-## Debug
+## 调试
 
 ```bash
 npm run debug:ready
@@ -72,16 +74,16 @@ http://localhost:8080/debug-tsc.html
 http://localhost:8080/debug-tsc.html?perf=1&heroes=200
 ```
 
-`debug:ready` 会编译 TypeScript、修复 ESM 扩展、复制 vendor/资源并确认 8080 服务。
+`debug:ready` 会编译 TypeScript、修复 ESM 扩展、复制 vendor/资源，并确认 8080 服务可用。
 
-改动以下区域必须优先做浏览器验证：
+以下改动必须优先做浏览器验证：
 
 - `src/app/GameScene.ts` / `src/app/GameLoopPipeline.ts`
 - Feature setup
 - Projection 或 Effect 到具体 Laya 节点
-- 输入、网络回包、资源、timer/tween、destroy
+- 输入、网络回包、资源、timer、tween、destroy
 
-## 调试路径
+## 排查路径
 
 画面不同步：
 
@@ -112,7 +114,7 @@ adapter emit
 
 ## 提交
 
-默认提交有效改动。提交前至少确认：
+默认提交有效改动。commit 描述尽量用中文。提交前至少确认：
 
 ```bash
 git diff --check

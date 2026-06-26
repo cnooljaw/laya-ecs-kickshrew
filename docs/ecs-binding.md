@@ -1,10 +1,10 @@
 # ECS、Projection 与 Effect
 
-本文只记录 ECS 绑定层的具体 API 和排查方法。目录结构、运行流和 Feature 边界看 `docs/architecture.md`。
+本文记录 ECS 绑定层 API、修改步骤和排查方法。目录结构、运行流和 Feature 边界见 `docs/architecture.md`。
 
-## Authority
+## 权威状态
 
-权威游戏数据保存在 bitecs component typed arrays。Laya 节点实现本业务切片内的 `*ViewContract.ts`，不反查 ECS，也不维护规则状态。
+权威状态保存在 bitecs component typed arrays。Laya 节点实现本业务切片内的 `*ViewContract.ts`，不反查 ECS，也不维护规则状态。
 
 ## EntityDefinition
 
@@ -22,7 +22,7 @@ export const PlayerEntity = defineEntity({
 ```
 
 - `one`：由 `bootstrapSingletons()` 创建，通过 `entities.one(type)` 获取。
-- `many`：通过 `create/createMany` 创建固定拓扑或池。
+- `many`：通过 `create/createMany` 创建固定拓扑或对象池。
 - 初始化发生在进场阶段，可以优先可读性和封装。
 - 运行期通常不 `removeEntity`；用 `visible/state/ageSec/spawnSeq` 等字段复用槽位。
 
@@ -47,7 +47,7 @@ export const PlayerProjection = defineProjection<IPlayerHUD>({
 });
 ```
 
-Rules:
+规则：
 
 - `components` 决定 bitecs query。
 - `watch` 字段决定 snapshot 比较范围。
@@ -91,7 +91,7 @@ effects.on(HitRewardEffect, payload => hitNode.showReward(...));
 
 Effect 按 definition 对象身份隔离。`emit` 只入队，主循环最后 `flush()`。
 
-## Change Recipes
+## 修改步骤
 
 新增持久可见字段：
 
@@ -110,7 +110,7 @@ Effect 按 definition 对象身份隔离。`emit` 只入队，主循环最后 `f
 4. effect node 通过 `createView/own` 交给 ViewRegistry 管理。
 5. 补 EffectRuntime 或效果流测试。
 
-## Troubleshooting
+## 排查
 
 ECS 数据变了但画面不变：
 
@@ -128,7 +128,7 @@ ECS 数据变了但画面不变：
 3. `GameLoopPipeline` 是否执行 `effects.flush()`。
 4. effect node 是否已创建并归 ViewRegistry 所有。
 
-## Tests
+## 测试
 
 ```bash
 npm test -- --run src/tests/ecs/EntityRuntime.test.ts

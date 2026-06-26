@@ -5,31 +5,25 @@ description: Use when changing ECS components, EntityDefinition definitions, sys
 
 # ECS Binding
 
-## Read First
+## 先读
 
 - `AGENTS.md`
 - `docs/ecs-binding.md`
-- `docs/architecture.md` for cross-module changes
-- Global skill `ecs-feature-assembly` for architecture judgment
+- 跨模块改动再读 `docs/architecture.md`
+- 架构判断使用全局 skill `ecs-feature-assembly`
 
-## Workflow
+## 工作流
 
-1. Identify the authoritative component and the system/helper that owns writes.
-2. Define or update the slice-local `EntityDefinition` initialization contract.
-3. Keep systems pure: no Laya nodes, registries, resource loading, or view callbacks.
-4. For persistent visible state:
-   - update the view contract;
-   - add a row in the owning `src/game/features/<name>/*Projection.ts`;
-   - mount the node from the owning Feature.
-5. For transient facts such as reward/miss:
-   - define a typed effect in the owning feature;
-   - emit from an adapter;
-   - register the view handler in the owning Feature.
-6. Keep Feature setup explicit for real topology such as one Hole owning one Shrew. Do not hide domain relationships in generic framework helpers.
-7. Prefer initialization-time pooling. Runtime state changes should reuse entities and nodes.
-8. Run the narrowest tests, then full tests and typecheck.
+1. 找到权威 component，以及负责写入的 system/helper。
+2. 定义或更新本切片的 `EntityDefinition` 初始化契约。
+3. 保持 system 纯净：不引入 Laya node、registry、resource loader 或 view callback。
+4. 持久可见状态走 view contract 和 `*Projection.ts`。
+5. reward、miss 等瞬时事实走 typed Effect。
+6. Feature setup 保留真实业务拓扑，例如一个 Hole 拥有一个 Shrew。
+7. 初始化阶段优先固定拓扑或对象池；运行期复用 entity/node。
+8. 先跑窄测试，再跑类型检查和必要的全量测试。
 
-## Common Tests
+## 常用测试
 
 ```bash
 npm test -- --run src/tests/ecs/EntityRuntime.test.ts
@@ -41,10 +35,10 @@ npx tsc --noEmit
 
 ## Review Checklist
 
-- Component remains authoritative.
-- Entity cardinality and initialization are explicit.
-- Projection watches every visible field and uses `noProjection` for rule-only fields.
-- Shared apply functions deduplicate coupled rows.
-- Feature is assembly, not a rule container.
-- No business dependency on dirty arrays, registry keys, full-sync flags, or global string events.
-- World teardown clears EffectRuntime, ProjectionRuntime, ViewRegistry and EntityRuntime.
+- Component 仍是权威状态。
+- Entity 基数和初始化显式。
+- Projection watch 了所有可见字段；规则字段用 `noProjection`。
+- 共用 apply 函数能去重耦合 row。
+- Feature 是装配层，不承载规则分支。
+- 业务不依赖 dirty array、registry key、full sync 标志或全局字符串事件。
+- world teardown 会清理 `EffectRuntime`、`ProjectionRuntime`、`ViewRegistry`、`EntityRuntime`。
