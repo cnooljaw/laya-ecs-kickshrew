@@ -151,13 +151,8 @@ deleteWorld
 
 下一次进入重新创建全部状态和快照。
 
-## 新增业务
+## 扩展点
 
-1. 创建 `src/game/features/foo`。
-2. 在切片内定义 Component、Entity、System、Projection、contract、Node 和配置。
-3. 在 `FooFeature` 使用小型装配原语。
-4. 只从 `index.ts` 暴露公开能力。
-5. 在 `src/game/GameFeatures.ts` 增加显式注册项。
-6. 补实体、规则、投影/effect 和生命周期测试。
+新增业务采用纵向切片：Component、Entity、System、Projection、contract、Node 和配置放在 `src/game/features/foo`，只从 `index.ts` 暴露公开能力，并在 `src/game/GameFeatures.ts` 增加显式注册项。
 
-不要修改全局 registry，不要维护 dirty bit，不要依赖频繁 `removeEntity`。
+框架负责 registry、dirty bit、full sync 和 teardown；业务不维护这些机制，也不依赖运行期频繁 `removeEntity`。具体 API 写法见 `docs/ecs-binding.md`。

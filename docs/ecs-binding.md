@@ -1,18 +1,10 @@
 # ECS、Projection 与 Effect
 
-## 权威状态
+本文只记录 ECS 绑定层的具体 API 和排查方法。目录结构、运行流和 Feature 边界看 `docs/architecture.md`。
 
-权威游戏数据保存在 bitecs component typed arrays 中。主要组件：
+## Authority
 
-- `ShrewComponent` / `AnimationComponent`
-- `HoleComponent`
-- `SceneComponent`
-- `HammerComponent`
-- `PlayerComponent`
-- `MonsterComponent` / `MonsterSpawnComponent`
-- `PerfHeroComponent`
-
-Laya 节点实现本业务切片内的 `*ViewContract.ts`。
+权威游戏数据保存在 bitecs component typed arrays。Laya 节点实现本业务切片内的 `*ViewContract.ts`，不反查 ECS，也不维护规则状态。
 
 ## EntityDefinition
 
@@ -29,13 +21,14 @@ export const PlayerEntity = defineEntity({
 });
 ```
 
-- `one`：由 `bootstrapSingletons()` 创建并通过 `entities.one(type)` 获取。
+- `one`：由 `bootstrapSingletons()` 创建，通过 `entities.one(type)` 获取。
 - `many`：通过 `create/createMany` 创建固定拓扑或池。
-- 初始化发生在进场阶段，可以优先可读性和封装，不为这段代码牺牲边界。
+- 初始化发生在进场阶段，可以优先可读性和封装。
+- 运行期通常不 `removeEntity`；用 `visible/state/ageSec/spawnSeq` 等字段复用槽位。
 
 ## ProjectionDefinition
 
-Projection 声明“哪些字段变化时调用哪个 view contract 方法”：
+Projection 声明“哪些 component 字段变化时调用哪个 view contract 方法”：
 
 ```ts
 const source = projectionSource("player", PlayerComponent);
@@ -54,12 +47,12 @@ export const PlayerProjection = defineProjection<IPlayerHUD>({
 });
 ```
 
-规则：
+Rules:
 
 - `components` 决定 bitecs query。
 - `watch` 字段决定 snapshot 比较范围。
-- row bit 由框架自动分配，业务不可见。
-- 规则字段需要被比较但不直接更新 view 时使用 `noProjection`。
+- row bit、dirty array、full sync 都是 runtime 私有机制，业务不可见。
+- 规则字段需要比较但不直接更新 view 时使用 `noProjection`。
 - 多行共用同一个 apply 函数时，单帧会去重。
 - 单个 Projection 最多 32 rows。
 
@@ -68,17 +61,17 @@ export const PlayerProjection = defineProjection<IPlayerHUD>({
 `mark(world)`：
 
 1. 遍历预编译 query。
-2. 首次创建 eid snapshot，并标记全部 rows。
+2. 首次看到 eid 时创建 snapshot，并标记全部 rows。
 3. 后续只比较 flattened fields。
-4. 把变化记录到 runtime 私有 `Uint32Array`。
+4. 把变化写入 runtime 私有 dirty arrays。
 
 `sync(world)`：
 
 1. 查 eid 对应 node。
 2. 执行变化 rows。
-3. 清零 runtime 私有 dirty/full arrays。
+3. 清零 dirty/full arrays。
 
-初始化 mount 会设置 runtime 私有 full sync。业务不写 `forceFullSync`。
+Feature mount 会触发初始化 full sync；业务不写 `forceFullSync`。
 
 ## EffectRuntime
 
@@ -96,59 +89,28 @@ effects.emit(HitRewardEffect, payload);
 effects.on(HitRewardEffect, payload => hitNode.showReward(...));
 ```
 
-Effect 按 definition 对象身份隔离。`emit` 不立即执行 handler，主循环最后 `flush()`。
+Effect 按 definition 对象身份隔离。`emit` 只入队，主循环最后 `flush()`。
 
-## Feature 装配
+## Change Recipes
 
-```ts
-export const MonsterFeature = defineFeature({
-  name: "monster",
-  entities: [MonsterEntity, MonsterTriggerEntity],
-  projections: [MonsterProjection],
-  systems: [
-    defineSystem("feature", "monster.lifetime", monsterLifetimeSystem),
-    defineSystem("feature", "monster.spawn", monsterSpawnSystem),
-  ],
-  setup: ({ entities, mountPool }) => {
-    const eids = createMonsterPool(entities, inputs);
-    mountPool({
-      eids,
-      projection: MonsterProjection,
-      create: () => new MonsterNode(),
-    });
-  },
-});
-```
+新增持久可见字段：
 
-Feature 不维护 registry、unsubscribe 数组或销毁列表。runtime context 统一处理。
-
-## 新增可见字段
-
-1. 在 component 增加字段并在 EntityDefinition 初始化。
+1. 在 component 增加字段，并在 EntityDefinition 初始化。
 2. 由 system/helper 修改字段。
 3. 在 view contract 增加方法。
-4. 在对应 Projection 增加/修改 `watch` row。
+4. 在对应 Projection 增加或修改 `watch` row。
 5. 在 view node 实现方法。
-6. 补 ProjectionRuntime/业务投影测试。
+6. 补 ProjectionRuntime 或业务投影测试。
 
-## 新增独立玩法
+新增瞬时效果：
 
-推荐结构：
+1. 在拥有该事实的业务切片定义 typed EffectDefinition。
+2. adapter/system emit 同一个 definition identity。
+3. Feature setup 注册 handler。
+4. effect node 通过 `createView/own` 交给 ViewRegistry 管理。
+5. 补 EffectRuntime 或效果流测试。
 
-```text
-src/game/features/foo/FooComponents.ts
-src/game/features/foo/FooEntities.ts
-src/game/features/foo/FooSystems.ts
-src/game/features/foo/FooViewContract.ts
-src/game/features/foo/FooProjection.ts
-src/game/features/foo/FooNode.ts
-src/game/features/foo/FooFeature.ts
-src/game/features/foo/index.ts
-```
-
-运行期实体优先预创建并通过 `visible/state/ageSec` 复用。Monster 和 PerfHero 都使用该策略。
-
-## 排查
+## Troubleshooting
 
 ECS 数据变了但画面不变：
 
@@ -157,16 +119,16 @@ ECS 数据变了但画面不变：
 3. Feature 是否声明该 Projection。
 4. Feature setup 是否 mount 正确 eid/node。
 5. view contract 方法是否被具体 Node 正确实现。
-6. 异步资源回调是否被 stale guard 拦截。
+6. async resource callback 是否被 stale guard 拦截。
 
 瞬时效果不显示：
 
-1. adapter 是否 emit 正确 EffectDefinition。
-2. Feature 是否对同一个 definition identity 注册 handler。
-3. GameLoopPipeline 是否执行 `effects.flush()`。
-4. effect node 是否已由 `createView` 创建并归 ViewRegistry 所有。
+1. 是否 emit 正确 EffectDefinition。
+2. handler 是否注册在同一个 definition identity 上。
+3. `GameLoopPipeline` 是否执行 `effects.flush()`。
+4. effect node 是否已创建并归 ViewRegistry 所有。
 
-## 测试
+## Tests
 
 ```bash
 npm test -- --run src/tests/ecs/EntityRuntime.test.ts

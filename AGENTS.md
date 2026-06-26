@@ -14,6 +14,7 @@
 ## 文档索引
 
 - 架构与目录：`docs/architecture.md`
+- 新手入门：`docs/getting-started.md`
 - ECS / Projection / Effect：`docs/ecs-binding.md`
 - Laya 运行时：`docs/laya-rules.md`
 - 性能压测：`docs/performance-tuning.md`
