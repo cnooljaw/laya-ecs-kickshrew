@@ -84,7 +84,7 @@
 
     .progress-bar {
       width: 100%;
-      height: 3.4%;
+      height: 3.8%;
       background: linear-gradient(180deg, var(--blue), var(--green));
       border-radius: inherit;
       transition: height 180ms ease;
@@ -454,7 +454,7 @@
 
       .progress-bar {
         height: 100%;
-        width: 3.4%;
+        width: 3.8%;
       }
 
       .viewport {
@@ -547,7 +547,7 @@
     <aside class="rail" aria-label="页面进度">
       <div class="rail-title">ECS FRAMEWORK</div>
       <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
-      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">29</span></div>
+      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">26</span></div>
     </aside>
 
     <section class="viewport">
@@ -759,8 +759,8 @@ SpeedComponent.value[eid] = fast</pre>
               <path d="M212 85 H298" stroke="#2364aa" stroke-width="3" marker-end="url(#ecsArrow)"></path>
               <path d="M476 85 H562" stroke="#2364aa" stroke-width="3" marker-end="url(#ecsArrow)"></path>
               <rect x="80" y="210" width="620" height="76" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="390" y="240" text-anchor="middle" font-size="17" font-weight="700" fill="#172231">一只地鼠不是一个对象，而是一组组件字段共用同一个 eid</text>
-              <text x="390" y="265" text-anchor="middle" font-size="13" fill="#5f6b7a">ShrewComponent + HoleComponent + Projection + ShrewNode</text>
+              <text x="390" y="240" text-anchor="middle" font-size="17" font-weight="700" fill="#172231">同一个 eid 串起多份数据，System 批量处理这些数据</text>
+              <text x="390" y="265" text-anchor="middle" font-size="13" fill="#5f6b7a">具体到 Shrew 的字段数组，后面用单独例子展开。</text>
               <rect x="124" y="338" width="156" height="58" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
               <text x="202" y="373" text-anchor="middle" font-size="14" font-weight="700" fill="#1f5f36">规则好测</text>
               <rect x="312" y="338" width="156" height="58" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
@@ -770,7 +770,7 @@ SpeedComponent.value[eid] = fast</pre>
             </svg>
           </div>
         </section>
-        <footer class="footer"><span>一句话：Entity 定位一份数据，Component 保存字段，System 按规则改字段。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
+        <footer class="footer"><span>一句话：Entity 定位数据，Component 保存字段，System 按规则改字段。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
       <article class="slide" data-title="Composition Root">
@@ -930,8 +930,8 @@ export const GAME_FEATURE_REGISTRY =
       <article class="slide" data-title="Feature Topology">
         <header>
           <div class="kicker">Business Topology</div>
-          <h2>Feature setup 写真实业务拓扑：框架只做机械挂载</h2>
-          <p class="lead">Shrew 展示父子 View 拓扑，Monster 展示固定池。两者都是业务能读懂的装配代码。</p>
+          <h2>Feature setup 写真实业务拓扑：以 Shrew 父子 View 为例</h2>
+          <p class="lead">ShrewFeature 里，一个 SceneLayer 拥有九个 Hole，每个 Hole 拥有一个 Shrew。框架只提供挂载原语，不隐藏业务关系。</p>
         </header>
         <section class="content split">
           <div class="rows">
@@ -949,13 +949,9 @@ mountOne({
 });</pre>
           </div>
           <div class="rows">
-            <div class="panel accent-cyan"><strong>MonsterFeature</strong><p>初始化时创建触发器和固定池，运行期只切换 visible、age、spawnSeq。</p></div>
-            <pre class="code">createMonsterTriggerEntities(entities, MONSTER_SPAWN_RULES);
-const eids = createMonsterPool(
-  entities,
-  createMonsterPoolInputs(MONSTER_SPAWN_RULES, viewConfig, durationSec),
-);
-mountPool({ eids, projection: MonsterProjection, create: () => new MonsterNode() });</pre>
+            <div class="panel accent-cyan"><strong>框架做什么</strong><p><code>mountOne</code> 负责把 eid、Projection 和 Node 绑定起来，并交给 ViewRegistry 托管生命周期。</p></div>
+            <div class="panel accent-red"><strong>框架不做什么</strong><p>不自动扫描目录，不推断父子关系，不把所有业务装进 BaseFeature。</p></div>
+            <div class="panel accent-blue"><strong>业务留下什么</strong><p>谁挂到谁下面、创建几个、用哪个 Node，这些真实关系留在 Feature setup 里。</p></div>
           </div>
         </section>
         <footer class="footer"><span>不要为了少写几行隐藏业务关系。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
@@ -1018,71 +1014,6 @@ sync(world)
           </div>
         </section>
         <footer class="footer"><span>文件：framework/sync/ProjectionRuntime.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
-      </article>
-
-      <article class="slide" data-title="Snapshot Diff Example">
-        <header>
-          <div class="kicker">Snapshot Diff</div>
-          <h2>Snapshot 前后对比：Projection dirty 是怎么被算出来的</h2>
-          <p class="lead"><code>ProjectionRuntime.mark</code> 比较 watched fields 和快照。字段变化只会标记对应 row，不会让业务自己维护 dirty bit。</p>
-        </header>
-        <section class="content split-wide">
-          <div class="rows">
-            <div class="panel accent-blue">
-              <strong>上一帧 snapshot</strong>
-              <pre class="code">eid = 17
-{
-  "shrew.actionState": Wait,
-  "shrew.animTimer": 1.2,
-  "shrew.isClickable": 0
-}</pre>
-            </div>
-            <div class="panel accent-green">
-              <strong>这一帧 Component</strong>
-              <pre class="code">ShrewComponent.actionState[17] = Up
-ShrewComponent.animTimer[17] = 0.31
-ShrewComponent.isClickable[17] = 0</pre>
-            </div>
-            <div class="panel accent-amber">
-              <strong>比较结果</strong>
-              <pre class="code">actionState: Wait -> Up  => row dirty
-animTimer:    1.2 -> 0.31 => row dirty
-isClickable:  0 -> 0     => 不标</pre>
-            </div>
-          </div>
-          <div class="diagram">
-            <svg viewBox="0 0 820 430" role="img" aria-label="Projection snapshot diff">
-              <defs><marker id="snapshotArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path></marker></defs>
-              <rect x="42" y="48" width="210" height="72" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="147" y="78" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">Snapshot</text>
-              <text x="147" y="100" text-anchor="middle" font-size="12" fill="#5f6b7a">上一帧字段值</text>
-              <rect x="306" y="48" width="210" height="72" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="411" y="78" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">Component Arrays</text>
-              <text x="411" y="100" text-anchor="middle" font-size="12" fill="#5f6b7a">这一帧字段值</text>
-              <rect x="570" y="48" width="210" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="675" y="78" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">dirtyBits[eid]</text>
-              <text x="675" y="100" text-anchor="middle" font-size="12" fill="#5f6b7a">只标变化 row</text>
-              <path d="M252 84 H298" stroke="#2364aa" stroke-width="3" marker-end="url(#snapshotArrow)"></path>
-              <path d="M516 84 H562" stroke="#2364aa" stroke-width="3" marker-end="url(#snapshotArrow)"></path>
-              <rect x="92" y="194" width="640" height="120" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
-              <text x="150" y="230" font-size="14" font-weight="700" fill="#17385d">字段</text>
-              <text x="354" y="230" font-size="14" font-weight="700" fill="#17385d">上一帧</text>
-              <text x="500" y="230" font-size="14" font-weight="700" fill="#17385d">这一帧</text>
-              <text x="628" y="230" font-size="14" font-weight="700" fill="#17385d">结果</text>
-              <line x1="112" y1="246" x2="712" y2="246" stroke="#d6dde8"></line>
-              <text x="150" y="274" font-size="13" fill="#283442">actionState</text>
-              <text x="354" y="274" font-size="13" fill="#5f6b7a">Wait</text>
-              <text x="500" y="274" font-size="13" fill="#1f5f36">Up</text>
-              <text x="628" y="274" font-size="13" fill="#80530f">apply animation</text>
-              <text x="150" y="304" font-size="13" fill="#283442">isClickable</text>
-              <text x="354" y="304" font-size="13" fill="#5f6b7a">0</text>
-              <text x="500" y="304" font-size="13" fill="#1f5f36">0</text>
-              <text x="628" y="304" font-size="13" fill="#5f6b7a">不触发</text>
-              <text x="410" y="378" text-anchor="middle" font-size="13" fill="#5f6b7a">比较后 snapshot 会更新成这一帧的值，下一帧继续对比。</text>
-            </svg>
-          </div>
-        </section>
-        <footer class="footer"><span>对应代码：framework/sync/ProjectionRuntime.ts、game/features/shrew/ShrewProjection.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
       <article class="slide" data-title="PlayerHud Projection Example">
@@ -1447,44 +1378,18 @@ exit scene
         <footer class="footer"><span>对应代码：src/game/features/perfHero/*，对应文档：docs/performance-tuning.md</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
-      <article class="slide" data-title="Add Feature">
-        <header>
-          <div class="kicker">New Feature</div>
-          <h2>新增 Feature 的标准路径：自己的目录内完成，只注册一行</h2>
-          <p class="lead">框架层已经提供小型装配原语。业务切片写真实规则，不继承 BaseFeature，不做自动扫描。</p>
-        </header>
-        <section class="content split">
-          <div class="rows">
-            <div class="panel accent-blue"><strong>目录</strong><p><code>src/game/features/foo/</code> 内放 Component、Entity、System、Projection、ViewContract、Node、Config。</p></div>
-            <div class="panel accent-green"><strong>Feature</strong><p>用 <code>defineFeature</code> 声明 entities、projections、systems、setup。</p></div>
-            <div class="panel accent-cyan"><strong>注册</strong><p>在 <code>src/game/GameFeatures.ts</code> 加一行显式 import 和数组项。</p></div>
-          </div>
-          <pre class="code">defineFeature({
-  name: "foo",
-  entities: [FooEntity],
-  projections: [FooProjection],
-  systems: [defineSystem("feature", "foo.state", fooSystem)],
-  setup: ({ entities, mountPool }) => {
-    const eids = createFooPool(entities, config);
-    mountPool({ eids, projection: FooProjection, create: () => new FooNode() });
-  },
-});</pre>
-        </section>
-        <footer class="footer"><span>新增业务主要复制 MonsterFeature 或 ShrewFeature 的形状。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
-      </article>
-
       <article class="slide" data-title="Monster Checklist">
         <header>
-          <div class="kicker">Implementation Checklist</div>
-          <h2>落地清单：新增一种非地鼠怪物，出现 10 秒后消失</h2>
-          <p class="lead">以当前纵向切片目录和 Feature Manifest 装配方式，说明新增 Monster 的落地路径。</p>
+          <div class="kicker">New Feature Example</div>
+          <h2>新增 Feature：以 Monster 为例，一页走完整条链路</h2>
+          <p class="lead">新增业务主要在自己的纵向切片内完成：定义状态、规则、投影、节点和装配，最后只在 <code>GameFeatures.ts</code> 显式注册一行。</p>
         </header>
         <section class="content split-wide">
           <div class="rows">
-            <div class="panel accent-green"><strong>1. 业务切片内完成</strong><p><code>src/game/features/monster/</code> 拥有 Component、Entity、System、Projection、Node、Config 和规则校验。</p></div>
-            <div class="panel accent-blue"><strong>2. Rhino 配置化</strong><p><code>MonsterType.Rhino</code> 指向 <code>resources/monster/rhino.sk</code>，默认同屏 1 个，按 money 里程碑触发。</p></div>
-            <div class="panel accent-violet"><strong>3. System 管 10 秒生命周期</strong><p><code>monsterSpawnSystem</code> 负责触发出现，<code>monsterLifetimeSystem</code> 超过 10 秒设置 <code>visible=0</code>，不删除 entity。</p></div>
-            <div class="panel accent-red"><strong>4. Projection 接入 View</strong><p><code>MonsterComponent.visible/pos/spawnSeq</code> 由 <code>MonsterProjection</code> 同步到 <code>IMonsterNode</code>。</p></div>
+            <div class="panel accent-green"><strong>1. 切片目录</strong><p><code>src/game/features/monster/</code> 拥有 Component、Entity、System、Projection、Node、Config 和规则校验。</p></div>
+            <div class="panel accent-blue"><strong>2. Feature Manifest</strong><p><code>MonsterFeature</code> 声明 entities、projections、systems、setup，不继承 BaseFeature，不做自动扫描。</p></div>
+            <div class="panel accent-violet"><strong>3. 业务规则</strong><p><code>monsterSpawnSystem</code> 按 money 里程碑触发，<code>monsterLifetimeSystem</code> 超过 10 秒设置 <code>visible=0</code>，不删除 entity。</p></div>
+            <div class="panel accent-red"><strong>4. 显式注册</strong><p>在 <code>src/game/GameFeatures.ts</code> import 并追加 <code>MonsterFeature</code>，框架层不需要改。</p></div>
           </div>
           <div class="diagram">
             <svg viewBox="0 0 820 420" role="img" aria-label="新增 Monster 落地流程">
@@ -1559,35 +1464,6 @@ npm run debug:ready</pre>
           <div class="quote"><p>判断代码放哪：稳定机制放 <code>framework</code>；业务规则和拓扑放 <code>game/features/&lt;name&gt;</code>；跨 Feature 输入、网络回包编排放 <code>game/session</code>；Laya 应用壳放 <code>app</code>。</p></div>
         </section>
         <footer class="footer"><span>用边界降低长期改动成本。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
-      </article>
-
-      <article class="slide" data-title="Summary">
-        <header>
-          <div class="kicker">Summary</div>
-          <h2>最后记住这条链路：状态变了，框架把变化投到表现</h2>
-          <p class="lead">新增业务时，不需要理解所有内部实现；先把自己的权威状态、规则、投影和装配声明清楚。</p>
-        </header>
-        <section class="content split-wide">
-          <pre class="code">input / network callback
-  -> game/session
-  -> Feature system or domain helper
-  -> Component
-  -> ProjectionRuntime.mark(world)
-  -> ProjectionRuntime.sync(world)
-  -> View contract
-  -> Laya Node
-
-transient result
-  -> EffectRuntime.emit(...)
-  -> GameLoopPipeline.flush()
-  -> view handler</pre>
-          <div class="rows">
-            <div class="panel accent-blue"><strong>框架层横向稳定</strong><p><code>framework/ecs</code>、<code>framework/feature</code>、<code>framework/sync</code>、<code>framework/view</code> 各管一件事。</p></div>
-            <div class="panel accent-green"><strong>业务层纵向切片</strong><p>Feature 目录自己拥有 Component、Entity、System、Projection、Node、Config。</p></div>
-            <div class="panel accent-cyan"><strong>读代码的落点</strong><p>先看 <code>GameScene</code> 和 <code>GameLoopPipeline</code>，再看 <code>MonsterFeature</code> 与 <code>MonsterProjection</code>。</p></div>
-          </div>
-        </section>
-        <footer class="footer"><span>这就是当前框架的主线。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
     </section>
