@@ -720,7 +720,7 @@ SpeedComponent.value[eid] = fast</pre>
             <tr><td>更新频率</td><td>用户操作驱动、低频界面刷新</td><td>每帧批量推进大量实体</td></tr>
             <tr><td>状态来源</td><td>ViewModel 贴近界面结构</td><td>Component 保存游戏权威事实</td></tr>
             <tr><td>规则组织</td><td>围绕页面和控件组织</td><td>围绕 System 批量处理规则</td></tr>
-            <tr><td>表现同步</td><td>数据绑定直接驱动 UI</td><td>Projection 差量同步到 View contract</td></tr>
+            <tr><td>表现同步</td><td>数据绑定直接驱动 UI</td><td>Projection 差量同步到 <code>I*</code> 接口</td></tr>
           </table>
           <div class="rows">
             <div class="panel accent-blue"><strong>本项目的选择</strong><p>Laya Node 是投影目标，不是状态权威。金币、地鼠状态、怪物生命周期都先落到 Component。</p></div>
@@ -918,8 +918,8 @@ mountOne({
       <article class="slide" data-title="Projection Definition">
         <header>
           <div class="kicker">Projection</div>
-          <h2>Projection 把持久可见状态映射到 View contract</h2>
-          <p class="lead">System 只改 Component。Projection 负责把 Component 字段变化翻译成 View 方法调用。</p>
+          <h2>Projection 把持久可见状态映射到 <code>I*</code> 接口</h2>
+          <p class="lead">System 只改 Component。Projection 负责把 Component 字段变化翻译成 <code>IPlayerHUD</code>、<code>IMonsterNode</code> 这类接口方法调用。</p>
         </header>
         <section class="content split-wide">
           <pre class="code">const source = projectionSource("monster", MonsterComponent);
@@ -938,7 +938,7 @@ export const MonsterProjection = defineProjection&lt;IMonsterNode&gt;({
 });</pre>
           <div class="rows">
             <div class="panel accent-blue"><strong><code>watch(...)</code></strong><p>声明一组字段和一个 apply 函数。字段变化时才调用 apply。</p></div>
-            <div class="panel accent-green"><strong>View contract</strong><p>Projection 调接口，Node 实现接口。规则层不 import Laya。</p></div>
+            <div class="panel accent-green"><strong><code>I*</code> 接口文件</strong><p>Projection 调接口，Node 实现接口。规则层不 import Laya。</p></div>
             <div class="panel accent-amber"><strong><code>noProjection</code></strong><p>规则字段可以被 watch 用于 dirty 分组，但不需要更新 View。</p></div>
           </div>
         </section>
@@ -1150,7 +1150,7 @@ for (const effect of current) dispatch(effect);</pre>
             <div class="route-step">network.update<small>处理回包</small></div>
             <div class="route-step">feature systems<small>Monster/PerfHero 等功能系统</small></div>
             <div class="route-step">projection.mark<small>比较 Component 快照</small></div>
-            <div class="route-step">projection.sync<small>调用 View contract</small></div>
+            <div class="route-step">projection.sync<small>调用 I* 接口</small></div>
             <div class="route-step">effects.flush<small>派发瞬时事实</small></div>
             <div class="route-step">Laya render<small>引擎表现</small></div>
           </div>

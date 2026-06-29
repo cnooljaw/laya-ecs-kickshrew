@@ -63,7 +63,7 @@ src/game/features/foo/
   FooEntities.ts
   FooSystems.ts
   FooProjection.ts
-  FooViewContract.ts
+  IFooNode.ts
   FooNode.ts
   FooFeature.ts
   index.ts

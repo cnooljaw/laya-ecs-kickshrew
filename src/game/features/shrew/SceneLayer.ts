@@ -22,7 +22,7 @@ import { destroyNode } from "../../../framework/view/LayaLifecycle";
 import { loadResource } from "../../../framework/view/LayaLoader";
 import { getLaya } from "../../../framework/view/LayaRuntime";
 import { getAtlasPath, getFrameTexture } from "../../../resource/AtlasConfig";
-import type { ISceneLayer } from "./SceneViewContract";
+import type { ISceneLayer } from "./ISceneLayer";
 import { MapType } from "./ShrewTypes";
 
 /** 地图类型 → 背景 atlas 逻辑名 */

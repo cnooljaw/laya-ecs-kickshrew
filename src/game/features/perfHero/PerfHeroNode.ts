@@ -3,7 +3,7 @@ import { loadSpineTemplate } from "../../../framework/view/LayaLoader";
 import { getLaya } from "../../../framework/view/LayaRuntime";
 import { createSkeleton } from "../../../framework/view/LayaSpine";
 import { PERF_HERO_RESOURCES, PERF_HERO_VIEW_CONFIG } from "./PerfHeroViewConfig";
-import type { IPerfHeroNode } from "./PerfHeroViewContract";
+import type { IPerfHeroNode } from "./IPerfHeroNode";
 
 interface PerfHeroResource {
   name: string;

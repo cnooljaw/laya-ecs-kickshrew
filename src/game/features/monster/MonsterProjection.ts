@@ -1,6 +1,6 @@
 import { defineProjection, projectionSource, watch } from "../../../framework/sync/ProjectionDefinition";
 import { MonsterComponent } from "./MonsterComponents";
-import type { IMonsterNode } from "./MonsterViewContract";
+import type { IMonsterNode } from "./IMonsterNode";
 
 const source = projectionSource("monster", MonsterComponent);
 

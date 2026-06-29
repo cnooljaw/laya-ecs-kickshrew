@@ -4,7 +4,7 @@
 
 ## 权威状态
 
-权威状态保存在 bitecs component typed arrays。Laya 节点实现本业务切片内的 `*ViewContract.ts`，不反查 ECS，也不维护规则状态。
+权威状态保存在 bitecs component typed arrays。Laya 节点实现本业务切片内的接口文件，例如 `IPlayerHUD.ts`、`IHammerNode.ts`、`IMonsterNode.ts`。Node 不反查 ECS，也不维护规则状态。
 
 ## EntityDefinition
 
@@ -28,7 +28,7 @@ export const PlayerEntity = defineEntity({
 
 ## ProjectionDefinition
 
-Projection 声明“哪些 component 字段变化时调用哪个 view contract 方法”：
+Projection 声明“哪些 component 字段变化时调用哪个 `I*` 接口方法”：
 
 ```ts
 const source = projectionSource("player", PlayerComponent);
@@ -97,7 +97,7 @@ Effect 按 definition 对象身份隔离。`emit` 只入队，主循环最后 `f
 
 1. 在 component 增加字段，并在 EntityDefinition 初始化。
 2. 由 system/helper 修改字段。
-3. 在 view contract 增加方法。
+3. 在对应 `I*` 接口文件增加方法，例如 `IShrewNode.ts`。
 4. 在对应 Projection 增加或修改 `watch` row。
 5. 在 view node 实现方法。
 6. 补 ProjectionRuntime 或业务投影测试。
@@ -118,7 +118,7 @@ ECS 数据变了但画面不变：
 2. Projection 是否包含该 component 和字段。
 3. Feature 是否声明该 Projection。
 4. Feature setup 是否 mount 正确 eid/node。
-5. view contract 方法是否被具体 Node 正确实现。
+5. `I*` 接口方法是否被具体 Node 正确实现。
 6. async resource callback 是否被 stale guard 拦截。
 
 瞬时效果不显示：

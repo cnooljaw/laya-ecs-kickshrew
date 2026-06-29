@@ -5,7 +5,7 @@ import {
   watch,
 } from "../../../framework/sync/ProjectionDefinition";
 import { HammerComponent } from "./HammerComponents";
-import type { IHammerNode } from "./HammerViewContract";
+import type { IHammerNode } from "./IHammerNode";
 
 const source = projectionSource("hammer", HammerComponent);
 

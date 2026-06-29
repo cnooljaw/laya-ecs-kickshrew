@@ -4,7 +4,7 @@ import { getLaya } from "../../../framework/view/LayaRuntime";
 import { createSkeleton } from "../../../framework/view/LayaSpine";
 import { MonsterType } from "./MonsterTypes";
 import { MONSTER_VIEW_CONFIG } from "./MonsterViewConfig";
-import type { IMonsterNode } from "./MonsterViewContract";
+import type { IMonsterNode } from "./IMonsterNode";
 
 interface MonsterPlayRequest {
   monsterType: number;

@@ -1,6 +1,6 @@
 import { defineProjection, projectionSource, watch } from "../../../framework/sync/ProjectionDefinition";
 import { PlayerComponent } from "./PlayerComponents";
-import type { IPlayerHUD } from "./PlayerViewContract";
+import type { IPlayerHUD } from "./IPlayerHUD";
 
 const source = projectionSource("player", PlayerComponent);
 

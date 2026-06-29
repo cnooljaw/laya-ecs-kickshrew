@@ -27,7 +27,7 @@ input / network
   -> game/session
   -> ECS component
   -> ProjectionRuntime
-  -> view contract
+  -> I* 接口
   -> Laya node
 
 transient result
@@ -60,7 +60,7 @@ feature system/helper -> component -> tests
 改持久表现：
 
 ```text
-component field -> view contract -> projection row -> node method
+component field -> I* 接口 -> projection row -> node method
 ```
 
 改一次性表现：

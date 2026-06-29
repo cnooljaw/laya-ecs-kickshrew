@@ -28,7 +28,7 @@ import { getLaya } from "../../../framework/view/LayaRuntime";
 import { getAtlasPath, getFrameTexture } from "../../../resource/AtlasConfig";
 import { ShrewType, ShrewAction } from "./ShrewTypes";
 import { SHREW_VIEW_CONFIG } from "./ShrewViewConfig";
-import type { IShrewNode } from "./ShrewViewContract";
+import type { IShrewNode } from "./IShrewNode";
 
 export function getShrewMainLayerY(actionState: number, bodyH: number, progress: number): number {
   const standY = -bodyH * 0.5;

@@ -1,10 +1,10 @@
 export { HolePositions, getHoleGrid, getHoleZOrder } from "./HolePositions";
-export type { IHoleNode } from "./HoleViewContract";
+export type { IHoleNode } from "./IHoleNode";
 export {
   SCENE_CYCLE,
   SCENE_CYCLE_INTERVAL,
 } from "./SceneConfig";
-export type { ISceneLayer } from "./SceneViewContract";
+export type { ISceneLayer } from "./ISceneLayer";
 export {
   AnimationComponent,
   HoleComponent,
@@ -39,4 +39,4 @@ export {
   ShrewType,
   ZOrder,
 } from "./ShrewTypes";
-export type { IShrewNode } from "./ShrewViewContract";
+export type { IShrewNode } from "./IShrewNode";

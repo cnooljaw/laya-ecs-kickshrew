@@ -27,7 +27,7 @@ input/network
   -> feature system/domain helper
   -> component
   -> projection
-  -> view contract
+  -> I* 接口
   -> Laya node
 ```
 
@@ -61,7 +61,7 @@ adapter
 
 - 初始化时编译 query、watched fields、row offsets、dirty/full arrays 和 eid/node registry。
 - 首次看到 eid 时创建 snapshot，并全量同步。
-- 后续只比较声明字段，按变化 row 调用 view contract。
+- 后续只比较声明字段，按变化 row 调用 `I*` 接口。
 - 同一轮内相同 apply 函数只执行一次。
 
 ### EffectRuntime

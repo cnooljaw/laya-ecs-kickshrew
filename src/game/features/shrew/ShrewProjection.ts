@@ -5,8 +5,8 @@ import {
   projectionSource,
   watch,
 } from "../../../framework/sync/ProjectionDefinition";
-import type { IHoleNode } from "./HoleViewContract";
-import type { ISceneLayer } from "./SceneViewContract";
+import type { IHoleNode } from "./IHoleNode";
+import type { ISceneLayer } from "./ISceneLayer";
 import {
   AnimationComponent,
   HoleComponent,
@@ -14,7 +14,7 @@ import {
   ShrewComponent,
 } from "./ShrewComponents";
 import { AnimType, ShrewAction } from "./ShrewTypes";
-import type { IShrewNode } from "./ShrewViewContract";
+import type { IShrewNode } from "./IShrewNode";
 
 const sceneSource = projectionSource("scene", SceneComponent);
 const holeSource = projectionSource("hole", HoleComponent);

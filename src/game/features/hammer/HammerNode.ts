@@ -8,7 +8,7 @@ import { loadResource } from "../../../framework/view/LayaLoader";
 import { getLaya } from "../../../framework/view/LayaRuntime";
 import { getAtlasPath, getFrameTexture } from "../../../resource/AtlasConfig";
 import { HAMMER_VIEW_CONFIG } from "./HammerViewConfig";
-import type { IHammerNode } from "./HammerViewContract";
+import type { IHammerNode } from "./IHammerNode";
 
 /** 锤子类型 → atlas 中的帧名（game_view.atlas 内的大图锤子帧）*/
 const HAMMER_FRAME_MAP: Record<number, string> = {

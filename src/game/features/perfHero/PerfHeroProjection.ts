@@ -1,6 +1,6 @@
 import { defineProjection, projectionSource, watch } from "../../../framework/sync/ProjectionDefinition";
 import { PerfHeroComponent } from "./PerfHeroComponents";
-import type { IPerfHeroNode } from "./PerfHeroViewContract";
+import type { IPerfHeroNode } from "./IPerfHeroNode";
 
 const source = projectionSource("perfHero", PerfHeroComponent);
 

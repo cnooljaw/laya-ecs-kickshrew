@@ -5,7 +5,7 @@
 import { VIEWPORT } from "../../../config/ViewLayoutConfig";
 import { destroyNode } from "../../../framework/view/LayaLifecycle";
 import { getLaya } from "../../../framework/view/LayaRuntime";
-import type { IHoleNode } from "./HoleViewContract";
+import type { IHoleNode } from "./IHoleNode";
 
 export class HoleNode implements IHoleNode {
   private _container: any = null;
