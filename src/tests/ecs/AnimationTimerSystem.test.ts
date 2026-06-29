@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createGameWorld } from '../../ecs/world';
+import { createGameWorld } from '../../framework/ecs/World';
 import { createSingletonEntities } from '../helpers/SingletonTestEntities';
 import { createShrewEntity } from '../helpers/CoreTestEntities';
 import {

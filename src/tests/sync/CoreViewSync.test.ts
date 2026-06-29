@@ -12,7 +12,7 @@ import {
 } from "../../game/features/shrew";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { AnimType, MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
-import { createGameWorld } from "../../ecs/world";
+import { createGameWorld } from "../../framework/ecs/World";
 import type { IHoleNode } from "../../game/features/shrew";
 import type { ISceneLayer } from "../../game/features/shrew";
 import type { IShrewNode } from "../../game/features/shrew";

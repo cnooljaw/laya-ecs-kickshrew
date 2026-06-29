@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createGameWorld } from "../../ecs/world";
+import { createGameWorld } from "../../framework/ecs/World";
 import { ViewRegistry } from "../../framework/view/ViewRegistry";
 import { addComponent, addEntity, defineComponent, Types } from "bitecs";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";

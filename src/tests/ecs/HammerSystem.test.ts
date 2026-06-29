@@ -6,7 +6,7 @@ import { HammerEntity } from "../../game/features/hammer";
 import { hammerSystem } from "../../game/features/hammer";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HammerType } from "../../game/features/hammer";
-import { createGameWorld } from "../../ecs/world";
+import { createGameWorld } from "../../framework/ecs/World";
 import { thunderSystem } from "../../game/session";
 import { createSingletonEntities } from "../helpers/SingletonTestEntities";
 

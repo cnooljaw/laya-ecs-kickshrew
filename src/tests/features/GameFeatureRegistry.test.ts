@@ -8,7 +8,7 @@ import { MonsterEntity, MonsterTriggerEntity } from "../../game/features/monster
 import { PerfHeroEntity } from "../../game/features/perfHero";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { defineEntity } from "../../framework/ecs/EntityDefinition";
-import { createGameWorld } from "../../ecs/world";
+import { createGameWorld } from "../../framework/ecs/World";
 import { setupCoreGameplay } from "../../game/features/shrew";
 import {
   defineFeature,

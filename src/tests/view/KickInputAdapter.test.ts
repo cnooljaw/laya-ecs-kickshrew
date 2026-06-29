@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createGameWorld } from "../../ecs/world";
+import { createGameWorld } from "../../framework/ecs/World";
 import { createSingletonEntities } from "../helpers/SingletonTestEntities";
 import { createHoleEntities, createShrewEntity } from "../helpers/CoreTestEntities";
 import { HammerComponent } from "../../game/features/hammer";

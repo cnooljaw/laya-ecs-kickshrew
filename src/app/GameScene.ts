@@ -8,7 +8,7 @@
  * 4. 处理触摸事件
  * 5. 启动网络层
  */
-import { createGameWorld } from "../ecs/world";
+import { createGameWorld } from "../framework/ecs/World";
 import { deleteWorld } from "bitecs";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";

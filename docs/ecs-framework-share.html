@@ -84,7 +84,7 @@
 
     .progress-bar {
       width: 100%;
-      height: 3.7%;
+      height: 3.4%;
       background: linear-gradient(180deg, var(--blue), var(--green));
       border-radius: inherit;
       transition: height 180ms ease;
@@ -454,7 +454,7 @@
 
       .progress-bar {
         height: 100%;
-        width: 3.7%;
+        width: 3.4%;
       }
 
       .viewport {
@@ -547,7 +547,7 @@
     <aside class="rail" aria-label="页面进度">
       <div class="rail-title">ECS FRAMEWORK</div>
       <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
-      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">27</span></div>
+      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">29</span></div>
     </aside>
 
     <section class="viewport">
@@ -637,8 +637,8 @@ src/game/features/{shrew,hammer,monster,perfHero}</pre>
               <rect x="638" y="172" width="160" height="72" rx="8" fill="#ffffff" stroke="#d6dde8"/>
               <text x="718" y="202" text-anchor="middle" font-size="15" font-weight="700" fill="#172231">ViewRegistry</text>
               <text x="718" y="225" text-anchor="middle" font-size="12" fill="#5f6b7a">生命周期 owner</text>
-              <rect x="275" y="291" width="300" height="45" rx="8" fill="#fff8eb" stroke="#b7791f"/>
-              <text x="425" y="319" text-anchor="middle" font-size="15" font-weight="760" fill="#172231">GameLoopPipeline：state → network → feature → mark → sync → flush</text>
+              <rect x="150" y="291" width="560" height="45" rx="8" fill="#fff8eb" stroke="#b7791f"/>
+              <text x="430" y="319" text-anchor="middle" font-size="14" font-weight="760" fill="#172231">GameLoopPipeline：state → network → feature → mark → sync → flush</text>
               <path d="M215 72 H275" stroke="#7a8797" stroke-width="2" marker-end="url(#arrow)"/>
               <path d="M475 72 H545" stroke="#7a8797" stroke-width="2" marker-end="url(#arrow)"/>
               <path d="M662 109 V150 H138 V172" stroke="#7a8797" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
@@ -650,22 +650,97 @@ src/game/features/{shrew,hammer,monster,perfHero}</pre>
           </div>
           <div class="rows">
             <div class="panel accent-blue"><strong>框架负责机械工作</strong><p>创建、汇总、校验、挂载、dirty mark、full sync、snapshot、flush、清理。</p></div>
-            <div class="panel accent-green"><strong>业务保留真实规则</strong><p>Component 字段、Entity 初始化、Feature 拓扑、System 规则、Projection 映射、Node 表现。</p></div>
+            <div class="panel accent-green"><strong>业务写真实规则</strong><p>Component 字段、Entity 初始化、Feature 拓扑、System 规则、Projection 映射、Node 表现。</p></div>
           </div>
         </section>
         <footer class="footer"><span>边界越清楚，新增业务越少改框架。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
+      </article>
+
+      <article class="slide" data-title="Composition First">
+        <header>
+          <div class="kicker">Composition First</div>
+          <h2>先理解组合优于继承：游戏对象经常不是一棵类树</h2>
+          <p class="lead">继承适合稳定的“是什么”层级；游戏运行期更常见的是类型、状态、Buff、动画、碰撞、网络和池化能力交叉组合。</p>
+        </header>
+        <section class="content split-wide">
+          <div class="rows">
+            <div class="panel accent-red">
+              <strong>继承写法很快膨胀</strong>
+              <pre class="code">class Shrew {}
+class RedShrew extends Shrew {}
+class BlueHatShrew extends RedShrew {}
+class FastBlueHatShrew extends BlueHatShrew {}
+class DizzyFastBlueHatShrew extends FastBlueHatShrew {}</pre>
+            </div>
+            <div class="panel accent-green">
+              <strong>组合写法把变化拆开</strong>
+              <pre class="code">eid = create shrew
+ShrewComponent.shrewType[eid] = Blue
+ShrewComponent.hasHat[eid] = 1
+ShrewComponent.actionState[eid] = Stand
+SpeedComponent.value[eid] = fast</pre>
+            </div>
+          </div>
+          <div class="diagram">
+            <svg viewBox="0 0 820 420" role="img" aria-label="组合优于继承">
+              <defs><marker id="compositionArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path></marker></defs>
+              <rect x="52" y="48" width="240" height="74" rx="8" fill="#fbeeee" stroke="#b34343"></rect>
+              <text x="172" y="78" text-anchor="middle" font-size="16" font-weight="700" fill="#8a2828">继承树</text>
+              <text x="172" y="101" text-anchor="middle" font-size="13" fill="#5f6b7a">新变化容易变成新子类</text>
+              <rect x="528" y="48" width="240" height="74" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="648" y="78" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">组件组合</text>
+              <text x="648" y="101" text-anchor="middle" font-size="13" fill="#5f6b7a">新增能力就是新增字段或系统</text>
+              <path d="M292 85 H520" stroke="#2364aa" stroke-width="3" marker-end="url(#compositionArrow)"></path>
+              <rect x="110" y="190" width="130" height="58" rx="8" fill="#fff" stroke="#d6dde8"></rect>
+              <text x="175" y="225" text-anchor="middle" font-size="14" font-weight="700" fill="#172231">类型</text>
+              <rect x="264" y="190" width="130" height="58" rx="8" fill="#fff" stroke="#d6dde8"></rect>
+              <text x="329" y="225" text-anchor="middle" font-size="14" font-weight="700" fill="#172231">帽子</text>
+              <rect x="418" y="190" width="130" height="58" rx="8" fill="#fff" stroke="#d6dde8"></rect>
+              <text x="483" y="225" text-anchor="middle" font-size="14" font-weight="700" fill="#172231">眩晕</text>
+              <rect x="572" y="190" width="130" height="58" rx="8" fill="#fff" stroke="#d6dde8"></rect>
+              <text x="637" y="225" text-anchor="middle" font-size="14" font-weight="700" fill="#172231">加速</text>
+              <rect x="164" y="318" width="492" height="62" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="410" y="344" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">同一个 eid 组合多份数据，System 按规则批量处理</text>
+              <text x="410" y="366" text-anchor="middle" font-size="12" fill="#5f6b7a">这就是 ECS 能替代复杂对象层级的核心原因。</text>
+            </svg>
+          </div>
+        </section>
+        <footer class="footer"><span>设计判断：变化维度多且可叠加时，优先组合。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
+      </article>
+
+      <article class="slide" data-title="Why ECS">
+        <header>
+          <div class="kicker">Why ECS</div>
+          <h2>为什么游戏运行期常用 ECS，而不是只用 MVVM</h2>
+          <p class="lead">MVVM 擅长表单、页面状态和低频 UI 绑定；游戏主循环要处理大量实体、计时、碰撞、池化、动画状态和网络回包合流。</p>
+        </header>
+        <section class="content split-wide">
+          <table class="table">
+            <tr><th>关注点</th><th>MVVM 更适合</th><th>ECS 更适合</th></tr>
+            <tr><td>更新频率</td><td>用户操作驱动、低频界面刷新</td><td>每帧批量推进大量实体</td></tr>
+            <tr><td>状态来源</td><td>ViewModel 贴近界面结构</td><td>Component 保存游戏权威事实</td></tr>
+            <tr><td>规则组织</td><td>围绕页面和控件组织</td><td>围绕 System 批量处理规则</td></tr>
+            <tr><td>表现同步</td><td>数据绑定直接驱动 UI</td><td>Projection 差量同步到 View contract</td></tr>
+          </table>
+          <div class="rows">
+            <div class="panel accent-blue"><strong>本项目的选择</strong><p>Laya Node 是投影目标，不是状态权威。金币、地鼠状态、怪物生命周期都先落到 Component。</p></div>
+            <div class="panel accent-green"><strong>不是否定 MVVM</strong><p>HUD、设置面板、背包列表这类纯 UI 仍然可以借鉴 MVVM；但战斗/玩法运行期要有统一帧循环。</p></div>
+            <div class="panel accent-amber"><strong>关键收益</strong><p>规则可测，View 可替换，运行期合批同步，初始化阶段允许更厚的装配封装。</p></div>
+          </div>
+        </section>
+        <footer class="footer"><span>一句话：游戏运行期先要稳定的事实和帧顺序，再谈界面表达。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
       <article class="slide" data-title="ECS Intro">
         <header>
           <div class="kicker">ECS Intro</div>
           <h2>ECS 是什么：把“对象”拆成数据和规则</h2>
-          <p class="lead">这页保留原分享的核心解释：ECS 不是为了把代码写复杂，而是把权威状态、规则和表现分开。</p>
+          <p class="lead">ECS 不是为了把代码写复杂，而是把权威状态、规则和表现分开，让每一层只处理自己擅长的事情。</p>
         </header>
         <section class="content split-wide">
           <div class="rows">
             <div class="panel accent-blue"><strong>Entity 是编号</strong><p><code>eid</code> 只是一个数字。一只地鼠、一个洞位、玩家 HUD、场景单例，都是 world 里的 entity。</p></div>
-            <div class="panel accent-green"><strong>Component 是数据表</strong><p><code>ShrewComponent.hp[eid]</code>、<code>SceneComponent.currentMap[eid]</code> 这种写法，本质是用 eid 去数组里取字段。</p></div>
+            <div class="panel accent-green"><strong>Component 是数据表</strong><p><code>ShrewComponent.hp[eid]</code>、<code>PlayerComponent.money[eid]</code> 这种写法，本质是用 eid 去数组里取字段。</p></div>
             <div class="panel accent-amber"><strong>System 是规则</strong><p>状态机、命中、场景轮换、锤子冷却都在 system 里跑。System 改数据，不直接改 Laya 节点。</p></div>
             <div class="panel accent-red"><strong>Projection 是表现同步</strong><p>字段变化由 <code>ProjectionRuntime.mark/sync</code> 统一同步到 View contract，业务不维护 dirty bit。</p></div>
           </div>
@@ -818,7 +893,7 @@ export const GAME_FEATURE_REGISTRY =
         <header>
           <div class="kicker">Shrew Example</div>
           <h2>用 ShrewComponent 看懂 bitecs 的数据模型</h2>
-          <p class="lead">这是原 deck 里最有教学价值的例子：地鼠不是一个对象，而是一个 eid 加多组 component 字段。</p>
+          <p class="lead">地鼠不是一个大对象，而是一个 eid 加多组 component 字段。字段数组让系统可以批量推进状态。</p>
         </header>
         <section class="content split">
           <div class="rows">
@@ -855,7 +930,7 @@ export const GAME_FEATURE_REGISTRY =
       <article class="slide" data-title="Feature Topology">
         <header>
           <div class="kicker">Business Topology</div>
-          <h2>Feature setup 保留真实业务拓扑：框架只做机械挂载</h2>
+          <h2>Feature setup 写真实业务拓扑：框架只做机械挂载</h2>
           <p class="lead">Shrew 展示父子 View 拓扑，Monster 展示固定池。两者都是业务能读懂的装配代码。</p>
         </header>
         <section class="content split">
@@ -949,7 +1024,7 @@ sync(world)
         <header>
           <div class="kicker">Snapshot Diff</div>
           <h2>Snapshot 前后对比：Projection dirty 是怎么被算出来的</h2>
-          <p class="lead">原 deck 里的 snapshot 例子保留下来，但改成当前实现：<code>ProjectionRuntime.mark</code> 比较 watched fields 和快照。</p>
+          <p class="lead"><code>ProjectionRuntime.mark</code> 比较 watched fields 和快照。字段变化只会标记对应 row，不会让业务自己维护 dirty bit。</p>
         </header>
         <section class="content split-wide">
           <div class="rows">
@@ -1010,84 +1085,93 @@ isClickable:  0 -> 0     => 不标</pre>
         <footer class="footer"><span>对应代码：framework/sync/ProjectionRuntime.ts、game/features/shrew/ShrewProjection.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
-      <article class="slide" data-title="Scene Projection Example">
+      <article class="slide" data-title="PlayerHud Projection Example">
         <header>
-          <div class="kicker">Scene Example</div>
-          <h2>例子：SceneComponent 场景从 Meadow 切到 Ship</h2>
-          <p class="lead">原来的 Scene dirty 示例改成当前 Projection 链路：System 改 <code>SceneComponent</code>，<code>SceneProjection</code> 调用 <code>SceneLayer</code>。</p>
+          <div class="kicker">PlayerHud Example</div>
+          <h2>例子：命中回包让金币变化，HUD 为什么会刷新</h2>
+          <p class="lead">服务端回包是金币奖励的权威来源。session 把奖励写入 <code>PlayerComponent.money</code>，ProjectionRuntime 再把变化同步到 <code>PlayerHUD</code>。</p>
         </header>
         <section class="content split-wide">
           <div class="rows">
             <div class="panel accent-green">
-              <strong>1. System 写权威状态</strong>
-              <pre class="code">SceneComponent.currentMap[sceneEid] = MapType.Ship;
-SceneComponent.sceneTimer[sceneEid] = 0;
-SceneComponent.transitioning[sceneEid] = 1;</pre>
+              <strong>1. 回包写权威状态</strong>
+              <pre class="code">const moneyBefore = PlayerComponent.money[playerEid];
+PlayerComponent.money[playerEid] += response.money;</pre>
             </div>
             <div class="panel accent-blue">
-              <strong>2. Projection 监听字段</strong>
-              <pre class="code">watch(sceneSource, ["currentMap"], "scene map", ({ eid, node }) => {
-  node.switchScene(SceneComponent.currentMap[eid]);
+              <strong>2. Projection 监听 money</strong>
+              <pre class="code">watch(source, ["money"], "player money", ({ eid, node }) => {
+  node.setMoney(PlayerComponent.money[eid]);
 });</pre>
             </div>
             <div class="panel accent-violet">
-              <strong>3. View contract 更新 Laya</strong>
-              <pre class="code">SceneLayer.switchScene(mapType)
-  -> destroy old children
-  -> create map layer
-  -> reset zOrder</pre>
+              <strong>3. View contract 更新文字</strong>
+              <pre class="code">PlayerHUD.setMoney(value)
+  -> this._moneyText.text = `金币: ${value}`</pre>
             </div>
           </div>
           <div class="diagram">
-            <svg viewBox="0 0 760 420" role="img" aria-label="Scene Projection 例子">
-              <defs><marker id="sceneArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path></marker></defs>
-              <rect x="46" y="44" width="300" height="74" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="196" y="75" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">sceneCycleSystem</text>
-              <text x="196" y="99" text-anchor="middle" font-size="13" fill="#5f6b7a">currentMap: Meadow -> Ship</text>
-              <rect x="414" y="44" width="300" height="74" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="564" y="75" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">ProjectionRuntime.mark</text>
-              <text x="564" y="99" text-anchor="middle" font-size="13" fill="#5f6b7a">snapshot 发现 currentMap 变化</text>
-              <rect x="46" y="202" width="300" height="74" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="196" y="233" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">ProjectionRuntime.sync</text>
-              <text x="196" y="257" text-anchor="middle" font-size="13" fill="#5f6b7a">执行 SceneProjection row</text>
-              <rect x="414" y="202" width="300" height="74" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
-              <text x="564" y="233" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">SceneLayer.switchScene</text>
-              <text x="564" y="257" text-anchor="middle" font-size="13" fill="#5f6b7a">Laya 场景表现变化</text>
-              <path d="M346 81 H406" stroke="#2364aa" stroke-width="3" marker-end="url(#sceneArrow)"></path>
-              <path d="M564 118 C548 172 276 188 216 202" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#sceneArrow)"></path>
-              <path d="M346 239 H406" stroke="#2364aa" stroke-width="3" marker-end="url(#sceneArrow)"></path>
-              <text x="380" y="360" text-anchor="middle" font-size="13" fill="#5f6b7a">重点：System 不调 SceneLayer，View 不改 SceneComponent。</text>
+            <svg viewBox="0 0 820 420" role="img" aria-label="PlayerHud Projection 例子">
+              <defs><marker id="playerHudArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path></marker></defs>
+              <rect x="42" y="46" width="210" height="68" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="147" y="74" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">KickResponseFlow</text>
+              <text x="147" y="96" text-anchor="middle" font-size="12" fill="#5f6b7a">applyPlayerKickResponse</text>
+              <rect x="310" y="46" width="210" height="68" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="415" y="74" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">PlayerComponent.money</text>
+              <text x="415" y="96" text-anchor="middle" font-size="12" fill="#5f6b7a">金币权威状态变化</text>
+              <rect x="578" y="46" width="200" height="68" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="678" y="74" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">ProjectionRuntime.mark</text>
+              <text x="678" y="96" text-anchor="middle" font-size="12" fill="#5f6b7a">snapshot 发现 money 变化</text>
+              <rect x="174" y="210" width="210" height="68" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="279" y="238" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">ProjectionRuntime.sync</text>
+              <text x="279" y="260" text-anchor="middle" font-size="12" fill="#5f6b7a">执行 PlayerProjection row</text>
+              <rect x="446" y="210" width="210" height="68" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="551" y="238" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">PlayerHUD.setMoney</text>
+              <text x="551" y="260" text-anchor="middle" font-size="12" fill="#5f6b7a">Laya 文本显示金币</text>
+              <path d="M252 80 H302" stroke="#2364aa" stroke-width="3" marker-end="url(#playerHudArrow)"></path>
+              <path d="M520 80 H570" stroke="#2364aa" stroke-width="3" marker-end="url(#playerHudArrow)"></path>
+              <path d="M678 114 C648 168 392 202 304 210" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#playerHudArrow)"></path>
+              <path d="M384 244 H438" stroke="#2364aa" stroke-width="3" marker-end="url(#playerHudArrow)"></path>
+              <text x="410" y="356" text-anchor="middle" font-size="13" fill="#5f6b7a">重点：网络回包不直接改 HUD，HUD 也不自己保存金币规则。</text>
             </svg>
           </div>
         </section>
-        <footer class="footer"><span>对应代码：game/features/shrew/SceneCycleSystem.ts、ShrewProjection.ts、SceneLayer.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
+        <footer class="footer"><span>对应代码：game/session/KickResponseFlow.ts、game/features/playerHud/PlayerSystems.ts、PlayerProjection.ts、PlayerHUD.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
       <article class="slide" data-title="Shrew Projection Example">
         <header>
           <div class="kicker">Shrew Example</div>
           <h2>例子：地鼠从 Wait 变成 Up，画面为什么会动</h2>
-          <p class="lead">保留原来的 Shrew 示例：状态机只改 ECS 数据，Projection 决定哪些字段变化会触发 <code>ShrewNode</code>。</p>
+          <p class="lead">状态机或命中检测只改 ECS 数据。<code>ProjectionRuntime.mark</code> 发现字段变化，<code>sync</code> 执行 <code>ShrewProjection</code>，最后才调用 <code>ShrewNode</code>。</p>
         </header>
         <section class="content split-wide">
           <div class="diagram">
             <svg viewBox="0 0 780 430" role="img" aria-label="Shrew Projection 例子">
               <defs><marker id="shrewProjectionArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path></marker></defs>
-              <rect x="34" y="42" width="210" height="72" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="139" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">ShrewStateSystem</text>
-              <text x="139" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">Wait 计时到 0</text>
-              <rect x="296" y="42" width="210" height="72" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
-              <text x="401" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">改 ECS 数据</text>
-              <text x="401" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">actionState=Up, animTimer=...</text>
-              <rect x="558" y="42" width="180" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
-              <text x="648" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">ShrewProjection</text>
-              <text x="648" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">watch fields</text>
-              <rect x="296" y="236" width="210" height="72" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
-              <text x="401" y="266" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">ShrewNode</text>
-              <text x="401" y="288" text-anchor="middle" font-size="12" fill="#5f6b7a">播放出洞表现</text>
-              <path d="M244 78 H288" stroke="#2364aa" stroke-width="3" marker-end="url(#shrewProjectionArrow)"></path>
-              <path d="M506 78 H550" stroke="#2364aa" stroke-width="3" marker-end="url(#shrewProjectionArrow)"></path>
-              <path d="M648 114 C628 190 493 221 430 236" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#shrewProjectionArrow)"></path>
+              <rect x="30" y="42" width="160" height="68" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="110" y="70" text-anchor="middle" font-size="14" font-weight="700" fill="#1f5f36">ShrewStateSystem</text>
+              <text x="110" y="92" text-anchor="middle" font-size="12" fill="#5f6b7a">Wait 计时到 0</text>
+              <rect x="226" y="42" width="160" height="68" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="306" y="70" text-anchor="middle" font-size="14" font-weight="700" fill="#17385d">改 ECS 数据</text>
+              <text x="306" y="92" text-anchor="middle" font-size="12" fill="#5f6b7a">actionState=Up</text>
+              <rect x="422" y="42" width="160" height="68" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="502" y="70" text-anchor="middle" font-size="14" font-weight="700" fill="#80530f">mark</text>
+              <text x="502" y="92" text-anchor="middle" font-size="12" fill="#5f6b7a">snapshot diff</text>
+              <rect x="618" y="42" width="132" height="68" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="684" y="70" text-anchor="middle" font-size="14" font-weight="700" fill="#80530f">sync</text>
+              <text x="684" y="92" text-anchor="middle" font-size="12" fill="#5f6b7a">run row</text>
+              <rect x="208" y="236" width="180" height="72" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="298" y="266" text-anchor="middle" font-size="15" font-weight="700" fill="#80530f">ShrewProjection</text>
+              <text x="298" y="288" text-anchor="middle" font-size="12" fill="#5f6b7a">watch actionState</text>
+              <rect x="454" y="236" width="180" height="72" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="544" y="266" text-anchor="middle" font-size="15" font-weight="700" fill="#46317d">ShrewNode</text>
+              <text x="544" y="288" text-anchor="middle" font-size="12" fill="#5f6b7a">播放出洞表现</text>
+              <path d="M190 76 H218" stroke="#2364aa" stroke-width="3" marker-end="url(#shrewProjectionArrow)"></path>
+              <path d="M386 76 H414" stroke="#2364aa" stroke-width="3" marker-end="url(#shrewProjectionArrow)"></path>
+              <path d="M582 76 H610" stroke="#2364aa" stroke-width="3" marker-end="url(#shrewProjectionArrow)"></path>
+              <path d="M684 110 C664 178 424 224 326 236" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#shrewProjectionArrow)"></path>
+              <path d="M388 272 H446" stroke="#2364aa" stroke-width="3" marker-end="url(#shrewProjectionArrow)"></path>
               <text x="390" y="374" text-anchor="middle" font-size="13" fill="#5f6b7a">重点：状态机不直接调动画，动画节点也不改状态机。</text>
             </svg>
           </div>
@@ -1099,16 +1183,18 @@ ShrewComponent.animTimer[eid] = SHREW_TIMING.upDurationSec;
 ShrewComponent.isClickable[eid] = 0;</pre>
             </div>
             <div class="panel accent-blue">
-              <strong>2. Projection 声明变化</strong>
-              <pre class="code">watch(source, ["actionState", "animTimer"], "shrew animation", ({ eid, node }) => {
-  node.setAnimation(...);
-});</pre>
+              <strong>2. mark 找到变化</strong>
+              <pre class="code">ProjectionRuntime.mark(world)
+  -> actionState: Wait -> Up
+  -> animTimer: old -> new
+  -> dirty row bit = 1</pre>
             </div>
             <div class="panel accent-amber">
-              <strong>3. Node 更新表现</strong>
-              <pre class="code">ShrewNode.setAnimation(...)
+              <strong>3. sync 更新表现</strong>
+              <pre class="code">ProjectionRuntime.sync(world)
+  -> ShrewProjection row
+  -> ShrewNode.setAnimation(...)
   -> mainLayer.y 插值
-  -> 播放对应 Spine/帧动画
   -> 不写 Component</pre>
             </div>
           </div>
@@ -1120,25 +1206,30 @@ ShrewComponent.isClickable[eid] = 0;</pre>
         <header>
           <div class="kicker">Effect</div>
           <h2>Effect 处理瞬时事实：reward、miss、一次性声音或动画</h2>
-          <p class="lead">Projection 适合持久状态；Effect 适合“发生过一次”的事实。emit 只入队，帧末 flush。</p>
+          <p class="lead">Projection 适合持久状态；Effect 适合“发生过一次”的事实。它是一个带类型的观察者模式：Feature 注册观察者，session emit 事件，帧末统一 flush。</p>
         </header>
         <section class="content split-wide">
           <pre class="code">const HitRewardEffect = defineEffect&lt;HitReward&gt;("hit.reward");
 
-// system/session
-ctx.effects.emit(HitRewardEffect, reward);
-
-// feature setup
+// PlayerHudFeature setup: 注册观察者
 ctx.effects.on(HitRewardEffect, reward => {
-  hudNode.showReward(reward);
+  hitEffectNode.showReward(reward);
 });
 
-// GameLoopPipeline.update
-this._deps.effects?.flush();</pre>
+// KickResponseFlow: 命中奖励只入队
+effects.emit(HitRewardEffect, reward);
+
+// EffectRuntime.flush: 帧末分发并清空 pending
+const current = pending;
+pending = [];
+for (const effect of current) dispatch(effect);</pre>
           <div class="cards">
-            <div class="mini accent-blue"><strong>typed definition</strong><p>EffectDefinition 用对象身份匹配 handler，不靠全局字符串 EventBus。</p></div>
-            <div class="mini accent-green"><strong>pending queue</strong><p><code>emit</code> 写入队列，<code>flush</code> 统一分发。</p></div>
-            <div class="mini accent-red"><strong>clear on exit</strong><p>world 退出时清空 handler 和 pending，避免旧场景收到回调。</p></div>
+            <div class="mini accent-blue"><strong>定义事件</strong><p><code>EffectDefinition</code> 用对象身份匹配 handler，不靠全局字符串 EventBus。</p></div>
+            <div class="mini accent-green"><strong>注册观察者</strong><p><code>PlayerHudFeature</code> 在 setup 中监听 <code>HitRewardEffect</code>，触发飘字表现。</p></div>
+            <div class="mini accent-amber"><strong>入队和派发</strong><p><code>emit</code> 只 <code>pending.push</code>；<code>flush</code> 先把 <code>pending</code> 置空，再分发本轮事件。</p></div>
+            <div class="mini accent-red"><strong>退出清理</strong><p>world 退出时 <code>clear()</code> 清空 handler 和 pending，避免旧场景收到回调。</p></div>
+            <div class="mini accent-violet"><strong>不是持久状态</strong><p>奖励飘字、miss 提示、一次性声音用 Effect；金币数值仍然写 Component。</p></div>
+            <div class="mini accent-cyan"><strong>不会漏清</strong><p><code>pending.push</code> 对应 <code>flush</code> 的 <code>pending = []</code>，这不是泄漏点。</p></div>
           </div>
         </section>
         <footer class="footer"><span>文件：framework/sync/EffectDefinition.ts、EffectRuntime.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
@@ -1195,7 +1286,7 @@ this._deps.effects?.flush();</pre>
         <header>
           <div class="kicker">Protocol Boundary</div>
           <h2>protobuf 网络边界：二进制收发，不让协议细节扩散到 View</h2>
-          <p class="lead">保留原来的网络边界页。当前代码里，View 不读 proto；网络回包进入 session，再更新 ECS 或 emit Effect。</p>
+          <p class="lead">当前代码里，View 不读 proto；网络回包进入 session，再更新 ECS 或 emit Effect。协议细节停在 network/session 边界内。</p>
         </header>
         <section class="content split-wide">
           <div class="diagram">
@@ -1240,7 +1331,7 @@ this._deps.effects?.flush();</pre>
         <header>
           <div class="kicker">State Machine</div>
           <h2>状态机：少状态、明语义、统一重置入口</h2>
-          <p class="lead">保留原来的地鼠 FSM 页。它解释为什么 state systems 放在每帧前半段：规则先决定状态，表现后面由 Projection 统一同步。</p>
+          <p class="lead">state systems 放在每帧前半段：规则先决定状态，表现后面由 Projection 统一同步。命中时还要区分本地即时反馈和服务端回包权威。</p>
         </header>
         <section class="content split">
           <div class="diagram">
@@ -1272,8 +1363,9 @@ this._deps.effects?.flush();</pre>
           </div>
           <div class="rows">
             <div class="panel accent-green"><strong>自然循环</strong><p>Wait 随机等待，Up 播出洞，Stand 开启可点击，Down 回洞，最后重置回 Wait。</p></div>
-            <div class="panel accent-red"><strong>命中循环</strong><p>命中检测判断成功后改成 Dizzy，短暂停留后重置到 Wait。</p></div>
-            <div class="panel accent-blue"><strong>测试重点</strong><p>每条状态边都能用单测重放，尤其是 deltaSec 计时、蓝鼠双击、Dizzy 重置。</p></div>
+            <div class="panel accent-red"><strong>Dizzy 的权威动作</strong><p>触摸命中后，<code>hitDetectionSystem</code> 立刻 <code>hp--</code> 并调用 <code>startShrewDizzyHold</code>。这是本地即时表现的权威动作。</p></div>
+            <div class="panel accent-blue"><strong>hitResponse 的职责</strong><p>服务端回包进入 <code>routeKickResponse</code>，更新金币、怒气、锤子和雷电，emit 奖励 Effect；它不再改 Shrew 的 Dizzy 状态。</p></div>
+            <div class="panel accent-amber"><strong>先后顺序</strong><p>touch -> local hit -> Dizzy -> send request；response -> score/resource/effect。这样命中反馈不等待网络。</p></div>
           </div>
         </section>
         <footer class="footer"><span>对应代码：src/game/features/shrew/ShrewStateSystem.ts、src/tests/ecs/ShrewStateSystem.test.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
@@ -1317,7 +1409,7 @@ exit scene
         <header>
           <div class="kicker">Performance Stress</div>
           <h2>压测调试：先分清 ECS 压力和 Laya 渲染压力</h2>
-          <p class="lead">原 deck 的压测页保留在 world 生命周期后。PerfHero 链路用来观察 Spine/Skeleton、Projection、节点池和长时间运行压力。</p>
+          <p class="lead">PerfHero 链路用来观察 Spine/Skeleton、Projection、节点池和长时间运行压力，重点是分清 ECS 压力和 Laya 渲染压力。</p>
         </header>
         <section class="content split">
           <div class="rows">
@@ -1359,7 +1451,7 @@ exit scene
         <header>
           <div class="kicker">New Feature</div>
           <h2>新增 Feature 的标准路径：自己的目录内完成，只注册一行</h2>
-          <p class="lead">框架层已经提供小型装配原语。业务切片保留真实规则，不继承 BaseFeature，不做自动扫描。</p>
+          <p class="lead">框架层已经提供小型装配原语。业务切片写真实规则，不继承 BaseFeature，不做自动扫描。</p>
         </header>
         <section class="content split">
           <div class="rows">
@@ -1385,7 +1477,7 @@ exit scene
         <header>
           <div class="kicker">Implementation Checklist</div>
           <h2>落地清单：新增一种非地鼠怪物，出现 10 秒后消失</h2>
-          <p class="lead">保留原 deck 的 Monster checklist，但改成当前纵向切片目录和 Feature Manifest 装配方式。</p>
+          <p class="lead">以当前纵向切片目录和 Feature Manifest 装配方式，说明新增 Monster 的落地路径。</p>
         </header>
         <section class="content split-wide">
           <div class="rows">
@@ -1429,7 +1521,7 @@ exit scene
         <header>
           <div class="kicker">TDD Workflow</div>
           <h2>TDD：先证明问题，再改代码，最后整理和提交</h2>
-          <p class="lead">原 deck 的 TDD 页也保留。它是这套框架能持续演进的工程纪律。</p>
+          <p class="lead">TDD 是这套框架能持续演进的工程纪律：先证明行为，再做最小实现，最后整理边界和命名。</p>
         </header>
         <section class="content split-wide">
           <div class="rows">

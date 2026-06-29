@@ -6,7 +6,7 @@ import { HoleEntity, SceneEntity, ShrewEntity } from "../../game/features/shrew"
 import { sceneCycleSystem } from "../../game/features/shrew";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
-import { createGameWorld } from "../../ecs/world";
+import { createGameWorld } from "../../framework/ecs/World";
 
 describe("SceneCycleSystem", () => {
   let world: ReturnType<typeof createGameWorld>;

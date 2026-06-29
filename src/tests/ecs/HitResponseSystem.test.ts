@@ -7,7 +7,7 @@ import {
   type KickResponse,
 } from "../../game/session";
 import { HammerType } from "../../game/features/hammer";
-import { createGameWorld } from "../../ecs/world";
+import { createGameWorld } from "../../framework/ecs/World";
 import { createSingletonEntities } from "../helpers/SingletonTestEntities";
 
 describe("HitResponseSystem", () => {
