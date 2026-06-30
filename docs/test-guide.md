@@ -62,6 +62,17 @@ npm test -- --run src/tests/features src/tests/view/GameScene.test.ts
 - protobuf、seqId、超时与乱序回包。
 - Laya 节点池化、async resource stale guard 和 destroy。
 
+## 测试归位
+
+测试目录按“保护哪个边界”命名，不按历史实现放置。
+
+- `src/tests/ecs`：只放框架 ECS 机制，例如 `EntityRuntime`、`GameWorld`。
+- `src/tests/sync`、`src/tests/effects`：只放 Projection、Effect runtime 和定义层测试。
+- `src/tests/features`：放 FeatureRegistry、运行时装配、生命周期这类框架/业务交界测试。
+- `src/tests/game/features/<name>`：放具体业务切片规则，例如 shrew 状态机、地图轮换、monster 池。
+- `src/tests/game/session`：放输入、命中检测、回包处理和跨 Feature 编排。
+- 移动 Laya 项目里的测试文件时，同步移动已跟踪的 `.meta` 文件；如果新路径被 `.gitignore` 忽略，需要 `git add -f`。
+
 ## 调试
 
 ```bash

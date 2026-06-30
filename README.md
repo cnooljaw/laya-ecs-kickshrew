@@ -24,8 +24,8 @@ http://localhost:8080/debug-tsc.html?perf=1&heroes=200
 
 ```text
 src/app/                  Laya 应用壳、GameScene、GameLoopPipeline
-src/framework/ecs/        EntityDefinition / EntityRuntime
-src/framework/feature/    Feature Manifest、Registry、mount 原语
+src/framework/ecs/        EntityDefinition / EntityRuntime / GameWorld
+src/framework/feature/    Feature Manifest、Registry、FeatureSetupContext、ViewMounting
 src/framework/sync/       Projection / Effect definition and runtime
 src/framework/view/       ViewRegistry 与 Laya 窄兼容层
 src/game/features/        shrew、hammer、playerHud、monster、perfHero
@@ -70,6 +70,8 @@ src/game/features/foo/
 ```
 
 新增业务主要在自己的目录内完成，只在 `src/game/GameFeatures.ts` 增加一行显式注册。运行期优先使用固定槽位或对象池，不依赖频繁 `removeEntity`。
+
+命名和测试归位规则见 [docs/architecture.md](docs/architecture.md) 与 [docs/test-guide.md](docs/test-guide.md)。
 
 ## 收尾验证
 

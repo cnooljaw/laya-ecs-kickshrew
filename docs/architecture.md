@@ -170,3 +170,14 @@ deleteWorld
 新增业务采用纵向切片：Component、Entity、System、Projection、contract、Node 和配置放在 `src/game/features/foo`，只从 `index.ts` 暴露公开能力，并在 `src/game/GameFeatures.ts` 增加显式注册项。
 
 框架负责 registry、dirty bit、full sync 和 teardown。业务不维护这些机制，也不依赖运行期频繁 `removeEntity`。具体写法见 `docs/ecs-binding.md`。
+
+## 命名与归位
+
+命名优先回答“谁负责什么”，其次才考虑缩短字符数。
+
+- 框架文件使用稳定机制名：`GameWorld`、`FeatureSetupContext`、`ViewMounting`。避免用 `World`、`RuntimeContext`、`Primitives` 这类过宽或偏内部实现的名字。
+- 业务切片文件使用业务归属名：`MapCycleSystem`、`HammerThunderSystem`、`PerfRuntimeConfig`。跨 Feature 编排放在 `game/session`，不要伪装成某个 Feature 的内部 system。
+- 只有进入 frame pipeline 的函数使用 `System` 后缀。一次输入、回包或判断动作使用动词名，例如 `detectKickHit`、`handleKickResponse`、`applyKickResponse`。
+- Laya 节点接口使用 `I*Node`；HUD 这类稳定缩写保持全大写，例如 `PlayerHUDFeature`、`PlayerHUDViewConfig`。
+- 系统注册名和文件/函数语义保持一致，例如 `shrew.mapCycle`、`session.hammerThunder`。不要让测试快照继续保留旧概念。
+- 测试放在被保护边界旁边：框架机制放 `src/tests/ecs`、`src/tests/sync`、`src/tests/features`；业务规则放 `src/tests/game/features/<name>`；输入和回包放 `src/tests/game/session`。
