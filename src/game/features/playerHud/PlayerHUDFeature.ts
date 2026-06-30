@@ -9,9 +9,9 @@ export const PlayerHUDFeature = defineFeature({
   name: "playerHud",
   entities: [PlayerEntity],
   projections: [PlayerProjection],
-  setup: ({ entities, effects, mountOne, createView }) => {
-    mountOne({
-      eid: entities.one(PlayerEntity),
+  setup: ({ effects, mountSingleton, createView }) => {
+    mountSingleton({
+      entity: PlayerEntity,
       projection: PlayerProjection,
       create: () => new PlayerHUD(),
     });

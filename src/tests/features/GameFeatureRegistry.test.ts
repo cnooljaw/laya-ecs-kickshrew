@@ -72,6 +72,18 @@ function createSetupContext(entities: ReturnType<typeof createEntityRuntime>) {
       mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
       return create(eid, index);
     }),
+    mountSingleton: ({ entity, projection, create }: any) => {
+      const eid = entities.one(entity);
+      mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
+      return create(eid, 0);
+    },
+    createAndMountMany: ({ entity, inputs, projection, create }: any) => {
+      const eids = entities.createMany(entity, inputs);
+      return eids.map((eid: number, index: number) => {
+        mounts.set(projection.name, (mounts.get(projection.name) ?? 0) + 1);
+        return create(eid, index);
+      });
+    },
     own: <T extends { destroy(): void }>(resource: T) => {
       resources++;
       return resource;
@@ -146,6 +158,51 @@ describe("GameFeatureRegistry", () => {
     expect(result.holes).toHaveLength(9);
     expect(result.shrews).toHaveLength(9);
     expect(result.holes.map(eid => HoleComponent.shrewEid[eid])).toEqual(result.shrews);
+  });
+
+  it("mounts singleton entity views through setup context capability", () => {
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, [TestSceneEntity]);
+    entities.bootstrapSingletons();
+    const setup = createSetupContext(entities);
+
+    const node = setup.context.mountSingleton({
+      entity: TestSceneEntity,
+      projection: TestSceneProjection,
+      create: () => ({ destroy: () => {}, create: () => {} }),
+    });
+
+    expect(node).toBeDefined();
+    expect(Object.fromEntries(setup.mounts)).toEqual({ testScene: 1 });
+  });
+
+  it("creates and mounts many entity views through setup context capability", () => {
+    const ManyEntity = defineEntity<number>({
+      name: "testMany",
+      components: [SceneComponent],
+      cardinality: "many",
+      initialize: (eid, value) => {
+        SceneComponent.currentMap[eid] = value;
+      },
+    });
+    const ManyProjection = defineProjection({
+      name: "testMany",
+      components: [SceneComponent],
+      rows: [watch(sceneSource, ["currentMap"], "current map", noProjection)],
+    });
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, [ManyEntity]);
+    const setup = createSetupContext(entities);
+
+    const nodes = setup.context.createAndMountMany({
+      entity: ManyEntity,
+      inputs: [1, 2, 3],
+      projection: ManyProjection,
+      create: () => ({ destroy: () => {}, create: () => {} }),
+    });
+
+    expect(nodes).toHaveLength(3);
+    expect(Object.fromEntries(setup.mounts)).toEqual({ testMany: 3 });
   });
 
   it("sets up the complete runtime through stable capabilities", () => {

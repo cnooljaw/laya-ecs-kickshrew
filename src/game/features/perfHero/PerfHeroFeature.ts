@@ -10,17 +10,14 @@ export const PerfHeroFeature = defineFeature({
   entities: [PerfHeroEntity],
   projections: [PerfHeroProjection],
   systems: [defineSystem("feature", "perfHero.state", perfHeroSystem)],
-  setup: ({ entities, mountPool, own }) => {
+  setup: ({ createAndMountMany, own }) => {
     const config = getPerfRuntimeConfig();
     if (config.heroCount <= 0) return;
 
-    const eids = entities.createMany(
-      PerfHeroEntity,
-      Array.from({ length: config.heroCount }, (_, index) => index),
-    );
     const pool = own(new PerfHeroSpinePoolGroup());
-    mountPool({
-      eids,
+    createAndMountMany({
+      entity: PerfHeroEntity,
+      inputs: Array.from({ length: config.heroCount }, (_, index) => index),
       projection: PerfHeroProjection,
       create: () => new PerfHeroNode(pool),
     });

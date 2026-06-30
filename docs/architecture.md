@@ -85,6 +85,9 @@ defineFeature({
 ```
 
 `setup` 可以创建固定拓扑、对象池、节点和 effect handler。核心规则保留在拥有它的业务切片。
+常见单例视图优先使用 `ctx.mountSingleton({ entity, projection, create })`；
+常见固定输入池优先使用 `ctx.createAndMountMany({ entity, inputs, projection, create })`。
+父子拓扑、规则校验、trigger 创建和跨实体关系仍应在 Feature setup 中显式表达。
 
 `ShrewFeature` 显式保留业务拓扑：
 

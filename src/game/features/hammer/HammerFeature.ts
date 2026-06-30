@@ -13,9 +13,9 @@ export const HammerFeature = defineFeature({
   entities: [HammerEntity],
   projections: [HammerProjection],
   systems: [defineSystem("state", "hammer.state", hammerSystem)],
-  setup: ({ entities, mountOne }) => {
-    mountOne({
-      eid: entities.one(HammerEntity),
+  setup: ({ mountSingleton }) => {
+    mountSingleton({
+      entity: HammerEntity,
       projection: HammerProjection,
       create: () => new HammerNode(),
     });
