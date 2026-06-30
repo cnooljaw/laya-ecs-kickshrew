@@ -6,8 +6,6 @@ import { HammerComponent } from "../../../../game/features/hammer";
 import {
   AnimationComponent,
   AnimType,
-  HoleComponent,
-  MapType,
   ShrewAction,
   ShrewComponent,
   ShrewType,
@@ -15,6 +13,7 @@ import {
   setShrewTimingOverride,
   shrewStateSystem,
 } from "../../../../game/features/shrew";
+import { HoleComponent, MapType } from "../../../../game/features/board";
 
 const FRAME_DELTA = 1 / 60;
 

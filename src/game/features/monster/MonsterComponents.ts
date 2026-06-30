@@ -9,6 +9,13 @@ export const MonsterComponent = defineComponent({
   ageSec: Types.f32,
   durationSec: Types.f32,
   spawnSeq: Types.f32,
+  holeA: Types.f32,
+  holeB: Types.f32,
+  holeC: Types.f32,
+  hp: Types.f32,
+  hitSeq: Types.f32,
+  defeatedSeq: Types.f32,
+  reward: Types.f32,
 });
 
 export const MonsterSpawnComponent = defineComponent({

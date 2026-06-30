@@ -1,22 +1,23 @@
 import { hasComponent } from "bitecs";
 import { describe, expect, it } from "vitest";
-import { HolePositions } from "../../game/features/shrew";
-import { SCENE_CYCLE_INTERVAL } from "../../game/features/shrew";
+import { HolePositions, SCENE_CYCLE_INTERVAL } from "../../game/features/board";
 import {
   AnimationComponent,
-  HoleComponent,
-  SceneComponent,
   ShrewComponent,
 } from "../../game/features/shrew";
+import { HoleComponent, SceneComponent } from "../../game/features/board";
 import { PlayerComponent } from "../../game/features/playerHud";
 import {
   HoleEntity,
   SceneEntity,
+} from "../../game/features/board";
+import {
   ShrewEntity,
 } from "../../game/features/shrew";
 import { PlayerEntity } from "../../game/features/playerHud";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
+import { HOLE_COUNT, MapType } from "../../game/features/board";
+import { ShrewAction, ShrewType } from "../../game/features/shrew";
 import { createGameWorld } from "../../framework/ecs/GameWorld";
 
 describe("world factory", () => {
@@ -64,7 +65,8 @@ describe("world factory", () => {
     holes.forEach((eid, index) => {
       expect(HoleComponent.posXRatio[eid]).toBeCloseTo(HolePositions[MapType.Meadow].xRatios[index], 5);
       expect(HoleComponent.posYRatio[eid]).toBeCloseTo(HolePositions[MapType.Meadow].yRatios[index], 5);
-      expect(HoleComponent.shrewEid[eid]).toBe(0);
+      expect(HoleComponent.residentEid[eid]).toBe(0);
+      expect(HoleComponent.occupantEid[eid]).toBe(0);
     });
   });
 

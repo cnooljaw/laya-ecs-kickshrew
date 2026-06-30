@@ -25,6 +25,7 @@
 import { clearTweens, destroyChildren, destroyNode } from "../../../framework/view/LayaLifecycle";
 import { loadResource } from "../../../framework/view/LayaLoader";
 import { getLaya } from "../../../framework/view/LayaRuntime";
+import { DESIGN_RESOLUTION } from "../../../config/GameTuning";
 import { getAtlasPath, getFrameTexture } from "../../../resource/AtlasConfig";
 import { ShrewType, ShrewAction } from "./ShrewTypes";
 import { SHREW_VIEW_CONFIG } from "./ShrewViewConfig";
@@ -187,10 +188,6 @@ export class ShrewNode implements IShrewNode {
       this._bodyW = bw;
       this._bodyH = bh;
 
-      if (this._container) {
-        this._container.x = 0;
-        this._container.y = 0;
-      }
       this._configureClip(Laya, bw, bh);
       this._layoutDizzyLayer();
 
@@ -282,6 +279,16 @@ export class ShrewNode implements IShrewNode {
           drawPart(getFrameTexture(atlasRes, def.handRight),def.handRight,bw * 1.05,   bh * 0.58, 0);
       }
     });
+  }
+
+  setPosition(xRatio: number, yRatio: number): void {
+    if (!this._container) return;
+    this._container.x = xRatio * DESIGN_RESOLUTION.width;
+    this._container.y = yRatio * DESIGN_RESOLUTION.height;
+  }
+
+  setZOrder(z: number): void {
+    if (this._container) this._container.zOrder = z;
   }
 
   setAnimation(actionState: number, _animType: number, progress: number): void {

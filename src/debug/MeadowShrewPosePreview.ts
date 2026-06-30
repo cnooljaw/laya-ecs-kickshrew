@@ -1,16 +1,18 @@
 import { VIEWPORT } from "../config/ViewLayoutConfig";
 import {
-  AnimType,
   HOLE_COUNT,
   HolePositions,
   MapType,
-  ShrewAction,
-  ShrewType,
   getHoleGrid,
   getHoleZOrder,
+} from "../game/features/board";
+import {
+  AnimType,
+  ShrewAction,
+  ShrewType,
 } from "../game/features/shrew";
-import { HoleNode } from "../game/features/shrew/HoleNode";
-import { SceneLayer } from "../game/features/shrew/SceneLayer";
+import { HoleNode } from "../game/features/board";
+import { SceneLayer } from "../game/features/board";
 import { ShrewNode } from "../game/features/shrew/ShrewNode";
 
 type PreviewPose = "up0" | "stand";

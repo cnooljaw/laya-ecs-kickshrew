@@ -39,9 +39,8 @@ export class HoleNode implements IHoleNode {
     }
   }
 
-  setShrewVisible(shrewEid: number): void {
-    // 由 ShrewViewBinding 直接控制 ShrewNode 的可见性
-    // HoleNode 仅负责容器层级
+  setOccupant(_kind: number, _eid: number): void {
+    // Board 只维护洞位容器层级；具体 occupant view 由对应 Feature 自己投影。
   }
 
   setZOrder(z: number): void {

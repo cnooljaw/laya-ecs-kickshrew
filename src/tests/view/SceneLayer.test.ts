@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MapType } from "../../game/features/shrew";
-import { SceneLayer } from "../../game/features/shrew/SceneLayer";
+import { MapType, SceneLayer } from "../../game/features/board";
 
 class FakeSprite {
   children: FakeSprite[] = [];

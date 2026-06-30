@@ -1,24 +1,11 @@
-export { HolePositions, getHoleGrid, getHoleZOrder } from "./HolePositions";
-export type { IHoleNode } from "./IHoleNode";
-export {
-  SCENE_CYCLE,
-  SCENE_CYCLE_INTERVAL,
-} from "./SceneConfig";
-export type { ISceneLayer } from "./ISceneLayer";
 export {
   AnimationComponent,
-  HoleComponent,
-  SceneComponent,
   ShrewComponent,
 } from "./ShrewComponents";
-export { HoleEntity, SceneEntity, ShrewEntity } from "./ShrewEntities";
+export { ShrewEntity } from "./ShrewEntities";
 export { ShrewFeature, setupCoreGameplay } from "./ShrewFeature";
 export { startShrewDizzyHold } from "./ShrewLifecycle";
-export {
-  HoleProjection,
-  SceneProjection,
-  ShrewProjection,
-} from "./ShrewProjection";
+export { ShrewProjection } from "./ShrewProjection";
 export {
   PERF_SHREW_TIMING,
   SHREW_TIMING,
@@ -28,13 +15,10 @@ export {
   type ShrewTiming,
 } from "./ShrewRules";
 export { shrewAnimationTimerSystem } from "./ShrewAnimationTimerSystem";
-export { mapCycleSystem } from "./MapCycleSystem";
+export { shrewBoardSyncSystem, syncShrewBoardPosition } from "./ShrewBoardSyncSystem";
 export { shrewStateSystem } from "./ShrewStateSystem";
 export {
   AnimType,
-  GRID_SIZE,
-  HOLE_COUNT,
-  MapType,
   ShrewAction,
   ShrewType,
   ZOrder,

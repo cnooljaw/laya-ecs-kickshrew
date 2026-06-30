@@ -1,4 +1,4 @@
-import { MapType } from "./ShrewTypes";
+import { MapType } from "./BoardTypes";
 
 export interface SceneConfig {
   mapType: MapType;

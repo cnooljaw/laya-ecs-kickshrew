@@ -1,25 +1,32 @@
 import { describe, expect, it } from "vitest";
 import {
   AnimationComponent,
-  HoleComponent,
-  SceneComponent,
   ShrewComponent,
 } from "../../game/features/shrew";
 import {
+  BoardPositionComponent,
+  HoleComponent,
+  SceneComponent,
+} from "../../game/features/board";
+import {
   HoleEntity,
   SceneEntity,
+} from "../../game/features/board";
+import {
   ShrewEntity,
 } from "../../game/features/shrew";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { AnimType, MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
+import { MapType } from "../../game/features/board";
+import { AnimType, ShrewAction, ShrewType } from "../../game/features/shrew";
 import { createGameWorld } from "../../framework/ecs/GameWorld";
-import type { IHoleNode } from "../../game/features/shrew";
-import type { ISceneLayer } from "../../game/features/shrew";
+import type { IHoleNode, ISceneLayer } from "../../game/features/board";
 import type { IShrewNode } from "../../game/features/shrew";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import {
   HoleProjection,
   SceneProjection,
+} from "../../game/features/board";
+import {
   ShrewProjection,
 } from "../../game/features/shrew";
 
@@ -28,7 +35,9 @@ function createShrewNode(calls: {
   animations: Array<[number, number, number]>;
   clickables: boolean[];
   hats: boolean[];
+  positions: Array<[number, number]>;
   props: number[];
+  zOrders: number[];
 }): IShrewNode {
   return {
     setSpriteFrame: (type, map) => calls.sprites.push([type, map]),
@@ -37,7 +46,9 @@ function createShrewNode(calls: {
     },
     setClickable: clickable => calls.clickables.push(clickable),
     setHatVisible: visible => calls.hats.push(visible),
+    setPosition: (x, y) => calls.positions.push([x, y]),
     setPropType: propType => calls.props.push(propType),
+    setZOrder: z => calls.zOrders.push(z),
   };
 }
 
@@ -54,7 +65,9 @@ describe("compiled core projections", () => {
       animations: [] as Array<[number, number, number]>,
       clickables: [] as boolean[],
       hats: [] as boolean[],
+      positions: [] as Array<[number, number]>,
       props: [] as number[],
+      zOrders: [] as number[],
     };
     const runtime = createProjectionRuntime([ShrewProjection]);
     runtime.mount(ShrewProjection, eid, createShrewNode(calls));
@@ -88,7 +101,9 @@ describe("compiled core projections", () => {
       animations: [] as Array<[number, number, number]>,
       clickables: [] as boolean[],
       hats: [] as boolean[],
+      positions: [] as Array<[number, number]>,
       props: [] as number[],
+      zOrders: [] as number[],
     };
     const runtime = createProjectionRuntime([ShrewProjection]);
     runtime.mount(ShrewProjection, eid, createShrewNode(calls));
@@ -106,8 +121,45 @@ describe("compiled core projections", () => {
       animations: [],
       clickables: [],
       hats: [],
+      positions: [],
       props: [],
+      zOrders: [],
     });
+  });
+
+  it("projects shrew board position and z-order", () => {
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, [ShrewEntity]);
+    const eid = entities.create(ShrewEntity, {
+      shrewType: ShrewType.Red,
+      mapType: MapType.Meadow,
+    });
+    const calls = {
+      sprites: [] as Array<[number, number]>,
+      animations: [] as Array<[number, number, number]>,
+      clickables: [] as boolean[],
+      hats: [] as boolean[],
+      positions: [] as Array<[number, number]>,
+      props: [] as number[],
+      zOrders: [] as number[],
+    };
+    const runtime = createProjectionRuntime([ShrewProjection]);
+    runtime.mount(ShrewProjection, eid, createShrewNode(calls));
+    runtime.mark(world);
+    runtime.sync(world);
+    calls.positions.length = 0;
+    calls.zOrders.length = 0;
+
+    BoardPositionComponent.xRatio[eid] = 0.42;
+    BoardPositionComponent.yRatio[eid] = 0.63;
+    BoardPositionComponent.zIndex[eid] = 5;
+    runtime.mark(world);
+    runtime.sync(world);
+
+    expect(calls.positions).toHaveLength(1);
+    expect(calls.positions[0][0]).toBeCloseTo(0.42, 5);
+    expect(calls.positions[0][1]).toBeCloseTo(0.63, 5);
+    expect(calls.zOrders).toEqual([5]);
   });
 
   it("projects hole position, occupant and z-order", () => {
@@ -116,30 +168,31 @@ describe("compiled core projections", () => {
     const eid = entities.create(HoleEntity, { index: 0, mapType: MapType.Meadow });
     const calls = {
       positions: [] as Array<[number, number]>,
-      shrews: [] as number[],
+      occupants: [] as Array<[number, number]>,
       zOrders: [] as number[],
     };
     const node: IHoleNode = {
       setPosition: (x, y) => calls.positions.push([x, y]),
-      setShrewVisible: shrewEid => calls.shrews.push(shrewEid),
+      setOccupant: (kind, eid) => calls.occupants.push([kind, eid]),
       setZOrder: z => calls.zOrders.push(z),
     };
     const runtime = createProjectionRuntime([HoleProjection]);
     runtime.mount(HoleProjection, eid, node);
     runtime.mark(world);
     runtime.sync(world);
-    calls.positions.length = calls.shrews.length = calls.zOrders.length = 0;
+    calls.positions.length = calls.occupants.length = calls.zOrders.length = 0;
 
     HoleComponent.posXRatio[eid] = 0.25;
     HoleComponent.posYRatio[eid] = 0.5;
-    HoleComponent.shrewEid[eid] = 7;
+    HoleComponent.occupantKind[eid] = 1;
+    HoleComponent.occupantEid[eid] = 7;
     HoleComponent.zIndex[eid] = 3;
     runtime.mark(world);
     runtime.sync(world);
 
     expect(calls).toEqual({
       positions: [[0.25, 0.5]],
-      shrews: [7],
+      occupants: [[1, 7]],
       zOrders: [3],
     });
   });

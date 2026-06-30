@@ -5,11 +5,10 @@ import { createShrewEntity } from '../../../helpers/CoreTestEntities';
 import {
   AnimationComponent,
   AnimType,
-  MapType,
-  SceneComponent,
   ShrewType,
   shrewAnimationTimerSystem,
 } from "../../../../game/features/shrew";
+import { MapType, SceneComponent } from "../../../../game/features/board";
 
 describe('ShrewAnimationTimerSystem', () => {
   let world: ReturnType<typeof createGameWorld>;
@@ -79,22 +78,12 @@ describe('ShrewAnimationTimerSystem', () => {
     expect(AnimationComponent.progress[eid2]).toBeCloseTo(0.5 + delta / 2.0, 3);
   });
 
-  it('sceneTimer 随 delta 推进', () => {
+  it('不再推进 sceneTimer，场景时间由 board 系统负责', () => {
     const singletons = createSingletonEntities(world);
     const sceneEid = singletons.scene;
 
     shrewAnimationTimerSystem(world, 1.5);
 
-    expect(SceneComponent.sceneTimer[sceneEid]).toBe(1.5);
-  });
-
-  it('sceneTimer 连续推进累加', () => {
-    const singletons = createSingletonEntities(world);
-    const sceneEid = singletons.scene;
-
-    shrewAnimationTimerSystem(world, 1);
-    shrewAnimationTimerSystem(world, 2);
-
-    expect(SceneComponent.sceneTimer[sceneEid]).toBe(3);
+    expect(SceneComponent.sceneTimer[sceneEid]).toBe(0);
   });
 });

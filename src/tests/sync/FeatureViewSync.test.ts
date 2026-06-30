@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MonsterComponent } from "../../game/features/monster";
 import { MonsterEntity } from "../../game/features/monster";
 import { MonsterType } from "../../game/features/monster";
+import { BoardPositionComponent } from "../../game/features/board";
 import { PerfHeroComponent } from "../../game/features/perfHero";
 import { PerfHeroEntity } from "../../game/features/perfHero";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
@@ -27,12 +28,18 @@ describe("feature projections", () => {
       spawns: [] as Array<{ monsterType: number; spawnSeq: number }>,
       positions: [] as Array<[number, number]>,
       scales: [] as number[],
+      hits: [] as number[],
+      defeated: [] as number[],
+      zOrders: [] as number[],
       visible: [] as boolean[],
     };
     const node: IMonsterNode = {
+      playDefeated: seq => calls.defeated.push(seq),
+      playHit: seq => calls.hits.push(seq),
       spawn: (monsterType, spawnSeq) => calls.spawns.push({ monsterType, spawnSeq }),
       setPosition: (x, y) => calls.positions.push([x, y]),
       setScale: scale => calls.scales.push(scale),
+      setZOrder: z => calls.zOrders.push(z),
       setVisible: visible => calls.visible.push(visible),
     };
     const runtime = createProjectionRuntime([MonsterProjection]);
@@ -40,12 +47,22 @@ describe("feature projections", () => {
 
     MonsterComponent.visible[monster] = 1;
     MonsterComponent.spawnSeq[monster] = 1;
+    MonsterComponent.hitSeq[monster] = 1;
+    MonsterComponent.defeatedSeq[monster] = 1;
+    BoardPositionComponent.xRatio[monster] = 0.5;
+    BoardPositionComponent.yRatio[monster] = 0.6;
+    BoardPositionComponent.zIndex[monster] = 80;
     runtime.mark(world);
     runtime.sync(world);
 
     expect(calls.spawns).toEqual([{ monsterType: MonsterType.Rhino, spawnSeq: 1 }]);
-    expect(calls.positions).toEqual([[MonsterComponent.posX[monster], MonsterComponent.posY[monster]]]);
+    expect(calls.positions).toHaveLength(1);
+    expect(calls.positions[0][0]).toBeCloseTo(0.5, 5);
+    expect(calls.positions[0][1]).toBeCloseTo(0.6, 5);
     expect(calls.scales).toEqual([MonsterComponent.scale[monster]]);
+    expect(calls.hits).toEqual([1]);
+    expect(calls.defeated).toEqual([1]);
+    expect(calls.zOrders).toEqual([80]);
     expect(calls.visible).toEqual([true]);
   });
 

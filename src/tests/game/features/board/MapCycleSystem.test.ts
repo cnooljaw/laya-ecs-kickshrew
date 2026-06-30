@@ -1,22 +1,28 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { HolePositions, getHoleZOrder } from "../../../../game/features/shrew";
-import { SCENE_CYCLE_INTERVAL } from "../../../../game/features/shrew";
-import { HoleComponent, SceneComponent, ShrewComponent } from "../../../../game/features/shrew";
-import { HoleEntity, SceneEntity, ShrewEntity } from "../../../../game/features/shrew";
-import { mapCycleSystem } from "../../../../game/features/shrew";
+import {
+  BoardOccupantKind,
+  HoleComponent,
+  HoleEntity,
+  HolePositions,
+  HOLE_COUNT,
+  MapType,
+  SceneComponent,
+  SceneEntity,
+  SCENE_CYCLE_INTERVAL,
+  getHoleZOrder,
+  mapCycleSystem,
+} from "../../../../game/features/board";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
-import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../../../game/features/shrew";
 import { createGameWorld } from "../../../../framework/ecs/GameWorld";
 
-describe("MapCycleSystem", () => {
+describe("Board MapCycleSystem", () => {
   let world: ReturnType<typeof createGameWorld>;
   let scene: number;
   let holes: number[];
-  let shrews: number[];
 
   beforeEach(() => {
     world = createGameWorld();
-    const entities = createEntityRuntime(world, [SceneEntity, HoleEntity, ShrewEntity]);
+    const entities = createEntityRuntime(world, [SceneEntity, HoleEntity]);
     entities.bootstrapSingletons();
     scene = entities.one(SceneEntity);
     holes = entities.createMany(
@@ -26,22 +32,12 @@ describe("MapCycleSystem", () => {
         mapType: MapType.Meadow,
       })),
     );
-    shrews = Array.from({ length: HOLE_COUNT }, () => {
-      const eid = entities.create(ShrewEntity, {
-        shrewType: ShrewType.Red,
-        mapType: MapType.Meadow,
-      });
-      ShrewComponent.actionState[eid] = ShrewAction.Stand;
-      ShrewComponent.isClickable[eid] = 1;
-      return eid;
-    });
   });
 
-  it("does not switch before the configured interval", () => {
-    SceneComponent.sceneTimer[scene] = SCENE_CYCLE_INTERVAL - 0.01;
+  it("advances scene timer without switching before the configured interval", () => {
+    mapCycleSystem(world, 1.5);
 
-    mapCycleSystem(world);
-
+    expect(SceneComponent.sceneTimer[scene]).toBe(1.5);
     expect(SceneComponent.currentMap[scene]).toBe(MapType.Meadow);
   });
 
@@ -53,7 +49,12 @@ describe("MapCycleSystem", () => {
     }
   });
 
-  it("resets runtime state and applies the next map to shrews and holes", () => {
+  it("updates hole positions and restores occupants to residents on map switch", () => {
+    const holeEid = holes[1];
+    HoleComponent.residentKind[holeEid] = BoardOccupantKind.Shrew;
+    HoleComponent.residentEid[holeEid] = 1001;
+    HoleComponent.occupantKind[holeEid] = BoardOccupantKind.Monster;
+    HoleComponent.occupantEid[holeEid] = 2001;
     SceneComponent.sceneTimer[scene] = SCENE_CYCLE_INTERVAL * 1.5;
 
     mapCycleSystem(world);
@@ -61,14 +62,8 @@ describe("MapCycleSystem", () => {
     expect(SceneComponent.currentMap[scene]).toBe(MapType.Ship);
     expect(SceneComponent.sceneTimer[scene]).toBe(0);
     expect(SceneComponent.transitioning[scene]).toBe(1);
-
-    for (const eid of shrews) {
-      expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Wait);
-      expect(ShrewComponent.isClickable[eid]).toBe(0);
-      expect(ShrewComponent.animTimer[eid]).toBeGreaterThanOrEqual(1);
-      expect(ShrewComponent.animTimer[eid]).toBeLessThanOrEqual(8);
-      expect(ShrewComponent.mapType[eid]).toBe(MapType.Ship);
-    }
+    expect(HoleComponent.occupantKind[holeEid]).toBe(BoardOccupantKind.Shrew);
+    expect(HoleComponent.occupantEid[holeEid]).toBe(1001);
 
     holes.forEach((eid, index) => {
       expect(HoleComponent.posXRatio[eid]).toBeCloseTo(HolePositions[MapType.Ship].xRatios[index], 5);

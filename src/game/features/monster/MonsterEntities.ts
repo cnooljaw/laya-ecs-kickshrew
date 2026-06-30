@@ -1,4 +1,5 @@
 import { defineEntity } from "../../../framework/ecs/EntityDefinition";
+import { BoardPositionComponent } from "../board/index";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponents";
 import type { MonsterType } from "./MonsterTypes";
 
@@ -12,7 +13,7 @@ export interface MonsterEntityInput {
 
 export const MonsterEntity = defineEntity<MonsterEntityInput>({
   name: "monster",
-  components: [MonsterComponent],
+  components: [MonsterComponent, BoardPositionComponent],
   cardinality: "many",
   initialize: (eid, input) => {
     MonsterComponent.monsterType[eid] = input.monsterType;
@@ -23,6 +24,16 @@ export const MonsterEntity = defineEntity<MonsterEntityInput>({
     MonsterComponent.ageSec[eid] = 0;
     MonsterComponent.durationSec[eid] = input.durationSec;
     MonsterComponent.spawnSeq[eid] = 0;
+    MonsterComponent.holeA[eid] = -1;
+    MonsterComponent.holeB[eid] = -1;
+    MonsterComponent.holeC[eid] = -1;
+    MonsterComponent.hp[eid] = 0;
+    MonsterComponent.hitSeq[eid] = 0;
+    MonsterComponent.defeatedSeq[eid] = 0;
+    MonsterComponent.reward[eid] = 30;
+    BoardPositionComponent.xRatio[eid] = 0;
+    BoardPositionComponent.yRatio[eid] = 0;
+    BoardPositionComponent.zIndex[eid] = 0;
   },
 });
 

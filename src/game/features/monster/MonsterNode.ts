@@ -2,6 +2,7 @@ import { destroyNode } from "../../../framework/view/LayaLifecycle";
 import { loadSpineTemplate } from "../../../framework/view/LayaLoader";
 import { getLaya } from "../../../framework/view/LayaRuntime";
 import { createSkeleton } from "../../../framework/view/LayaSpine";
+import { DESIGN_RESOLUTION } from "../../../config/GameTuning";
 import { MonsterType } from "./MonsterTypes";
 import { MONSTER_VIEW_CONFIG } from "./MonsterViewConfig";
 import type { IMonsterNode } from "./IMonsterNode";
@@ -43,21 +44,35 @@ export class MonsterNode implements IMonsterNode {
   }
 
   spawn(monsterType: number, spawnSeq: number): void {
-    if (!this._container || spawnSeq === this._lastSpawnSeq) return;
+    if (!this._container || spawnSeq <= 0 || spawnSeq === this._lastSpawnSeq) return;
     this._lastSpawnSeq = spawnSeq;
     this._loadAndPlay({ monsterType, skUrl: this._resolveSkUrl(monsterType), spawnSeq });
   }
 
+  playHit(_hitSeq: number): void {
+    if (_hitSeq <= 0) return;
+    this._skeleton?.play?.(0, true);
+  }
+
+  playDefeated(_defeatedSeq: number): void {
+    if (_defeatedSeq <= 0) return;
+    this._skeleton?.play?.(0, false);
+  }
+
   setPosition(x: number, y: number): void {
     if (!this._container) return;
-    this._container.x = x;
-    this._container.y = y;
+    this._container.x = x * DESIGN_RESOLUTION.width;
+    this._container.y = y * DESIGN_RESOLUTION.height;
   }
 
   setScale(scale: number): void {
     if (!this._container) return;
     this._container.scaleX = scale;
     this._container.scaleY = scale;
+  }
+
+  setZOrder(z: number): void {
+    if (this._container) this._container.zOrder = z;
   }
 
   setVisible(visible: boolean): void {

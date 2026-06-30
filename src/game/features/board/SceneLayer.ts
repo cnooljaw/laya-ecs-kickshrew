@@ -23,7 +23,7 @@ import { loadResource } from "../../../framework/view/LayaLoader";
 import { getLaya } from "../../../framework/view/LayaRuntime";
 import { getAtlasPath, getFrameTexture } from "../../../resource/AtlasConfig";
 import type { ISceneLayer } from "./ISceneLayer";
-import { MapType } from "./ShrewTypes";
+import { MapType } from "./BoardTypes";
 
 /** 地图类型 → 背景 atlas 逻辑名 */
 const MAP_BG_ATLAS: Record<number, string> = {

@@ -1,9 +1,14 @@
 import { defineQuery } from "bitecs";
+import {
+  createBoardRuntimeFromWorld,
+  type BoardRuntime,
+} from "../board/index";
 import { PlayerComponent } from "../playerHud/index";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponents";
 import { spawnMonster } from "./MonsterPool";
 import { MONSTER_SPAWN_RULES, type MonsterSpawnRule } from "./MonsterRules";
 import { MonsterType } from "./MonsterTypes";
+import { MONSTER_HOLE_TRIADS, type MonsterHoleTriad } from "./MonsterHoleTriads";
 
 const playerQuery = defineQuery([PlayerComponent]);
 const monsterQuery = defineQuery([MonsterComponent]);
@@ -29,9 +34,14 @@ export function monsterSpawnSystem(
     MonsterSpawnComponent.lastMilestone[state] = milestone;
     if (activeCount(world, rule.monsterType) >= rule.maxActiveCount) continue;
 
+    const board = createBoardRuntimeFromWorld(world);
+    if (!board) continue;
+    const triad = findAvailableTriad(board);
+    if (!triad) continue;
+
     const eid = findInactiveMonster(world, rule.monsterType);
     if (eid <= 0) continue;
-    spawnMonster(eid, rule.monsterType);
+    spawnMonster(eid, rule.monsterType, triad, board);
   }
 }
 
@@ -46,8 +56,20 @@ export function monsterLifetimeSystem(world: any, deltaSec: number): void {
     MonsterComponent.ageSec[eid] = nextAge;
     if (nextAge >= duration) {
       MonsterComponent.visible[eid] = 0;
+      releaseMonsterTriad(world, eid);
     }
   }
+}
+
+export function releaseMonsterTriad(world: any, monsterEid: number): void {
+  const board = createBoardRuntimeFromWorld(world);
+  if (!board) return;
+  const triad = getMonsterTriad(monsterEid);
+  if (!triad) return;
+  board.releaseTriad(triad);
+  MonsterComponent.holeA[monsterEid] = -1;
+  MonsterComponent.holeB[monsterEid] = -1;
+  MonsterComponent.holeC[monsterEid] = -1;
 }
 
 function currentMilestone(player: number, rule: MonsterSpawnRule): number {
@@ -77,4 +99,20 @@ function findInactiveMonster(world: any, monsterType: MonsterType): number {
     }
   }
   return 0;
+}
+
+function findAvailableTriad(board: BoardRuntime): MonsterHoleTriad | undefined {
+  for (const triad of MONSTER_HOLE_TRIADS) {
+    if (board.canOccupyTriad(triad)) return triad;
+  }
+  return undefined;
+}
+
+function getMonsterTriad(monsterEid: number): MonsterHoleTriad | undefined {
+  const triad: MonsterHoleTriad = [
+    MonsterComponent.holeA[monsterEid],
+    MonsterComponent.holeB[monsterEid],
+    MonsterComponent.holeC[monsterEid],
+  ];
+  return triad.every(index => index >= 0) ? triad : undefined;
 }

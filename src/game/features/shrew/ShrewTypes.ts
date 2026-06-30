@@ -13,14 +13,6 @@ export const enum ShrewAction {
   Dizzy = 5,
 }
 
-export const enum MapType {
-  None = 1,
-  Meadow = 2,
-  Ship = 3,
-  Space = 4,
-  Max = 5,
-}
-
 export const enum ZOrder {
   hand = 0,
   ear = 1,
@@ -55,5 +47,4 @@ export const enum AnimType {
   TreasureBox = 9,
 }
 
-export const HOLE_COUNT = 9;
-export const GRID_SIZE = 3;
+export { GRID_SIZE, HOLE_COUNT, MapType } from "../board/index";

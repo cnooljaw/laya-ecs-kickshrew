@@ -18,7 +18,7 @@ import {
   ShrewAction,
   ShrewComponent,
 } from "../features/shrew/index";
-import { detectKickHit } from "./KickHitDetection";
+import { detectKickHit, KickHitTargetKind } from "./KickHitDetection";
 
 export const KICK_INPUT_SOUNDS = {
   hitOne:  "resources/sound/sound_shrew/Hit_One.wav",
@@ -68,7 +68,15 @@ export class KickInputController {
     const result = detectKickHit(world, xRatio, yRatio);
     recordHammerFeedback(hammerEid, x, y);
 
-    if (result.bKickShrew === 1) {
+    if (result.targetKind === KickHitTargetKind.Monster) {
+      traceLogger.log("monster.hit", {
+        hitMonsterEid: result.hitMonsterEid,
+      });
+      playSound(KICK_INPUT_SOUNDS.hitOne);
+      return;
+    }
+
+    if (result.targetKind === KickHitTargetKind.Shrew) {
       const actionState = ShrewComponent.actionState[result.hitShrewEid];
       const animType = AnimationComponent.animType[result.hitShrewEid];
       traceLogger.log("hit.detected", {

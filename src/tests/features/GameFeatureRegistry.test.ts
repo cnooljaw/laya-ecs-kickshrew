@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { MONSTER_SPAWN_RULES } from "../../game/features/monster";
-import { HoleComponent, SceneComponent } from "../../game/features/shrew";
-import { HoleEntity, SceneEntity, ShrewEntity } from "../../game/features/shrew";
+import {
+  BoardFeature,
+  BoardRuntime,
+  BoardCapability,
+  HoleComponent,
+  HoleEntity,
+  HoleProjection,
+  SceneComponent,
+  SceneEntity,
+  SceneProjection,
+  setupBoard,
+} from "../../game/features/board";
+import { ShrewEntity } from "../../game/features/shrew";
 import { HammerEntity } from "../../game/features/hammer";
 import { PlayerEntity } from "../../game/features/playerHud";
 import { MonsterEntity, MonsterTriggerEntity } from "../../game/features/monster";
@@ -17,14 +28,18 @@ import {
 } from "../../framework/feature/FeatureManifest";
 import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../game/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../framework/feature/FeatureRegistry";
-import type { FeatureSetupContext } from "../../framework/feature/FeatureSetupContext";
+import {
+  defineCapability,
+  type FeatureCapability,
+  type FeatureSetupContext,
+} from "../../framework/feature/FeatureSetupContext";
 import {
   defineProjection,
   noProjection,
   projectionSource,
   watch,
 } from "../../framework/sync/ProjectionDefinition";
-import { HoleProjection, SceneProjection, ShrewProjection } from "../../game/features/shrew";
+import { ShrewProjection } from "../../game/features/shrew";
 import { HammerProjection } from "../../game/features/hammer";
 import { PlayerProjection } from "../../game/features/playerHud";
 import { MonsterProjection } from "../../game/features/monster";
@@ -53,6 +68,7 @@ function feature(name: string): FeatureManifest {
 
 function createSetupContext(entities: ReturnType<typeof createEntityRuntime>) {
   const mounts = new Map<string, number>();
+  const capabilities = new Map<FeatureCapability<any>, any>();
   let resources = 0;
   const context: FeatureSetupContext = {
     entities,
@@ -84,6 +100,15 @@ function createSetupContext(entities: ReturnType<typeof createEntityRuntime>) {
         return create(eid, index);
       });
     },
+    provide: (capability, value) => {
+      capabilities.set(capability, value);
+    },
+    use: capability => {
+      if (!capabilities.has(capability)) {
+        throw new Error(`Feature capability is not provided: ${capability.name}`);
+      }
+      return capabilities.get(capability);
+    },
     own: <T extends { destroy(): void }>(resource: T) => {
       resources++;
       return resource;
@@ -97,6 +122,17 @@ function createSetupContext(entities: ReturnType<typeof createEntityRuntime>) {
 }
 
 describe("GameFeatureRegistry", () => {
+  it("shares typed setup capabilities between features", () => {
+    const TestCapability = defineCapability<{ value: number }>("test.capability");
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, []);
+    const setup = createSetupContext(entities);
+
+    setup.context.provide(TestCapability, { value: 7 });
+
+    expect(setup.context.use(TestCapability).value).toBe(7);
+  });
+
   it("expands entities, projections and phased systems", () => {
     function updateState(): void {}
     function updateFeature(): void {}
@@ -119,10 +155,15 @@ describe("GameFeatureRegistry", () => {
   });
 
   it("keeps real feature contribution order stable", () => {
+    expect(GAME_FEATURES.map(feature => feature.name).slice(0, 2)).toEqual([
+      "board",
+      "shrew",
+    ]);
     expect(GAME_FEATURE_REGISTRY.systemsByPhase("state").map(item => item.name)).toEqual([
+      "board.mapCycle",
+      "shrew.boardSync",
       "shrew.animationTimer",
       "shrew.state",
-      "shrew.mapCycle",
       "hammer.state",
       "session.hammerThunder",
     ]);
@@ -153,11 +194,14 @@ describe("GameFeatureRegistry", () => {
     entities.bootstrapSingletons();
     const { context } = createSetupContext(entities);
 
+    const boardResult = setupBoard(context);
     const result = setupCoreGameplay(context);
 
-    expect(result.holes).toHaveLength(9);
+    expect(boardResult.holes).toHaveLength(9);
     expect(result.shrews).toHaveLength(9);
-    expect(result.holes.map(eid => HoleComponent.shrewEid[eid])).toEqual(result.shrews);
+    expect(context.use(BoardCapability)).toBeInstanceOf(BoardRuntime);
+    expect(boardResult.holes.map(eid => HoleComponent.residentEid[eid])).toEqual(result.shrews);
+    expect(boardResult.holes.map(eid => HoleComponent.occupantEid[eid])).toEqual(result.shrews);
   });
 
   it("mounts singleton entity views through setup context capability", () => {
@@ -255,6 +299,7 @@ describe("GameFeatureRegistry", () => {
   });
 
   it("validates the real feature table", () => {
+    expect(GAME_FEATURES).toContain(BoardFeature);
     expect(() => validateGameFeatures(GAME_FEATURES)).not.toThrow();
   });
 });

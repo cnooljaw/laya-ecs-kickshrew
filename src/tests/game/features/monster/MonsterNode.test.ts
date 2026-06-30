@@ -77,4 +77,25 @@ describe("MonsterNode", () => {
     expect(skeletons).toHaveLength(1);
     expect(skeletons[0].playCalls).toBe(1);
   });
+
+  it("spawnSeq 为 0 的初始同步不加载 Spine", async () => {
+    const load = vi.fn();
+    vi.stubGlobal("window", {
+      Laya: {
+        Sprite: FakeSprite,
+        Skeleton: FakeSkeleton,
+        loader: { load },
+      },
+    });
+
+    const node = new MonsterNode({
+      resolveSkUrl: () => "resources/monster/rhino.sk",
+    });
+    node.create(new FakeSprite());
+
+    node.spawn(1, 0);
+    await flushPromises();
+
+    expect(load).not.toHaveBeenCalled();
+  });
 });

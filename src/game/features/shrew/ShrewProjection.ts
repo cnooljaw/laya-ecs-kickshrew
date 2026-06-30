@@ -5,21 +5,17 @@ import {
   projectionSource,
   watch,
 } from "../../../framework/sync/ProjectionDefinition";
-import type { IHoleNode } from "./IHoleNode";
-import type { ISceneLayer } from "./ISceneLayer";
 import {
   AnimationComponent,
-  HoleComponent,
-  SceneComponent,
+  BoardPositionComponent,
   ShrewComponent,
 } from "./ShrewComponents";
 import { AnimType, ShrewAction } from "./ShrewTypes";
 import type { IShrewNode } from "./IShrewNode";
 
-const sceneSource = projectionSource("scene", SceneComponent);
-const holeSource = projectionSource("hole", HoleComponent);
 const shrewSource = projectionSource("shrew", ShrewComponent);
 const animationSource = projectionSource("animation", AnimationComponent);
+const boardPositionSource = projectionSource("boardPosition", BoardPositionComponent);
 
 function applyShrewSprite({ eid, node }: { eid: number; node: IShrewNode }): void {
   node.setSpriteFrame(ShrewComponent.shrewType[eid], ShrewComponent.mapType[eid]);
@@ -44,41 +40,18 @@ function applyShrewAnimation({ eid, node }: { eid: number; node: IShrewNode }): 
   );
 }
 
-export const SceneProjection = defineProjection<ISceneLayer>({
-  name: "scene",
-  components: [SceneComponent],
-  rows: [
-    watch(sceneSource, ["currentMap"], "current map", ({ eid, node }) => {
-      node.switchScene(SceneComponent.currentMap[eid]);
-    }),
-    watch(sceneSource, ["sceneTimer"], "scene timer", noProjection),
-    watch(sceneSource, ["transitioning"], "scene transition", ({ eid, node }) => {
-      node.setTransitioning(SceneComponent.transitioning[eid] === 1);
-    }),
-  ],
-});
-
-export const HoleProjection = defineProjection<IHoleNode>({
-  name: "hole",
-  components: [HoleComponent],
-  rows: [
-    watch(holeSource, ["posXRatio", "posYRatio"], "hole position", ({ eid, node }) => {
-      node.setPosition(HoleComponent.posXRatio[eid], HoleComponent.posYRatio[eid]);
-    }),
-    watch(holeSource, ["shrewEid"], "hole occupant", ({ eid, node }) => {
-      node.setShrewVisible(HoleComponent.shrewEid[eid]);
-    }),
-    watch(holeSource, ["zIndex"], "hole z-order", ({ eid, node }) => {
-      node.setZOrder(HoleComponent.zIndex[eid]);
-    }),
-  ],
-});
-
 export const ShrewProjection = defineProjection<IShrewNode>({
   name: "shrew",
-  components: [ShrewComponent, AnimationComponent],
+  components: [ShrewComponent, AnimationComponent, BoardPositionComponent],
   rows: [
+    watch(boardPositionSource, ["xRatio", "yRatio"], "shrew board position", ({ eid, node }) => {
+      node.setPosition(BoardPositionComponent.xRatio[eid], BoardPositionComponent.yRatio[eid]);
+    }),
+    watch(boardPositionSource, ["zIndex"], "shrew board z-order", ({ eid, node }) => {
+      node.setZOrder(BoardPositionComponent.zIndex[eid]);
+    }),
     watch(shrewSource, ["shrewType"], "shrew type", applyShrewSprite),
+    watch(shrewSource, ["holeIndex"], "shrew hole index", noProjection),
     watch(shrewSource, ["hp"], "shrew hp", noProjection),
     watch(shrewSource, ["actionState"], "shrew action", applyShrewAnimation),
     watch(shrewSource, ["hasHat"], "shrew hat", ({ eid, node }) => {

@@ -12,6 +12,14 @@ import type {
   MountSingletonOptions,
 } from "./ViewMounting";
 
+export interface FeatureCapability<T> {
+  readonly name: string;
+}
+
+export function defineCapability<T>(name: string): FeatureCapability<T> {
+  return { name };
+}
+
 export interface FeatureSetupContext {
   readonly entities: EntityRuntime;
   readonly effects: Pick<EffectRuntime, "on" | "emit">;
@@ -22,6 +30,8 @@ export interface FeatureSetupContext {
   createAndMountMany<TInput, TNode extends MountableView>(
     options: CreateAndMountManyOptions<TInput, TNode>,
   ): TNode[];
+  provide<T>(capability: FeatureCapability<T>, value: T): void;
+  use<T>(capability: FeatureCapability<T>): T;
   own<TResource extends Destroyable>(resource: TResource): TResource;
 }
 
@@ -36,6 +46,8 @@ interface FeatureSetupContextDeps {
 export function createFeatureSetupContext(
   deps: FeatureSetupContextDeps,
 ): FeatureSetupContext {
+  const capabilities = new Map<FeatureCapability<any>, any>();
+
   function mountOne<TNode extends MountableView>(
     options: MountOneOptions<TNode>,
   ): TNode {
@@ -85,6 +97,15 @@ export function createFeatureSetupContext(
         parent: options.parent,
         create: options.create,
       });
+    },
+    provide: (capability, value) => {
+      capabilities.set(capability, value);
+    },
+    use: capability => {
+      if (!capabilities.has(capability)) {
+        throw new Error(`Feature capability is not provided: ${capability.name}`);
+      }
+      return capabilities.get(capability);
     },
     own: resource => deps.viewRegistry.own(resource),
   };

@@ -1,4 +1,4 @@
-import { MapType } from "./ShrewTypes";
+import { MapType } from "./BoardTypes";
 
 /**
  * 洞位比例坐标（Laya 屏幕空间，960x640），表示地鼠出洞的视觉锚点。

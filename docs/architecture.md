@@ -89,15 +89,17 @@ defineFeature({
 常见固定输入池优先使用 `ctx.createAndMountMany({ entity, inputs, projection, create })`。
 父子拓扑、规则校验、trigger 创建和跨实体关系仍应在 Feature setup 中显式表达。
 
-`ShrewFeature` 显式保留业务拓扑：
+`BoardFeature` 拥有基础棋盘拓扑：
 
 1. mount Scene。
 2. 创建 9 个 Hole。
-3. 每个 Hole 创建一个 Shrew。
-4. 写入 `HoleComponent.shrewEid`。
-5. ShrewNode 以 HoleNode container 为 parent。
+3. 维护地图轮换、洞位坐标、洞位 zOrder。
+4. 维护 `residentKind/residentEid` 和 `occupantKind/occupantEid`。
+5. provide `BoardCapability`，供其他 Feature 通过受控 API 绑定或占用洞位。
 
-这个关系是玩法事实，不进入通用 EntityRuntime helper。
+`ShrewFeature` 只创建 Shrew，并通过 `board.bindResident(index, BoardOccupantKind.Shrew, shrewEid)` 建立 1:1 默认住户关系。`ShrewNode` 挂在 root，由 `BoardPositionComponent` 投影自己的位置和 zOrder。
+
+`MonsterFeature` 使用固定实体池。金币跨过 100 倍数时从 board 查找空闲三角形洞位，占用 3 个 Hole，并把 Monster 放在三角形中心。没有可用三角形时跳过本次刷怪，不挤掉已有 Shrew 或 Monster。
 
 ## 启动和主循环
 
@@ -130,8 +132,11 @@ effectRuntime.flush
 ```text
 Main -> GameScene -> KickInputController
   -> detectKickHit
-  -> NetworkAdapter.sendKick
+  -> Shrew: NetworkAdapter.sendKick
+  -> Monster: local hp/reward/triad release
 ```
+
+命中检测不以 Hole 作为唯一目标入口。Hammer 点击位置会和当前可命中的 Shrew、Monster 的 `BoardPositionComponent` 中心比较，选择半径内最近目标。Hole 只负责表达当前 occupant；当 Monster 占用三洞时，这三个洞的 Shrew 自然不参与候选。
 
 回包：
 
@@ -182,5 +187,5 @@ deleteWorld
 - 业务切片文件使用业务归属名：`MapCycleSystem`、`HammerThunderSystem`、`PerfRuntimeConfig`。跨 Feature 编排放在 `game/session`，不要伪装成某个 Feature 的内部 system。
 - 只有进入 frame pipeline 的函数使用 `System` 后缀。一次输入、回包或判断动作使用动词名，例如 `detectKickHit`、`handleKickResponse`、`applyKickResponse`。
 - Laya 节点接口使用 `I*Node`；HUD 这类稳定缩写保持全大写，例如 `PlayerHUDFeature`、`PlayerHUDViewConfig`。
-- 系统注册名和文件/函数语义保持一致，例如 `shrew.mapCycle`、`session.hammerThunder`。不要让测试快照继续保留旧概念。
+- 系统注册名和文件/函数语义保持一致，例如 `board.mapCycle`、`session.hammerThunder`。不要让测试快照继续保留旧概念。
 - 测试放在被保护边界旁边：框架机制放 `src/tests/ecs`、`src/tests/sync`、`src/tests/features`；业务规则放 `src/tests/game/features/<name>`；输入和回包放 `src/tests/game/session`。

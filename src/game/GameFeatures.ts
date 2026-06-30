@@ -1,3 +1,4 @@
+import { BoardFeature } from "./features/board";
 import { ShrewFeature } from "./features/shrew";
 import type { FeatureManifest } from "../framework/feature/FeatureManifest";
 import { createGameFeatureRegistry } from "../framework/feature/FeatureRegistry";
@@ -8,6 +9,7 @@ import { PlayerHUDFeature } from "./features/playerHud";
 import { SessionFeature } from "./session";
 
 export const GAME_FEATURES: readonly FeatureManifest[] = [
+  BoardFeature,
   ShrewFeature,
   HammerFeature,
   PlayerHUDFeature,

@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import { createGameWorld } from "../../../framework/ecs/GameWorld";
 import { createSingletonEntities } from "../../helpers/SingletonTestEntities";
 import { createHoleEntities, createShrewEntity } from "../../helpers/CoreTestEntities";
+import { createEntityRuntime } from "../../../framework/ecs/EntityRuntime";
 import { HammerComponent } from "../../../game/features/hammer";
-import { HoleComponent, ShrewComponent } from "../../../game/features/shrew";
-import { MapType, ShrewAction, ShrewType } from "../../../game/features/shrew";
+import { BoardOccupantKind, BoardPositionComponent, HoleComponent, MapType } from "../../../game/features/board";
+import { ShrewAction, ShrewComponent, ShrewType } from "../../../game/features/shrew";
+import { MonsterComponent, MonsterEntity, MonsterType } from "../../../game/features/monster";
+import { PlayerComponent } from "../../../game/features/playerHud";
 import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../../config/GameTuning";
 import { KickInputController, KICK_INPUT_SOUNDS } from "../../../game/session";
 import { HitMissEffect } from "../../../game/features/playerHud";
@@ -19,7 +22,7 @@ describe("KickInputController", () => {
     const playedSounds: string[] = [];
     const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
 
-    HoleComponent.shrewEid[holeEid] = shrewEid;
+    bindShrewToHole(holeEid, shrewEid);
     ShrewComponent.isClickable[shrewEid] = 1;
     HammerComponent.hitTable[singletons.hammer] = 1;
 
@@ -88,6 +91,69 @@ describe("KickInputController", () => {
     expect(effects).toEqual([[HitMissEffect, undefined]]);
   });
 
+  it("点中 Monster 时本地处理奖励且不发送地鼠 kick 请求", () => {
+    const world = createGameWorld();
+    const singletons = createSingletonEntities(world);
+    const holes = createHoleEntities(world, MapType.Meadow);
+    const monster = createEntityRuntime(world, [MonsterEntity]).create(MonsterEntity, {
+      monsterType: MonsterType.Rhino,
+      posX: 0,
+      posY: 0,
+      scale: 1,
+      durationSec: 10,
+    });
+    const sentRequests: any[] = [];
+    const playedSounds: string[] = [];
+    const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
+
+    MonsterComponent.visible[monster] = 1;
+    MonsterComponent.hp[monster] = 1;
+    MonsterComponent.reward[monster] = 30;
+    MonsterComponent.holeA[monster] = 0;
+    MonsterComponent.holeB[monster] = 1;
+    MonsterComponent.holeC[monster] = 3;
+    BoardPositionComponent.xRatio[monster] = (
+      HoleComponent.posXRatio[holes[0]]
+      + HoleComponent.posXRatio[holes[1]]
+      + HoleComponent.posXRatio[holes[3]]
+    ) / 3;
+    BoardPositionComponent.yRatio[monster] = (
+      HoleComponent.posYRatio[holes[0]]
+      + HoleComponent.posYRatio[holes[1]]
+      + HoleComponent.posYRatio[holes[3]]
+    ) / 3;
+    for (const index of [0, 1, 3]) {
+      HoleComponent.occupantKind[holes[index]] = BoardOccupantKind.Monster;
+      HoleComponent.occupantEid[holes[index]] = monster;
+    }
+    HammerComponent.hitTable[singletons.hammer] = 1;
+    PlayerComponent.money[singletons.player] = 100;
+
+    const adapter = new KickInputController({
+      world,
+      hammerEid: singletons.hammer,
+      network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
+      effects: { emit: () => {} },
+      playSound: url => playedSounds.push(url),
+      traceLogger: {
+        log: (event: string, payload: Record<string, unknown>) => traceEvents.push({ event, payload }),
+      },
+    });
+
+    adapter.handleTouch(
+      BoardPositionComponent.xRatio[monster] * DESIGN_RESOLUTION.width,
+      BoardPositionComponent.yRatio[monster] * DESIGN_RESOLUTION.height,
+    );
+
+    expect(sentRequests).toHaveLength(0);
+    expect(playedSounds).toEqual([KICK_INPUT_SOUNDS.hitOne]);
+    expect(PlayerComponent.money[singletons.player]).toBe(130);
+    expect(traceEvents.map(entry => entry.event)).toEqual([
+      "input.touch",
+      "monster.hit",
+    ]);
+  });
+
   it("锤子冷却中时记录 blocked 而不是 miss", () => {
     const world = createGameWorld();
     const singletons = createSingletonEntities(world);
@@ -126,7 +192,7 @@ describe("KickInputController", () => {
     const shrewEid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
     const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
 
-    HoleComponent.shrewEid[holeEid] = shrewEid;
+    bindShrewToHole(holeEid, shrewEid);
     ShrewComponent.isClickable[shrewEid] = 1;
 
     const adapter = new KickInputController({
@@ -158,3 +224,14 @@ describe("KickInputController", () => {
     });
   });
 });
+
+function bindShrewToHole(holeEid: number, shrewEid: number): void {
+  ShrewComponent.holeIndex[shrewEid] = HoleComponent.index[holeEid];
+  HoleComponent.residentKind[holeEid] = BoardOccupantKind.Shrew;
+  HoleComponent.residentEid[holeEid] = shrewEid;
+  HoleComponent.occupantKind[holeEid] = BoardOccupantKind.Shrew;
+  HoleComponent.occupantEid[holeEid] = shrewEid;
+  BoardPositionComponent.xRatio[shrewEid] = HoleComponent.posXRatio[holeEid];
+  BoardPositionComponent.yRatio[shrewEid] = HoleComponent.posYRatio[holeEid];
+  BoardPositionComponent.zIndex[shrewEid] = HoleComponent.zIndex[holeEid];
+}

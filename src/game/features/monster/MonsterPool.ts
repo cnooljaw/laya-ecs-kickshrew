@@ -1,4 +1,9 @@
 import type { EntityRuntime } from "../../../framework/ecs/EntityRuntime";
+import {
+  BoardOccupantKind,
+  BoardPositionComponent,
+  type BoardRuntime,
+} from "../board/index";
 import { MonsterComponent } from "./MonsterComponents";
 import {
   MonsterEntity,
@@ -8,6 +13,7 @@ import {
 import type { MonsterSpawnRule } from "./MonsterRules";
 import type { MonsterViewConfig } from "./MonsterViewConfig";
 import type { MonsterType } from "./MonsterTypes";
+import { getMonsterTriadCenter, type MonsterHoleTriad } from "./MonsterHoleTriads";
 
 export function createMonsterTriggerEntities(
   entities: EntityRuntime,
@@ -47,9 +53,25 @@ export function createMonsterPoolInputs(
   return inputs;
 }
 
-export function spawnMonster(eid: number, monsterType: MonsterType): void {
+export function spawnMonster(
+  eid: number,
+  monsterType: MonsterType,
+  triad: MonsterHoleTriad,
+  board: BoardRuntime,
+): void {
+  const center = getMonsterTriadCenter(triad, board);
   MonsterComponent.monsterType[eid] = monsterType;
   MonsterComponent.visible[eid] = 1;
   MonsterComponent.ageSec[eid] = 0;
+  MonsterComponent.holeA[eid] = triad[0];
+  MonsterComponent.holeB[eid] = triad[1];
+  MonsterComponent.holeC[eid] = triad[2];
+  MonsterComponent.hp[eid] = 3;
+  MonsterComponent.hitSeq[eid] = 0;
+  MonsterComponent.reward[eid] = 30;
+  BoardPositionComponent.xRatio[eid] = center.xRatio;
+  BoardPositionComponent.yRatio[eid] = center.yRatio;
+  BoardPositionComponent.zIndex[eid] = 80;
+  board.occupyTriad(triad, BoardOccupantKind.Monster, eid);
   MonsterComponent.spawnSeq[eid] += 1;
 }

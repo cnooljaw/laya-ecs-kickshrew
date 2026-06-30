@@ -1,4 +1,4 @@
-import { SceneEntity } from "../../game/features/shrew";
+import { SceneEntity } from "../../game/features/board";
 import { HammerEntity } from "../../game/features/hammer";
 import { PlayerEntity } from "../../game/features/playerHud";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";

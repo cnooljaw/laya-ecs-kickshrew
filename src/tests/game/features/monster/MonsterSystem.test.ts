@@ -7,6 +7,14 @@ import { MonsterType } from "../../../../game/features/monster/MonsterTypes";
 import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../../game/features/monster/MonsterSystems";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 import {
+  BoardOccupantKind,
+  BoardPositionComponent,
+  BoardRuntime,
+  HoleComponent,
+  HoleEntity,
+  MapType,
+} from "../../../../game/features/board";
+import {
   MonsterEntity,
   MonsterTriggerEntity,
   type MonsterEntityInput,
@@ -29,6 +37,15 @@ describe("MonsterSystem", () => {
 
   function createMonsterRuntime(world: any) {
     return createEntityRuntime(world, [MonsterEntity, MonsterTriggerEntity]);
+  }
+
+  function createBoard(world: any, scene: number): BoardRuntime {
+    const runtime = createEntityRuntime(world, [HoleEntity]);
+    const holes = runtime.createMany(
+      HoleEntity,
+      Array.from({ length: 9 }, (_, index) => ({ index, mapType: MapType.Meadow })),
+    );
+    return new BoardRuntime(scene, holes);
   }
 
   it("为每条规则创建独立 tracker，不受四槽字段限制", () => {
@@ -55,7 +72,8 @@ describe("MonsterSystem", () => {
 
   it("玩家金币跨过 100 倍数时生成一次 Rhino，重复帧不重复生成", () => {
     const world = createGameWorld();
-    const { player } = createSingletonEntities(world);
+    const { player, scene } = createSingletonEntities(world);
+    const board = createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
     const monster = runtime.create(MonsterEntity, monsterInput());
@@ -73,6 +91,13 @@ describe("MonsterSystem", () => {
     expect(MonsterComponent.monsterType[monster]).toBe(MonsterType.Rhino);
     expect(MonsterComponent.durationSec[monster]).toBe(10);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
+    expect(MonsterComponent.hp[monster]).toBe(3);
+    expect([MonsterComponent.holeA[monster], MonsterComponent.holeB[monster], MonsterComponent.holeC[monster]])
+      .toEqual([0, 1, 3]);
+    expect(board.holes.slice(0, 2).map(hole => HoleComponent.occupantEid[hole])).toEqual([monster, monster]);
+    expect(HoleComponent.occupantEid[board.getHoleEid(3)]).toBe(monster);
+    expect(BoardPositionComponent.xRatio[monster]).toBeGreaterThan(0);
+    expect(BoardPositionComponent.yRatio[monster]).toBeGreaterThan(0);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
 
     monsterSpawnSystem(world);
@@ -101,7 +126,8 @@ describe("MonsterSystem", () => {
 
   it("一次跨过多个 100 倍数时默认只生成一次，并消费到最新里程碑", () => {
     const world = createGameWorld();
-    const { player } = createSingletonEntities(world);
+    const { player, scene } = createSingletonEntities(world);
+    createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
     const monster = runtime.create(MonsterEntity, monsterInput());
@@ -116,7 +142,8 @@ describe("MonsterSystem", () => {
 
   it("达到新 100 倍数时如果 Rhino 仍在场，则丢弃这次触发且隐藏后不补发", () => {
     const world = createGameWorld();
-    const { player } = createSingletonEntities(world);
+    const { player, scene } = createSingletonEntities(world);
+    createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
     const monster = runtime.create(MonsterEntity, monsterInput());
@@ -158,5 +185,29 @@ describe("MonsterSystem", () => {
       MonsterType.Rhino,
       MonsterType.Rhino,
     ]);
+  });
+
+  it("没有任何可用三角形时跳过本次刷怪且不挤掉现有占用", () => {
+    const world = createGameWorld();
+    const { player, scene } = createSingletonEntities(world);
+    const board = createBoard(world, scene);
+    const runtime = createMonsterRuntime(world);
+    const spawnState = runtime.create(MonsterTriggerEntity, 0);
+    const monster = runtime.create(MonsterEntity, monsterInput());
+
+    for (const hole of board.holes) {
+      HoleComponent.residentKind[hole] = BoardOccupantKind.Shrew;
+      HoleComponent.residentEid[hole] = 1000 + HoleComponent.index[hole];
+      HoleComponent.occupantKind[hole] = BoardOccupantKind.Monster;
+      HoleComponent.occupantEid[hole] = 999;
+    }
+    PlayerComponent.money[player] = 100;
+
+    monsterSpawnSystem(world);
+
+    expect(MonsterComponent.visible[monster]).toBe(0);
+    expect(MonsterComponent.spawnSeq[monster]).toBe(0);
+    expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
+    expect(board.holes.every(hole => HoleComponent.occupantEid[hole] === 999)).toBe(true);
   });
 });

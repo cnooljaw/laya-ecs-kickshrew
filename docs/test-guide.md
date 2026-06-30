@@ -37,7 +37,7 @@ npm test -- --run src/tests/effects
 
 ```bash
 npm test -- --run src/tests/game/features/shrew/ShrewStateSystem.test.ts
-npm test -- --run src/tests/game/features/shrew/ShrewAnimationTimerSystem.test.ts src/tests/game/features/shrew/MapCycleSystem.test.ts
+npm test -- --run src/tests/game/features/shrew/ShrewAnimationTimerSystem.test.ts src/tests/game/features/board/MapCycleSystem.test.ts
 npm test -- --run src/tests/game/session/KickHitDetection.test.ts src/tests/game/session/KickResponseHandler.test.ts
 npm test -- --run src/tests/game/features/monster
 npm test -- --run src/tests/game/features/perfHero
