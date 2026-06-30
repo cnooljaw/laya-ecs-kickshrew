@@ -8,7 +8,7 @@ import type {
   MountableView,
   MountOneOptions,
   MountPoolOptions,
-} from "./MountPrimitives";
+} from "./ViewMounting";
 
 export interface FeatureSetupContext {
   readonly entities: EntityRuntime;
@@ -19,7 +19,7 @@ export interface FeatureSetupContext {
   own<TResource extends Destroyable>(resource: TResource): TResource;
 }
 
-interface FeatureRuntimeContextDeps {
+interface FeatureSetupContextDeps {
   root: any;
   entityRuntime: EntityRuntime;
   projectionRuntime: ProjectionRuntime;
@@ -27,8 +27,8 @@ interface FeatureRuntimeContextDeps {
   effectRuntime: EffectRuntime;
 }
 
-export function createFeatureRuntimeContext(
-  deps: FeatureRuntimeContextDeps,
+export function createFeatureSetupContext(
+  deps: FeatureSetupContextDeps,
 ): FeatureSetupContext {
   function mountOne<TNode extends MountableView>(
     options: MountOneOptions<TNode>,

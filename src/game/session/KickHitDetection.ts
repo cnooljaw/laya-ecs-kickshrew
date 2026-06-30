@@ -1,5 +1,5 @@
 /**
- * HitDetectionSystem — 触摸碰撞检测系统
+ * KickHitDetection — 击打命中判定
  *
  * 职责:
  * 1. 检查锤子 hitTable 是否可用 (hitTable=1时可敲击)
@@ -7,7 +7,7 @@
  * 3. 击中时: hp-1, hasHat 处理(蓝鼠), 进入 Dizzy 短暂停留, isClickable=0
  * 4. 击中后设 hitTable=0 防止连点 (~0.24秒后由锤子动画系统恢复)
  *
- * 此系统由触摸事件异步触发，不在帧循环中。
+ * 此逻辑由触摸事件异步触发，不在帧循环中。
  */
 import { defineQuery } from "bitecs";
 import { HAMMER_RULES, HIT_DETECTION } from "../../config/GameTuning";
@@ -26,7 +26,7 @@ const holeQuery = defineQuery([HoleComponent]);
 const hammerQuery = defineQuery([HammerComponent]);
 
 /** 击中结果 */
-export interface HitResult {
+export interface KickHitResult {
   bKickShrew: number;     // 1=击中, 0=未中
   hitHoleIndex: number;   // 击中的洞位索引 (0~8), -1=无
   hitHoleEid: number;     // 击中的洞位 eid, -1=无
@@ -39,14 +39,14 @@ export interface HitResult {
 const HIT_RADIUS_RATIO = HIT_DETECTION.radiusRatio;
 
 /**
- * 触摸碰撞检测
+ * 击打命中判定
  * @param world ECS 世界
  * @param touchXRatio 触摸 X 比例 (0~1, 相对屏幕宽度)
  * @param touchYRatio 触摸 Y 比例 (0~1, 相对屏幕高度)
  * @returns 击中结果
  */
-export function hitDetectionSystem(world: any, touchXRatio: number, touchYRatio: number): HitResult {
-  const emptyResult: HitResult = {
+export function detectKickHit(world: any, touchXRatio: number, touchYRatio: number): KickHitResult {
+  const emptyResult: KickHitResult = {
     bKickShrew: 0,
     hitHoleIndex: -1,
     hitHoleEid: -1,

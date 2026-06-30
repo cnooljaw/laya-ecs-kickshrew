@@ -126,7 +126,7 @@ effectRuntime.flush
 
 ```text
 Main -> GameScene -> KickInputController
-  -> hitDetectionSystem
+  -> detectKickHit
   -> NetworkAdapter.sendKick
 ```
 
@@ -134,9 +134,9 @@ Main -> GameScene -> KickInputController
 
 ```text
 NetworkAdapter callback
-  -> KickResponseFlow
+  -> KickResponseHandler
   -> Player/Hammer public mutation helpers
-  -> ThunderSystem cross-feature orchestration
+  -> activateHammerThunderIfCharged cross-feature orchestration
   -> HitRewardEffect emit
   -> frame-end flush
   -> HitEffectNode

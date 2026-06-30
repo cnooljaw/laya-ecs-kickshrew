@@ -47,7 +47,7 @@ transient result
 4. `src/game/features/shrew/ShrewFeature.ts`：固定拓扑示例。
 5. `src/game/features/monster/MonsterFeature.ts`：固定池示例。
 6. `src/game/session/KickInputController.ts`：输入进入 ECS。
-7. `src/game/session/KickResponseFlow.ts`：回包进入 ECS 和 Effect。
+7. `src/game/session/KickResponseHandler.ts`：回包进入 ECS 和 Effect。
 
 ## 第一次改动
 

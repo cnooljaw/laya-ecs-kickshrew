@@ -27,8 +27,8 @@ export {
   setShrewTimingOverride,
   type ShrewTiming,
 } from "./ShrewRules";
-export { animationTimerSystem } from "./AnimationTimerSystem";
-export { sceneCycleSystem } from "./SceneCycleSystem";
+export { shrewAnimationTimerSystem } from "./ShrewAnimationTimerSystem";
+export { mapCycleSystem } from "./MapCycleSystem";
 export { shrewStateSystem } from "./ShrewStateSystem";
 export {
   AnimType,

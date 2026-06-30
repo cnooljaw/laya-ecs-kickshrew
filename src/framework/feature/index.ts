@@ -1,4 +1,4 @@
 export * from "./FeatureManifest";
 export * from "./FeatureRegistry";
-export * from "./FeatureRuntimeContext";
-export * from "./MountPrimitives";
+export * from "./FeatureSetupContext";
+export * from "./ViewMounting";

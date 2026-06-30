@@ -8,19 +8,19 @@
  * 4. 处理触摸事件
  * 5. 启动网络层
  */
-import { createGameWorld } from "../framework/ecs/World";
+import { createGameWorld } from "../framework/ecs/GameWorld";
 import { deleteWorld } from "bitecs";
 import { NetworkAdapter } from "../network/NetworkAdapter";
 import type { KickResponse } from "../network/ProtocolTypes";
 import { GameLoopPipeline } from "./GameLoopPipeline";
 import { ViewRegistry } from "../framework/view/ViewRegistry";
-import { getPerfShrewTiming, getPerfTestRuntimeConfig, PerfTestRuntimeConfig } from "../game/features/perfHero";
+import { getPerfShrewTiming, getPerfRuntimeConfig, PerfRuntimeConfig } from "../game/features/perfHero";
 import {
   resetShrewTimingOverride,
   setShrewTimingOverride,
 } from "../game/features/shrew";
 import { GAME_FEATURE_REGISTRY } from "../game/GameFeatures";
-import { createFeatureRuntimeContext } from "../framework/feature/FeatureRuntimeContext";
+import { createFeatureSetupContext } from "../framework/feature/FeatureSetupContext";
 import { createEntityRuntime, type EntityRuntime } from "../framework/ecs/EntityRuntime";
 import {
   createProjectionRuntime,
@@ -30,7 +30,7 @@ import { createEffectRuntime, type EffectRuntime } from "../framework/sync/Effec
 import {
   KickInputController,
   createKickInputController,
-  routeKickResponse,
+  handleKickResponse,
 } from "../game/session";
 
 /** 音效路径 */
@@ -42,7 +42,7 @@ export class GameScene {
   private _world: any = null;
   private _network: NetworkAdapter;
   private _viewRegistry: ViewRegistry;
-  private _perfConfig: PerfTestRuntimeConfig;
+  private _perfConfig: PerfRuntimeConfig;
   private _running: boolean = false;
   private _root: any = null;
   private _entityRuntime: EntityRuntime | null = null;
@@ -54,7 +54,7 @@ export class GameScene {
   constructor() {
     this._network = new NetworkAdapter();
     this._viewRegistry = new ViewRegistry();
-    this._perfConfig = getPerfTestRuntimeConfig();
+    this._perfConfig = getPerfRuntimeConfig();
   }
 
   /** 初始化游戏 */
@@ -86,7 +86,7 @@ export class GameScene {
       Laya.SoundManager.playMusic(SND.bg, 0);
     }
 
-    GAME_FEATURE_REGISTRY.setupAll(createFeatureRuntimeContext({
+    GAME_FEATURE_REGISTRY.setupAll(createFeatureSetupContext({
       root: this._root,
       viewRegistry: this._viewRegistry,
       entityRuntime: this._entityRuntime,
@@ -96,7 +96,7 @@ export class GameScene {
 
     // 3. 设置网络回调
     this._network.onResponse((resp: KickResponse) => {
-      routeKickResponse(this._world, this._effectRuntime!, resp);
+      handleKickResponse(this._world, this._effectRuntime!, resp);
     });
 
     this._loopPipeline = new GameLoopPipeline({

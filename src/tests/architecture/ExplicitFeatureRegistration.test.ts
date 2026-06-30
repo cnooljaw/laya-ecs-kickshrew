@@ -7,7 +7,7 @@ describe("feature registration", () => {
 
     expect(source).toContain("ShrewFeature");
     expect(source).toContain("HammerFeature");
-    expect(source).toContain("PlayerHudFeature");
+    expect(source).toContain("PlayerHUDFeature");
     expect(source).toContain("MonsterFeature");
     expect(source).toContain("PerfHeroFeature");
     expect(source).not.toMatch(/readdir|glob|import\.meta|require\.context/);

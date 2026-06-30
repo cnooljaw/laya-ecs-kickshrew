@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ShrewEntity } from "../../game/features/shrew";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { MapType, ShrewType } from "../../game/features/shrew";
-import { createGameWorld } from "../../framework/ecs/World";
+import { createGameWorld } from "../../framework/ecs/GameWorld";
 import type { IShrewNode } from "../../game/features/shrew";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import { ShrewProjection } from "../../game/features/shrew";

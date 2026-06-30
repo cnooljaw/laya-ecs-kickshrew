@@ -7,6 +7,6 @@ export { PERF_HERO_RESOURCES, PERF_HERO_VIEW_CONFIG } from "./PerfHeroViewConfig
 export { perfHeroSystem } from "./PerfHeroSystems";
 export {
   getPerfShrewTiming,
-  getPerfTestRuntimeConfig,
-  type PerfTestRuntimeConfig,
-} from "./PerfTestConfig";
+  getPerfRuntimeConfig,
+  type PerfRuntimeConfig,
+} from "./PerfRuntimeConfig";

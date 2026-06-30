@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getPerfTestRuntimeConfig } from "../../../../game/features/perfHero";
+import { getPerfRuntimeConfig } from "../../../../game/features/perfHero";
 
-describe("PerfTestConfig", () => {
+describe("PerfRuntimeConfig", () => {
   it("perf=1 默认启用地鼠加速和英雄 Spine 压测", () => {
-    expect(getPerfTestRuntimeConfig("?perf=1")).toEqual({
+    expect(getPerfRuntimeConfig("?perf=1")).toEqual({
       enabled: true,
       shrewFast: true,
       heroCount: 80,
@@ -11,7 +11,7 @@ describe("PerfTestConfig", () => {
   });
 
   it("heroes=0 允许只测试地鼠加速", () => {
-    expect(getPerfTestRuntimeConfig("?perf=1&heroes=0")).toEqual({
+    expect(getPerfRuntimeConfig("?perf=1&heroes=0")).toEqual({
       enabled: true,
       shrewFast: true,
       heroCount: 0,

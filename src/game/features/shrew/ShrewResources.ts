@@ -1,7 +1,7 @@
 import { ShrewType, MapType } from "./ShrewTypes";
 
 /** 地鼠资源映射 — shrewType+mapType → 各部件精灵帧名 */
-export interface ShrewResMap {
+export interface ShrewResourceSet {
   body: string;
   face: string;
   faceCry: string;
@@ -28,27 +28,27 @@ export interface ShrewResMap {
   rightEyeDizzy1?: string;
 }
 
-type ResMapKey = `${ShrewType}-${MapType}`;
-const resMap: Map<string, ShrewResMap> = new Map();
+type ShrewResourceKey = `${ShrewType}-${MapType}`;
+const shrewResources: Map<string, ShrewResourceSet> = new Map();
 
-function k(shrewType: ShrewType, mapType: MapType): ResMapKey {
-  return `${shrewType}-${mapType}` as ResMapKey;
+function k(shrewType: ShrewType, mapType: MapType): ShrewResourceKey {
+  return `${shrewType}-${mapType}` as ShrewResourceKey;
 }
 
 // 红色地鼠 — 各场景道具
-resMap.set(k(ShrewType.Red, MapType.Meadow), {
+shrewResources.set(k(ShrewType.Red, MapType.Meadow), {
   body: "red_body.png", face: "red_face_smile.png", faceCry: "red_face_cry.png",
   leftHand: "red_hand_left.png", rightHand: "red_hand_right.png",
   leftEar: "red_ear_left_up.png", rightEar: "red_ear_right_up.png",
   swelling: "red_swelling.png", prop: "red_prop_bean.png",
 });
-resMap.set(k(ShrewType.Red, MapType.Ship), {
+shrewResources.set(k(ShrewType.Red, MapType.Ship), {
   body: "red_body.png", face: "red_face_smile.png", faceCry: "red_face_cry.png",
   leftHand: "red_hand_left.png", rightHand: "red_hand_right.png",
   leftEar: "red_ear_left_up.png", rightEar: "red_ear_right_up1.png",
   swelling: "red_swelling.png", prop: "red_prop_Belt.png",
 });
-resMap.set(k(ShrewType.Red, MapType.Space), {
+shrewResources.set(k(ShrewType.Red, MapType.Space), {
   body: "red_body.png", face: "red_face_smile.png", faceCry: "red_face_cry.png",
   leftHand: "red_hand_left.png", rightHand: "red_hand_right.png",
   leftEar: "red_ear_left_up.png", rightEar: "red_ear_right_up.png",
@@ -56,7 +56,7 @@ resMap.set(k(ShrewType.Red, MapType.Space), {
 });
 
 // 蓝色地鼠(BOSS) — 各场景帽子
-resMap.set(k(ShrewType.Blue, MapType.Meadow), {
+shrewResources.set(k(ShrewType.Blue, MapType.Meadow), {
   body: "boss_body.png", face: "boss_face_smile.png", faceCry: "boss_face_miserable.png",
   faceAngry: "boss_face_angry.png",
   leftHand: "boss_hand_left_down.png", rightHand: "boss_hand_right_down.png",
@@ -67,7 +67,7 @@ resMap.set(k(ShrewType.Blue, MapType.Meadow), {
   handLeftUp: "boss_hand_left_up.png", handRightUp: "boss_hand_right_up.png",
   handLeftDizzy: "boss_hand_left_dizzy.png", handRightDizzy: "boss_hand_right_dizzy.png",
 });
-resMap.set(k(ShrewType.Blue, MapType.Ship), {
+shrewResources.set(k(ShrewType.Blue, MapType.Ship), {
   body: "boss_body.png", face: "boss_face_smile.png", faceCry: "boss_face_miserable.png",
   faceAngry: "boss_face_angry.png",
   leftHand: "boss_hand_left_down.png", rightHand: "boss_hand_right_down.png",
@@ -78,7 +78,7 @@ resMap.set(k(ShrewType.Blue, MapType.Ship), {
   handLeftUp: "boss_hand_left_up.png", handRightUp: "boss_hand_right_up.png",
   handLeftDizzy: "boss_hand_left_dizzy.png", handRightDizzy: "boss_hand_right_dizzy.png",
 });
-resMap.set(k(ShrewType.Blue, MapType.Space), {
+shrewResources.set(k(ShrewType.Blue, MapType.Space), {
   body: "boss_body.png", face: "boss_face_smile.png", faceCry: "boss_face_miserable.png",
   faceAngry: "boss_face_angry.png",
   leftHand: "boss_hand_left_down.png", rightHand: "boss_hand_right_down.png",
@@ -91,19 +91,19 @@ resMap.set(k(ShrewType.Blue, MapType.Space), {
 });
 
 // 黄色地鼠
-resMap.set(k(ShrewType.Yellow, MapType.Meadow), {
+shrewResources.set(k(ShrewType.Yellow, MapType.Meadow), {
   body: "yellow_body.png", face: "yellow_face_smile.png", faceCry: "yellow_face_cry.png",
   leftHand: "yellow_hand_left.png", rightHand: "yellow_hand_right.png",
   leftEar: "yellow_ear_left_up.png", rightEar: "yellow_ear_right_up.png",
   swelling: "yellow_swelling.png", prop: "Yellow_prop_bean.png",
 });
-resMap.set(k(ShrewType.Yellow, MapType.Ship), {
+shrewResources.set(k(ShrewType.Yellow, MapType.Ship), {
   body: "yellow_body.png", face: "yellow_face_smile.png", faceCry: "yellow_face_cry.png",
   leftHand: "yellow_hand_left.png", rightHand: "yellow_hand_right.png",
   leftEar: "yellow_ear_left_up.png", rightEar: "yellow_ear_right_up.png",
   swelling: "yellow_swelling.png", prop: "yellow_prop_one_eye.png",
 });
-resMap.set(k(ShrewType.Yellow, MapType.Space), {
+shrewResources.set(k(ShrewType.Yellow, MapType.Space), {
   body: "yellow_body.png", face: "yellow_face_smile.png", faceCry: "yellow_face_cry.png",
   leftHand: "yellow_hand_left.png", rightHand: "yellow_hand_right.png",
   leftEar: "yellow_ear_left_up.png", rightEar: "yellow_ear_right_up.png",
@@ -111,7 +111,7 @@ resMap.set(k(ShrewType.Yellow, MapType.Space), {
 });
 
 // 绿色地鼠
-resMap.set(k(ShrewType.Green, MapType.Meadow), {
+shrewResources.set(k(ShrewType.Green, MapType.Meadow), {
   body: "second_body.png", face: "second_face_smile.png", faceCry: "second_face_cry.png",
   leftHand: "second_hand_up_left.png", rightHand: "second_hand_up_right.png",
   leftEar: "second_ear_left.png", rightEar: "second_ear_right.png",
@@ -120,7 +120,7 @@ resMap.set(k(ShrewType.Green, MapType.Meadow), {
   leftEyeDizzy: "second_eye_right_dizzy.png", rightEyeDizzy: "second_eye_left_dizzy.png",
   leftEyeDizzy1: "second_eye_right_dizzy1.png", rightEyeDizzy1: "second_eye_left_dizzy1.png",
 });
-resMap.set(k(ShrewType.Green, MapType.Ship), {
+shrewResources.set(k(ShrewType.Green, MapType.Ship), {
   body: "second_body.png", face: "second_face_smile.png", faceCry: "second_face_cry.png",
   leftHand: "second_hand_up_left.png", rightHand: "second_hand_up_right.png",
   leftEar: "second_ear_left.png", rightEar: "second_ear_right.png",
@@ -129,7 +129,7 @@ resMap.set(k(ShrewType.Green, MapType.Ship), {
   leftEyeDizzy: "second_eye_right_dizzy.png", rightEyeDizzy: "second_eye_left_dizzy.png",
   leftEyeDizzy1: "second_eye_right_dizzy1.png", rightEyeDizzy1: "second_eye_left_dizzy1.png",
 });
-resMap.set(k(ShrewType.Green, MapType.Space), {
+shrewResources.set(k(ShrewType.Green, MapType.Space), {
   body: "second_body.png", face: "second_face_smile.png", faceCry: "second_face_cry.png",
   leftHand: "second_hand_up_left.png", rightHand: "second_hand_up_right.png",
   leftEar: "second_ear_left.png", rightEar: "second_ear_right.png",
@@ -139,6 +139,6 @@ resMap.set(k(ShrewType.Green, MapType.Space), {
   leftEyeDizzy1: "second_eye_right_dizzy1.png", rightEyeDizzy1: "second_eye_left_dizzy1.png",
 });
 
-export function getShrewRes(shrewType: ShrewType, mapType: MapType): ShrewResMap | undefined {
-  return resMap.get(k(shrewType, mapType));
+export function getShrewResources(shrewType: ShrewType, mapType: MapType): ShrewResourceSet | undefined {
+  return shrewResources.get(k(shrewType, mapType));
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PlayerComponent } from "../../game/features/playerHud";
 import { PlayerEntity } from "../../game/features/playerHud";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { createGameWorld } from "../../framework/ecs/World";
+import { createGameWorld } from "../../framework/ecs/GameWorld";
 import type { IPlayerHUD } from "../../game/features/playerHud/IPlayerHUD";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import { PlayerProjection } from "../../game/features/playerHud";

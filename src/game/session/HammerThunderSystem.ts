@@ -9,7 +9,7 @@ import { PlayerComponent } from "../features/playerHud/index";
 const hammerQuery = defineQuery([HammerComponent]);
 const playerQuery = defineQuery([PlayerComponent]);
 
-export function thunderSystem(world: any): void {
+export function activateHammerThunderIfCharged(world: any): void {
   const hammer = hammerQuery(world)[0];
   const player = playerQuery(world)[0];
   if (hammer === undefined || player === undefined) return;

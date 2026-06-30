@@ -3,7 +3,7 @@ import { PerfHeroEntity } from "./PerfHeroEntities";
 import { PerfHeroNode, PerfHeroSpinePoolGroup } from "./PerfHeroNode";
 import { PerfHeroProjection } from "./PerfHeroProjection";
 import { perfHeroSystem } from "./PerfHeroSystems";
-import { getPerfTestRuntimeConfig } from "./PerfTestConfig";
+import { getPerfRuntimeConfig } from "./PerfRuntimeConfig";
 
 export const PerfHeroFeature = defineFeature({
   name: "perfHero",
@@ -11,7 +11,7 @@ export const PerfHeroFeature = defineFeature({
   projections: [PerfHeroProjection],
   systems: [defineSystem("feature", "perfHero.state", perfHeroSystem)],
   setup: ({ entities, mountPool, own }) => {
-    const config = getPerfTestRuntimeConfig();
+    const config = getPerfRuntimeConfig();
     if (config.heroCount <= 0) return;
 
     const eids = entities.createMany(

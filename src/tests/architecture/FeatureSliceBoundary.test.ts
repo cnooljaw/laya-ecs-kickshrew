@@ -41,7 +41,7 @@ function featureName(path: string): string | undefined {
 
 describe("feature slice boundaries", () => {
   it("feature setup context does not expose the ECS world", () => {
-    const source = readFileSync("src/framework/feature/FeatureRuntimeContext.ts", "utf8");
+    const source = readFileSync("src/framework/feature/FeatureSetupContext.ts", "utf8");
 
     expect(source).not.toMatch(/\breadonly\s+world\b/);
     expect(source).not.toMatch(/\bworld\s*:/);

@@ -744,7 +744,7 @@ SpeedComponent.value[eid] = fast</pre>
   -> entityRuntime.bootstrapSingletons()
   -> createProjectionRuntime(registry.projections())
   -> createEffectRuntime()
-  -> registry.setupAll(createFeatureRuntimeContext(...))
+  -> registry.setupAll(createFeatureSetupContext(...))
   -> create GameLoopPipeline(...)
   -> projectionRuntime.mark(world)
   -> projectionRuntime.sync(world)</pre>
@@ -767,7 +767,7 @@ SpeedComponent.value[eid] = fast</pre>
           <pre class="code">export const GAME_FEATURES = [
   ShrewFeature,
   HammerFeature,
-  PlayerHudFeature,
+  PlayerHUDFeature,
   SessionFeature,
   PerfHeroFeature,
   MonsterFeature,
@@ -945,9 +945,9 @@ export const MonsterProjection = defineProjection&lt;IMonsterNode&gt;({
         <footer class="footer"><span>文件：framework/sync/ProjectionDefinition.ts、game/features/*/*Projection.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
-      <article class="slide" data-title="PlayerHud Projection Example">
+      <article class="slide" data-title="PlayerHUD Projection Example">
         <header>
-          <div class="kicker">PlayerHud Example</div>
+          <div class="kicker">PlayerHUD Example</div>
           <h2>例子：金币变化从回包到 HUD 的完整生命周期</h2>
           <p class="lead">服务端回包写入 <code>PlayerComponent.money</code> 后，不直接改 HUD。下一帧由 <code>mark</code> 比较快照并标 dirty，再由 <code>sync</code> 调用 <code>PlayerHUD.setMoney</code>。</p>
         </header>
@@ -983,7 +983,7 @@ PlayerComponent.money[playerEid] += response.money;</pre>
             </div>
           </div>
           <div class="diagram">
-            <svg viewBox="0 0 820 420" role="img" aria-label="PlayerHud Projection 例子">
+            <svg viewBox="0 0 820 420" role="img" aria-label="PlayerHUD Projection 例子">
               <defs><marker id="playerHudArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path></marker></defs>
               <rect x="32" y="42" width="150" height="64" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
               <text x="107" y="69" text-anchor="middle" font-size="14" font-weight="700" fill="#17385d">mountOne</text>
@@ -1016,7 +1016,7 @@ PlayerComponent.money[playerEid] += response.money;</pre>
             </svg>
           </div>
         </section>
-        <footer class="footer"><span>对应代码：game/session/KickResponseFlow.ts、game/features/playerHud/PlayerSystems.ts、PlayerProjection.ts、PlayerHUD.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
+        <footer class="footer"><span>对应代码：game/session/KickResponseHandler.ts、game/features/playerHud/PlayerSystems.ts、PlayerProjection.ts、PlayerHUD.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
       <article class="slide" data-title="Shrew Projection Example">
@@ -1091,12 +1091,12 @@ ShrewComponent.isClickable[eid] = 0;</pre>
         <section class="content split-wide">
           <pre class="code">const HitRewardEffect = defineEffect&lt;HitReward&gt;("hit.reward");
 
-// 订阅：PlayerHudFeature 关心奖励飘字
+// 订阅：PlayerHUDFeature 关心奖励飘字
 ctx.effects.on(HitRewardEffect, reward => {
   hitEffectNode.showReward(reward);
 });
 
-// 发布：KickResponseFlow 只发布事实
+// 发布：KickResponseHandler 只发布事实
 effects.emit(HitRewardEffect, reward);
 
 // 帧末：统一分发并清空 pending
@@ -1105,8 +1105,8 @@ pending = [];
 for (const effect of current) dispatch(effect);</pre>
           <div class="cards">
             <div class="mini accent-blue"><strong>定义主题</strong><p><code>EffectDefinition</code> 是订阅主题，用对象身份匹配，不靠全局字符串 EventBus。</p></div>
-            <div class="mini accent-green"><strong>订阅方</strong><p><code>PlayerHudFeature</code> 订阅 <code>HitRewardEffect</code>，只负责飘字、miss 提示、声音这类表现。</p></div>
-            <div class="mini accent-amber"><strong>发布方</strong><p><code>KickResponseFlow</code> 发布奖励事实，不 import HUD 节点，也不关心有几个订阅方。</p></div>
+            <div class="mini accent-green"><strong>订阅方</strong><p><code>PlayerHUDFeature</code> 订阅 <code>HitRewardEffect</code>，只负责飘字、miss 提示、声音这类表现。</p></div>
+            <div class="mini accent-amber"><strong>发布方</strong><p><code>KickResponseHandler</code> 发布奖励事实，不 import HUD 节点，也不关心有几个订阅方。</p></div>
             <div class="mini accent-red"><strong>退出清理</strong><p>world 退出时 <code>clear()</code> 清空 handler 和 pending，避免旧场景收到回调。</p></div>
             <div class="mini accent-violet"><strong>不是持久状态</strong><p>奖励飘字、miss 提示、一次性声音用 Effect；金币数值仍然写 Component。</p></div>
             <div class="mini accent-cyan"><strong>队列生命周期</strong><p><code>emit</code> 只 <code>pending.push</code>；<code>flush</code> 先 <code>pending = []</code>，再分发本轮事件。</p></div>
@@ -1188,7 +1188,7 @@ for (const effect of current) dispatch(effect);</pre>
               <text x="602" y="221" text-anchor="middle" font-size="15" font-weight="700" fill="#172231">Envelope(seq_id, msg_id, payload)</text>
               <text x="602" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">protobuf 编码/解码</text>
               <rect x="70" y="196" width="280" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="210" y="221" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">KickResponseFlow</text>
+              <text x="210" y="221" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">KickResponseHandler</text>
               <text x="210" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">回包进入 ECS/session</text>
               <path d="M190 80 H238" stroke="#2364aa" stroke-width="3" marker-end="url(#protoArrow)"></path>
               <path d="M396 80 H444" stroke="#2364aa" stroke-width="3" marker-end="url(#protoArrow)"></path>
@@ -1200,11 +1200,11 @@ for (const effect of current) dispatch(effect);</pre>
           </div>
           <div class="rows">
             <div class="panel accent-blue"><strong>请求怎么出去</strong><p><code>KickInputController</code> 只组业务请求；<code>KickSocket.sendKick()</code> 加 seqId，<code>KickProtoCodec</code> 包成 protobuf 二进制。</p></div>
-            <div class="panel accent-green"><strong>回包怎么回来</strong><p>回包按 seqId 匹配 pending，再由 <code>NetworkAdapter.onResponse</code> 交给 <code>routeKickResponse</code>。</p></div>
+            <div class="panel accent-green"><strong>回包怎么回来</strong><p>回包按 seqId 匹配 pending，再由 <code>NetworkAdapter.onResponse</code> 交给 <code>handleKickResponse</code>。</p></div>
             <div class="panel accent-red"><strong>边界是什么</strong><p>网络层不直接改 View；View 不知道 wire 格式。</p></div>
           </div>
         </section>
-        <footer class="footer"><span>对应代码：src/network/KickSocket.ts、KickProtoCodec.ts、src/game/session/KickResponseFlow.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
+        <footer class="footer"><span>对应代码：src/network/KickSocket.ts、KickProtoCodec.ts、src/game/session/KickResponseHandler.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
       <article class="slide" data-title="FSM">
@@ -1243,8 +1243,8 @@ for (const effect of current) dispatch(effect);</pre>
           </div>
           <div class="rows">
             <div class="panel accent-green"><strong>自然循环</strong><p>Wait 随机等待，Up 播出洞，Stand 开启可点击，Down 回洞，最后重置回 Wait。</p></div>
-            <div class="panel accent-red"><strong>Dizzy 的权威动作</strong><p>触摸命中后，<code>hitDetectionSystem</code> 立刻 <code>hp--</code> 并调用 <code>startShrewDizzyHold</code>。这是本地即时表现的权威动作。</p></div>
-            <div class="panel accent-blue"><strong>hitResponse 的职责</strong><p>服务端回包进入 <code>routeKickResponse</code>，更新金币、怒气、锤子和雷电，emit 奖励 Effect；它不再改 Shrew 的 Dizzy 状态。</p></div>
+            <div class="panel accent-red"><strong>Dizzy 的权威动作</strong><p>触摸命中后，<code>detectKickHit</code> 立刻 <code>hp--</code> 并调用 <code>startShrewDizzyHold</code>。这是本地即时表现的权威动作。</p></div>
+            <div class="panel accent-blue"><strong>applyKickResponse 的职责</strong><p>服务端回包进入 <code>handleKickResponse</code>，更新金币、怒气、锤子和雷电，emit 奖励 Effect；它不再改 Shrew 的 Dizzy 状态。</p></div>
             <div class="panel accent-amber"><strong>先后顺序</strong><p>touch -> local hit -> Dizzy -> send request；response -> score/resource/effect。这样命中反馈不等待网络。</p></div>
           </div>
         </section>

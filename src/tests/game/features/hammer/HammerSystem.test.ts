@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { HAMMER_RULES } from "../../config/GameTuning";
-import { HammerComponent } from "../../game/features/hammer";
-import { PlayerComponent } from "../../game/features/playerHud";
-import { HammerEntity } from "../../game/features/hammer";
-import { hammerSystem } from "../../game/features/hammer";
-import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { HammerType } from "../../game/features/hammer";
-import { createGameWorld } from "../../framework/ecs/World";
-import { thunderSystem } from "../../game/session";
-import { createSingletonEntities } from "../helpers/SingletonTestEntities";
+import { HAMMER_RULES } from "../../../../config/GameTuning";
+import { HammerComponent } from "../../../../game/features/hammer";
+import { PlayerComponent } from "../../../../game/features/playerHud";
+import { HammerEntity } from "../../../../game/features/hammer";
+import { hammerSystem } from "../../../../game/features/hammer";
+import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
+import { HammerType } from "../../../../game/features/hammer";
+import { createGameWorld } from "../../../../framework/ecs/GameWorld";
+import { activateHammerThunderIfCharged } from "../../../../game/session";
+import { createSingletonEntities } from "../../../helpers/SingletonTestEntities";
 
 describe("HammerSystem", () => {
   let world: ReturnType<typeof createGameWorld>;
@@ -57,7 +57,7 @@ describe("HammerSystem", () => {
   ])("applies the thunder threshold at angry=$angry", ({ angry, active }) => {
     PlayerComponent.angry[singletons.player] = angry;
 
-    thunderSystem(world);
+    activateHammerThunderIfCharged(world);
 
     expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(active);
     expect(HammerComponent.selectedType[singletons.hammer]).toBe(
@@ -68,7 +68,7 @@ describe("HammerSystem", () => {
 
   it("restores the normal hammer after the thunder animation", () => {
     PlayerComponent.angry[singletons.player] = HAMMER_RULES.thunderAngryThreshold;
-    thunderSystem(world);
+    activateHammerThunderIfCharged(world);
 
     hammerSystem(world, undefined, true);
 

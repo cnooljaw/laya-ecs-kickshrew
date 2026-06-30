@@ -27,7 +27,7 @@ http://<LAN-IP>:8080/debug-tsc.html?perf=1&heroes=200
 
 ```text
 URL query
-  -> PerfTestConfig
+  -> PerfRuntimeConfig
   -> PerfHeroFeature.setup
   -> PerfHeroEntities create fixed slots
   -> PerfHeroSystems
@@ -39,7 +39,7 @@ URL query
 
 主要文件：
 
-- `src/game/features/perfHero/PerfTestConfig.ts`
+- `src/game/features/perfHero/PerfRuntimeConfig.ts`
 - `src/game/features/perfHero/PerfHeroViewConfig.ts`
 - `src/game/features/perfHero/PerfHeroRules.ts`
 - `src/game/features/perfHero/PerfHeroEntities.ts`

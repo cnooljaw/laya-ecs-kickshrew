@@ -3,10 +3,10 @@ import { HammerEntity } from "../../game/features/hammer";
 import { PlayerEntity } from "../../game/features/playerHud";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HammerType } from "../../game/features/hammer";
-import { createGameWorld } from "../../framework/ecs/World";
+import { createGameWorld } from "../../framework/ecs/GameWorld";
 import { createEffectRuntime } from "../../framework/sync/EffectRuntime";
 import { HitRewardEffect } from "../../game/features/playerHud";
-import { routeKickResponse } from "../../game/session";
+import { handleKickResponse } from "../../game/session";
 
 describe("hit effect flow", () => {
   it("emits successful rewards once during flush", () => {
@@ -17,7 +17,7 @@ describe("hit effect flow", () => {
     const shown: Array<{ shrewIndex: number; reward: number }> = [];
     effects.on(HitRewardEffect, payload => shown.push(payload));
 
-    routeKickResponse(world, effects, {
+    handleKickResponse(world, effects, {
       seqId: 1,
       cmd: "kickResult",
       ret: 0,

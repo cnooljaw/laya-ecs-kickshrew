@@ -3,8 +3,8 @@
  *
  * 职责:
  * 1. 持有 KickSocket 和 MockServer 实例
- * 2. 将 KickSocket 收到的回包转发给 HitResponseSystem
- * 3. 将 HitDetectionSystem 的击中结果通过 KickSocket 发送
+ * 2. 将 KickSocket 收到的回包转发给 KickResponseHandler
+ * 3. 将 KickHitDetection 的击中结果通过 KickSocket 发送
  * 4. 每帧调用 checkTimeout
  *
  * 依赖 Laya 运行时（触摸事件），不在 vitest 中测试

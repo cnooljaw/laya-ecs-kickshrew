@@ -1,11 +1,11 @@
 import { defineFeature, defineSystem } from "../../../framework/feature/FeatureManifest";
-import type { FeatureSetupContext } from "../../../framework/feature/FeatureRuntimeContext";
-import { animationTimerSystem } from "./AnimationTimerSystem";
+import type { FeatureSetupContext } from "../../../framework/feature/FeatureSetupContext";
+import { shrewAnimationTimerSystem } from "./ShrewAnimationTimerSystem";
 import { HoleComponent } from "./ShrewComponents";
 import { HoleEntity, SceneEntity, ShrewEntity } from "./ShrewEntities";
 import { HoleNode } from "./HoleNode";
 import { SceneLayer } from "./SceneLayer";
-import { sceneCycleSystem } from "./SceneCycleSystem";
+import { mapCycleSystem } from "./MapCycleSystem";
 import {
   HoleProjection,
   SceneProjection,
@@ -68,9 +68,9 @@ export const ShrewFeature = defineFeature({
   entities: [SceneEntity, HoleEntity, ShrewEntity],
   projections: [SceneProjection, HoleProjection, ShrewProjection],
   systems: [
-    defineSystem("state", "shrew.animationTimer", animationTimerSystem),
+    defineSystem("state", "shrew.animationTimer", shrewAnimationTimerSystem),
     defineSystem("state", "shrew.state", shrewStateSystem),
-    defineSystem("state", "shrew.sceneCycle", sceneCycleSystem),
+    defineSystem("state", "shrew.mapCycle", mapCycleSystem),
   ],
   setup: setupCoreGameplay,
 });

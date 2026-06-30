@@ -1,5 +1,5 @@
 /**
- * SceneCycleSystem — 场景切换系统
+ * MapCycleSystem — 地图轮换系统
  *
  * 职责:
  * 1. 检查 sceneTimer >= cycleInterval 时切换场景
@@ -18,7 +18,7 @@ const sceneQuery = defineQuery([SceneComponent]);
 const shrewQuery = defineQuery([ShrewComponent]);
 const holeQuery = defineQuery([HoleComponent]);
 
-export function sceneCycleSystem(world: any): void {
+export function mapCycleSystem(world: any): void {
   const sceneEntities = sceneQuery(world);
   if (sceneEntities.length === 0) return;
 

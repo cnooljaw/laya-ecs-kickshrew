@@ -1,7 +1,7 @@
 export { HitMissEffect, HitRewardEffect } from "./HitEffects";
 export { PlayerComponent } from "./PlayerComponents";
 export { PlayerEntity } from "./PlayerEntities";
-export { PlayerHudFeature } from "./PlayerHudFeature";
+export { PlayerHUDFeature } from "./PlayerHUDFeature";
 export { PlayerProjection } from "./PlayerProjection";
 export {
   applyPlayerKickResponse,

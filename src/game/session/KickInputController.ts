@@ -18,7 +18,7 @@ import {
   ShrewAction,
   ShrewComponent,
 } from "../features/shrew/index";
-import { hitDetectionSystem } from "./KickDetection";
+import { detectKickHit } from "./KickHitDetection";
 
 export const KICK_INPUT_SOUNDS = {
   hitOne:  "resources/sound/sound_shrew/Hit_One.wav",
@@ -65,7 +65,7 @@ export class KickInputController {
       return;
     }
 
-    const result = hitDetectionSystem(world, xRatio, yRatio);
+    const result = detectKickHit(world, xRatio, yRatio);
     recordHammerFeedback(hammerEid, x, y);
 
     if (result.bKickShrew === 1) {
@@ -135,7 +135,7 @@ export function normalizeTouch(x: number, y: number): { xRatio: number; yRatio: 
 
 export function createKickRequest(
   hammerEid: number,
-  result: ReturnType<typeof hitDetectionSystem>,
+  result: ReturnType<typeof detectKickHit>,
 ): Omit<KickRequest, "seqId"> {
   return {
     cmd: "kick",

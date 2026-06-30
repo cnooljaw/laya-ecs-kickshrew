@@ -5,7 +5,7 @@ import { PlayerEntity } from "./PlayerEntities";
 import { PlayerHUD } from "./PlayerHUD";
 import { PlayerProjection } from "./PlayerProjection";
 
-export const PlayerHudFeature = defineFeature({
+export const PlayerHUDFeature = defineFeature({
   name: "playerHud",
   entities: [PlayerEntity],
   projections: [PlayerProjection],

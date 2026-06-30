@@ -4,7 +4,7 @@
  */
 import { destroyNode } from "../../../framework/view/LayaLifecycle";
 import { getLaya } from "../../../framework/view/LayaRuntime";
-import { PLAYER_HUD_VIEW_CONFIG } from "./PlayerHudViewConfig";
+import { PLAYER_HUD_VIEW_CONFIG } from "./PlayerHUDViewConfig";
 import type { IPlayerHUD } from "./IPlayerHUD";
 
 export class PlayerHUD implements IPlayerHUD {

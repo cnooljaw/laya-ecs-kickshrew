@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { HAMMER_RULES } from "../../config/GameTuning";
-import { HammerComponent } from "../../game/features/hammer";
-import { PlayerComponent } from "../../game/features/playerHud";
+import { HAMMER_RULES } from "../../../config/GameTuning";
+import { HammerComponent } from "../../../game/features/hammer";
+import { PlayerComponent } from "../../../game/features/playerHud";
 import {
-  hitResponseSystem,
+  applyKickResponse,
   type KickResponse,
-} from "../../game/session";
-import { HammerType } from "../../game/features/hammer";
-import { createGameWorld } from "../../framework/ecs/World";
-import { createSingletonEntities } from "../helpers/SingletonTestEntities";
+} from "../../../game/session";
+import { HammerType } from "../../../game/features/hammer";
+import { createGameWorld } from "../../../framework/ecs/GameWorld";
+import { createSingletonEntities } from "../../helpers/SingletonTestEntities";
 
-describe("HitResponseSystem", () => {
+describe("KickResponseHandler", () => {
   let world: ReturnType<typeof createGameWorld>;
   let singletons: ReturnType<typeof createSingletonEntities>;
 
@@ -51,7 +51,7 @@ describe("HitResponseSystem", () => {
       ],
     });
 
-    const rewards = hitResponseSystem(world, response);
+    const rewards = applyKickResponse(world, response);
 
     expect({
       money: PlayerComponent.money[singletons.player],
@@ -75,7 +75,7 @@ describe("HitResponseSystem", () => {
     { angry: HAMMER_RULES.thunderAngryThreshold, active: 1 },
     { angry: HAMMER_RULES.thunderAngryThreshold + 1, active: 1 },
   ])("applies the thunder threshold at angry=$angry", ({ angry, active }) => {
-    hitResponseSystem(world, makeResponse({ angry, hammerId: HammerType.Wood }));
+    applyKickResponse(world, makeResponse({ angry, hammerId: HammerType.Wood }));
 
     expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(active);
     expect(HammerComponent.selectedType[singletons.hammer]).toBe(
@@ -96,7 +96,7 @@ describe("HitResponseSystem", () => {
       hammer: HammerComponent.selectedType[singletons.hammer],
     };
 
-    const rewards = hitResponseSystem(world, makeResponse({
+    const rewards = applyKickResponse(world, makeResponse({
       ret: -1,
       money: 999,
       angry: 999,
@@ -118,7 +118,7 @@ describe("HitResponseSystem", () => {
   it("logs score deltas after applying the response", () => {
     const events: Array<{ event: string; payload: Record<string, unknown> }> = [];
 
-    hitResponseSystem(world, makeResponse({ money: 120, power: 3, levelScore: 450 }), {
+    applyKickResponse(world, makeResponse({ money: 120, power: 3, levelScore: 450 }), {
       log: (event, payload) => events.push({ event, payload }),
     });
 

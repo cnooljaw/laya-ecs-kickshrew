@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createGameWorld } from "../../framework/ecs/World";
+import { createGameWorld } from "../../framework/ecs/GameWorld";
 import { ViewRegistry } from "../../framework/view/ViewRegistry";
 import { addComponent, addEntity, defineComponent, Types } from "bitecs";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
@@ -9,7 +9,7 @@ import {
   projectionSource,
   watch,
 } from "../../framework/sync/ProjectionDefinition";
-import { createFeatureRuntimeContext } from "../../framework/feature/FeatureRuntimeContext";
+import { createFeatureSetupContext } from "../../framework/feature/FeatureSetupContext";
 import { createEffectRuntime } from "../../framework/sync/EffectRuntime";
 
 const CounterComponent = defineComponent({
@@ -53,7 +53,7 @@ describe("GameFeatureRuntime", () => {
         lifecycle.push("destroy");
       },
     };
-    const context = createFeatureRuntimeContext({
+    const context = createFeatureSetupContext({
       root,
       entityRuntime,
       projectionRuntime,
@@ -90,7 +90,7 @@ describe("GameFeatureRuntime", () => {
         destroyed.push("owned");
       },
     };
-    const context = createFeatureRuntimeContext({
+    const context = createFeatureSetupContext({
       root: null,
       entityRuntime: createEntityRuntime(world, []),
       projectionRuntime: createProjectionRuntime([]),
@@ -110,7 +110,7 @@ describe("GameFeatureRuntime", () => {
     const world = createGameWorld();
     const eids = [addEntity(world), addEntity(world)];
     for (const eid of eids) addComponent(world, CounterComponent, eid);
-    const context = createFeatureRuntimeContext({
+    const context = createFeatureSetupContext({
       root: null,
       entityRuntime: createEntityRuntime(world, []),
       projectionRuntime: createProjectionRuntime([CounterProjection]),

@@ -1,3 +1,3 @@
 export * from "./EntityDefinition";
 export * from "./EntityRuntime";
-export * from "./World";
+export * from "./GameWorld";

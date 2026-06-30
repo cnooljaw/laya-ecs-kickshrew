@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { GameScene } from "../../app/GameScene";
 import type { GameLoopPipeline } from "../../app/GameLoopPipeline";
-import type { KickInputAdapter } from "../../game/session";
+import type { KickInputController } from "../../game/session";
 import type { EntityRuntime } from "../../framework/ecs/EntityRuntime";
 import type { ProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import type { EffectRuntime } from "../../framework/sync/EffectRuntime";
@@ -11,7 +11,7 @@ import { HammerComponent } from "../../game/features/hammer";
 interface GameSceneInternals {
   _world: object | null;
   _loopPipeline: GameLoopPipeline | null;
-  _kickInput: KickInputAdapter | null;
+  _kickInput: KickInputController | null;
   _entityRuntime: EntityRuntime | null;
   _projectionRuntime: ProjectionRuntime | null;
   _effectRuntime: EffectRuntime | null;

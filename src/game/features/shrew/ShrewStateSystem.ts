@@ -21,7 +21,7 @@ const shrewQuery = defineQuery([ShrewComponent, AnimationComponent]);
 
 /**
  * 地鼠状态机系统
- * 注意: animTimer 由本系统自行递减，不依赖 AnimationTimerSystem
+ * 注意: animTimer 由本系统自行递减，不依赖 ShrewAnimationTimerSystem
  */
 export function shrewStateSystem(world: any, deltaSec: number): void {
   const entities = shrewQuery(world);

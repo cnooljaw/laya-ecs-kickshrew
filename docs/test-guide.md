@@ -36,8 +36,9 @@ npm test -- --run src/tests/effects
 核心规则：
 
 ```bash
-npm test -- --run src/tests/ecs/ShrewStateSystem.test.ts
-npm test -- --run src/tests/ecs/HitDetectionSystem.test.ts src/tests/ecs/HitResponseSystem.test.ts
+npm test -- --run src/tests/game/features/shrew/ShrewStateSystem.test.ts
+npm test -- --run src/tests/game/features/shrew/ShrewAnimationTimerSystem.test.ts src/tests/game/features/shrew/MapCycleSystem.test.ts
+npm test -- --run src/tests/game/session/KickHitDetection.test.ts src/tests/game/session/KickResponseHandler.test.ts
 npm test -- --run src/tests/game/features/monster
 npm test -- --run src/tests/game/features/perfHero
 ```

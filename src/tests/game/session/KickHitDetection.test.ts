@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createGameWorld } from '../../framework/ecs/World';
-import { createSingletonEntities } from '../helpers/SingletonTestEntities';
-import { createHoleEntities, createShrewEntity } from '../helpers/CoreTestEntities';
-import { HammerComponent } from "../../game/features/hammer";
-import { HammerType } from "../../game/features/hammer";
+import { createGameWorld } from '../../../framework/ecs/GameWorld';
+import { createSingletonEntities } from '../../helpers/SingletonTestEntities';
+import { createHoleEntities, createShrewEntity } from '../../helpers/CoreTestEntities';
+import { HammerComponent } from "../../../game/features/hammer";
+import { HammerType } from "../../../game/features/hammer";
 import {
   HOLE_COUNT,
   HoleComponent,
@@ -12,11 +12,11 @@ import {
   ShrewAction,
   ShrewComponent,
   ShrewType,
-} from "../../game/features/shrew";
-import { hitDetectionSystem, HitResult } from "../../game/session/KickDetection";
-import { HAMMER_RULES } from "../../config/GameTuning";
+} from "../../../game/features/shrew";
+import { detectKickHit, KickHitResult } from "../../../game/session/KickHitDetection";
+import { HAMMER_RULES } from "../../../config/GameTuning";
 
-describe('HitDetectionSystem', () => {
+describe('KickHitDetection', () => {
   let world: ReturnType<typeof createGameWorld>;
   let holes: number[];
   let singletons: ReturnType<typeof createSingletonEntities>;
@@ -41,7 +41,7 @@ describe('HitDetectionSystem', () => {
   };
 
   it('触摸点在地鼠 hitArea 内: 返回击中结果', () => {
-    const result = hitDetectionSystem(world, ...touchAtHole(1));
+    const result = detectKickHit(world, ...touchAtHole(1));
 
     expect(result.bKickShrew).toBe(1);
     expect(result.hitHoleIndex).toBeGreaterThanOrEqual(0);
@@ -55,7 +55,7 @@ describe('HitDetectionSystem', () => {
       ShrewComponent.isClickable[shrewEid] = 0;
     }
 
-    const result = hitDetectionSystem(world, ...touchAtHole(1));
+    const result = detectKickHit(world, ...touchAtHole(1));
 
     expect(result.bKickShrew).toBe(0);
   });
@@ -63,7 +63,7 @@ describe('HitDetectionSystem', () => {
   it('锤子 hitTable=0 时(动画中): 不响应触摸', () => {
     HammerComponent.hitTable[singletons.hammer] = 0;
 
-    const result = hitDetectionSystem(world, ...touchAtHole(1));
+    const result = detectKickHit(world, ...touchAtHole(1));
 
     expect(result.bKickShrew).toBe(0);
   });
@@ -71,7 +71,7 @@ describe('HitDetectionSystem', () => {
   it('锤子 hitTable=1 时: 正常响应触摸', () => {
     HammerComponent.hitTable[singletons.hammer] = 1;
 
-    const result = hitDetectionSystem(world, ...touchAtHole(1));
+    const result = detectKickHit(world, ...touchAtHole(1));
 
     expect(result.bKickShrew).toBe(1);
   });
@@ -81,7 +81,7 @@ describe('HitDetectionSystem', () => {
     ShrewComponent.hp[shrewEid] = 1;
     ShrewComponent.isClickable[shrewEid] = 1;
 
-    hitDetectionSystem(world, ...touchAtHole(1));
+    detectKickHit(world, ...touchAtHole(1));
 
     expect(ShrewComponent.hp[shrewEid]).toBe(0);
     expect(ShrewComponent.actionState[shrewEid]).toBe(ShrewAction.Dizzy);
@@ -97,7 +97,7 @@ describe('HitDetectionSystem', () => {
     ShrewComponent.isClickable[shrewEid] = 1;
     ShrewComponent.actionState[shrewEid] = ShrewAction.Stand;
 
-    hitDetectionSystem(world, ...touchAtHole(1));
+    detectKickHit(world, ...touchAtHole(1));
 
     expect(ShrewComponent.hp[shrewEid]).toBe(1);
     expect(ShrewComponent.hasHat[shrewEid]).toBe(0);
@@ -106,7 +106,7 @@ describe('HitDetectionSystem', () => {
 
   it('触摸点不在任何洞位范围内: 未击中', () => {
     // 触摸坐标超出所有洞位范围
-    const result = hitDetectionSystem(world, 0.01, 0.01);
+    const result = detectKickHit(world, 0.01, 0.01);
 
     expect(result.bKickShrew).toBe(0);
   });
@@ -114,7 +114,7 @@ describe('HitDetectionSystem', () => {
   it('击中后 hitTable 设为 0 (防止连点)', () => {
     HammerComponent.hitTable[singletons.hammer] = 1;
 
-    hitDetectionSystem(world, ...touchAtHole(1));
+    detectKickHit(world, ...touchAtHole(1));
 
     expect(HammerComponent.hitTable[singletons.hammer]).toBe(0);
     expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBeCloseTo(HAMMER_RULES.hitCooldownSec, 3);

@@ -10,21 +10,21 @@ import {
   applyPlayerKickResponse,
   findPlayer,
 } from "../features/playerHud/index";
-import { thunderSystem } from "./ThunderSystem";
+import { activateHammerThunderIfCharged } from "./HammerThunderSystem";
 
-export function routeKickResponse(
+export function handleKickResponse(
   world: any,
   effects: Pick<EffectRuntime, "emit">,
   response: KickResponse,
   traceLogger: HitTraceLogger = consoleHitTraceLogger,
 ): void {
-  const rewards = hitResponseSystem(world, response, traceLogger);
+  const rewards = applyKickResponse(world, response, traceLogger);
   for (const reward of rewards) {
     effects.emit(HitRewardEffect, reward);
   }
 }
 
-export function hitResponseSystem(
+export function applyKickResponse(
   world: any,
   response: KickResponse,
   traceLogger: HitTraceLogger = consoleHitTraceLogger,
@@ -46,6 +46,6 @@ export function hitResponseSystem(
   if (hammer !== undefined) {
     applyHammerKickResponse(hammer, response);
   }
-  thunderSystem(world);
+  activateHammerThunderIfCharged(world);
   return response.shrewResp ?? [];
 }

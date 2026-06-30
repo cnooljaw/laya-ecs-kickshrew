@@ -56,8 +56,8 @@ transient result
 ## 常见入口
 
 - 状态机：`src/game/features/shrew/ShrewStateSystem.ts`
-- 命中/输入：`src/game/session/KickDetection.ts`、`KickInputController.ts`
-- 回包：`src/game/session/KickResponseFlow.ts`
+- 命中/输入：`src/game/session/KickHitDetection.ts`、`KickInputController.ts`
+- 回包：`src/game/session/KickResponseHandler.ts`
 - 业务切片：`src/game/features/{shrew,hammer,playerHud,monster,perfHero}`
 - Feature 注册：`src/game/GameFeatures.ts`
 - 运行时：`src/app/GameScene.ts`、`src/app/GameLoopPipeline.ts`

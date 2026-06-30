@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { HolePositions, getHoleZOrder } from "../../game/features/shrew";
-import { SCENE_CYCLE_INTERVAL } from "../../game/features/shrew";
-import { HoleComponent, SceneComponent, ShrewComponent } from "../../game/features/shrew";
-import { HoleEntity, SceneEntity, ShrewEntity } from "../../game/features/shrew";
-import { sceneCycleSystem } from "../../game/features/shrew";
-import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
-import { createGameWorld } from "../../framework/ecs/World";
+import { HolePositions, getHoleZOrder } from "../../../../game/features/shrew";
+import { SCENE_CYCLE_INTERVAL } from "../../../../game/features/shrew";
+import { HoleComponent, SceneComponent, ShrewComponent } from "../../../../game/features/shrew";
+import { HoleEntity, SceneEntity, ShrewEntity } from "../../../../game/features/shrew";
+import { mapCycleSystem } from "../../../../game/features/shrew";
+import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
+import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../../../game/features/shrew";
+import { createGameWorld } from "../../../../framework/ecs/GameWorld";
 
-describe("SceneCycleSystem", () => {
+describe("MapCycleSystem", () => {
   let world: ReturnType<typeof createGameWorld>;
   let scene: number;
   let holes: number[];
@@ -40,7 +40,7 @@ describe("SceneCycleSystem", () => {
   it("does not switch before the configured interval", () => {
     SceneComponent.sceneTimer[scene] = SCENE_CYCLE_INTERVAL - 0.01;
 
-    sceneCycleSystem(world);
+    mapCycleSystem(world);
 
     expect(SceneComponent.currentMap[scene]).toBe(MapType.Meadow);
   });
@@ -48,7 +48,7 @@ describe("SceneCycleSystem", () => {
   it("cycles Meadow -> Ship -> Space -> Meadow", () => {
     for (const expected of [MapType.Ship, MapType.Space, MapType.Meadow]) {
       SceneComponent.sceneTimer[scene] = SCENE_CYCLE_INTERVAL;
-      sceneCycleSystem(world);
+      mapCycleSystem(world);
       expect(SceneComponent.currentMap[scene]).toBe(expected);
     }
   });
@@ -56,7 +56,7 @@ describe("SceneCycleSystem", () => {
   it("resets runtime state and applies the next map to shrews and holes", () => {
     SceneComponent.sceneTimer[scene] = SCENE_CYCLE_INTERVAL * 1.5;
 
-    sceneCycleSystem(world);
+    mapCycleSystem(world);
 
     expect(SceneComponent.currentMap[scene]).toBe(MapType.Ship);
     expect(SceneComponent.sceneTimer[scene]).toBe(0);

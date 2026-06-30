@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createGameWorld } from "../../../../framework/ecs/World";
+import { createGameWorld } from "../../../../framework/ecs/GameWorld";
 import { createSingletonEntities } from "../../../helpers/SingletonTestEntities";
 import { PlayerComponent } from "../../../../game/features/playerHud";
 import { MonsterComponent, MonsterSpawnComponent } from "../../../../game/features/monster/MonsterComponents";

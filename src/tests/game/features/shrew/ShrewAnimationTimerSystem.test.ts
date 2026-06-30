@@ -1,17 +1,17 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createGameWorld } from '../../framework/ecs/World';
-import { createSingletonEntities } from '../helpers/SingletonTestEntities';
-import { createShrewEntity } from '../helpers/CoreTestEntities';
+import { createGameWorld } from '../../../../framework/ecs/GameWorld';
+import { createSingletonEntities } from '../../../helpers/SingletonTestEntities';
+import { createShrewEntity } from '../../../helpers/CoreTestEntities';
 import {
   AnimationComponent,
   AnimType,
   MapType,
   SceneComponent,
   ShrewType,
-  animationTimerSystem,
-} from "../../game/features/shrew";
+  shrewAnimationTimerSystem,
+} from "../../../../game/features/shrew";
 
-describe('AnimationTimerSystem', () => {
+describe('ShrewAnimationTimerSystem', () => {
   let world: ReturnType<typeof createGameWorld>;
 
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('AnimationTimerSystem', () => {
     AnimationComponent.progress[eid] = 0;
 
     const delta = 1 / 60;
-    animationTimerSystem(world, delta);
+    shrewAnimationTimerSystem(world, delta);
 
     const progress = AnimationComponent.progress[eid];
     expect(progress).toBeGreaterThan(0);
@@ -37,7 +37,7 @@ describe('AnimationTimerSystem', () => {
     AnimationComponent.progress[eid] = 0.99;
     AnimationComponent.animType[eid] = AnimType.Up;
 
-    animationTimerSystem(world, 0.1);
+    shrewAnimationTimerSystem(world, 0.1);
 
     expect(AnimationComponent.progress[eid]).toBeGreaterThanOrEqual(1.0);
     expect(AnimationComponent.animType[eid]).toBe(AnimType.Up);
@@ -48,7 +48,7 @@ describe('AnimationTimerSystem', () => {
     AnimationComponent.duration[eid] = 0.31;
     AnimationComponent.progress[eid] = 0.5;
 
-    animationTimerSystem(world, 0);
+    shrewAnimationTimerSystem(world, 0);
 
     expect(AnimationComponent.progress[eid]).toBe(0.5);
   });
@@ -58,7 +58,7 @@ describe('AnimationTimerSystem', () => {
     AnimationComponent.duration[eid] = 0;
     AnimationComponent.progress[eid] = 0;
 
-    animationTimerSystem(world, 1 / 60);
+    shrewAnimationTimerSystem(world, 1 / 60);
 
     expect(AnimationComponent.progress[eid]).toBe(0);
   });
@@ -73,7 +73,7 @@ describe('AnimationTimerSystem', () => {
     AnimationComponent.progress[eid2] = 0.5;
 
     const delta = 1 / 60;
-    animationTimerSystem(world, delta);
+    shrewAnimationTimerSystem(world, delta);
 
     expect(AnimationComponent.progress[eid1]).toBeCloseTo(delta / 0.31, 3);
     expect(AnimationComponent.progress[eid2]).toBeCloseTo(0.5 + delta / 2.0, 3);
@@ -83,7 +83,7 @@ describe('AnimationTimerSystem', () => {
     const singletons = createSingletonEntities(world);
     const sceneEid = singletons.scene;
 
-    animationTimerSystem(world, 1.5);
+    shrewAnimationTimerSystem(world, 1.5);
 
     expect(SceneComponent.sceneTimer[sceneEid]).toBe(1.5);
   });
@@ -92,8 +92,8 @@ describe('AnimationTimerSystem', () => {
     const singletons = createSingletonEntities(world);
     const sceneEid = singletons.scene;
 
-    animationTimerSystem(world, 1);
-    animationTimerSystem(world, 2);
+    shrewAnimationTimerSystem(world, 1);
+    shrewAnimationTimerSystem(world, 2);
 
     expect(SceneComponent.sceneTimer[sceneEid]).toBe(3);
   });

@@ -3,7 +3,7 @@
  */
 import { destroyNode } from "../../../framework/view/LayaLifecycle";
 import { getLaya } from "../../../framework/view/LayaRuntime";
-import { HIT_EFFECT_VIEW_CONFIG } from "./PlayerHudViewConfig";
+import { HIT_EFFECT_VIEW_CONFIG } from "./PlayerHUDViewConfig";
 
 export class HitEffectNode {
   private _container: any = null;

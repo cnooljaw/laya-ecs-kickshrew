@@ -50,9 +50,9 @@ monster/MonsterNode      怪物 Spine 节点
 - 跨业务规则：`src/config/GameTuning.ts`
 - Shrew：`src/game/features/shrew/{ShrewRules,ShrewViewConfig,HolePositions,SceneConfig}.ts`
 - Hammer：`src/game/features/hammer/{HammerConfig,HammerViewConfig}.ts`
-- Player HUD：`src/game/features/playerHud/PlayerHudViewConfig.ts`
+- Player HUD：`src/game/features/playerHud/PlayerHUDViewConfig.ts`
 - Monster：`src/game/features/monster/{MonsterRules,MonsterViewConfig}.ts`
-- PerfHero：`src/game/features/perfHero/{PerfHeroRules,PerfHeroViewConfig,PerfTestConfig}.ts`
+- PerfHero：`src/game/features/perfHero/{PerfHeroRules,PerfHeroViewConfig,PerfRuntimeConfig}.ts`
 - atlas 逻辑名：`src/resource/AtlasConfig.ts`
 
 不要在 view 或 system 里散落 `960/640`、命中半径、zOrder、HUD 坐标等数字。
@@ -66,7 +66,7 @@ monster/MonsterNode      怪物 Spine 节点
 - Cocos 是 Y-up，Laya 是 Y-down。
 - Laya AtlasResource 子帧不一定能通过 `Loader.getRes(frameUrl)` 拿到，本项目用 `getFrameTexture(atlasRes, frameName)` 按 url 后缀查找。
 - `rotated=true` 的 atlas 帧需要 `ShrewNode` 手动补偿。
-- cover zOrder 与洞位行绑定。改地图时同时看 `HolePositions`、`SceneConfig`、`SceneLayer`、`SceneCycleSystem`。
+- cover zOrder 与洞位行绑定。改地图时同时看 `HolePositions`、`SceneConfig`、`SceneLayer`、`MapCycleSystem`。
 
 ## Laya 升级检查
 

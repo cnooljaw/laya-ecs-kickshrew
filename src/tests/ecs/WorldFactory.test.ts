@@ -17,7 +17,7 @@ import {
 import { PlayerEntity } from "../../game/features/playerHud";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { HOLE_COUNT, MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
-import { createGameWorld } from "../../framework/ecs/World";
+import { createGameWorld } from "../../framework/ecs/GameWorld";
 
 describe("world factory", () => {
   it.each([

@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { createGameWorld } from "../../framework/ecs/World";
-import { createSingletonEntities } from "../helpers/SingletonTestEntities";
-import { createHoleEntities, createShrewEntity } from "../helpers/CoreTestEntities";
-import { HammerComponent } from "../../game/features/hammer";
-import { HoleComponent, ShrewComponent } from "../../game/features/shrew";
-import { MapType, ShrewAction, ShrewType } from "../../game/features/shrew";
-import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../config/GameTuning";
-import { KickInputAdapter, KICK_INPUT_SOUNDS } from "../../game/session";
-import { HitMissEffect } from "../../game/features/playerHud";
+import { createGameWorld } from "../../../framework/ecs/GameWorld";
+import { createSingletonEntities } from "../../helpers/SingletonTestEntities";
+import { createHoleEntities, createShrewEntity } from "../../helpers/CoreTestEntities";
+import { HammerComponent } from "../../../game/features/hammer";
+import { HoleComponent, ShrewComponent } from "../../../game/features/shrew";
+import { MapType, ShrewAction, ShrewType } from "../../../game/features/shrew";
+import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../../config/GameTuning";
+import { KickInputController, KICK_INPUT_SOUNDS } from "../../../game/session";
+import { HitMissEffect } from "../../../game/features/playerHud";
 
-describe("KickInputAdapter", () => {
+describe("KickInputController", () => {
   it("点中可点击地鼠时播放命中音效并发送击打请求", () => {
     const world = createGameWorld();
     const singletons = createSingletonEntities(world);
@@ -23,7 +23,7 @@ describe("KickInputAdapter", () => {
     ShrewComponent.isClickable[shrewEid] = 1;
     HammerComponent.hitTable[singletons.hammer] = 1;
 
-    const adapter = new KickInputAdapter({
+    const adapter = new KickInputController({
       world,
       hammerEid: singletons.hammer,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
@@ -70,7 +70,7 @@ describe("KickInputAdapter", () => {
     const playedSounds: string[] = [];
     const effects: unknown[] = [];
 
-    const adapter = new KickInputAdapter({
+    const adapter = new KickInputController({
       world,
       hammerEid: singletons.hammer,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
@@ -99,7 +99,7 @@ describe("KickInputAdapter", () => {
     HammerComponent.hitTable[singletons.hammer] = 0;
     HammerComponent.hitCooldownSec[singletons.hammer] = 0.12;
 
-    const adapter = new KickInputAdapter({
+    const adapter = new KickInputController({
       world,
       hammerEid: singletons.hammer,
       network: { sendKick: (req: any) => { sentRequests.push(req); return Promise.resolve({}); } } as any,
@@ -129,7 +129,7 @@ describe("KickInputAdapter", () => {
     HoleComponent.shrewEid[holeEid] = shrewEid;
     ShrewComponent.isClickable[shrewEid] = 1;
 
-    const adapter = new KickInputAdapter({
+    const adapter = new KickInputController({
       world,
       hammerEid: singletons.hammer,
       network: {

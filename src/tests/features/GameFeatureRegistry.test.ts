@@ -8,7 +8,7 @@ import { MonsterEntity, MonsterTriggerEntity } from "../../game/features/monster
 import { PerfHeroEntity } from "../../game/features/perfHero";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { defineEntity } from "../../framework/ecs/EntityDefinition";
-import { createGameWorld } from "../../framework/ecs/World";
+import { createGameWorld } from "../../framework/ecs/GameWorld";
 import { setupCoreGameplay } from "../../game/features/shrew";
 import {
   defineFeature,
@@ -17,7 +17,7 @@ import {
 } from "../../framework/feature/FeatureManifest";
 import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../game/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../framework/feature/FeatureRegistry";
-import type { FeatureSetupContext } from "../../framework/feature/FeatureRuntimeContext";
+import type { FeatureSetupContext } from "../../framework/feature/FeatureSetupContext";
 import {
   defineProjection,
   noProjection,
@@ -110,9 +110,9 @@ describe("GameFeatureRegistry", () => {
     expect(GAME_FEATURE_REGISTRY.systemsByPhase("state").map(item => item.name)).toEqual([
       "shrew.animationTimer",
       "shrew.state",
-      "shrew.sceneCycle",
+      "shrew.mapCycle",
       "hammer.state",
-      "session.thunder",
+      "session.hammerThunder",
     ]);
     expect(GAME_FEATURE_REGISTRY.entityTypes()).toEqual(expect.arrayContaining([
       SceneEntity,

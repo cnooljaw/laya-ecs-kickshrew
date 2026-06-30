@@ -1,13 +1,13 @@
 import { PERF_SHREW_TIMING } from "../shrew/index";
 import { PERF_HERO_VIEW_CONFIG } from "./PerfHeroViewConfig";
 
-export interface PerfTestRuntimeConfig {
+export interface PerfRuntimeConfig {
   enabled: boolean;
   shrewFast: boolean;
   heroCount: number;
 }
 
-export function getPerfTestRuntimeConfig(search?: string): PerfTestRuntimeConfig {
+export function getPerfRuntimeConfig(search?: string): PerfRuntimeConfig {
   const query = search ?? getRuntimeSearch();
   const params = new URLSearchParams(query);
   const enabled = params.get("perf") === "1";

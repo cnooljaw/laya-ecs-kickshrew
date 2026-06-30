@@ -1,6 +1,6 @@
 import type { EntityDefinition } from "../ecs/EntityDefinition";
 import type { ProjectionDefinition } from "../sync/ProjectionDefinition";
-import type { FeatureSetupContext } from "./FeatureRuntimeContext";
+import type { FeatureSetupContext } from "./FeatureSetupContext";
 
 export type GameSystem = (world: any, deltaSec: number) => void;
 export type GameSystemPhase = "state" | "feature";

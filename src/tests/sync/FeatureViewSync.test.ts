@@ -5,7 +5,7 @@ import { MonsterType } from "../../game/features/monster";
 import { PerfHeroComponent } from "../../game/features/perfHero";
 import { PerfHeroEntity } from "../../game/features/perfHero";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { createGameWorld } from "../../framework/ecs/World";
+import { createGameWorld } from "../../framework/ecs/GameWorld";
 import type { IMonsterNode } from "../../game/features/monster/IMonsterNode";
 import type { IPerfHeroNode } from "../../game/features/perfHero/IPerfHeroNode";
 import { MonsterProjection } from "../../game/features/monster";
