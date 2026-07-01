@@ -8,5 +8,11 @@ export {
   MONSTER_HOLE_TRIADS,
   type MonsterHoleTriad,
 } from "./MonsterHoleTriads";
-export { monsterLifetimeSystem, monsterSpawnSystem, releaseMonsterTriad, startMonsterDizzy } from "./MonsterSystems";
+export {
+  monsterBoardSyncSystem,
+  monsterLifetimeSystem,
+  monsterSpawnSystem,
+  releaseMonsterTriad,
+  startMonsterDizzy,
+} from "./MonsterSystems";
 export { MonsterAction, MonsterType } from "./MonsterTypes";

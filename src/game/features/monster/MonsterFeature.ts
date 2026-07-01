@@ -12,7 +12,7 @@ import {
   MONSTER_SPAWN_RULES,
   validateMonsterRules,
 } from "./MonsterRules";
-import { monsterLifetimeSystem, monsterSpawnSystem } from "./MonsterSystems";
+import { monsterBoardSyncSystem, monsterLifetimeSystem, monsterSpawnSystem } from "./MonsterSystems";
 import { MONSTER_VIEW_CONFIG, validateMonsterViewConfig } from "./MonsterViewConfig";
 
 export const MonsterFeature = defineFeature({
@@ -21,6 +21,7 @@ export const MonsterFeature = defineFeature({
   projections: [MonsterProjection],
   systems: [
     defineSystem("feature", "monster.lifetime", monsterLifetimeSystem),
+    defineSystem("feature", "monster.boardSync", monsterBoardSyncSystem),
     defineSystem("feature", "monster.spawn", monsterSpawnSystem),
   ],
   setup: ({ entities, mountPool }) => {

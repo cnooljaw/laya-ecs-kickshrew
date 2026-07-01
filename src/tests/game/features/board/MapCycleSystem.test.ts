@@ -49,7 +49,7 @@ describe("Board MapCycleSystem", () => {
     }
   });
 
-  it("updates hole positions and restores occupants to residents on map switch", () => {
+  it("updates hole positions without clearing current occupants on map switch", () => {
     const holeEid = holes[1];
     HoleComponent.residentKind[holeEid] = BoardOccupantKind.Shrew;
     HoleComponent.residentEid[holeEid] = 1001;
@@ -62,8 +62,8 @@ describe("Board MapCycleSystem", () => {
     expect(SceneComponent.currentMap[scene]).toBe(MapType.Ship);
     expect(SceneComponent.sceneTimer[scene]).toBe(0);
     expect(SceneComponent.transitioning[scene]).toBe(1);
-    expect(HoleComponent.occupantKind[holeEid]).toBe(BoardOccupantKind.Shrew);
-    expect(HoleComponent.occupantEid[holeEid]).toBe(1001);
+    expect(HoleComponent.occupantKind[holeEid]).toBe(BoardOccupantKind.Monster);
+    expect(HoleComponent.occupantEid[holeEid]).toBe(2001);
 
     holes.forEach((eid, index) => {
       expect(HoleComponent.posXRatio[eid]).toBeCloseTo(HolePositions[MapType.Ship].xRatios[index], 5);

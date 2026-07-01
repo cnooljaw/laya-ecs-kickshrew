@@ -4,15 +4,19 @@ import { createSingletonEntities } from "../../../helpers/SingletonTestEntities"
 import { PlayerComponent } from "../../../../game/features/playerHud";
 import { MonsterComponent, MonsterSpawnComponent } from "../../../../game/features/monster/MonsterComponents";
 import { MonsterAction, MonsterType } from "../../../../game/features/monster/MonsterTypes";
-import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../../game/features/monster/MonsterSystems";
+import { monsterBoardSyncSystem, monsterLifetimeSystem, monsterSpawnSystem } from "../../../../game/features/monster/MonsterSystems";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 import {
   BoardOccupantKind,
   BoardPositionComponent,
   BoardRuntime,
   HoleComponent,
+  HolePositions,
   HoleEntity,
   MapType,
+  SceneComponent,
+  SCENE_CYCLE_INTERVAL,
+  mapCycleSystem,
 } from "../../../../game/features/board";
 import {
   MonsterEntity,
@@ -156,6 +160,38 @@ describe("MonsterSystem", () => {
       expect(HoleComponent.occupantKind[board.getHoleEid(holeIndex)]).toBe(HoleComponent.residentKind[board.getHoleEid(holeIndex)]);
       expect(HoleComponent.occupantEid[board.getHoleEid(holeIndex)]).toBe(HoleComponent.residentEid[board.getHoleEid(holeIndex)]);
     }
+  });
+
+  it("地图切换后仍保持 Monster 三洞占用并按新地图洞位重算中心", () => {
+    const world = createGameWorld();
+    const { scene } = createSingletonEntities(world);
+    const board = createBoard(world, scene);
+    const monster = createMonsterRuntime(world).create(MonsterEntity, monsterInput());
+    const triad: readonly [number, number, number] = [0, 1, 3];
+    spawnMonster(monster, MonsterType.Rhino, triad, board);
+
+    SceneComponent.sceneTimer[scene] = SCENE_CYCLE_INTERVAL;
+    mapCycleSystem(world);
+    monsterBoardSyncSystem(world);
+
+    expect(SceneComponent.currentMap[scene]).toBe(MapType.Ship);
+    for (const holeIndex of triad) {
+      const holeEid = board.getHoleEid(holeIndex);
+      expect(HoleComponent.occupantKind[holeEid]).toBe(BoardOccupantKind.Monster);
+      expect(HoleComponent.occupantEid[holeEid]).toBe(monster);
+    }
+    expect(BoardPositionComponent.xRatio[monster]).toBeCloseTo(
+      (HolePositions[MapType.Ship].xRatios[0]
+        + HolePositions[MapType.Ship].xRatios[1]
+        + HolePositions[MapType.Ship].xRatios[3]) / 3,
+      5,
+    );
+    expect(BoardPositionComponent.yRatio[monster]).toBeCloseTo(
+      (HolePositions[MapType.Ship].yRatios[0]
+        + HolePositions[MapType.Ship].yRatios[1]
+        + HolePositions[MapType.Ship].yRatios[3]) / 3,
+      5,
+    );
   });
 
   it("一次跨过多个 100 倍数时默认只生成一次，并消费到最新里程碑", () => {

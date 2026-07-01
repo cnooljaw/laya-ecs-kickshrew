@@ -1,5 +1,6 @@
 import { defineQuery } from "bitecs";
 import {
+  BoardPositionComponent,
   createBoardRuntimeFromWorld,
   type BoardRuntime,
 } from "../board/index";
@@ -8,7 +9,7 @@ import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponents";
 import { spawnMonster } from "./MonsterPool";
 import { MONSTER_SPAWN_RULES, MONSTER_TIMING, type MonsterSpawnRule } from "./MonsterRules";
 import { MonsterAction, MonsterType } from "./MonsterTypes";
-import { MONSTER_HOLE_TRIADS, type MonsterHoleTriad } from "./MonsterHoleTriads";
+import { getMonsterTriadCenter, MONSTER_HOLE_TRIADS, type MonsterHoleTriad } from "./MonsterHoleTriads";
 
 const playerQuery = defineQuery([PlayerComponent]);
 const monsterQuery = defineQuery([MonsterComponent]);
@@ -77,6 +78,25 @@ export function monsterLifetimeSystem(world: any, deltaSec: number): void {
       MonsterComponent.animationProgress[eid] = 1 - MonsterComponent.stateTimer[eid] / MONSTER_TIMING.dizzySec;
       if (MonsterComponent.stateTimer[eid] <= 0) resetMonsterToWait(world, eid);
     }
+  }
+}
+
+export function monsterBoardSyncSystem(world: any): void {
+  const board = createBoardRuntimeFromWorld(world);
+  if (!board) return;
+
+  const entities = monsterQuery(world);
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i];
+    if (MonsterComponent.visible[eid] !== 1) continue;
+
+    const triad = getMonsterTriad(eid);
+    if (!triad) continue;
+
+    const center = getMonsterTriadCenter(triad, board);
+    BoardPositionComponent.xRatio[eid] = center.xRatio;
+    BoardPositionComponent.yRatio[eid] = center.yRatio;
+    BoardPositionComponent.zIndex[eid] = 80;
   }
 }
 

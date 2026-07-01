@@ -45,8 +45,6 @@ export function mapCycleSystem(world: any, delta: number = 0): void {
       HoleComponent.posXRatio[eid] = holePos.xRatios[i];
       HoleComponent.posYRatio[eid] = holePos.yRatios[i];
       HoleComponent.zIndex[eid] = getHoleZOrder(HoleComponent.gridRow[eid]);
-      HoleComponent.occupantKind[eid] = HoleComponent.residentKind[eid];
-      HoleComponent.occupantEid[eid] = HoleComponent.residentEid[eid];
     }
   }
 }

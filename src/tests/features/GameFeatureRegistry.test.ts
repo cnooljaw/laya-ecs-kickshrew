@@ -170,6 +170,7 @@ describe("GameFeatureRegistry", () => {
     ]);
     expect(GAME_FEATURE_REGISTRY.systemsByPhase("feature").map(item => item.name)).toEqual([
       "monster.lifetime",
+      "monster.boardSync",
       "monster.spawn",
       "shrew.boardSync",
       "perfHero.state",
