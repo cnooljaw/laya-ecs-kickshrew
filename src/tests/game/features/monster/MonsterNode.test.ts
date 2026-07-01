@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DESIGN_RESOLUTION } from "../../../../config/GameTuning";
 import { MonsterNode } from "../../../../game/features/monster/MonsterNode";
 import { MonsterAction } from "../../../../game/features/monster";
+import type { MonsterViewConfig } from "../../../../game/features/monster/MonsterViewConfig";
 
 class FakeSprite {
   name = "";
@@ -44,6 +45,17 @@ async function flushPromises(): Promise<void> {
   await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
+}
+
+function createViewConfig(visualBounds: MonsterViewConfig["visualBounds"]): MonsterViewConfig {
+  return {
+    skUrl: "resources/monster/test.sk",
+    pngUrl: "resources/monster/test.png",
+    scale: 1,
+    posX: 0,
+    posY: 0,
+    visualBounds,
+  };
 }
 
 describe("MonsterNode", () => {
@@ -158,6 +170,7 @@ describe("MonsterNode", () => {
     const parent = new FakeSprite();
     const node = new MonsterNode({
       resolveSkUrl: () => "resources/monster/drop-height.sk",
+      resolveViewConfig: () => createViewConfig({ x: -20, y: -80, width: 100, height: 200 }),
     });
     node.create(parent);
     const container = parent.children[0] as FakeSprite;
@@ -166,16 +179,17 @@ describe("MonsterNode", () => {
 
     node.setPosition(0.5, 0.6);
     node.setAnimation(MonsterAction.Drop, 0);
-    expect(container.x).toBeCloseTo(DESIGN_RESOLUTION.width * 0.5, 3);
-    expect(container.y).toBeCloseTo(0, 3);
+    expect(container.x + 30).toBeCloseTo(DESIGN_RESOLUTION.width * 0.5, 3);
+    expect(container.y + 20).toBeCloseTo(0, 3);
 
     node.setAnimation(MonsterAction.Drop, 1);
-    expect(container.y).toBeCloseTo(DESIGN_RESOLUTION.height * 0.6, 3);
+    expect(container.y + 20).toBeCloseTo(DESIGN_RESOLUTION.height * 0.6, 3);
   });
 
-  it("有 skeleton bounds 时用视觉中心对齐 BoardPosition，并暴露调试几何", async () => {
+  it("用配置视觉框中心对齐 BoardPosition，并暴露 raw bounds 做调试对照", async () => {
     const skeleton = new FakeSkeleton();
-    skeleton.bounds = { x: -20, y: -80, width: 100, height: 200 };
+    skeleton.bounds = { x: -300, y: -260, width: 900, height: 560 };
+    const visualBounds = { x: -20, y: -80, width: 100, height: 200 };
     const load = vi.fn().mockResolvedValue({
       buildArmature: () => skeleton,
     });
@@ -189,6 +203,7 @@ describe("MonsterNode", () => {
     const parent = new FakeSprite();
     const node = new MonsterNode({
       resolveSkUrl: () => "resources/monster/center-offset.sk",
+      resolveViewConfig: () => createViewConfig(visualBounds),
     });
     node.create(parent);
     node.setScale(0.5);
@@ -201,18 +216,26 @@ describe("MonsterNode", () => {
 
     const targetX = DESIGN_RESOLUTION.width * 0.5;
     const targetY = DESIGN_RESOLUTION.height * 0.6;
-    expect(container.x + (skeleton.bounds.x + skeleton.bounds.width * 0.5) * 0.5).toBeCloseTo(targetX, 3);
-    expect(container.y + (skeleton.bounds.y + skeleton.bounds.height * 0.5) * 0.5).toBeCloseTo(targetY, 3);
+    expect(container.x + (visualBounds.x + visualBounds.width * 0.5) * 0.5).toBeCloseTo(targetX, 3);
+    expect(container.y + (visualBounds.y + visualBounds.height * 0.5) * 0.5).toBeCloseTo(targetY, 3);
 
     const geometry = node.getDebugGeometry();
     expect(geometry?.containerAnchor).toEqual({ x: container.x, y: container.y });
-    expect(geometry?.skeletonBounds).toEqual({
+    expect(geometry?.visualBounds).toEqual({
+      x: container.x + visualBounds.x * 0.5,
+      y: container.y + visualBounds.y * 0.5,
+      width: visualBounds.width * 0.5,
+      height: visualBounds.height * 0.5,
+      centerX: targetX,
+      centerY: targetY,
+    });
+    expect(geometry?.rawSkeletonBounds).toEqual({
       x: container.x + skeleton.bounds.x * 0.5,
       y: container.y + skeleton.bounds.y * 0.5,
       width: skeleton.bounds.width * 0.5,
       height: skeleton.bounds.height * 0.5,
-      centerX: targetX,
-      centerY: targetY,
+      centerX: container.x + (skeleton.bounds.x + skeleton.bounds.width * 0.5) * 0.5,
+      centerY: container.y + (skeleton.bounds.y + skeleton.bounds.height * 0.5) * 0.5,
     });
   });
 });

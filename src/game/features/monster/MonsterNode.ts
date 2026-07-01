@@ -5,7 +5,7 @@ import { createSkeleton } from "../../../framework/view/LayaSpine";
 import { DESIGN_RESOLUTION } from "../../../config/GameTuning";
 import { MonsterType } from "./MonsterTypes";
 import { MonsterAction } from "./MonsterTypes";
-import { MONSTER_VIEW_CONFIG } from "./MonsterViewConfig";
+import { MONSTER_VIEW_CONFIG, type MonsterViewConfig, type MonsterVisualBounds } from "./MonsterViewConfig";
 import type { IMonsterNode } from "./IMonsterNode";
 
 interface MonsterPlayRequest {
@@ -16,6 +16,7 @@ interface MonsterPlayRequest {
 
 interface MonsterNodeOptions {
   resolveSkUrl?: (monsterType: number) => string;
+  resolveViewConfig?: (monsterType: number) => MonsterViewConfig;
 }
 
 interface MonsterDebugBounds {
@@ -29,16 +30,19 @@ interface MonsterDebugBounds {
 
 export interface MonsterDebugGeometry {
   containerAnchor: { x: number; y: number };
-  skeletonBounds: MonsterDebugBounds | null;
+  visualBounds: MonsterDebugBounds;
+  rawSkeletonBounds: MonsterDebugBounds | null;
 }
 
 export class MonsterNode implements IMonsterNode {
   private readonly _resolveSkUrl: (monsterType: number) => string;
+  private readonly _resolveViewConfig: (monsterType: number) => MonsterViewConfig;
   private _container: any = null;
   private _skeleton: any = null;
   private _destroyed = false;
   private _visible = false;
   private _lastSpawnSeq = -1;
+  private _monsterType = MonsterType.Rhino;
   private _baseX = 0;
   private _baseY = 0;
   private _offsetY = 0;
@@ -48,6 +52,7 @@ export class MonsterNode implements IMonsterNode {
 
   constructor(options: MonsterNodeOptions = {}) {
     this._resolveSkUrl = options.resolveSkUrl ?? resolveDefaultMonsterSkUrl;
+    this._resolveViewConfig = options.resolveViewConfig ?? resolveDefaultMonsterViewConfig;
   }
 
   create(parent: any): void {
@@ -66,6 +71,7 @@ export class MonsterNode implements IMonsterNode {
 
   spawn(monsterType: number, spawnSeq: number): void {
     if (!this._container || spawnSeq <= 0 || spawnSeq === this._lastSpawnSeq) return;
+    this._monsterType = monsterType as MonsterType;
     this._lastSpawnSeq = spawnSeq;
     this._loadAndPlay({ monsterType, skUrl: this._resolveSkUrl(monsterType), spawnSeq });
   }
@@ -120,11 +126,20 @@ export class MonsterNode implements IMonsterNode {
       x: this._container.x ?? 0,
       y: this._container.y ?? 0,
     };
-    const bounds = this._getSkeletonBounds();
-    if (!bounds) {
-      return { containerAnchor, skeletonBounds: null };
-    }
+    const visualBounds = this._toWorldBounds(containerAnchor, this._getVisualBounds());
+    const rawSkeletonBounds = this._getSkeletonBounds();
 
+    return {
+      containerAnchor,
+      visualBounds,
+      rawSkeletonBounds: rawSkeletonBounds ? this._toWorldBounds(containerAnchor, rawSkeletonBounds) : null,
+    };
+  }
+
+  private _toWorldBounds(
+    containerAnchor: { x: number; y: number },
+    bounds: { x: number; y: number; width: number; height: number },
+  ): MonsterDebugBounds {
     const scaleX = this._container.scaleX ?? this._scale;
     const scaleY = this._container.scaleY ?? this._scale;
     const x = containerAnchor.x + bounds.x * scaleX;
@@ -133,15 +148,12 @@ export class MonsterNode implements IMonsterNode {
     const height = bounds.height * scaleY;
 
     return {
-      containerAnchor,
-      skeletonBounds: {
-        x,
-        y,
-        width,
-        height,
-        centerX: x + width * 0.5,
-        centerY: y + height * 0.5,
-      },
+      x,
+      y,
+      width,
+      height,
+      centerX: x + width * 0.5,
+      centerY: y + height * 0.5,
     };
   }
 
@@ -153,14 +165,18 @@ export class MonsterNode implements IMonsterNode {
   }
 
   private _getSkeletonCenterOffset(): { x: number; y: number } {
-    const bounds = this._getSkeletonBounds();
-    if (!bounds || !this._container) return { x: 0, y: 0 };
+    const bounds = this._getVisualBounds();
+    if (!this._container) return { x: 0, y: 0 };
     const scaleX = this._container.scaleX ?? this._scale;
     const scaleY = this._container.scaleY ?? this._scale;
     return {
       x: (bounds.x + bounds.width * 0.5) * scaleX,
       y: (bounds.y + bounds.height * 0.5) * scaleY,
     };
+  }
+
+  private _getVisualBounds(): MonsterVisualBounds {
+    return this._resolveViewConfig(this._monsterType).visualBounds;
   }
 
   private _getSkeletonBounds(): { x: number; y: number; width: number; height: number } | null {
@@ -202,7 +218,10 @@ export class MonsterNode implements IMonsterNode {
 }
 
 function resolveDefaultMonsterSkUrl(monsterType: number): string {
-  const config = MONSTER_VIEW_CONFIG[monsterType as MonsterType]
+  return resolveDefaultMonsterViewConfig(monsterType).skUrl;
+}
+
+function resolveDefaultMonsterViewConfig(monsterType: number): MonsterViewConfig {
+  return MONSTER_VIEW_CONFIG[monsterType as MonsterType]
     ?? MONSTER_VIEW_CONFIG[MonsterType.Rhino];
-  return config.skUrl;
 }

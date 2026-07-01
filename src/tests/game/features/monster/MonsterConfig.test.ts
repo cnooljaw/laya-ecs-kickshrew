@@ -84,11 +84,14 @@ describe("Monster configuration", () => {
         scale: 0,
         posX: 0,
         posY: 0,
+        visualBounds: { x: 0, y: 0, width: 0, height: 0 },
       },
     })).toEqual([
       "MONSTER_VIEW_CONFIG[1].skUrl 不能为空",
       "MONSTER_VIEW_CONFIG[1].pngUrl 不能为空",
       "MONSTER_VIEW_CONFIG[1].scale 必须大于 0",
+      "MONSTER_VIEW_CONFIG[1].visualBounds.width 必须大于 0",
+      "MONSTER_VIEW_CONFIG[1].visualBounds.height 必须大于 0",
     ]);
   });
 });

@@ -150,7 +150,7 @@ class MonsterDropPreview {
   private _tickMonsterDebugOverlay(): void {
     this._drawMonsterDebugOverlay();
     const geometry = this._monster.getDebugGeometry();
-    if (Date.now() - this._debugOverlayStartMs > 2000 && geometry?.skeletonBounds) {
+    if (Date.now() - this._debugOverlayStartMs > 2000 && geometry) {
       this._Laya.timer.clear(this, this._tickMonsterDebugOverlay);
     }
   }
@@ -204,6 +204,7 @@ class MonsterDropPreview {
     const geometry = this._monster.getDebugGeometry();
     const graphics = this._monsterDebugLayer.graphics;
     const blue = "#0a84ff";
+    const rawBoundsColor = "#8e8e93";
 
     graphics.clear();
     if (!geometry) return;
@@ -214,15 +215,28 @@ class MonsterDropPreview {
     graphics.drawCircle(anchor.x, anchor.y, 5, blue);
     graphics.fillText("container", anchor.x + 8, anchor.y + 8, "12px monospace", blue, "left");
 
-    const bounds = geometry.skeletonBounds;
-    if (!bounds) return;
+    const rawBounds = geometry.rawSkeletonBounds;
+    if (rawBounds) {
+      this._drawRect(rawBounds, rawBoundsColor, 1);
+      graphics.fillText("raw skeleton.getBounds()", rawBounds.x, rawBounds.y - 16, "12px monospace", rawBoundsColor, "left");
+    }
 
-    graphics.drawLine(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y, blue, 2);
-    graphics.drawLine(bounds.x + bounds.width, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, blue, 2);
-    graphics.drawLine(bounds.x + bounds.width, bounds.y + bounds.height, bounds.x, bounds.y + bounds.height, blue, 2);
-    graphics.drawLine(bounds.x, bounds.y + bounds.height, bounds.x, bounds.y, blue, 2);
-    graphics.drawCircle(bounds.centerX, bounds.centerY, 5, blue);
-    graphics.fillText("skeleton.getBounds()", bounds.x, bounds.y - 16, "12px monospace", blue, "left");
+    const visualBounds = geometry.visualBounds;
+    this._drawRect(visualBounds, blue, 2);
+    graphics.drawCircle(visualBounds.centerX, visualBounds.centerY, 5, blue);
+    graphics.fillText("visualBounds", visualBounds.x, visualBounds.y - 16, "12px monospace", blue, "left");
+  }
+
+  private _drawRect(
+    bounds: { x: number; y: number; width: number; height: number },
+    color: string,
+    lineWidth: number,
+  ): void {
+    const graphics = this._monsterDebugLayer.graphics;
+    graphics.drawLine(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y, color, lineWidth);
+    graphics.drawLine(bounds.x + bounds.width, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, color, lineWidth);
+    graphics.drawLine(bounds.x + bounds.width, bounds.y + bounds.height, bounds.x, bounds.y + bounds.height, color, lineWidth);
+    graphics.drawLine(bounds.x, bounds.y + bounds.height, bounds.x, bounds.y, color, lineWidth);
   }
 
   private _createPanel(): void {
