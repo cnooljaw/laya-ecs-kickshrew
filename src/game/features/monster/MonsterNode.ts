@@ -29,7 +29,6 @@ export class MonsterNode implements IMonsterNode {
   private _baseY = 0;
   private _offsetY = 0;
   private _scale = 1;
-  private _monsterHeight = DESIGN_RESOLUTION.height * 0.14;
   private _actionState = MonsterAction.Wait;
   private _animationProgress = 0;
 
@@ -69,7 +68,7 @@ export class MonsterNode implements IMonsterNode {
     this._animationProgress = progress;
     if (actionState === MonsterAction.Drop) {
       const clamped = Math.max(0, Math.min(1, progress));
-      this._offsetY = -this._monsterHeight * this._scale * 2 * (1 - clamped);
+      this._offsetY = -this._baseY * (1 - clamped);
     } else {
       this._offsetY = 0;
     }
@@ -127,20 +126,12 @@ export class MonsterNode implements IMonsterNode {
       this._skeleton.name = `MonsterSkeleton:${request.monsterType}`;
       this._skeleton.visible = this._visible;
       this._container.addChild(this._skeleton);
-      this._monsterHeight = resolveMonsterHeight(this._skeleton, this._monsterHeight);
       this._skeleton.play?.(0, true);
       this.setAnimation(this._actionState, this._animationProgress);
     } catch {
       this.setVisible(false);
     }
   }
-}
-
-function resolveMonsterHeight(skeleton: any, fallback: number): number {
-  if (typeof skeleton?.height === "number" && skeleton.height > 0) return skeleton.height;
-  const bounds = skeleton?.getBounds?.();
-  if (typeof bounds?.height === "number" && bounds.height > 0) return bounds.height;
-  return fallback;
 }
 
 function resolveDefaultMonsterSkUrl(monsterType: number): string {

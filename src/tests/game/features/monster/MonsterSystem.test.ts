@@ -25,6 +25,7 @@ import {
   spawnMonster,
 } from "../../../../game/features/monster/MonsterPool";
 import { MONSTER_HOLE_TRIADS } from "../../../../game/features/monster/MonsterHoleTriads";
+import { MONSTER_TIMING } from "../../../../game/features/monster/MonsterRules";
 
 describe("MonsterSystem", () => {
   afterEach(() => {
@@ -140,11 +141,11 @@ describe("MonsterSystem", () => {
     const triad: readonly [number, number, number] = [1, 3, 4];
     spawnMonster(monster, MonsterType.Rhino, triad, board);
 
-    monsterLifetimeSystem(world, 0.2);
+    monsterLifetimeSystem(world, MONSTER_TIMING.dropSec - 0.01);
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Drop);
 
-    monsterLifetimeSystem(world, 0.3);
+    monsterLifetimeSystem(world, 0.02);
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Stay);
 

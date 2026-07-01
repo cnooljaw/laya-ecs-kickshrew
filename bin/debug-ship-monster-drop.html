@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Ship Monster Drop</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #222; }
+    canvas { display: block; }
+    #monster-drop-panel {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 9999;
+      display: grid;
+      grid-template-columns: auto auto 1fr;
+      gap: 8px;
+      align-items: end;
+      font: 13px monospace;
+      pointer-events: auto;
+    }
+    #monster-drop-panel a,
+    #monster-drop-panel button {
+      color: #f4f4f4;
+      background: rgba(0, 0, 0, 0.62);
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      padding: 6px 8px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    #monster-drop-panel a[data-active="true"],
+    #monster-drop-panel button[data-active="true"] {
+      color: #111;
+      background: #ffffff;
+    }
+    #monster-drop-panel .map-links,
+    #monster-drop-panel .triad-actions,
+    #monster-drop-panel .triad-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+  </style>
+  <script src="js/libs/laya.core.js"></script>
+  <script src="js/libs/laya.webgl_2D.js"></script>
+  <script src="js/libs/laya.ui2.js"></script>
+  <script src="js/libs/laya.ani.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "bitecs": "./js/debug/vendor/bitecs/index.mjs",
+      "tslib": "./js/debug/vendor/tslib/tslib.es6.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <script type="module">
+    import(`./js/debug/src/debug/MonsterDropPreview.js?v=${Date.now()}`);
+  </script>
+</body>
+</html>

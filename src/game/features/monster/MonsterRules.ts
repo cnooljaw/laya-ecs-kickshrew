@@ -17,7 +17,7 @@ export const MONSTER_DURATION_SEC: Record<MonsterType, number> = {
 };
 
 export const MONSTER_TIMING = {
-  dropSec: 0.45,
+  dropSec: 0.31,
   dizzySec: 0.5,
 } as const;
 

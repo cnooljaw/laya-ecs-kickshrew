@@ -139,14 +139,9 @@ describe("MonsterNode", () => {
     expect(skeletons[0].lastLoop).toBe(false);
   });
 
-  it("Drop 动画从目标中心上方约 2 倍 Monster 高度处落到 BoardPosition 对应位置", async () => {
-    const skeletons: FakeSkeleton[] = [];
+  it("Drop 动画从屏幕顶部落到 BoardPosition 对应位置", async () => {
     const load = vi.fn().mockResolvedValue({
-      buildArmature: () => {
-        const skeleton = new FakeSkeleton();
-        skeletons.push(skeleton);
-        return skeleton;
-      },
+      buildArmature: () => new FakeSkeleton(),
     });
     vi.stubGlobal("window", {
       Laya: {
@@ -167,7 +162,7 @@ describe("MonsterNode", () => {
     node.setPosition(0.5, 0.6);
     node.setAnimation(MonsterAction.Drop, 0);
     expect(container.x).toBeCloseTo(DESIGN_RESOLUTION.width * 0.5, 3);
-    expect(container.y).toBeCloseTo(DESIGN_RESOLUTION.height * 0.6 - skeletons[0].height * 2, 3);
+    expect(container.y).toBeCloseTo(0, 3);
 
     node.setAnimation(MonsterAction.Drop, 1);
     expect(container.y).toBeCloseTo(DESIGN_RESOLUTION.height * 0.6, 3);
