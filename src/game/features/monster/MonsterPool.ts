@@ -46,7 +46,6 @@ export function createMonsterPoolInputs(
         monsterType: rule.monsterType,
         posX: view.posX,
         posY: view.posY,
-        scale: view.scale,
         durationSec: durationSec[rule.monsterType],
       });
     }

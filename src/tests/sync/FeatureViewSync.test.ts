@@ -21,13 +21,11 @@ describe("feature projections", () => {
       monsterType: MonsterType.Rhino,
       posX: 480,
       posY: 352,
-      scale: 1,
       durationSec: 10,
     });
     const calls = {
       spawns: [] as Array<{ monsterType: number; spawnSeq: number }>,
       positions: [] as Array<[number, number]>,
-      scales: [] as number[],
       hits: [] as number[],
       defeated: [] as number[],
       animations: [] as Array<[number, number]>,
@@ -40,7 +38,6 @@ describe("feature projections", () => {
       spawn: (monsterType, spawnSeq) => calls.spawns.push({ monsterType, spawnSeq }),
       setAnimation: (action, progress) => calls.animations.push([action, progress]),
       setPosition: (x, y) => calls.positions.push([x, y]),
-      setScale: scale => calls.scales.push(scale),
       setZOrder: z => calls.zOrders.push(z),
       setVisible: visible => calls.visible.push(visible),
     };
@@ -63,7 +60,6 @@ describe("feature projections", () => {
     expect(calls.positions).toHaveLength(1);
     expect(calls.positions[0][0]).toBeCloseTo(0.5, 5);
     expect(calls.positions[0][1]).toBeCloseTo(0.6, 5);
-    expect(calls.scales).toEqual([MonsterComponent.scale[monster]]);
     expect(calls.hits).toEqual([1]);
     expect(calls.defeated).toEqual([1]);
     expect(calls.animations).toEqual([[MonsterAction.Drop, 0.5]]);

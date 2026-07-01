@@ -7,7 +7,6 @@ export interface MonsterEntityInput {
   readonly monsterType: MonsterType;
   readonly posX: number;
   readonly posY: number;
-  readonly scale: number;
   readonly durationSec: number;
 }
 
@@ -19,7 +18,6 @@ export const MonsterEntity = defineEntity<MonsterEntityInput>({
     MonsterComponent.monsterType[eid] = input.monsterType;
     MonsterComponent.posX[eid] = input.posX;
     MonsterComponent.posY[eid] = input.posY;
-    MonsterComponent.scale[eid] = input.scale;
     MonsterComponent.visible[eid] = 0;
     MonsterComponent.ageSec[eid] = 0;
     MonsterComponent.durationSec[eid] = input.durationSec;

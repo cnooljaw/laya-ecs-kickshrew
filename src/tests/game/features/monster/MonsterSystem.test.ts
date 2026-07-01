@@ -37,7 +37,6 @@ describe("MonsterSystem", () => {
       monsterType,
       posX: 480,
       posY: 352,
-      scale: 1,
       durationSec: 10,
     };
   }

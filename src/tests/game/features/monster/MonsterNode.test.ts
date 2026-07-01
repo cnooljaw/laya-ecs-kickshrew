@@ -51,7 +51,6 @@ function createViewConfig(visualBounds: MonsterViewConfig["visualBounds"]): Mons
   return {
     skUrl: "resources/monster/test.sk",
     pngUrl: "resources/monster/test.png",
-    scale: 1,
     posX: 0,
     posY: 0,
     visualBounds,
@@ -156,6 +155,45 @@ describe("MonsterNode", () => {
     expect(skeletons[0].lastLoop).toBe(false);
   });
 
+  it("同类型重复 spawn 复用已加载 Skeleton，避免重复销毁重建导致闪烁", async () => {
+    const skeleton = new FakeSkeleton();
+    const load = vi.fn().mockResolvedValue({
+      buildArmature: () => skeleton,
+    });
+    vi.stubGlobal("window", {
+      Laya: {
+        Sprite: FakeSprite,
+        Skeleton: FakeSkeleton,
+        loader: { load },
+      },
+    });
+    const parent = new FakeSprite();
+    const node = new MonsterNode({
+      resolveSkUrl: () => "resources/monster/reuse-skeleton.sk",
+    });
+    node.create(parent);
+
+    node.spawn(1, 1);
+    await flushPromises();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(skeleton.playCalls).toBe(1);
+
+    node.spawn(1, 2);
+    await flushPromises();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(skeleton.playCalls).toBe(1);
+
+    node.playDefeated(1);
+    expect(skeleton.playCalls).toBe(2);
+    expect(skeleton.lastLoop).toBe(false);
+
+    node.spawn(1, 3);
+    await flushPromises();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(skeleton.playCalls).toBe(3);
+    expect(skeleton.lastLoop).toBe(true);
+  });
+
   it("Drop 动画从屏幕顶部落到 BoardPosition 对应位置", async () => {
     const load = vi.fn().mockResolvedValue({
       buildArmature: () => new FakeSkeleton(),
@@ -206,7 +244,6 @@ describe("MonsterNode", () => {
       resolveViewConfig: () => createViewConfig(visualBounds),
     });
     node.create(parent);
-    node.setScale(0.5);
     const container = parent.children[0] as FakeSprite;
 
     node.spawn(1, 1);
@@ -216,26 +253,26 @@ describe("MonsterNode", () => {
 
     const targetX = DESIGN_RESOLUTION.width * 0.5;
     const targetY = DESIGN_RESOLUTION.height * 0.6;
-    expect(container.x + (visualBounds.x + visualBounds.width * 0.5) * 0.5).toBeCloseTo(targetX, 3);
-    expect(container.y + (visualBounds.y + visualBounds.height * 0.5) * 0.5).toBeCloseTo(targetY, 3);
+    expect(container.x + visualBounds.x + visualBounds.width * 0.5).toBeCloseTo(targetX, 3);
+    expect(container.y + visualBounds.y + visualBounds.height * 0.5).toBeCloseTo(targetY, 3);
 
     const geometry = node.getDebugGeometry();
     expect(geometry?.containerAnchor).toEqual({ x: container.x, y: container.y });
     expect(geometry?.visualBounds).toEqual({
-      x: container.x + visualBounds.x * 0.5,
-      y: container.y + visualBounds.y * 0.5,
-      width: visualBounds.width * 0.5,
-      height: visualBounds.height * 0.5,
+      x: container.x + visualBounds.x,
+      y: container.y + visualBounds.y,
+      width: visualBounds.width,
+      height: visualBounds.height,
       centerX: targetX,
       centerY: targetY,
     });
     expect(geometry?.rawSkeletonBounds).toEqual({
-      x: container.x + skeleton.bounds.x * 0.5,
-      y: container.y + skeleton.bounds.y * 0.5,
-      width: skeleton.bounds.width * 0.5,
-      height: skeleton.bounds.height * 0.5,
-      centerX: container.x + (skeleton.bounds.x + skeleton.bounds.width * 0.5) * 0.5,
-      centerY: container.y + (skeleton.bounds.y + skeleton.bounds.height * 0.5) * 0.5,
+      x: container.x + skeleton.bounds.x,
+      y: container.y + skeleton.bounds.y,
+      width: skeleton.bounds.width,
+      height: skeleton.bounds.height,
+      centerX: container.x + skeleton.bounds.x + skeleton.bounds.width * 0.5,
+      centerY: container.y + skeleton.bounds.y + skeleton.bounds.height * 0.5,
     });
   });
 });

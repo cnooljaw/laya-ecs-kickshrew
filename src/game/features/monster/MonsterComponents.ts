@@ -4,7 +4,6 @@ export const MonsterComponent = defineComponent({
   monsterType: Types.f32,
   posX: Types.f32,
   posY: Types.f32,
-  scale: Types.f32,
   visible: Types.f32,
   ageSec: Types.f32,
   durationSec: Types.f32,

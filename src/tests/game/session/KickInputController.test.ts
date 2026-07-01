@@ -99,7 +99,6 @@ describe("KickInputController", () => {
       monsterType: MonsterType.Rhino,
       posX: 0,
       posY: 0,
-      scale: 1,
       durationSec: 10,
     });
     const sentRequests: any[] = [];

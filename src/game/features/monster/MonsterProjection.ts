@@ -19,9 +19,6 @@ export const MonsterProjection = defineProjection<IMonsterNode>({
     watch(boardPositionSource, ["zIndex"], "monster board z-order", ({ eid, node }) => {
       node.setZOrder(BoardPositionComponent.zIndex[eid]);
     }),
-    watch(source, ["scale"], "monster scale", ({ eid, node }) => {
-      node.setScale(MonsterComponent.scale[eid]);
-    }),
     watch(source, ["actionState", "animationProgress"], "monster animation", ({ eid, node }) => {
       node.setAnimation(MonsterComponent.actionState[eid], MonsterComponent.animationProgress[eid]);
     }),

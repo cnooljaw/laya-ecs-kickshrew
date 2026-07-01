@@ -71,7 +71,6 @@ class MonsterDropPreview {
 
     this._createHolesAndShrews();
     this._monster.create(this._root);
-    this._monster.setScale(MONSTER_VIEW_CONFIG[MonsterType.Rhino].scale);
     this._monster.setVisible(false);
     this._createPanel();
     this.playTriad(0);

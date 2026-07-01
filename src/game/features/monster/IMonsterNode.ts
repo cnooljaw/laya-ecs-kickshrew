@@ -4,7 +4,6 @@ export interface IMonsterNode {
   spawn(monsterType: number, spawnSeq: number): void;
   setAnimation(actionState: number, progress: number): void;
   setPosition(x: number, y: number): void;
-  setScale(scale: number): void;
   setZOrder(z: number): void;
   setVisible(visible: boolean): void;
 }
