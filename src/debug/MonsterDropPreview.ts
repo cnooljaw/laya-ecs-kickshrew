@@ -9,7 +9,6 @@ import {
   getHoleZOrder,
 } from "../game/features/board";
 import { MONSTER_HOLE_TRIADS, type MonsterHoleTriad } from "../game/features/monster/MonsterHoleTriads";
-import { MONSTER_TIMING } from "../game/features/monster/MonsterRules";
 import { MonsterAction, MonsterType } from "../game/features/monster/MonsterTypes";
 import { MonsterNode } from "../game/features/monster/MonsterNode";
 import { MONSTER_VIEW_CONFIG } from "../game/features/monster/MonsterViewConfig";
@@ -28,6 +27,8 @@ const MAP_CONFIG: Record<PreviewMapKey, PreviewMapConfig> = {
   ship: { label: "Ship", mapType: MapType.Ship },
   space: { label: "Space", mapType: MapType.Space },
 };
+
+const MONSTER_DROP_PREVIEW_SEC = 0.31;
 
 class MonsterDropPreview {
   private readonly _root: any;
@@ -92,7 +93,7 @@ class MonsterDropPreview {
 
   private _tickDrop(): void {
     const elapsedSec = (Date.now() - this._dropStartMs) / 1000;
-    const progress = Math.min(1, elapsedSec / MONSTER_TIMING.dropSec);
+    const progress = Math.min(1, elapsedSec / MONSTER_DROP_PREVIEW_SEC);
     this._monster.setAnimation(MonsterAction.Drop, progress);
     if (progress >= 1) {
       this._Laya.timer.clear(this, this._tickDrop);
@@ -180,7 +181,7 @@ class MonsterDropPreview {
     this._triadLayer.graphics.drawLine(points[2].x, points[2].y, points[0].x, points[0].y, "#34c759", 3);
     this._triadLayer.graphics.drawCircle(centerX, centerY, 8, "#34c759");
     this._triadLayer.graphics.fillText(
-      `${this._activeTriadIndex}: [${triad.join(",")}]  drop ${MONSTER_TIMING.dropSec}s`,
+      `${this._activeTriadIndex}: [${triad.join(",")}]  drop ${MONSTER_DROP_PREVIEW_SEC}s`,
       centerX + 12,
       centerY - 18,
       "15px monospace",
