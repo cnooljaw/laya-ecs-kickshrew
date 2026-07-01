@@ -3,7 +3,7 @@ import { createGameWorld } from "../../../../framework/ecs/GameWorld";
 import { createSingletonEntities } from "../../../helpers/SingletonTestEntities";
 import { PlayerComponent } from "../../../../game/features/playerHud";
 import { MonsterComponent, MonsterSpawnComponent } from "../../../../game/features/monster/MonsterComponents";
-import { MonsterType } from "../../../../game/features/monster/MonsterTypes";
+import { MonsterAction, MonsterType } from "../../../../game/features/monster/MonsterTypes";
 import { monsterLifetimeSystem, monsterSpawnSystem } from "../../../../game/features/monster/MonsterSystems";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 import {
@@ -22,6 +22,7 @@ import {
 import {
   createMonsterPool,
   createMonsterTriggerEntities,
+  spawnMonster,
 } from "../../../../game/features/monster/MonsterPool";
 
 describe("MonsterSystem", () => {
@@ -88,14 +89,19 @@ describe("MonsterSystem", () => {
     monsterSpawnSystem(world);
 
     expect(MonsterComponent.visible[monster]).toBe(1);
+    expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Drop);
+    expect(MonsterComponent.stateTimer[monster]).toBeGreaterThan(0);
     expect(MonsterComponent.monsterType[monster]).toBe(MonsterType.Rhino);
     expect(MonsterComponent.durationSec[monster]).toBe(10);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterComponent.hp[monster]).toBe(3);
-    expect([MonsterComponent.holeA[monster], MonsterComponent.holeB[monster], MonsterComponent.holeC[monster]])
-      .toEqual([0, 1, 3]);
-    expect(board.holes.slice(0, 2).map(hole => HoleComponent.occupantEid[hole])).toEqual([monster, monster]);
-    expect(HoleComponent.occupantEid[board.getHoleEid(3)]).toBe(monster);
+    const triad = [MonsterComponent.holeA[monster], MonsterComponent.holeB[monster], MonsterComponent.holeC[monster]];
+    expect(triad).not.toEqual([0, 1, 3]);
+    expect(triad).toContain(4);
+    for (const holeIndex of triad) {
+      expect(HoleComponent.occupantKind[board.getHoleEid(holeIndex)]).toBe(BoardOccupantKind.Monster);
+      expect(HoleComponent.occupantEid[board.getHoleEid(holeIndex)]).toBe(monster);
+    }
     expect(BoardPositionComponent.xRatio[monster]).toBeGreaterThan(0);
     expect(BoardPositionComponent.yRatio[monster]).toBeGreaterThan(0);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
@@ -106,22 +112,30 @@ describe("MonsterSystem", () => {
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
   });
 
-  it("隐藏策略下 Rhino 出现 10 秒后只设置 visible=0，不删除实体", () => {
+  it("Rhino 按 Drop -> Stay -> Wait 推进，Stay 10 秒后释放三洞但不删除实体", () => {
     const world = createGameWorld();
-    createSingletonEntities(world);
+    const { scene } = createSingletonEntities(world);
+    const board = createBoard(world, scene);
     const monster = createMonsterRuntime(world).create(MonsterEntity, monsterInput());
-
-    MonsterComponent.monsterType[monster] = MonsterType.Rhino;
-    MonsterComponent.visible[monster] = 1;
-    MonsterComponent.ageSec[monster] = 9.5;
-    MonsterComponent.durationSec[monster] = 10;
-
-    monsterLifetimeSystem(world, 0.4);
-    expect(MonsterComponent.visible[monster]).toBe(1);
+    const triad: readonly [number, number, number] = [1, 3, 4];
+    spawnMonster(monster, MonsterType.Rhino, triad, board);
 
     monsterLifetimeSystem(world, 0.2);
+    expect(MonsterComponent.visible[monster]).toBe(1);
+    expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Drop);
+
+    monsterLifetimeSystem(world, 0.3);
+    expect(MonsterComponent.visible[monster]).toBe(1);
+    expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Stay);
+
+    monsterLifetimeSystem(world, 10);
     expect(MonsterComponent.visible[monster]).toBe(0);
-    expect(MonsterComponent.ageSec[monster]).toBe(10);
+    expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Wait);
+    expect(MonsterComponent.ageSec[monster]).toBe(0);
+    for (const holeIndex of triad) {
+      expect(HoleComponent.occupantKind[board.getHoleEid(holeIndex)]).toBe(HoleComponent.residentKind[board.getHoleEid(holeIndex)]);
+      expect(HoleComponent.occupantEid[board.getHoleEid(holeIndex)]).toBe(HoleComponent.residentEid[board.getHoleEid(holeIndex)]);
+    }
   });
 
   it("一次跨过多个 100 倍数时默认只生成一次，并消费到最新里程碑", () => {

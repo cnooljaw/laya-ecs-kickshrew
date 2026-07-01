@@ -16,6 +16,11 @@ export const MONSTER_DURATION_SEC: Record<MonsterType, number> = {
   [MonsterType.Rhino]: 10,
 };
 
+export const MONSTER_TIMING = {
+  dropSec: 0.45,
+  dizzySec: 0.5,
+} as const;
+
 export const MONSTER_SPAWN_RULES: readonly MonsterSpawnRule[] = [
   {
     slot: 0,

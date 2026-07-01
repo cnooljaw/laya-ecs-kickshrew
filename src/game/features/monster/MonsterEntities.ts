@@ -1,7 +1,7 @@
 import { defineEntity } from "../../../framework/ecs/EntityDefinition";
 import { BoardPositionComponent } from "../board/index";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponents";
-import type { MonsterType } from "./MonsterTypes";
+import { MonsterAction, type MonsterType } from "./MonsterTypes";
 
 export interface MonsterEntityInput {
   readonly monsterType: MonsterType;
@@ -23,6 +23,9 @@ export const MonsterEntity = defineEntity<MonsterEntityInput>({
     MonsterComponent.visible[eid] = 0;
     MonsterComponent.ageSec[eid] = 0;
     MonsterComponent.durationSec[eid] = input.durationSec;
+    MonsterComponent.actionState[eid] = MonsterAction.Wait;
+    MonsterComponent.stateTimer[eid] = 0;
+    MonsterComponent.animationProgress[eid] = 0;
     MonsterComponent.spawnSeq[eid] = 0;
     MonsterComponent.holeA[eid] = -1;
     MonsterComponent.holeB[eid] = -1;

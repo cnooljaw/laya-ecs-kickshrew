@@ -18,9 +18,9 @@ import {
   ShrewComponent,
   ShrewType,
 } from "../../../game/features/shrew";
-import { MonsterComponent, MonsterEntity, MonsterType } from "../../../game/features/monster";
+import { monsterLifetimeSystem, MonsterAction, MonsterComponent, MonsterEntity, MonsterType } from "../../../game/features/monster";
 import { PlayerComponent } from "../../../game/features/playerHud";
-import { detectKickHit, KickHitResult } from "../../../game/session/KickHitDetection";
+import { detectKickHit, KickHitTargetKind } from "../../../game/session/KickHitDetection";
 import { HAMMER_RULES } from "../../../config/GameTuning";
 
 describe('KickHitDetection', () => {
@@ -56,6 +56,7 @@ describe('KickHitDetection', () => {
       durationSec: 10,
     });
     MonsterComponent.visible[monster] = 1;
+    MonsterComponent.actionState[monster] = MonsterAction.Stay;
     MonsterComponent.hp[monster] = 3;
     MonsterComponent.holeA[monster] = triad[0];
     MonsterComponent.holeB[monster] = triad[1];
@@ -150,7 +151,24 @@ describe('KickHitDetection', () => {
     expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBeCloseTo(HAMMER_RULES.hitCooldownSec, 3);
   });
 
-  it("命中 Monster 三次后奖励 30 金币并释放三角形洞位", () => {
+  it("Monster Drop 阶段不可命中，也不会穿透命中被占用三洞内的地鼠", () => {
+    const monster = createMonsterAtTriad([0, 1, 3]);
+    MonsterComponent.actionState[monster] = MonsterAction.Drop;
+    const x = BoardPositionComponent.xRatio[monster];
+    const y = BoardPositionComponent.yRatio[monster];
+
+    const result = detectKickHit(world, x, y);
+
+    expect(result.targetKind).toBe(KickHitTargetKind.None);
+    expect(result.hitMonsterEid).toBe(-1);
+    expect(MonsterComponent.hp[monster]).toBe(3);
+    for (const index of [0, 1, 3]) {
+      const resident = HoleComponent.residentEid[holes[index]];
+      expect(ShrewComponent.isClickable[resident]).toBe(1);
+    }
+  });
+
+  it("命中 Monster 三次后进入 Dizzy，奖励 30 金币，Dizzy 结束后释放三角形洞位", () => {
     const monster = createMonsterAtTriad([0, 1, 3]);
     const x = BoardPositionComponent.xRatio[monster];
     const y = BoardPositionComponent.yRatio[monster];
@@ -163,9 +181,19 @@ describe('KickHitDetection', () => {
     }
 
     expect(MonsterComponent.hp[monster]).toBe(0);
+    expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Dizzy);
     expect(MonsterComponent.hitSeq[monster]).toBe(3);
     expect(MonsterComponent.defeatedSeq[monster]).toBe(1);
     expect(PlayerComponent.money[singletons.player]).toBe(130);
+    for (const index of [0, 1, 3]) {
+      expect(HoleComponent.occupantKind[holes[index]]).toBe(BoardOccupantKind.Monster);
+      expect(HoleComponent.occupantEid[holes[index]]).toBe(monster);
+    }
+
+    monsterLifetimeSystem(world, 0.6);
+
+    expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Wait);
+    expect(MonsterComponent.visible[monster]).toBe(0);
     for (const index of [0, 1, 3]) {
       expect(HoleComponent.occupantKind[holes[index]]).toBe(BoardOccupantKind.Shrew);
       expect(HoleComponent.occupantEid[holes[index]]).toBe(HoleComponent.residentEid[holes[index]]);

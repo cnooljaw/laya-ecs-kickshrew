@@ -4,6 +4,7 @@ import { getLaya } from "../../../framework/view/LayaRuntime";
 import { createSkeleton } from "../../../framework/view/LayaSpine";
 import { DESIGN_RESOLUTION } from "../../../config/GameTuning";
 import { MonsterType } from "./MonsterTypes";
+import { MonsterAction } from "./MonsterTypes";
 import { MONSTER_VIEW_CONFIG } from "./MonsterViewConfig";
 import type { IMonsterNode } from "./IMonsterNode";
 
@@ -24,6 +25,9 @@ export class MonsterNode implements IMonsterNode {
   private _destroyed = false;
   private _visible = false;
   private _lastSpawnSeq = -1;
+  private _baseX = 0;
+  private _baseY = 0;
+  private _offsetY = 0;
 
   constructor(options: MonsterNodeOptions = {}) {
     this._resolveSkUrl = options.resolveSkUrl ?? resolveDefaultMonsterSkUrl;
@@ -49,20 +53,27 @@ export class MonsterNode implements IMonsterNode {
     this._loadAndPlay({ monsterType, skUrl: this._resolveSkUrl(monsterType), spawnSeq });
   }
 
-  playHit(_hitSeq: number): void {
-    if (_hitSeq <= 0) return;
-    this._skeleton?.play?.(0, true);
-  }
+  playHit(_hitSeq: number): void {}
 
   playDefeated(_defeatedSeq: number): void {
     if (_defeatedSeq <= 0) return;
     this._skeleton?.play?.(0, false);
   }
 
+  setAnimation(actionState: number, progress: number): void {
+    if (actionState === MonsterAction.Drop) {
+      const clamped = Math.max(0, Math.min(1, progress));
+      this._offsetY = -DESIGN_RESOLUTION.height * 0.28 * (1 - clamped);
+    } else {
+      this._offsetY = 0;
+    }
+    this._applyTransform();
+  }
+
   setPosition(x: number, y: number): void {
-    if (!this._container) return;
-    this._container.x = x * DESIGN_RESOLUTION.width;
-    this._container.y = y * DESIGN_RESOLUTION.height;
+    this._baseX = x * DESIGN_RESOLUTION.width;
+    this._baseY = y * DESIGN_RESOLUTION.height;
+    this._applyTransform();
   }
 
   setScale(scale: number): void {
@@ -79,6 +90,12 @@ export class MonsterNode implements IMonsterNode {
     this._visible = visible;
     if (this._container) this._container.visible = visible;
     if (this._skeleton) this._skeleton.visible = visible;
+  }
+
+  private _applyTransform(): void {
+    if (!this._container) return;
+    this._container.x = this._baseX;
+    this._container.y = this._baseY + this._offsetY;
   }
 
   destroy(): void {
@@ -102,7 +119,6 @@ export class MonsterNode implements IMonsterNode {
       this._skeleton.name = `MonsterSkeleton:${request.monsterType}`;
       this._skeleton.visible = this._visible;
       this._container.addChild(this._skeleton);
-      this._skeleton.play?.(0, true);
     } catch {
       this.setVisible(false);
     }

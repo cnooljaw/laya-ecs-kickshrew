@@ -6,7 +6,7 @@ import { createEntityRuntime } from "../../../framework/ecs/EntityRuntime";
 import { HammerComponent } from "../../../game/features/hammer";
 import { BoardOccupantKind, BoardPositionComponent, HoleComponent, MapType } from "../../../game/features/board";
 import { ShrewAction, ShrewComponent, ShrewType } from "../../../game/features/shrew";
-import { MonsterComponent, MonsterEntity, MonsterType } from "../../../game/features/monster";
+import { MonsterAction, MonsterComponent, MonsterEntity, MonsterType } from "../../../game/features/monster";
 import { PlayerComponent } from "../../../game/features/playerHud";
 import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../../config/GameTuning";
 import { KickInputController, KICK_INPUT_SOUNDS } from "../../../game/session";
@@ -107,6 +107,7 @@ describe("KickInputController", () => {
     const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
 
     MonsterComponent.visible[monster] = 1;
+    MonsterComponent.actionState[monster] = MonsterAction.Stay;
     MonsterComponent.hp[monster] = 1;
     MonsterComponent.reward[monster] = 30;
     MonsterComponent.holeA[monster] = 0;

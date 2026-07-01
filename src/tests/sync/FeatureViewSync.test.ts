@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MonsterComponent } from "../../game/features/monster";
 import { MonsterEntity } from "../../game/features/monster";
-import { MonsterType } from "../../game/features/monster";
+import { MonsterAction, MonsterType } from "../../game/features/monster";
 import { BoardPositionComponent } from "../../game/features/board";
 import { PerfHeroComponent } from "../../game/features/perfHero";
 import { PerfHeroEntity } from "../../game/features/perfHero";
@@ -30,6 +30,7 @@ describe("feature projections", () => {
       scales: [] as number[],
       hits: [] as number[],
       defeated: [] as number[],
+      animations: [] as Array<[number, number]>,
       zOrders: [] as number[],
       visible: [] as boolean[],
     };
@@ -37,6 +38,7 @@ describe("feature projections", () => {
       playDefeated: seq => calls.defeated.push(seq),
       playHit: seq => calls.hits.push(seq),
       spawn: (monsterType, spawnSeq) => calls.spawns.push({ monsterType, spawnSeq }),
+      setAnimation: (action, progress) => calls.animations.push([action, progress]),
       setPosition: (x, y) => calls.positions.push([x, y]),
       setScale: scale => calls.scales.push(scale),
       setZOrder: z => calls.zOrders.push(z),
@@ -46,6 +48,8 @@ describe("feature projections", () => {
     runtime.mount(MonsterProjection, monster, node);
 
     MonsterComponent.visible[monster] = 1;
+    MonsterComponent.actionState[monster] = MonsterAction.Drop;
+    MonsterComponent.animationProgress[monster] = 0.5;
     MonsterComponent.spawnSeq[monster] = 1;
     MonsterComponent.hitSeq[monster] = 1;
     MonsterComponent.defeatedSeq[monster] = 1;
@@ -62,6 +66,7 @@ describe("feature projections", () => {
     expect(calls.scales).toEqual([MonsterComponent.scale[monster]]);
     expect(calls.hits).toEqual([1]);
     expect(calls.defeated).toEqual([1]);
+    expect(calls.animations).toEqual([[MonsterAction.Drop, 0.5]]);
     expect(calls.zOrders).toEqual([80]);
     expect(calls.visible).toEqual([true]);
   });

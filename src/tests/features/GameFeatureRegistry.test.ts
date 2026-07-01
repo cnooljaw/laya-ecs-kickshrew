@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MONSTER_SPAWN_RULES } from "../../game/features/monster";
 import {
   BoardFeature,
+  BoardOccupantKind,
   BoardRuntime,
   BoardCapability,
   HoleComponent,
@@ -12,9 +13,9 @@ import {
   SceneProjection,
   setupBoard,
 } from "../../game/features/board";
-import { ShrewEntity } from "../../game/features/shrew";
+import { ShrewAction, ShrewComponent, ShrewEntity } from "../../game/features/shrew";
 import { HammerEntity } from "../../game/features/hammer";
-import { PlayerEntity } from "../../game/features/playerHud";
+import { PlayerComponent, PlayerEntity } from "../../game/features/playerHud";
 import { MonsterEntity, MonsterTriggerEntity } from "../../game/features/monster";
 import { PerfHeroEntity } from "../../game/features/perfHero";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
@@ -155,17 +156,23 @@ describe("GameFeatureRegistry", () => {
   });
 
   it("keeps real feature contribution order stable", () => {
-    expect(GAME_FEATURES.map(feature => feature.name).slice(0, 2)).toEqual([
+    expect(GAME_FEATURES.map(feature => feature.name).slice(0, 3)).toEqual([
       "board",
+      "monster",
       "shrew",
     ]);
     expect(GAME_FEATURE_REGISTRY.systemsByPhase("state").map(item => item.name)).toEqual([
       "board.mapCycle",
-      "shrew.boardSync",
       "shrew.animationTimer",
       "shrew.state",
       "hammer.state",
       "session.hammerThunder",
+    ]);
+    expect(GAME_FEATURE_REGISTRY.systemsByPhase("feature").map(item => item.name)).toEqual([
+      "monster.lifetime",
+      "monster.spawn",
+      "shrew.boardSync",
+      "perfHero.state",
     ]);
     expect(GAME_FEATURE_REGISTRY.entityTypes()).toEqual(expect.arrayContaining([
       SceneEntity,
@@ -266,6 +273,37 @@ describe("GameFeatureRegistry", () => {
       monster: MONSTER_SPAWN_RULES.reduce((count, rule) => count + rule.maxActiveCount, 0),
     });
     expect(setup.resourceCount()).toBe(1);
+  });
+
+  it("runs Monster occupancy before final Shrew board sync in the same loop frame", () => {
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, GAME_FEATURE_REGISTRY.entityTypes());
+    entities.bootstrapSingletons();
+    const setup = createSetupContext(entities);
+    GAME_FEATURE_REGISTRY.setupAll(setup.context);
+    const board = setup.context.use(BoardCapability);
+
+    PlayerComponent.money[entities.one(PlayerEntity)] = 100;
+    for (const hole of board.holes) {
+      const shrew = HoleComponent.residentEid[hole];
+      ShrewComponent.actionState[shrew] = ShrewAction.Stand;
+      ShrewComponent.isClickable[shrew] = 1;
+    }
+
+    for (const system of GAME_FEATURE_REGISTRY.systemsByPhase("state")) {
+      system.run(world, 0);
+    }
+    for (const system of GAME_FEATURE_REGISTRY.systemsByPhase("feature")) {
+      system.run(world, 0);
+    }
+
+    const monsterHoles = board.holes.filter(hole => HoleComponent.occupantKind[hole] === BoardOccupantKind.Monster);
+    expect(monsterHoles).toHaveLength(3);
+    for (const hole of monsterHoles) {
+      const shrew = HoleComponent.residentEid[hole];
+      expect(ShrewComponent.actionState[shrew]).toBe(ShrewAction.Wait);
+      expect(ShrewComponent.isClickable[shrew]).toBe(0);
+    }
   });
 
   it("reuses precomputed phase arrays", () => {

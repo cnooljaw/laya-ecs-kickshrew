@@ -11,8 +11,9 @@ import {
   type MonsterEntityInput,
 } from "./MonsterEntities";
 import type { MonsterSpawnRule } from "./MonsterRules";
+import { MONSTER_TIMING } from "./MonsterRules";
 import type { MonsterViewConfig } from "./MonsterViewConfig";
-import type { MonsterType } from "./MonsterTypes";
+import { MonsterAction, type MonsterType } from "./MonsterTypes";
 import { getMonsterTriadCenter, type MonsterHoleTriad } from "./MonsterHoleTriads";
 
 export function createMonsterTriggerEntities(
@@ -63,6 +64,9 @@ export function spawnMonster(
   MonsterComponent.monsterType[eid] = monsterType;
   MonsterComponent.visible[eid] = 1;
   MonsterComponent.ageSec[eid] = 0;
+  MonsterComponent.actionState[eid] = MonsterAction.Drop;
+  MonsterComponent.stateTimer[eid] = MONSTER_TIMING.dropSec;
+  MonsterComponent.animationProgress[eid] = 0;
   MonsterComponent.holeA[eid] = triad[0];
   MonsterComponent.holeB[eid] = triad[1];
   MonsterComponent.holeC[eid] = triad[2];

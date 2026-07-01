@@ -5,7 +5,7 @@
  * 1. 检查锤子 hitTable 是否可用 (hitTable=1时可敲击)
  * 2. 比较触摸坐标与 Shrew/Monster 目标中心，选择半径内最近目标
  * 3. 击中 Shrew 时: hp-1, hasHat 处理(蓝鼠), 进入 Dizzy 短暂停留, isClickable=0
- * 4. 击中 Monster 时: hp-1，三击后释放占用洞位并发放奖励
+ * 4. 击中 Monster 时: hp-1，三击后进入 Dizzy，奖励后等待状态机释放占用洞位
  * 5. 击中后设 hitTable=0 防止连点 (~0.24秒后由锤子动画系统恢复)
  *
  * 此逻辑由触摸事件异步触发，不在帧循环中。
@@ -16,8 +16,9 @@ import {
   HammerComponent,
 } from "../features/hammer/index";
 import {
+  MonsterAction,
   MonsterComponent,
-  releaseMonsterTriad,
+  startMonsterDizzy,
 } from "../features/monster/index";
 import { PlayerComponent } from "../features/playerHud/index";
 import {
@@ -158,6 +159,7 @@ function findClosestTarget(world: any, touchXRatio: number, touchYRatio: number)
   for (let i = 0; i < monsters.length; i++) {
     const eid = monsters[i];
     if (MonsterComponent.visible[eid] !== 1 || MonsterComponent.hp[eid] <= 0) continue;
+    if (MonsterComponent.actionState[eid] !== MonsterAction.Stay) continue;
     const dist = distanceToTarget(touchXRatio, touchYRatio, eid);
     if (dist >= HIT_RADIUS_RATIO || (closest && dist >= closest.dist)) continue;
     closest = {
@@ -207,5 +209,5 @@ function applyMonsterHit(world: any, monsterEid: number): void {
   if (players.length > 0) {
     PlayerComponent.money[players[0]] += MonsterComponent.reward[monsterEid];
   }
-  releaseMonsterTriad(world, monsterEid);
+  startMonsterDizzy(monsterEid);
 }

@@ -45,9 +45,9 @@ export const ShrewFeature = defineFeature({
   entities: [ShrewEntity],
   projections: [ShrewProjection],
   systems: [
-    defineSystem("state", "shrew.boardSync", shrewBoardSyncSystem),
     defineSystem("state", "shrew.animationTimer", shrewAnimationTimerSystem),
     defineSystem("state", "shrew.state", shrewStateSystem),
+    defineSystem("feature", "shrew.boardSync", shrewBoardSyncSystem),
   ],
   setup: setupCoreGameplay,
 });

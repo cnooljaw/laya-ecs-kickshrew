@@ -10,12 +10,12 @@ import { SessionFeature } from "./session";
 
 export const GAME_FEATURES: readonly FeatureManifest[] = [
   BoardFeature,
+  MonsterFeature,
   ShrewFeature,
   HammerFeature,
   PlayerHUDFeature,
   SessionFeature,
   PerfHeroFeature,
-  MonsterFeature,
 ];
 
 export const GAME_FEATURE_REGISTRY = createGameFeatureRegistry(GAME_FEATURES);

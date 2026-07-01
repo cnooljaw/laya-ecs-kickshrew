@@ -22,6 +22,9 @@ export const MonsterProjection = defineProjection<IMonsterNode>({
     watch(source, ["scale"], "monster scale", ({ eid, node }) => {
       node.setScale(MonsterComponent.scale[eid]);
     }),
+    watch(source, ["actionState", "animationProgress"], "monster animation", ({ eid, node }) => {
+      node.setAnimation(MonsterComponent.actionState[eid], MonsterComponent.animationProgress[eid]);
+    }),
     watch(source, ["hitSeq"], "monster hit", ({ eid, node }) => {
       node.playHit(MonsterComponent.hitSeq[eid]);
     }),
