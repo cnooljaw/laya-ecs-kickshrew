@@ -25,6 +25,7 @@ class FakeSprite {
 
 class FakeSkeleton extends FakeSprite {
   playCalls = 0;
+  stopCalls = 0;
   lastLoop: boolean | undefined;
   height = 120;
   bounds = { x: 0, y: 0, width: 0, height: 0 };
@@ -36,6 +37,10 @@ class FakeSkeleton extends FakeSprite {
 
   getBounds(): { x: number; y: number; width: number; height: number } {
     return this.bounds;
+  }
+
+  stop(): void {
+    this.stopCalls++;
   }
 
   offAll(): void {}
@@ -192,6 +197,44 @@ describe("MonsterNode", () => {
     expect(load).toHaveBeenCalledTimes(1);
     expect(skeleton.playCalls).toBe(3);
     expect(skeleton.lastLoop).toBe(true);
+  });
+
+  it("Wait 隐藏后再次复用 Skeleton 时从头恢复 loop，避免从隐藏期间的随机帧闪出", async () => {
+    const skeleton = new FakeSkeleton();
+    const load = vi.fn().mockResolvedValue({
+      buildArmature: () => skeleton,
+    });
+    vi.stubGlobal("window", {
+      Laya: {
+        Sprite: FakeSprite,
+        Skeleton: FakeSkeleton,
+        loader: { load },
+      },
+    });
+    const parent = new FakeSprite();
+    const node = new MonsterNode({
+      resolveSkUrl: () => "resources/monster/reuse-after-wait.sk",
+    });
+    node.create(parent);
+    const container = parent.children[0] as FakeSprite;
+
+    node.spawn(1, 1);
+    await flushPromises();
+    expect(skeleton.playCalls).toBe(1);
+
+    node.setAnimation(MonsterAction.Wait, 0);
+    expect(skeleton.stopCalls).toBe(1);
+    expect(container.visible).toBe(false);
+
+    node.setVisible(true);
+    node.spawn(1, 2);
+    await flushPromises();
+
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(skeleton.playCalls).toBe(2);
+    expect(skeleton.lastLoop).toBe(true);
+    expect(skeleton.stopCalls).toBe(1);
+    expect(container.visible).toBe(true);
   });
 
   it("Drop 动画从屏幕顶部落到 BoardPosition 对应位置", async () => {

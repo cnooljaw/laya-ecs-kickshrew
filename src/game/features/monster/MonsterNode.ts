@@ -89,6 +89,7 @@ export class MonsterNode implements IMonsterNode {
     this._actionState = actionState;
     this._animationProgress = progress;
     if (actionState === MonsterAction.Wait) {
+      this._stopLoop();
       this.setVisible(false);
     }
     if (actionState === MonsterAction.Drop) {
@@ -198,7 +199,6 @@ export class MonsterNode implements IMonsterNode {
     if (this._skeleton && this._loadedMonsterType === request.monsterType) {
       this._skeleton.visible = this._visible;
       this._playLoopIfNeeded();
-      this.setAnimation(this._actionState, this._animationProgress);
       return;
     }
 
@@ -214,7 +214,6 @@ export class MonsterNode implements IMonsterNode {
       this._skeleton.visible = this._visible;
       this._container.addChild(this._skeleton);
       this._playLoopIfNeeded();
-      this.setAnimation(this._actionState, this._animationProgress);
     } catch {
       this.setVisible(false);
     }
@@ -224,6 +223,12 @@ export class MonsterNode implements IMonsterNode {
     if (!this._skeleton || this._loopPlaying) return;
     this._skeleton.play?.(0, true);
     this._loopPlaying = true;
+  }
+
+  private _stopLoop(): void {
+    if (!this._skeleton || !this._loopPlaying) return;
+    this._skeleton.stop?.();
+    this._loopPlaying = false;
   }
 }
 
