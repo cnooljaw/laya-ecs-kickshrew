@@ -36,9 +36,11 @@ class MonsterDropPreview {
   private readonly _shrews: ShrewNode[] = [];
   private readonly _monster = new MonsterNode();
   private readonly _triadLayer: any;
+  private readonly _monsterDebugLayer: any;
   private _spawnSeq = 0;
   private _activeTriadIndex = 0;
   private _dropStartMs = 0;
+  private _debugOverlayStartMs = 0;
 
   constructor(
     private readonly _Laya: any,
@@ -54,6 +56,12 @@ class MonsterDropPreview {
     this._triadLayer.zOrder = 190;
     this._triadLayer.mouseEnabled = false;
     this._root.addChild(this._triadLayer);
+
+    this._monsterDebugLayer = new this._Laya.Sprite();
+    this._monsterDebugLayer.name = "MonsterSkeletonBoundsOverlay";
+    this._monsterDebugLayer.zOrder = 230;
+    this._monsterDebugLayer.mouseEnabled = false;
+    this._root.addChild(this._monsterDebugLayer);
   }
 
   create(): void {
@@ -83,6 +91,7 @@ class MonsterDropPreview {
     this._monster.setVisible(true);
     this._monster.setAnimation(MonsterAction.Drop, 0);
     this._ensureMonsterSpawned();
+    this._startMonsterDebugOverlay();
 
     this._Laya.timer.clear(this, this._tickDrop);
     this._dropStartMs = Date.now();
@@ -93,6 +102,7 @@ class MonsterDropPreview {
     const elapsedSec = (Date.now() - this._dropStartMs) / 1000;
     const progress = Math.min(1, elapsedSec / MONSTER_DROP_PREVIEW_SEC);
     this._monster.setAnimation(MonsterAction.Drop, progress);
+    this._drawMonsterDebugOverlay();
     if (progress >= 1) {
       this._Laya.timer.clear(this, this._tickDrop);
       this._monster.setAnimation(MonsterAction.Stay, 1);
@@ -128,6 +138,21 @@ class MonsterDropPreview {
       shrew.setClickable(false);
     }
     this._updateShrewBlockedState(MONSTER_HOLE_TRIADS[this._activeTriadIndex]);
+  }
+
+  private _startMonsterDebugOverlay(): void {
+    this._debugOverlayStartMs = Date.now();
+    this._drawMonsterDebugOverlay();
+    this._Laya.timer.clear(this, this._tickMonsterDebugOverlay);
+    this._Laya.timer.loop(16, this, this._tickMonsterDebugOverlay);
+  }
+
+  private _tickMonsterDebugOverlay(): void {
+    this._drawMonsterDebugOverlay();
+    const geometry = this._monster.getDebugGeometry();
+    if (Date.now() - this._debugOverlayStartMs > 2000 && geometry?.skeletonBounds) {
+      this._Laya.timer.clear(this, this._tickMonsterDebugOverlay);
+    }
   }
 
   private _ensureMonsterSpawned(): void {
@@ -173,6 +198,31 @@ class MonsterDropPreview {
         "left",
       );
     }
+  }
+
+  private _drawMonsterDebugOverlay(): void {
+    const geometry = this._monster.getDebugGeometry();
+    const graphics = this._monsterDebugLayer.graphics;
+    const blue = "#0a84ff";
+
+    graphics.clear();
+    if (!geometry) return;
+
+    const anchor = geometry.containerAnchor;
+    graphics.drawLine(anchor.x - 14, anchor.y, anchor.x + 14, anchor.y, blue, 2);
+    graphics.drawLine(anchor.x, anchor.y - 14, anchor.x, anchor.y + 14, blue, 2);
+    graphics.drawCircle(anchor.x, anchor.y, 5, blue);
+    graphics.fillText("container", anchor.x + 8, anchor.y + 8, "12px monospace", blue, "left");
+
+    const bounds = geometry.skeletonBounds;
+    if (!bounds) return;
+
+    graphics.drawLine(bounds.x, bounds.y, bounds.x + bounds.width, bounds.y, blue, 2);
+    graphics.drawLine(bounds.x + bounds.width, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height, blue, 2);
+    graphics.drawLine(bounds.x + bounds.width, bounds.y + bounds.height, bounds.x, bounds.y + bounds.height, blue, 2);
+    graphics.drawLine(bounds.x, bounds.y + bounds.height, bounds.x, bounds.y, blue, 2);
+    graphics.drawCircle(bounds.centerX, bounds.centerY, 5, blue);
+    graphics.fillText("skeleton.getBounds()", bounds.x, bounds.y - 16, "12px monospace", blue, "left");
   }
 
   private _createPanel(): void {

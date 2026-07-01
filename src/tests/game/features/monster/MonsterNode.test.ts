@@ -26,10 +26,15 @@ class FakeSkeleton extends FakeSprite {
   playCalls = 0;
   lastLoop: boolean | undefined;
   height = 120;
+  bounds = { x: 0, y: 0, width: 0, height: 0 };
 
   play(_index = 0, loop = false): void {
     this.playCalls++;
     this.lastLoop = loop;
+  }
+
+  getBounds(): { x: number; y: number; width: number; height: number } {
+    return this.bounds;
   }
 
   offAll(): void {}
@@ -166,5 +171,48 @@ describe("MonsterNode", () => {
 
     node.setAnimation(MonsterAction.Drop, 1);
     expect(container.y).toBeCloseTo(DESIGN_RESOLUTION.height * 0.6, 3);
+  });
+
+  it("有 skeleton bounds 时用视觉中心对齐 BoardPosition，并暴露调试几何", async () => {
+    const skeleton = new FakeSkeleton();
+    skeleton.bounds = { x: -20, y: -80, width: 100, height: 200 };
+    const load = vi.fn().mockResolvedValue({
+      buildArmature: () => skeleton,
+    });
+    vi.stubGlobal("window", {
+      Laya: {
+        Sprite: FakeSprite,
+        Skeleton: FakeSkeleton,
+        loader: { load },
+      },
+    });
+    const parent = new FakeSprite();
+    const node = new MonsterNode({
+      resolveSkUrl: () => "resources/monster/center-offset.sk",
+    });
+    node.create(parent);
+    node.setScale(0.5);
+    const container = parent.children[0] as FakeSprite;
+
+    node.spawn(1, 1);
+    await flushPromises();
+    node.setPosition(0.5, 0.6);
+    node.setAnimation(MonsterAction.Stay, 1);
+
+    const targetX = DESIGN_RESOLUTION.width * 0.5;
+    const targetY = DESIGN_RESOLUTION.height * 0.6;
+    expect(container.x + (skeleton.bounds.x + skeleton.bounds.width * 0.5) * 0.5).toBeCloseTo(targetX, 3);
+    expect(container.y + (skeleton.bounds.y + skeleton.bounds.height * 0.5) * 0.5).toBeCloseTo(targetY, 3);
+
+    const geometry = node.getDebugGeometry();
+    expect(geometry?.containerAnchor).toEqual({ x: container.x, y: container.y });
+    expect(geometry?.skeletonBounds).toEqual({
+      x: container.x + skeleton.bounds.x * 0.5,
+      y: container.y + skeleton.bounds.y * 0.5,
+      width: skeleton.bounds.width * 0.5,
+      height: skeleton.bounds.height * 0.5,
+      centerX: targetX,
+      centerY: targetY,
+    });
   });
 });

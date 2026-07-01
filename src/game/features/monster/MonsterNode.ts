@@ -18,6 +18,20 @@ interface MonsterNodeOptions {
   resolveSkUrl?: (monsterType: number) => string;
 }
 
+interface MonsterDebugBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  centerX: number;
+  centerY: number;
+}
+
+export interface MonsterDebugGeometry {
+  containerAnchor: { x: number; y: number };
+  skeletonBounds: MonsterDebugBounds | null;
+}
+
 export class MonsterNode implements IMonsterNode {
   private readonly _resolveSkUrl: (monsterType: number) => string;
   private _container: any = null;
@@ -99,10 +113,63 @@ export class MonsterNode implements IMonsterNode {
     if (this._skeleton) this._skeleton.visible = visible;
   }
 
+  getDebugGeometry(): MonsterDebugGeometry | null {
+    if (!this._container) return null;
+
+    const containerAnchor = {
+      x: this._container.x ?? 0,
+      y: this._container.y ?? 0,
+    };
+    const bounds = this._getSkeletonBounds();
+    if (!bounds) {
+      return { containerAnchor, skeletonBounds: null };
+    }
+
+    const scaleX = this._container.scaleX ?? this._scale;
+    const scaleY = this._container.scaleY ?? this._scale;
+    const x = containerAnchor.x + bounds.x * scaleX;
+    const y = containerAnchor.y + bounds.y * scaleY;
+    const width = bounds.width * scaleX;
+    const height = bounds.height * scaleY;
+
+    return {
+      containerAnchor,
+      skeletonBounds: {
+        x,
+        y,
+        width,
+        height,
+        centerX: x + width * 0.5,
+        centerY: y + height * 0.5,
+      },
+    };
+  }
+
   private _applyTransform(): void {
     if (!this._container) return;
-    this._container.x = this._baseX;
-    this._container.y = this._baseY + this._offsetY;
+    const offset = this._getSkeletonCenterOffset();
+    this._container.x = this._baseX - offset.x;
+    this._container.y = this._baseY - offset.y + this._offsetY;
+  }
+
+  private _getSkeletonCenterOffset(): { x: number; y: number } {
+    const bounds = this._getSkeletonBounds();
+    if (!bounds || !this._container) return { x: 0, y: 0 };
+    const scaleX = this._container.scaleX ?? this._scale;
+    const scaleY = this._container.scaleY ?? this._scale;
+    return {
+      x: (bounds.x + bounds.width * 0.5) * scaleX,
+      y: (bounds.y + bounds.height * 0.5) * scaleY,
+    };
+  }
+
+  private _getSkeletonBounds(): { x: number; y: number; width: number; height: number } | null {
+    if (!this._skeleton) return null;
+    const bounds = this._skeleton.getBounds?.();
+    if (!bounds || bounds.width <= 0 || bounds.height <= 0) {
+      return null;
+    }
+    return bounds;
   }
 
   destroy(): void {
