@@ -13,6 +13,7 @@ function createNode(onSprite: () => void): IShrewNode {
   return {
     setSpriteFrame: onSprite,
     setAnimation: () => {},
+    setBlockedByOccupant: () => {},
     setClickable: () => {},
     setHatVisible: () => {},
     setPosition: () => {},

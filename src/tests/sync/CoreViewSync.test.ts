@@ -35,6 +35,7 @@ function createShrewNode(calls: {
   animations: Array<[number, number, number]>;
   clickables: boolean[];
   hats: boolean[];
+  blocked: boolean[];
   positions: Array<[number, number]>;
   props: number[];
   zOrders: number[];
@@ -46,6 +47,7 @@ function createShrewNode(calls: {
     },
     setClickable: clickable => calls.clickables.push(clickable),
     setHatVisible: visible => calls.hats.push(visible),
+    setBlockedByOccupant: blocked => calls.blocked.push(blocked),
     setPosition: (x, y) => calls.positions.push([x, y]),
     setPropType: propType => calls.props.push(propType),
     setZOrder: z => calls.zOrders.push(z),
@@ -65,6 +67,7 @@ describe("compiled core projections", () => {
       animations: [] as Array<[number, number, number]>,
       clickables: [] as boolean[],
       hats: [] as boolean[],
+      blocked: [] as boolean[],
       positions: [] as Array<[number, number]>,
       props: [] as number[],
       zOrders: [] as number[],
@@ -101,6 +104,7 @@ describe("compiled core projections", () => {
       animations: [] as Array<[number, number, number]>,
       clickables: [] as boolean[],
       hats: [] as boolean[],
+      blocked: [] as boolean[],
       positions: [] as Array<[number, number]>,
       props: [] as number[],
       zOrders: [] as number[],
@@ -121,6 +125,7 @@ describe("compiled core projections", () => {
       animations: [],
       clickables: [],
       hats: [],
+      blocked: [],
       positions: [],
       props: [],
       zOrders: [],
@@ -139,6 +144,7 @@ describe("compiled core projections", () => {
       animations: [] as Array<[number, number, number]>,
       clickables: [] as boolean[],
       hats: [] as boolean[],
+      blocked: [] as boolean[],
       positions: [] as Array<[number, number]>,
       props: [] as number[],
       zOrders: [] as number[],
@@ -160,6 +166,36 @@ describe("compiled core projections", () => {
     expect(calls.positions[0][0]).toBeCloseTo(0.42, 5);
     expect(calls.positions[0][1]).toBeCloseTo(0.63, 5);
     expect(calls.zOrders).toEqual([5]);
+  });
+
+  it("projects shrew blocked-by-occupant visibility override", () => {
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, [ShrewEntity]);
+    const eid = entities.create(ShrewEntity, {
+      shrewType: ShrewType.Red,
+      mapType: MapType.Meadow,
+    });
+    const calls = {
+      sprites: [] as Array<[number, number]>,
+      animations: [] as Array<[number, number, number]>,
+      clickables: [] as boolean[],
+      hats: [] as boolean[],
+      blocked: [] as boolean[],
+      positions: [] as Array<[number, number]>,
+      props: [] as number[],
+      zOrders: [] as number[],
+    };
+    const runtime = createProjectionRuntime([ShrewProjection]);
+    runtime.mount(ShrewProjection, eid, createShrewNode(calls));
+    runtime.mark(world);
+    runtime.sync(world);
+    calls.blocked.length = 0;
+
+    ShrewComponent.blockedByOccupant[eid] = 1;
+    runtime.mark(world);
+    runtime.sync(world);
+
+    expect(calls.blocked).toEqual([true]);
   });
 
   it("projects hole position, occupant and z-order", () => {

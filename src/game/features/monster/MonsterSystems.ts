@@ -8,7 +8,7 @@ import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponents";
 import { spawnMonster } from "./MonsterPool";
 import { MONSTER_SPAWN_RULES, MONSTER_TIMING, type MonsterSpawnRule } from "./MonsterRules";
 import { MonsterAction, MonsterType } from "./MonsterTypes";
-import { getMonsterTriadCenter, MONSTER_HOLE_TRIADS, type MonsterHoleTriad } from "./MonsterHoleTriads";
+import { MONSTER_HOLE_TRIADS, type MonsterHoleTriad } from "./MonsterHoleTriads";
 
 const playerQuery = defineQuery([PlayerComponent]);
 const monsterQuery = defineQuery([MonsterComponent]);
@@ -127,16 +127,13 @@ function findInactiveMonster(world: any, monsterType: MonsterType): number {
 }
 
 function findAvailableTriad(board: BoardRuntime): MonsterHoleTriad | undefined {
-  let selected: MonsterHoleTriad | undefined;
-  let bestScore = Infinity;
+  const available: MonsterHoleTriad[] = [];
   for (const triad of MONSTER_HOLE_TRIADS) {
     if (!board.canOccupyTriad(triad)) continue;
-    const score = triadCenterDistanceFromBoardCenter(board, triad);
-    if (score >= bestScore) continue;
-    bestScore = score;
-    selected = triad;
+    available.push(triad);
   }
-  return selected;
+  if (available.length === 0) return undefined;
+  return available[Math.floor(Math.random() * available.length)];
 }
 
 function getMonsterTriad(monsterEid: number): MonsterHoleTriad | undefined {
@@ -156,21 +153,4 @@ function resetMonsterToWait(world: any, monsterEid: number): void {
   MonsterComponent.ageSec[monsterEid] = 0;
   MonsterComponent.hp[monsterEid] = 0;
   releaseMonsterTriad(world, monsterEid);
-}
-
-function triadCenterDistanceFromBoardCenter(board: BoardRuntime, triad: MonsterHoleTriad): number {
-  const center = getMonsterTriadCenter(triad, board);
-  let boardX = 0;
-  let boardY = 0;
-  for (const hole of board.holes) {
-    const holeIndex = board.getHoleIndex(hole);
-    const holeCenter = board.getHoleCenter(holeIndex);
-    boardX += holeCenter.xRatio;
-    boardY += holeCenter.yRatio;
-  }
-  boardX /= board.holes.length;
-  boardY /= board.holes.length;
-  const dx = center.xRatio - boardX;
-  const dy = center.yRatio - boardY;
-  return dx * dx + dy * dy;
 }

@@ -133,6 +133,26 @@ describe("ShrewNode animation positioning", () => {
     expect(mainLayer?.removeChildrenCalls[0]).toEqual([0, -1, true]);
   });
 
+  it("被 Monster 占洞时强制隐藏可见中的地鼠容器", () => {
+    vi.stubGlobal("window", {
+      Laya: {
+        Sprite: FakeSprite,
+        Rectangle: FakeRectangle,
+      },
+    });
+    const parent = new FakeSprite();
+    const node = new ShrewNode();
+    node.create(parent);
+    const container = parent.children[0];
+
+    node.setAnimation(ShrewAction.Stand, 0, 1);
+    expect(container.visible).toBe(true);
+
+    node.setBlockedByOccupant(true);
+
+    expect(container.visible).toBe(false);
+  });
+
   it("旧 setSpriteFrame 异步加载晚返回时不会重建当前地鼠部件", async () => {
     const loads: Array<{ resolve: (atlas: unknown) => void }> = [];
     vi.stubGlobal("window", {

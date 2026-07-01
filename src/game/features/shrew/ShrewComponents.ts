@@ -9,6 +9,7 @@ export const ShrewComponent = defineComponent({
   hasHat: Types.f32,
   mapType: Types.f32,
   isClickable: Types.f32,
+  blockedByOccupant: Types.f32,
   animTimer: Types.f32,
   propType: Types.f32,
 });

@@ -37,5 +37,6 @@ describe("ShrewBoardSyncSystem", () => {
 
     expect(ShrewComponent.actionState[shrew]).toBe(ShrewAction.Wait);
     expect(ShrewComponent.isClickable[shrew]).toBe(0);
+    expect(ShrewComponent.blockedByOccupant[shrew]).toBe(1);
   });
 });

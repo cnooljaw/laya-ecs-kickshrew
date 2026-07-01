@@ -122,6 +122,7 @@ export class ShrewNode implements IShrewNode {
   private _currentShrewType: number = -1;
   private _currentMapType: number = -1;
   private _isDizzyVisible: boolean = false;
+  private _blockedByOccupant = false;
 
   create(parent: any): void {
     const Laya = getLaya();
@@ -304,34 +305,42 @@ export class ShrewNode implements IShrewNode {
 
       case ShrewAction.Up:
         // 出洞：progress 0→1，mainLayer.y 从下方隐藏点 → 洞中心点
-        this._container.visible = true;
+        this._container.visible = !this._blockedByOccupant;
         this._setDizzyVisible(Laya, false);
         if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Stand:
-        this._container.visible = true;
+        this._container.visible = !this._blockedByOccupant;
         this._setDizzyVisible(Laya, false);
         if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Down:
         // 入洞：progress 0→1，mainLayer.y 从洞中心点 → 下方隐藏点
-        this._container.visible = true;
+        this._container.visible = !this._blockedByOccupant;
         this._setDizzyVisible(Laya, false);
         if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
         break;
 
       case ShrewAction.Dizzy:
-        this._container.visible = true;
+        this._container.visible = !this._blockedByOccupant;
         if (this._mainLayer) this._mainLayer.y = getShrewMainLayerLocalY(actionState, this._bodyH, progress);
-        this._setDizzyVisible(Laya, true);
+        this._setDizzyVisible(Laya, !this._blockedByOccupant);
         break;
 
       default:
         this._container.visible = false;
         this._setDizzyVisible(Laya, false);
     }
+  }
+
+  setBlockedByOccupant(blocked: boolean): void {
+    this._blockedByOccupant = blocked;
+    if (!blocked) return;
+    if (this._container) this._container.visible = false;
+    const Laya = getLaya();
+    if (Laya) this._setDizzyVisible(Laya, false);
   }
 
   setClickable(clickable: boolean): void {

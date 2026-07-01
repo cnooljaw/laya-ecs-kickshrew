@@ -61,6 +61,9 @@ export const ShrewProjection = defineProjection<IShrewNode>({
     watch(shrewSource, ["isClickable"], "shrew clickable", ({ eid, node }) => {
       node.setClickable(ShrewComponent.isClickable[eid] === 1);
     }),
+    watch(shrewSource, ["blockedByOccupant"], "shrew blocked by occupant", ({ eid, node }) => {
+      node.setBlockedByOccupant(ShrewComponent.blockedByOccupant[eid] === 1);
+    }),
     watch(shrewSource, ["animTimer"], "shrew timer", noProjection),
     watch(shrewSource, ["propType"], "shrew prop", ({ eid, node }) => {
       node.setPropType(ShrewComponent.propType[eid]);

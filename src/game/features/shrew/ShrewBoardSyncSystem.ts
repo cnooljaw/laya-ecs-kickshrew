@@ -27,6 +27,7 @@ export function syncShrewBoardPosition(shrewEid: number, holeEid: number): void 
 function syncShrewOccupancyVisibility(shrewEid: number, holeEid: number): void {
   const isCurrentOccupant = HoleComponent.occupantKind[holeEid] === BoardOccupantKind.Shrew
     && HoleComponent.occupantEid[holeEid] === shrewEid;
+  ShrewComponent.blockedByOccupant[shrewEid] = isCurrentOccupant ? 0 : 1;
   if (isCurrentOccupant) return;
   ShrewComponent.actionState[shrewEid] = ShrewAction.Wait;
   ShrewComponent.isClickable[shrewEid] = 0;

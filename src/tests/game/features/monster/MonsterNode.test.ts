@@ -24,9 +24,12 @@ class FakeSprite {
 
 class FakeSkeleton extends FakeSprite {
   playCalls = 0;
+  lastLoop: boolean | undefined;
+  height = 120;
 
-  play(): void {
+  play(_index = 0, loop = false): void {
     this.playCalls++;
+    this.lastLoop = loop;
   }
 
   offAll(): void {}
@@ -77,7 +80,8 @@ describe("MonsterNode", () => {
 
     expect(load).toHaveBeenCalledTimes(2);
     expect(skeletons).toHaveLength(1);
-    expect(skeletons[0].playCalls).toBe(0);
+    expect(skeletons[0].playCalls).toBe(1);
+    expect(skeletons[0].lastLoop).toBe(true);
   });
 
   it("spawnSeq 为 0 的初始同步不加载 Spine", async () => {
@@ -101,7 +105,7 @@ describe("MonsterNode", () => {
     expect(load).not.toHaveBeenCalled();
   });
 
-  it("加载后不自动播放 Spine，击败时才播放一次自身动画", async () => {
+  it("加载后立即播放 Spine 动画，击败时继续播放自身动画", async () => {
     const skeletons: FakeSkeleton[] = [];
     const load = vi.fn().mockResolvedValue({
       buildArmature: () => {
@@ -124,28 +128,46 @@ describe("MonsterNode", () => {
 
     node.spawn(1, 1);
     await flushPromises();
+    expect(skeletons[0].playCalls).toBe(1);
+    expect(skeletons[0].lastLoop).toBe(true);
+
     node.playHit(1);
-    expect(skeletons[0].playCalls).toBe(0);
+    expect(skeletons[0].playCalls).toBe(1);
 
     node.playDefeated(1);
-    expect(skeletons[0].playCalls).toBe(1);
+    expect(skeletons[0].playCalls).toBe(2);
+    expect(skeletons[0].lastLoop).toBe(false);
   });
 
-  it("Drop 动画从目标中心上方落到 BoardPosition 对应位置", () => {
+  it("Drop 动画从目标中心上方约 2 倍 Monster 高度处落到 BoardPosition 对应位置", async () => {
+    const skeletons: FakeSkeleton[] = [];
+    const load = vi.fn().mockResolvedValue({
+      buildArmature: () => {
+        const skeleton = new FakeSkeleton();
+        skeletons.push(skeleton);
+        return skeleton;
+      },
+    });
     vi.stubGlobal("window", {
       Laya: {
         Sprite: FakeSprite,
+        Skeleton: FakeSkeleton,
+        loader: { load },
       },
     });
     const parent = new FakeSprite();
-    const node = new MonsterNode();
+    const node = new MonsterNode({
+      resolveSkUrl: () => "resources/monster/drop-height.sk",
+    });
     node.create(parent);
     const container = parent.children[0] as FakeSprite;
+    node.spawn(1, 1);
+    await flushPromises();
 
     node.setPosition(0.5, 0.6);
     node.setAnimation(MonsterAction.Drop, 0);
     expect(container.x).toBeCloseTo(DESIGN_RESOLUTION.width * 0.5, 3);
-    expect(container.y).toBeLessThan(DESIGN_RESOLUTION.height * 0.6);
+    expect(container.y).toBeCloseTo(DESIGN_RESOLUTION.height * 0.6 - skeletons[0].height * 2, 3);
 
     node.setAnimation(MonsterAction.Drop, 1);
     expect(container.y).toBeCloseTo(DESIGN_RESOLUTION.height * 0.6, 3);

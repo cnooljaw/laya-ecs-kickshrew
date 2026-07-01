@@ -9,6 +9,7 @@ export function resetShrewForNextCycle(eid: number): void {
   ShrewComponent.hasHat[eid] = shrewType === ShrewType.Blue ? 1 : 0;
   ShrewComponent.actionState[eid] = ShrewAction.Wait;
   ShrewComponent.isClickable[eid] = 0;
+  ShrewComponent.blockedByOccupant[eid] = 0;
   ShrewComponent.animTimer[eid] = randomRange(timing.waitMinSec, timing.waitMaxSec);
 
   AnimationComponent.animType[eid] = AnimType.Idle;

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createGameWorld } from "../../../../framework/ecs/GameWorld";
 import { createSingletonEntities } from "../../../helpers/SingletonTestEntities";
 import { PlayerComponent } from "../../../../game/features/playerHud";
@@ -24,8 +24,13 @@ import {
   createMonsterTriggerEntities,
   spawnMonster,
 } from "../../../../game/features/monster/MonsterPool";
+import { MONSTER_HOLE_TRIADS } from "../../../../game/features/monster/MonsterHoleTriads";
 
 describe("MonsterSystem", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   function monsterInput(monsterType = MonsterType.Rhino): MonsterEntityInput {
     return {
       monsterType,
@@ -96,8 +101,7 @@ describe("MonsterSystem", () => {
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterComponent.hp[monster]).toBe(3);
     const triad = [MonsterComponent.holeA[monster], MonsterComponent.holeB[monster], MonsterComponent.holeC[monster]];
-    expect(triad).not.toEqual([0, 1, 3]);
-    expect(triad).toContain(4);
+    expect(MONSTER_HOLE_TRIADS.some(candidate => candidate.every((hole, index) => hole === triad[index]))).toBe(true);
     for (const holeIndex of triad) {
       expect(HoleComponent.occupantKind[board.getHoleEid(holeIndex)]).toBe(BoardOccupantKind.Monster);
       expect(HoleComponent.occupantEid[board.getHoleEid(holeIndex)]).toBe(monster);
@@ -110,6 +114,22 @@ describe("MonsterSystem", () => {
 
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
+  });
+
+  it("从当前可用三角形中随机选择 Monster 出现位置", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.999);
+    const world = createGameWorld();
+    const { player, scene } = createSingletonEntities(world);
+    createBoard(world, scene);
+    const runtime = createMonsterRuntime(world);
+    runtime.create(MonsterTriggerEntity, 0);
+    const monster = runtime.create(MonsterEntity, monsterInput());
+
+    PlayerComponent.money[player] = 100;
+    monsterSpawnSystem(world);
+
+    expect([MonsterComponent.holeA[monster], MonsterComponent.holeB[monster], MonsterComponent.holeC[monster]])
+      .toEqual(MONSTER_HOLE_TRIADS[MONSTER_HOLE_TRIADS.length - 1]);
   });
 
   it("Rhino 按 Drop -> Stay -> Wait 推进，Stay 10 秒后释放三洞但不删除实体", () => {
