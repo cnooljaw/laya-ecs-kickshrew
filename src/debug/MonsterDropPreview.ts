@@ -65,7 +65,6 @@ class MonsterDropPreview {
     this._monster.create(this._root);
     this._monster.setScale(MONSTER_VIEW_CONFIG[MonsterType.Rhino].scale);
     this._monster.setVisible(false);
-    this._createHoleMarkers();
     this._createPanel();
     this.playTriad(0);
   }
@@ -77,14 +76,13 @@ class MonsterDropPreview {
 
     this._updatePanelActiveState();
     this._updateShrewBlockedState(triad);
-    this._drawTriadOverlay(triad, center);
+    this._drawTriadOverlays();
 
-    this._spawnSeq += 1;
     this._monster.setPosition(center.xRatio, center.yRatio);
     this._monster.setZOrder(80);
     this._monster.setVisible(true);
     this._monster.setAnimation(MonsterAction.Drop, 0);
-    this._monster.spawn(MonsterType.Rhino, this._spawnSeq);
+    this._ensureMonsterSpawned();
 
     this._Laya.timer.clear(this, this._tickDrop);
     this._dropStartMs = Date.now();
@@ -132,6 +130,12 @@ class MonsterDropPreview {
     this._updateShrewBlockedState(MONSTER_HOLE_TRIADS[this._activeTriadIndex]);
   }
 
+  private _ensureMonsterSpawned(): void {
+    if (this._spawnSeq > 0) return;
+    this._spawnSeq = 1;
+    this._monster.spawn(MonsterType.Rhino, this._spawnSeq);
+  }
+
   private _updateShrewBlockedState(triad: MonsterHoleTriad): void {
     const occupied = new Set<number>(triad);
     for (let i = 0; i < this._shrews.length; i++) {
@@ -139,55 +143,36 @@ class MonsterDropPreview {
     }
   }
 
-  private _createHoleMarkers(): void {
+  private _drawTriadOverlays(): void {
     const positions = HolePositions[this._mapConfig.mapType];
-    for (let i = 0; i < HOLE_COUNT; i++) {
-      const x = positions.xRatios[i] * VIEWPORT.width;
-      const y = positions.yRatios[i] * VIEWPORT.height;
-      const { row, col } = getHoleGrid(i);
+    const red = "#ff3b30";
+    this._triadLayer.graphics.clear();
+    for (let i = 0; i < MONSTER_HOLE_TRIADS.length; i++) {
+      const triad = MONSTER_HOLE_TRIADS[i];
+      const points = triad.map(index => ({
+        x: positions.xRatios[index] * VIEWPORT.width,
+        y: positions.yRatios[index] * VIEWPORT.height,
+      }));
+      const center = getTriadCenter(this._mapConfig.mapType, triad);
+      const centerX = center.xRatio * VIEWPORT.width;
+      const centerY = center.yRatio * VIEWPORT.height;
+      const active = i === this._activeTriadIndex;
+      const lineWidth = active ? 4 : 2;
+      const pointRadius = active ? 8 : 5;
 
-      const marker = new this._Laya.Sprite();
-      marker.name = `MonsterPreviewHoleMarker_${i}`;
-      marker.zOrder = 210;
-      marker.mouseEnabled = false;
-      marker.graphics.drawLine(-28, 0, 28, 0, "#ff3b30", 2);
-      marker.graphics.drawLine(0, -28, 0, 28, "#ff3b30", 2);
-      marker.graphics.drawCircle(0, 0, 4, "#ff3b30");
-      marker.graphics.fillText(
-        `${i} r${row}c${col}`,
-        8,
-        -30,
-        "13px monospace",
-        "#ffffff",
+      this._triadLayer.graphics.drawLine(points[0].x, points[0].y, points[1].x, points[1].y, red, lineWidth);
+      this._triadLayer.graphics.drawLine(points[1].x, points[1].y, points[2].x, points[2].y, red, lineWidth);
+      this._triadLayer.graphics.drawLine(points[2].x, points[2].y, points[0].x, points[0].y, red, lineWidth);
+      this._triadLayer.graphics.drawCircle(centerX, centerY, pointRadius, red);
+      this._triadLayer.graphics.fillText(
+        String(i),
+        centerX + 7,
+        centerY - 12,
+        active ? "15px monospace" : "12px monospace",
+        red,
         "left",
       );
-      marker.pos(x, y);
-      this._root.addChild(marker);
     }
-  }
-
-  private _drawTriadOverlay(triad: MonsterHoleTriad, center: { xRatio: number; yRatio: number }): void {
-    const positions = HolePositions[this._mapConfig.mapType];
-    const points = triad.map(index => ({
-      x: positions.xRatios[index] * VIEWPORT.width,
-      y: positions.yRatios[index] * VIEWPORT.height,
-    }));
-    const centerX = center.xRatio * VIEWPORT.width;
-    const centerY = center.yRatio * VIEWPORT.height;
-
-    this._triadLayer.graphics.clear();
-    this._triadLayer.graphics.drawLine(points[0].x, points[0].y, points[1].x, points[1].y, "#34c759", 3);
-    this._triadLayer.graphics.drawLine(points[1].x, points[1].y, points[2].x, points[2].y, "#34c759", 3);
-    this._triadLayer.graphics.drawLine(points[2].x, points[2].y, points[0].x, points[0].y, "#34c759", 3);
-    this._triadLayer.graphics.drawCircle(centerX, centerY, 8, "#34c759");
-    this._triadLayer.graphics.fillText(
-      `${this._activeTriadIndex}: [${triad.join(",")}]  drop ${MONSTER_DROP_PREVIEW_SEC}s`,
-      centerX + 12,
-      centerY - 18,
-      "15px monospace",
-      "#34c759",
-      "left",
-    );
   }
 
   private _createPanel(): void {
