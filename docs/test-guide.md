@@ -85,8 +85,12 @@ npm run debug:ready
 http://localhost:8080/debug-tsc.html
 http://localhost:8080/debug-tsc.html?perf=1&heroes=200
 http://localhost:8080/debug-meadow-shrews-stand.html
+http://localhost:8080/debug-ship-shrews-stand.html
 http://localhost:8080/debug-space-shrews-stand.html
+http://localhost:8080/debug-meadow-shrews-up0.html
 http://localhost:8080/debug-meadow-monster-drop.html
+http://localhost:8080/debug-ship-monster-drop.html
+http://localhost:8080/debug-space-monster-drop.html
 ```
 
 `debug:ready` 会编译 TypeScript、修复 ESM 扩展、复制 vendor/资源，并确认 8080 服务可用。

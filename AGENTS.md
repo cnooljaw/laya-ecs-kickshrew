@@ -29,12 +29,13 @@
 - `src/framework/feature/**`：Feature Manifest、Registry、mount 原语。
 - `src/framework/sync/**`：Projection / Effect 定义和 runtime。
 - `src/framework/view/**`：ViewRegistry 与容易随 Laya 版本变化的窄兼容层。
+- `src/game/board/**`：棋盘基础层，拥有 Scene、Hole、BoardPosition、拓扑和占用操作；可被业务 Feature 使用。
 - `src/game/features/<name>/**`：业务纵向切片，拥有 Component、Entity、System、Projection、contract、Node 和配置。
 - `src/game/session/**`：跨 Feature 规则、输入和回包编排，只依赖各 Feature 的公开 `index.ts`。
 - `src/app/**`：Laya 应用壳、world/runtime 装配和主循环。
 - `src/network/**`：协议、请求匹配和 transport；回包不得直接操作 view。
 
-`framework` 不得依赖 `game/app`。Feature 不得导入另一个 Feature 的内部文件。
+`framework` 不得依赖 `game/app`。业务 Feature 不得导入另一个业务 Feature 的内部文件。业务 Feature 可以依赖 `game/board` 公开 API。
 
 ## 数据流
 
@@ -59,6 +60,7 @@ transient result
 - 状态机：`src/game/features/shrew/ShrewStateSystem.ts`
 - 命中/输入：`src/game/session/KickHitDetection.ts`、`KickInputController.ts`
 - 回包：`src/game/session/KickResponseHandler.ts`
+- 棋盘基础层：`src/game/board/BoardFoundation.ts`、`BoardTopology.ts`、`BoardOps.ts`
 - 业务切片：`src/game/features/{shrew,hammer,playerHud,monster,perfHero}`
 - Feature 注册：`src/game/GameFeatures.ts`
 - 运行时：`src/app/GameScene.ts`、`src/app/GameLoopPipeline.ts`

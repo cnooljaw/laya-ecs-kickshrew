@@ -556,7 +556,7 @@
         <header>
           <div class="kicker">LayaAir + bitecs ECS</div>
           <h1>按代码关系讲清这个 ECS 客户端框架</h1>
-          <p class="lead">这份分享只回答一个问题：新同事从哪里开始读，怎样把 ECS 状态、Feature 装配、Projection 同步、Effect 表现和 Laya View 串起来。</p>
+          <p class="lead">这份分享只回答一个问题：新同事从哪里开始读，怎样把 ECS 状态、board 基础层、Feature 装配、Projection 同步、Effect 表现和 Laya View 串起来。</p>
           <div class="tag-row">
             <span class="tag">权威状态在 ECS</span>
             <span class="tag">Feature 是业务切片</span>
@@ -566,7 +566,7 @@
         </header>
         <section class="content split">
           <div class="rows">
-            <div class="quote"><p>主线：GameScene 组装 runtime，GameFeatures 汇总业务模块，GameLoopPipeline 按帧驱动系统、网络、投影和 Effect。</p></div>
+            <div class="quote"><p>主线：GameScene 组装 runtime，GameFeatures 汇总 board foundation、业务 Feature 和 session systems，GameLoopPipeline 按帧驱动系统、网络、投影和 Effect。</p></div>
             <div class="cards">
               <div class="mini accent-blue"><strong>读懂框架</strong><p>先看稳定横向层，再看一个纵向业务切片。</p></div>
               <div class="mini accent-green"><strong>新增功能</strong><p>主要在自己的 Feature 目录内完成，只在 GameFeatures 注册一行。</p></div>
@@ -575,8 +575,9 @@
           </div>
           <pre class="code">src/app/GameScene.ts
 src/game/GameFeatures.ts
+src/game/board
 src/framework/{ecs,feature,sync,view}
-src/game/features/{shrew,hammer,monster,perfHero}</pre>
+src/game/features/{shrew,hammer,playerHud,monster,perfHero}</pre>
         </section>
         <footer class="footer"><span>目标：理清关系，而不是背 API。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
@@ -590,7 +591,7 @@ src/game/features/{shrew,hammer,monster,perfHero}</pre>
         <section class="content">
           <div class="route">
             <div class="route-step">GameScene<small>把 runtime 接起来</small></div>
-            <div class="route-step">GameFeatures<small>显式注册 Feature[]</small></div>
+            <div class="route-step">GameFeatures<small>显式组合 foundation / feature / session</small></div>
             <div class="route-step">FeatureRegistry<small>整理 Feature 声明</small></div>
             <div class="route-step">FeatureSetupContext<small>setup 能用的工具清单</small></div>
             <div class="route-step">EntityRuntime<small>创建 ECS 实体</small></div>
@@ -600,6 +601,7 @@ src/game/features/{shrew,hammer,monster,perfHero}</pre>
           <table class="table">
             <tr><th>想理解什么</th><th>先看哪里</th><th>再看哪里</th></tr>
             <tr><td>启动流程</td><td><code>src/app/GameScene.ts</code></td><td><code>src/app/GameLoopPipeline.ts</code></td></tr>
+            <tr><td>棋盘基础层</td><td><code>src/game/board/BoardFoundation.ts</code></td><td><code>BoardTopology.ts / BoardOps.ts</code></td></tr>
             <tr><td>新增业务</td><td><code>src/game/features/monster/MonsterFeature.ts</code></td><td><code>src/game/GameFeatures.ts</code></td></tr>
             <tr><td>状态到画面</td><td><code>*Projection.ts</code></td><td><code>framework/sync/ProjectionRuntime.ts</code></td></tr>
           </table>
@@ -621,7 +623,7 @@ src/game/features/{shrew,hammer,monster,perfHero}</pre>
               <text x="122" y="91" text-anchor="middle" font-size="13" fill="#5f6b7a">启动装配入口</text>
               <rect x="275" y="35" width="200" height="74" rx="8" fill="#f7fbf6" stroke="#2d7d46"/>
               <text x="375" y="67" text-anchor="middle" font-size="17" font-weight="760" fill="#172231">GameFeatures</text>
-              <text x="375" y="91" text-anchor="middle" font-size="13" fill="#5f6b7a">Feature[] 显式注册</text>
+              <text x="375" y="91" text-anchor="middle" font-size="13" fill="#5f6b7a">foundation / feature / session</text>
               <rect x="545" y="35" width="235" height="74" rx="8" fill="#eef7f9" stroke="#188a9b"/>
               <text x="662" y="67" text-anchor="middle" font-size="17" font-weight="760" fill="#172231">FeatureRegistry</text>
               <text x="662" y="91" text-anchor="middle" font-size="13" fill="#5f6b7a">整理 / 校验 / 生成清单</text>
@@ -744,8 +746,8 @@ SpeedComponent.value[eid] = fast</pre>
   -> entityRuntime.bootstrapSingletons()
   -> createProjectionRuntime(registry.projections())
   -> createEffectRuntime()
-  -> registry.setupAll(createFeatureSetupContext(...))
-  -> create GameLoopPipeline(...)
+  -> featureRuntime = registry.setupAll(createFeatureSetupContext(...))
+  -> create GameLoopPipeline(featureRuntime)
   -> projectionRuntime.mark(world)
   -> projectionRuntime.sync(world)</pre>
           <div class="rows">
@@ -761,20 +763,30 @@ SpeedComponent.value[eid] = fast</pre>
         <header>
           <div class="kicker">Feature Registry</div>
           <h2>Feature 是业务模块声明，Registry 负责整理和校验</h2>
-          <p class="lead"><code>GameFeatures.ts</code> 是唯一显式注册点。新增 Feature 的框架改动应该只有这里一行。</p>
+          <p class="lead"><code>GameFeatures.ts</code> 是唯一显式组合点。board foundation、业务 Feature 和 session systems 在这里汇合。</p>
         </header>
         <section class="content split-wide">
-          <pre class="code">export const GAME_FEATURES = [
+          <pre class="code">export const GAME_FOUNDATIONS = [
+  BoardFoundation,
+];
+
+export const GAME_FEATURES = [
+  MonsterFeature,
   ShrewFeature,
   HammerFeature,
   PlayerHUDFeature,
-  SessionFeature,
   PerfHeroFeature,
-  MonsterFeature,
+];
+
+export const GAME_MODULES = [
+  ...GAME_FOUNDATIONS,
+  ...GAME_FEATURES,
 ];
 
 export const GAME_FEATURE_REGISTRY =
-  createGameFeatureRegistry(GAME_FEATURES);</pre>
+  createGameFeatureRegistry(GAME_MODULES, {
+    systems: GAME_SESSION_SYSTEMS,
+  });</pre>
           <table class="table">
             <tr><th>FeatureManifest 字段</th><th>表达什么</th><th>Registry 怎么用</th></tr>
             <tr><td><code>name</code></td><td>Feature 身份</td><td>校验不能重复</td></tr>
@@ -782,6 +794,7 @@ export const GAME_FEATURE_REGISTRY =
             <tr><td><code>projections</code></td><td>这个模块有哪些状态同步规则</td><td>交给 ProjectionRuntime</td></tr>
             <tr><td><code>systems</code></td><td>每帧运行的规则</td><td>按 state/feature 分组</td></tr>
             <tr><td><code>setup</code></td><td>初始化拓扑、池、View、Effect handler</td><td><code>setupAll(ctx)</code> 顺序执行</td></tr>
+            <tr><td><code>setupSystems</code></td><td>需要 setup capability 的每场景 system</td><td>生成 <code>GameFeatureRuntime</code></td></tr>
           </table>
         </section>
         <footer class="footer"><span>选择显式注册，不做目录扫描和大型 DSL。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
@@ -888,28 +901,34 @@ export const GAME_FEATURE_REGISTRY =
       <article class="slide" data-title="Feature Topology">
         <header>
           <div class="kicker">Business Topology</div>
-          <h2>Feature setup 写真实业务拓扑：以 Shrew 父子 View 为例</h2>
-          <p class="lead">ShrewFeature 里，一个 SceneLayer 拥有九个 Hole，每个 Hole 拥有一个 Shrew。框架只提供挂载原语，不隐藏业务关系。</p>
+          <h2>setup 写真实拓扑：board 建棋盘，Shrew 绑定住户</h2>
+          <p class="lead">BoardFoundation 创建 Scene 和 9 个 Hole；ShrewFeature 创建 9 个 Shrew，并把它们绑定成 Hole 的 resident。</p>
         </header>
         <section class="content split">
           <div class="rows">
-            <div class="panel accent-green"><strong>ShrewFeature</strong><p>一个 SceneLayer，九个 Hole，每个 Hole 拥有一个 Shrew。业务关系显式写在 setup 里。</p></div>
+            <div class="panel accent-green"><strong>BoardFoundation</strong><p>创建 SceneLayer、9 个 Hole 和 BoardTopology，提供 BoardTopologyCapability。</p></div>
             <pre class="code">const holeNode = mountOne({
   eid: holeEid,
   projection: HoleProjection,
   create: () => new HoleNode(),
 });
+
+const board = createBoardTopology(scene, holes);
+provide(BoardTopologyCapability, board);</pre>
+            <div class="panel accent-blue"><strong>ShrewFeature</strong><p>只创建 Shrew，调用 BoardOps 建立 resident 关系，并挂自己的节点。</p></div>
+            <pre class="code">bindResident(board, index, BoardOccupantKind.Shrew, shrewEid);
+syncShrewBoardPosition(shrewEid, getHoleEid(board, index));
+
 mountOne({
   eid: shrewEid,
   projection: ShrewProjection,
-  parent: holeNode.getContainer(),
   create: () => new ShrewNode(),
 });</pre>
           </div>
           <div class="rows">
             <div class="panel accent-cyan"><strong>框架做什么</strong><p><code>mountOne</code> 负责把 eid、Projection 和 Node 绑定起来，并交给 ViewRegistry 托管生命周期。</p></div>
             <div class="panel accent-red"><strong>框架不做什么</strong><p>不自动扫描目录，不推断父子关系，不把所有业务装进 BaseFeature。</p></div>
-            <div class="panel accent-blue"><strong>业务留下什么</strong><p>谁挂到谁下面、创建几个、用哪个 Node，这些真实关系留在 Feature setup 里。</p></div>
+            <div class="panel accent-blue"><strong>业务留下什么</strong><p>固定拓扑、对象池、resident/occupant 关系和节点创建数量，这些真实关系留在 setup 里。</p></div>
           </div>
         </section>
         <footer class="footer"><span>不要为了少写几行隐藏业务关系。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
@@ -923,9 +942,9 @@ mountOne({
         </header>
         <section class="content split-wide">
           <div class="rows">
-            <div class="panel accent-blue"><strong>BoardFeature</strong><p>拥有 Scene、Map、9 个 Hole、地图轮换、洞位坐标、zOrder、resident 和 occupant。</p></div>
-            <div class="panel accent-green"><strong>ShrewFeature</strong><p>创建 9 个 Shrew，并通过 <code>board.bindResident</code> 建立 1:1 默认住户关系。</p></div>
-            <div class="panel accent-violet"><strong>MonsterFeature</strong><p>金币跨 100 时找可用三角形，调用 <code>board.tryOccupyTriad</code> 原子占用 3 个洞。</p></div>
+            <div class="panel accent-blue"><strong>BoardFoundation</strong><p>拥有 Scene、Map、9 个 Hole、BoardTopology、洞位坐标、zOrder、resident 和 occupant。</p></div>
+            <div class="panel accent-green"><strong>ShrewFeature</strong><p>创建 9 个 Shrew，并通过 <code>bindResident(board,...)</code> 建立 1:1 默认住户关系。</p></div>
+            <div class="panel accent-violet"><strong>MonsterFeature</strong><p>金币跨 100 时找可用三角形，调用 <code>tryOccupyTriad(board,...)</code> 原子占用 3 个洞。</p></div>
             <div class="panel accent-amber"><strong>失败策略</strong><p>没有可用三角形就跳过本次刷怪，不挤掉正在出现、可点击或已被占用的 Shrew。</p></div>
           </div>
           <div class="diagram">
@@ -960,7 +979,7 @@ mountOne({
             </svg>
           </div>
         </section>
-        <footer class="footer"><span>对应代码：BoardRuntime.ts、MonsterPool.ts、KickHitDetection.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
+        <footer class="footer"><span>对应代码：BoardOps.ts、BoardTopology.ts、MonsterPool.ts、KickHitDetection.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
       <article class="slide" data-title="Projection Definition">
@@ -1389,10 +1408,10 @@ exit scene
             <div class="mini accent-blue"><strong>System 保持纯净</strong><p>不 import Laya、Node、resource loader、registry。</p></div>
             <div class="mini accent-cyan"><strong>Projection 走 contract</strong><p>持久可见状态通过 <code>*Projection.ts</code> 同步。</p></div>
             <div class="mini accent-violet"><strong>Effect 传瞬时事实</strong><p>reward、miss、声音、一次性动画不要塞进 Projection。</p></div>
-            <div class="mini accent-amber"><strong>Feature 不导入别的内部文件</strong><p>跨 Feature 走公开 <code>index.ts</code> 或 session。</p></div>
+            <div class="mini accent-amber"><strong>Feature 不导入别的内部文件</strong><p>业务 Feature 可以依赖 <code>game/board</code>，跨业务 Feature 走公开 <code>index.ts</code> 或 session。</p></div>
             <div class="mini accent-red"><strong>业务不维护 dirty</strong><p>dirtyBits、snapshot、fullSync、node map 都属于 framework/sync。</p></div>
           </div>
-          <div class="quote"><p>判断代码放哪：稳定机制放 <code>framework</code>；业务规则和拓扑放 <code>game/features/&lt;name&gt;</code>；跨 Feature 输入、网络回包编排放 <code>game/session</code>；Laya 应用壳放 <code>app</code>。</p></div>
+          <div class="quote"><p>判断代码放哪：稳定机制放 <code>framework</code>；棋盘基础能力放 <code>game/board</code>；业务规则放 <code>game/features/&lt;name&gt;</code>；跨 Feature 输入、网络回包编排放 <code>game/session</code>；Laya 应用壳放 <code>app</code>。</p></div>
         </section>
         <footer class="footer"><span>用边界降低长期改动成本。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>

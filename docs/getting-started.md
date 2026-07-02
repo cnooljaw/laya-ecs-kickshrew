@@ -44,10 +44,11 @@ transient result
 1. `src/app/GameScene.ts`：创建 world、runtime、FeatureRegistry。
 2. `src/app/GameLoopPipeline.ts`：每帧 state、network、feature、projection、effect 顺序。
 3. `src/game/GameFeatures.ts`：显式业务组合根。
-4. `src/game/features/shrew/ShrewFeature.ts`：固定拓扑示例。
-5. `src/game/features/monster/MonsterFeature.ts`：固定池示例。
-6. `src/game/session/KickInputController.ts`：输入进入 ECS。
-7. `src/game/session/KickResponseHandler.ts`：回包进入 ECS 和 Effect。
+4. `src/game/board/BoardFoundation.ts`：基础棋盘拓扑和洞位占用入口。
+5. `src/game/features/shrew/ShrewFeature.ts`：固定拓扑示例。
+6. `src/game/features/monster/MonsterFeature.ts`：固定池和 setup-time system 示例。
+7. `src/game/session/KickInputController.ts`：输入进入 ECS。
+8. `src/game/session/KickResponseHandler.ts`：回包进入 ECS 和 Effect。
 
 ## 第一次改动
 
@@ -70,6 +71,7 @@ defineEffect -> emit -> feature handler -> effect node
 ```
 
 新增业务通常只改 `src/game/features/foo/`，再到 `src/game/GameFeatures.ts` 增加一行显式注册。
+需要洞位、坐标或占用关系时，依赖 `src/game/board/index.ts` 的公开 API，不把 board 当普通业务 Feature 复制一套。
 
 ## 常用检查
 
@@ -83,6 +85,8 @@ npx tsc --noEmit
 ```
 
 运行时可见改动继续跑 `npm run debug:ready` 并打开浏览器入口。
+
+UI 调试页面索引看 `docs/ui-debugging-guide.md`。洞位、Shrew 站位、Monster 三角落点和 Spine 叠影不要只靠主页面猜，先用对应预览页定位。
 
 ## 下一步
 
