@@ -97,9 +97,11 @@ defineFeature({
 4. 维护 `residentKind/residentEid` 和 `occupantKind/occupantEid`。
 5. provide `BoardCapability`，供其他 Feature 通过受控 API 绑定或占用洞位。
 
-`ShrewFeature` 只创建 Shrew，并通过 `board.bindResident(index, BoardOccupantKind.Shrew, shrewEid)` 建立 1:1 默认住户关系。`ShrewNode` 挂在 root，由 `BoardPositionComponent` 投影自己的位置和 zOrder。
+`ShrewFeature` 只创建 Shrew，并通过 `board.bindResident(index, BoardOccupantKind.Shrew, shrewEid)` 建立 1:1 默认住户关系。`ShrewNode` 挂在 root，由 `BoardPositionComponent` 投影自己的位置和 zOrder。它不拥有 HoleNode，也不直接写洞位坐标。
 
-`MonsterFeature` 使用固定实体池。金币跨过 100 倍数时从 board 查找空闲三角形洞位，占用 3 个 Hole，并把 Monster 放在三角形中心。没有可用三角形时跳过本次刷怪，不挤掉已有 Shrew 或 Monster。
+`MonsterFeature` 使用固定实体池。金币跨过 100 倍数时从 board 查找空闲三角形洞位，调用 `tryOccupyTriad` 原子占用 3 个 Hole，并把 Monster 放在三角形中心。没有可用三角形时跳过本次刷怪，不挤掉已有 Shrew 或 Monster。
+
+洞位互斥由 `HoleComponent.occupantKind/occupantEid` 表达。Shrew 是 resident；Monster 是临时 occupant。Monster 占用三洞后，这三个洞的 resident Shrew 仍存在，但不再是 current occupant，因此不会参与命中候选。Monster 释放时只把 occupant 恢复为 resident。
 
 ## 启动和主循环
 
@@ -136,7 +138,7 @@ Main -> GameScene -> KickInputController
   -> Monster: local hp/reward/triad release
 ```
 
-命中检测不以 Hole 作为唯一目标入口。Hammer 点击位置会和当前可命中的 Shrew、Monster 的 `BoardPositionComponent` 中心比较，选择半径内最近目标。Hole 只负责表达当前 occupant；当 Monster 占用三洞时，这三个洞的 Shrew 自然不参与候选。
+命中检测不以 Hole 作为唯一目标入口。Hammer 点击位置会和当前可命中的 Shrew、Monster 的 `BoardPositionComponent` 中心比较，选择半径内最近目标。Shrew 候选必须仍是对应 Hole 的 current occupant；Monster 候选看自己的 visible、hp 和 Stay 状态。不存在“先 Monster 后 Shrew”的命中优先级分支，互斥已经由洞占用保证。
 
 回包：
 

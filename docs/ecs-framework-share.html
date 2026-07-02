@@ -547,7 +547,7 @@
     <aside class="rail" aria-label="页面进度">
       <div class="rail-title">ECS FRAMEWORK</div>
       <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
-      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">22</span></div>
+      <div class="counter"><span id="currentPage">01</span>/<span id="totalPage">23</span></div>
     </aside>
 
     <section class="viewport">
@@ -913,6 +913,54 @@ mountOne({
           </div>
         </section>
         <footer class="footer"><span>不要为了少写几行隐藏业务关系。</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
+      </article>
+
+      <article class="slide" data-title="Board Occupancy">
+        <header>
+          <div class="kicker">Board / Shrew / Monster</div>
+          <h2>洞位占用是 Shrew 和 Monster 互斥的权威事实</h2>
+          <p class="lead">Hole 同时记录默认住户和当前占用者。Shrew 是 resident，Monster 是临时 occupant；命中检测只看当前可命中的目标中心。</p>
+        </header>
+        <section class="content split-wide">
+          <div class="rows">
+            <div class="panel accent-blue"><strong>BoardFeature</strong><p>拥有 Scene、Map、9 个 Hole、地图轮换、洞位坐标、zOrder、resident 和 occupant。</p></div>
+            <div class="panel accent-green"><strong>ShrewFeature</strong><p>创建 9 个 Shrew，并通过 <code>board.bindResident</code> 建立 1:1 默认住户关系。</p></div>
+            <div class="panel accent-violet"><strong>MonsterFeature</strong><p>金币跨 100 时找可用三角形，调用 <code>board.tryOccupyTriad</code> 原子占用 3 个洞。</p></div>
+            <div class="panel accent-amber"><strong>失败策略</strong><p>没有可用三角形就跳过本次刷怪，不挤掉正在出现、可点击或已被占用的 Shrew。</p></div>
+          </div>
+          <div class="diagram">
+            <svg viewBox="0 0 820 430" role="img" aria-label="洞位占用与互斥">
+              <defs><marker id="occupancyArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2364aa"></path></marker></defs>
+              <rect x="42" y="36" width="230" height="80" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="157" y="68" text-anchor="middle" font-size="16" font-weight="700" fill="#17385d">Hole resident</text>
+              <text x="157" y="92" text-anchor="middle" font-size="13" fill="#5f6b7a">平时属于 Shrew</text>
+              <rect x="42" y="146" width="230" height="80" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="157" y="178" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">Hole occupant</text>
+              <text x="157" y="202" text-anchor="middle" font-size="13" fill="#5f6b7a">当前可能是 Shrew 或 Monster</text>
+              <rect x="336" y="36" width="178" height="80" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
+              <text x="425" y="68" text-anchor="middle" font-size="16" font-weight="700" fill="#1f5f36">bindResident</text>
+              <text x="425" y="92" text-anchor="middle" font-size="13" fill="#5f6b7a">Shrew 绑定默认洞</text>
+              <rect x="336" y="146" width="178" height="80" rx="8" fill="#f7f2ff" stroke="#6c4ab6"></rect>
+              <text x="425" y="178" text-anchor="middle" font-size="16" font-weight="700" fill="#46317d">tryOccupyTriad</text>
+              <text x="425" y="202" text-anchor="middle" font-size="13" fill="#5f6b7a">Monster 原子占 3 洞</text>
+              <rect x="578" y="36" width="200" height="80" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
+              <text x="678" y="68" text-anchor="middle" font-size="16" font-weight="700" fill="#80530f">BoardPosition</text>
+              <text x="678" y="92" text-anchor="middle" font-size="13" fill="#5f6b7a">目标中心和 zOrder</text>
+              <rect x="578" y="146" width="200" height="80" rx="8" fill="#fbeeee" stroke="#b34343"></rect>
+              <text x="678" y="178" text-anchor="middle" font-size="16" font-weight="700" fill="#8a2828">Hit Detection</text>
+              <text x="678" y="202" text-anchor="middle" font-size="13" fill="#5f6b7a">Hammer 比较目标中心</text>
+              <path d="M272 76 H328" stroke="#2364aa" stroke-width="3" marker-end="url(#occupancyArrow)"></path>
+              <path d="M272 186 H328" stroke="#2364aa" stroke-width="3" marker-end="url(#occupancyArrow)"></path>
+              <path d="M514 76 H570" stroke="#2364aa" stroke-width="3" marker-end="url(#occupancyArrow)"></path>
+              <path d="M514 186 H570" stroke="#2364aa" stroke-width="3" marker-end="url(#occupancyArrow)"></path>
+              <rect x="102" y="300" width="616" height="72" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
+              <text x="410" y="326" text-anchor="middle" font-size="15" font-weight="700" fill="#172231">Monster 占用 [a,b,c] 后，这三个洞的 Shrew 仍存在，但不再是 current occupant</text>
+              <text x="410" y="351" text-anchor="middle" font-size="13" fill="#5f6b7a">Shrew 候选被 occupant 过滤掉；Monster 用自己的 BoardPositionComponent 参与命中。</text>
+              <text x="410" y="398" text-anchor="middle" font-size="13" fill="#5f6b7a">releaseTriad 只把 occupant 恢复成 resident；地图切换只更新洞位，不清当前占用。</text>
+            </svg>
+          </div>
+        </section>
+        <footer class="footer"><span>对应代码：BoardRuntime.ts、MonsterPool.ts、KickHitDetection.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
       <article class="slide" data-title="Projection Definition">

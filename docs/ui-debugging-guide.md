@@ -122,6 +122,14 @@ MonsterComponent.holeA/B/C
 
 如果 `debug-tsc.html` 有 Shrew 和 Monster 同洞，先查 `HoleComponent.occupantKind/occupantEid`。Monster 占用三洞后，这三个洞的 resident Shrew 必须进入 blocked 状态。
 
+互斥排查顺序：
+
+1. `monsterSpawnSystem` 是否只从 `board.canOccupyTriad` 返回可用的三角形里随机选择。
+2. `spawnMonster` 是否通过 `board.tryOccupyTriad` 成功后才写 `MonsterComponent.visible/holeA/holeB/holeC/spawnSeq`。
+3. Shrew 候选是否仍要求对应 Hole 的 `occupantKind/eid` 等于当前 Shrew。
+4. Monster 消失或 Dizzy 结束后，`releaseTriad` 是否把三洞恢复为 resident。
+5. 切图后 `MapCycleSystem` 是否保留 occupant，`monsterBoardSyncSystem` 是否重算 Monster 三角中心。
+
 ## Monster 对齐标记
 
 Monster drop 页面有蓝色和灰色调试框：
