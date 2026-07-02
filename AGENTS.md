@@ -14,6 +14,7 @@
 
 - 新人入门：`docs/getting-started.md`
 - 架构和目录：`docs/architecture.md`
+- 玩法组装：`docs/gameplay-assembly.md`
 - ECS / Projection / Effect：`docs/ecs-binding.md`
 - Laya 运行时：`docs/laya-rules.md`
 - 界面调试：`docs/ui-debugging-guide.md`

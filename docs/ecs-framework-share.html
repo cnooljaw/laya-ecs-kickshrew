@@ -785,6 +785,7 @@ export const GAME_MODULES = [
 
 export const GAME_FEATURE_REGISTRY =
   createGameFeatureRegistry(GAME_MODULES, {
+    setup: setupGameSession,
     systems: GAME_SESSION_SYSTEMS,
   });</pre>
           <table class="table">
@@ -944,7 +945,7 @@ mountOne({
           <div class="rows">
             <div class="panel accent-blue"><strong>BoardFoundation</strong><p>拥有 Scene、Map、9 个 Hole、BoardTopology、洞位坐标、zOrder、resident 和 occupant。</p></div>
             <div class="panel accent-green"><strong>ShrewFeature</strong><p>创建 9 个 Shrew，并通过 <code>bindResident(board,...)</code> 建立 1:1 默认住户关系。</p></div>
-            <div class="panel accent-violet"><strong>MonsterFeature</strong><p>金币跨 100 时找可用三角形，调用 <code>tryOccupyTriad(board,...)</code> 原子占用 3 个洞。</p></div>
+            <div class="panel accent-violet"><strong>MonsterFeature</strong><p>消费 session 提供的里程碑，找可用三角形并调用 <code>tryOccupyTriad(board,...)</code> 原子占用 3 个洞。</p></div>
             <div class="panel accent-amber"><strong>失败策略</strong><p>没有可用三角形就跳过本次刷怪，不挤掉正在出现、可点击或已被占用的 Shrew。</p></div>
           </div>
           <div class="diagram">
@@ -975,7 +976,7 @@ mountOne({
               <rect x="102" y="300" width="616" height="72" rx="8" fill="#f8fafc" stroke="#d6dde8"></rect>
               <text x="410" y="326" text-anchor="middle" font-size="15" font-weight="700" fill="#172231">Monster 占用 [a,b,c] 后，这三个洞的 Shrew 仍存在，但不再是 current occupant</text>
               <text x="410" y="351" text-anchor="middle" font-size="13" fill="#5f6b7a">Shrew 候选被 occupant 过滤掉；Monster 用自己的 BoardPositionComponent 参与命中。</text>
-              <text x="410" y="398" text-anchor="middle" font-size="13" fill="#5f6b7a">releaseTriad 只把 occupant 恢复成 resident；地图切换只更新洞位，不清当前占用。</text>
+              <text x="410" y="398" text-anchor="middle" font-size="13" fill="#5f6b7a">releaseTriadIfOwned 按 owner 恢复 resident；地图切换只更新洞位，不清当前占用。</text>
             </svg>
           </div>
         </section>
@@ -1362,7 +1363,7 @@ exit scene
           <div class="rows">
             <div class="panel accent-green"><strong>1. 切片目录</strong><p><code>src/game/features/monster/</code> 拥有 Component、Entity、System、Projection、Node、Config 和规则校验。</p></div>
             <div class="panel accent-blue"><strong>2. Feature Manifest</strong><p><code>MonsterFeature</code> 声明 entities、projections、systems、setup，不继承 BaseFeature，不做自动扫描。</p></div>
-            <div class="panel accent-violet"><strong>3. 业务规则</strong><p><code>monsterSpawnSystem</code> 按 money 里程碑触发，<code>monsterLifetimeSystem</code> 超过 10 秒设置 <code>visible=0</code>，不删除 entity。</p></div>
+            <div class="panel accent-violet"><strong>3. 业务规则</strong><p><code>monsterSpawnSystem</code> 消费外部里程碑，<code>monsterLifetimeSystem</code> 超过 10 秒设置 <code>visible=0</code>，不删除 entity。</p></div>
             <div class="panel accent-red"><strong>4. 显式注册</strong><p>在 <code>src/game/GameFeatures.ts</code> import 并追加 <code>MonsterFeature</code>，框架层不需要改。</p></div>
           </div>
           <div class="diagram">
@@ -1373,7 +1374,7 @@ exit scene
               <text x="142" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">建触发器和池</text>
               <rect x="310" y="46" width="200" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
               <text x="410" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">monster systems</text>
-              <text x="410" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">money trigger / ageSec</text>
+              <text x="410" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">milestone / ageSec</text>
               <rect x="588" y="46" width="180" height="62" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
               <text x="678" y="72" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">MonsterProjection</text>
               <text x="678" y="94" text-anchor="middle" font-size="12" fill="#5f6b7a">watch visible / pos</text>

@@ -23,15 +23,16 @@ import {
 
 export { KickHitTargetKind } from "./KickTargeting";
 
-export interface KickHitResult {
-  bKickShrew: number;
+export interface KickMissResult {
+  targetKind: KickHitTargetKind.None;
+}
+
+export interface KickShrewHitResult {
+  targetKind: KickHitTargetKind.Shrew;
   hitHoleIndex: number;
   hitHoleEid: number;
   hitShrewEid: number;
-  hitMonsterEid: number;
   hitShrewType: number;
-  numOfShrew: number;
-  targetKind: KickHitTargetKind;
   actionState: number;
   actionStateName: string;
   animType: number;
@@ -40,6 +41,16 @@ export interface KickHitResult {
   isClickable: number;
   hp: number;
 }
+
+export interface KickMonsterHitResult {
+  targetKind: KickHitTargetKind.Monster;
+  hitMonsterEid: number;
+}
+
+export type KickHitResult =
+  | KickMissResult
+  | KickShrewHitResult
+  | KickMonsterHitResult;
 
 export function detectKickHit(world: any, touchXRatio: number, touchYRatio: number): KickHitResult {
   const emptyResult = createEmptyKickHitResult();
@@ -62,22 +73,18 @@ export function detectKickHit(world: any, touchXRatio: number, touchYRatio: numb
       if (player !== undefined) applyPlayerReward(player, hit.reward);
     }
     return {
-      ...emptyResult,
-      hitMonsterEid: hit.hitMonsterEid,
       targetKind: KickHitTargetKind.Monster,
+      hitMonsterEid: hit.hitMonsterEid,
     };
   }
 
   const hit = applyShrewLocalHit(target.eid);
   return {
-    ...emptyResult,
-    bKickShrew: 1,
+    targetKind: KickHitTargetKind.Shrew,
     hitHoleIndex: target.holeIndex,
     hitHoleEid: target.holeEid,
     hitShrewEid: target.eid,
     hitShrewType: hit.hitShrewType,
-    numOfShrew: 1,
-    targetKind: KickHitTargetKind.Shrew,
     actionState: hit.actionState,
     actionStateName: hit.actionStateName,
     animType: hit.animType,
@@ -111,22 +118,8 @@ function collectKickTargets(world: any): KickTarget[] {
   ];
 }
 
-function createEmptyKickHitResult(): KickHitResult {
+function createEmptyKickHitResult(): KickMissResult {
   return {
-    bKickShrew: 0,
-    hitHoleIndex: -1,
-    hitHoleEid: -1,
-    hitShrewEid: -1,
-    hitMonsterEid: -1,
-    hitShrewType: 0,
-    numOfShrew: 0,
     targetKind: KickHitTargetKind.None,
-    actionState: 0,
-    actionStateName: "",
-    animType: 0,
-    animTypeName: "",
-    dizzyTriggered: false,
-    isClickable: 0,
-    hp: 0,
   };
 }

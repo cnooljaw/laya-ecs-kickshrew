@@ -40,7 +40,7 @@ export function bindResident(
   restoreResident(board, index);
 }
 
-export function restoreResident(board: BoardTopology, index: number): void {
+function restoreResident(board: BoardTopology, index: number): void {
   const holeEid = getHoleEid(board, index);
   HoleComponent.occupantKind[holeEid] = HoleComponent.residentKind[holeEid];
   HoleComponent.occupantEid[holeEid] = HoleComponent.residentEid[holeEid];
@@ -69,7 +69,7 @@ export function tryOccupyTriad(
   return true;
 }
 
-export function releaseTriad(board: BoardTopology, triad: readonly [number, number, number]): void {
+function releaseTriad(board: BoardTopology, triad: readonly [number, number, number]): void {
   for (const index of triad) restoreResident(board, index);
 }
 

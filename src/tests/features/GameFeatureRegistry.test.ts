@@ -138,10 +138,13 @@ describe("GameFeatureRegistry", () => {
     expect(setup.context.use(TestCapability).value).toBe(7);
   });
 
-  it("expands entities, projections and phased systems", () => {
+  it("expands declarations and exposes phased systems only through setup runtime", () => {
     function updateState(): void {}
     function updateFeature(): void {}
     function updateSession(): void {}
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, []);
+    const setup = createSetupContext(entities);
     const registry = createGameFeatureRegistry([
       defineFeature({
         name: "compiled",
@@ -158,8 +161,11 @@ describe("GameFeatureRegistry", () => {
 
     expect(registry.entityTypes()).toEqual([TestSceneEntity]);
     expect(registry.projections()).toEqual([TestSceneProjection]);
-    expect(registry.systemsByPhase("state").map(item => item.run)).toEqual([updateState, updateSession]);
-    expect(registry.systemsByPhase("feature").map(item => item.run)).toEqual([updateFeature]);
+    expect("systemsByPhase" in registry).toBe(false);
+
+    const runtime = registry.setupAll(setup.context);
+    expect(runtime.systemsByPhase("state").map(item => item.run)).toEqual([updateState, updateSession]);
+    expect(runtime.systemsByPhase("feature").map(item => item.run)).toEqual([updateFeature]);
   });
 
   it("keeps real feature contribution order stable", () => {
@@ -175,17 +181,6 @@ describe("GameFeatureRegistry", () => {
       "board",
       "monster",
       "shrew",
-    ]);
-    expect(GAME_FEATURE_REGISTRY.systemsByPhase("state").map(item => item.name)).toEqual([
-      "board.mapCycle",
-      "shrew.animationTimer",
-      "shrew.state",
-      "hammer.state",
-      "session.hammerThunder",
-    ]);
-    expect(GAME_FEATURE_REGISTRY.systemsByPhase("feature").map(item => item.name)).toEqual([
-      "shrew.boardSync",
-      "perfHero.state",
     ]);
     expect(GAME_FEATURE_REGISTRY.entityTypes()).toEqual(expect.arrayContaining([
       SceneEntity,
@@ -286,6 +281,13 @@ describe("GameFeatureRegistry", () => {
       monster: MONSTER_SPAWN_RULES.reduce((count, rule) => count + rule.maxActiveCount, 0),
     });
     expect(setup.resourceCount()).toBe(1);
+    expect(runtime.systemsByPhase("state").map(item => item.name)).toEqual([
+      "board.mapCycle",
+      "shrew.animationTimer",
+      "shrew.state",
+      "hammer.state",
+      "session.hammerThunder",
+    ]);
     expect(runtime.systemsByPhase("feature").map(item => item.name)).toEqual([
       "monster.lifetime",
       "monster.boardSync",
@@ -328,8 +330,13 @@ describe("GameFeatureRegistry", () => {
 
   it("reuses precomputed phase arrays", () => {
     const registry = createGameFeatureRegistry([feature("featureA")]);
-    expect(registry.systemsByPhase("feature")).toBe(registry.systemsByPhase("feature"));
-    expect(registry.systemsByPhase("state")).toBe(registry.systemsByPhase("state"));
+    const world = createGameWorld();
+    const entities = createEntityRuntime(world, []);
+    const setup = createSetupContext(entities);
+    const runtime = registry.setupAll(setup.context);
+
+    expect(runtime.systemsByPhase("feature")).toBe(runtime.systemsByPhase("feature"));
+    expect(runtime.systemsByPhase("state")).toBe(runtime.systemsByPhase("state"));
   });
 
   it("rejects duplicate names", () => {

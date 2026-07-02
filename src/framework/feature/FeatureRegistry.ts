@@ -16,7 +16,6 @@ export interface RegisteredGameSystem {
 
 export interface GameFeatureRegistry {
   setupAll(ctx: FeatureSetupContext): GameFeatureRuntime;
-  systemsByPhase(phase: GameSystemPhase): readonly RegisteredGameSystem[];
   entityTypes(): readonly EntityDefinition<any>[];
   projections(): readonly ProjectionDefinition<any>[];
 }
@@ -27,6 +26,7 @@ export interface GameFeatureRuntime {
 
 export interface GameFeatureRegistryOptions {
   readonly systems?: readonly SystemDefinition[];
+  readonly setup?: (ctx: FeatureSetupContext) => void;
 }
 
 export function createGameFeatureRegistry(
@@ -35,14 +35,13 @@ export function createGameFeatureRegistry(
 ): GameFeatureRegistry {
   validateGameFeatures(features);
   validateRegistrySystems(features, options.systems ?? []);
-  const stateSystems = collectSystems(features, "state", options.systems);
-  const featureSystems = collectSystems(features, "feature", options.systems);
   const entityTypes = collectFeatureItems(features, feature => feature.entities);
   const projections = collectFeatureItems(features, feature => feature.projections);
 
   return {
     setupAll: ctx => {
       for (const feature of features) feature.setup?.(ctx);
+      options.setup?.(ctx);
       const runtimeSystems = collectRuntimeSystems(features, options.systems ?? [], ctx);
       const runtimeStateSystems = filterSystemsByPhase(runtimeSystems, "state");
       const runtimeFeatureSystems = filterSystemsByPhase(runtimeSystems, "feature");
@@ -54,7 +53,6 @@ export function createGameFeatureRegistry(
         systemsByPhase: phase => phase === "state" ? runtimeStateSystems : runtimeFeatureSystems,
       };
     },
-    systemsByPhase: phase => phase === "state" ? stateSystems : featureSystems,
     entityTypes: () => entityTypes,
     projections: () => projections,
   };
@@ -94,33 +92,6 @@ function validateRegistrySystems(
   for (const system of extraSystems) {
     assertUnique(systemNames, system.name, "FeatureSystem");
   }
-}
-
-function collectSystems(
-  features: readonly FeatureManifest[],
-  phase: GameSystemPhase,
-  extraSystems: readonly SystemDefinition[] = [],
-): RegisteredGameSystem[] {
-  const systems: RegisteredGameSystem[] = [];
-  for (const feature of features) {
-    for (const system of feature.systems ?? []) {
-      if (system.phase !== phase) continue;
-      systems.push({
-        phase: system.phase,
-        name: system.name,
-        run: system.run,
-      });
-    }
-  }
-  for (const system of extraSystems) {
-    if (system.phase !== phase) continue;
-    systems.push({
-      phase: system.phase,
-      name: system.name,
-      run: system.run,
-    });
-  }
-  return systems;
 }
 
 function collectRuntimeSystems(

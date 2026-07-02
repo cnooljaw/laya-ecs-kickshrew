@@ -6,33 +6,31 @@ import {
   releaseTriadIfOwned,
   type BoardTopology,
 } from "../../board/index";
-import { PlayerComponent } from "../playerHud/index";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponents";
 import { spawnMonster } from "./MonsterPool";
 import { MONSTER_SPAWN_RULES, MONSTER_TIMING, type MonsterSpawnRule } from "./MonsterRules";
+import type { MonsterSpawnMilestoneProvider } from "./MonsterSpawnTrigger";
 import { MonsterAction, MonsterType } from "./MonsterTypes";
 import { getMonsterTriadCenter, MONSTER_HOLE_TRIADS, type MonsterHoleTriad } from "./MonsterHoleTriads";
 
-const playerQuery = defineQuery([PlayerComponent]);
 const monsterQuery = defineQuery([MonsterComponent]);
 const monsterSpawnQuery = defineQuery([MonsterSpawnComponent]);
 
 export function monsterSpawnSystem(
   world: any,
   board: BoardTopology,
+  currentMilestone: MonsterSpawnMilestoneProvider,
   _deltaSec: number = 0,
   rules: readonly MonsterSpawnRule[] = MONSTER_SPAWN_RULES,
 ): void {
-  const players = playerQuery(world);
   const states = monsterSpawnQuery(world);
-  if (players.length === 0 || states.length === 0) return;
+  if (states.length === 0) return;
 
-  const player = players[0];
   for (let stateIndex = 0; stateIndex < states.length; stateIndex++) {
     const state = states[stateIndex];
     const rule = rules[MonsterSpawnComponent.ruleIndex[state]];
     if (!rule) continue;
-    const milestone = currentMilestone(player, rule);
+    const milestone = currentMilestone(world, rule);
     if (milestone <= MonsterSpawnComponent.lastMilestone[state]) continue;
 
     MonsterSpawnComponent.lastMilestone[state] = milestone;
@@ -111,12 +109,6 @@ export function startMonsterDizzy(monsterEid: number): void {
   MonsterComponent.actionState[monsterEid] = MonsterAction.Dizzy;
   MonsterComponent.stateTimer[monsterEid] = MONSTER_TIMING.dizzySec;
   MonsterComponent.animationProgress[monsterEid] = 0;
-}
-
-function currentMilestone(player: number, rule: MonsterSpawnRule): number {
-  const sourceValue = rule.trigger.source === "money" ? PlayerComponent.money[player] : 0;
-  if (rule.trigger.mode !== "multiple" || rule.trigger.interval <= 0) return 0;
-  return Math.floor(sourceValue / rule.trigger.interval);
 }
 
 function activeCount(world: any, monsterType: MonsterType): number {

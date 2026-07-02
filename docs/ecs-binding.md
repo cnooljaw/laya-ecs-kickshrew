@@ -11,7 +11,7 @@
 - `HoleComponent.residentKind/residentEid` 表示洞位默认住户，例如 Shrew。
 - `HoleComponent.occupantKind/occupantEid` 表示当前占用者，例如 Monster 临时占用三个洞。
 - `BoardPositionComponent` 表示挂在 root 下的业务目标位置和 zOrder；Shrew、Monster 和后续新目标都应复用它。
-- 其他 Feature 可以依赖 `game/board` 的公开 API，通过 `BoardTopologyCapability`、`BoardTopology` 和 `BoardOps` 绑定常驻、尝试占用或释放洞位，不直接写 `HoleComponent.occupant*`。
+- 其他 Feature 可以依赖 `game/board` 的公开 API，通过 `BoardTopologyCapability`、`BoardTopology` 和 `BoardOps` 绑定常驻、尝试占用或按 owner 释放洞位，不直接写 `HoleComponent.occupant*`。
 
 ## Board 洞位占用
 
@@ -27,7 +27,7 @@ occupantKind/occupantEid  -> 这个洞现在被谁占用，可能是 resident，
 - `ShrewFeature` 初始化时调用 `bindResident(board, index, BoardOccupantKind.Shrew, shrewEid)`，建立 9 个 Hole 和 9 个 Shrew 的 1:1 常驻关系。
 - `MonsterFeature` 运行期只占用符合 `MONSTER_HOLE_TRIADS` 的三洞组合。三洞都处在 resident 状态时，`tryOccupyTriad(board, triad, BoardOccupantKind.Monster, monsterEid)` 才会成功。
 - `tryOccupyTriad` 是原子 API。成功时一次写入 3 个洞的 occupant；失败时返回 `false`，不写任何洞，也不让调用方产生半个 Monster 状态。
-- `releaseTriad(board, triad)` 只做恢复：把 3 个洞的 occupant 恢复成各自 resident。
+- `releaseTriadIfOwned(board, triad, kind, eid)` 只释放指定 owner 持有的三洞，成功后把 occupant 恢复成各自 resident。
 - `MapCycleSystem` 切图时更新洞位坐标和 zOrder，但不清 current occupant。活跃 Monster 后续由 `monsterBoardSyncSystem` 按新地图重算三角中心。
 
 Shrew 和 Monster 的互斥不靠 View 隐藏实现，而靠 occupant：
@@ -141,7 +141,7 @@ Effect 按 definition 对象身份隔离。`emit` 只入队，主循环最后 `f
 新增会出现在洞位上的目标：
 
 1. Entity 组合里加入 `BoardPositionComponent`。
-2. Feature setup 或 system 通过 `BoardTopology` 和 `BoardOps` 选择洞位、绑定 resident 或调用 `tryOccupyTriad` 占用 triad。
+2. Feature setup 或 system 通过 `BoardTopology` 和 `BoardOps` 选择洞位、绑定 resident、调用 `tryOccupyTriad` 占用 triad，或调用 `releaseTriadIfOwned` 按 owner 释放。
 3. 同步 `BoardPositionComponent.xRatio/yRatio/zIndex`，Projection 只读该组件做 view 定位。
 4. 命中检测比较 Hammer 触点和目标中心，不把 HoleNode 当作业务命中入口。
 

@@ -76,7 +76,7 @@ export class KickInputController {
         hitHoleEid: result.hitHoleEid,
         hitShrewEid: result.hitShrewEid,
         hitShrewType: result.hitShrewType,
-        numOfShrew: result.numOfShrew,
+        numOfShrew: 1,
         actionState: result.actionState,
         actionStateName: result.actionStateName,
         animType: result.animType,

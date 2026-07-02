@@ -56,7 +56,8 @@ describe('KickHitDetection', () => {
   it('触摸点在地鼠 hitArea 内: 返回击中结果', () => {
     const result = detectKickHit(world, ...touchAtHole(1));
 
-    expect(result.bKickShrew).toBe(1);
+    expect(result.targetKind).toBe(KickHitTargetKind.Shrew);
+    if (result.targetKind !== KickHitTargetKind.Shrew) throw new Error("expected shrew hit");
     expect(result.hitHoleIndex).toBeGreaterThanOrEqual(0);
     expect(result.hitHoleIndex).toBeLessThan(HOLE_COUNT);
   });
@@ -70,7 +71,7 @@ describe('KickHitDetection', () => {
 
     const result = detectKickHit(world, ...touchAtHole(1));
 
-    expect(result.bKickShrew).toBe(0);
+    expect(result.targetKind).toBe(KickHitTargetKind.None);
   });
 
   it('锤子 hitTable=0 时(动画中): 不响应触摸', () => {
@@ -78,7 +79,7 @@ describe('KickHitDetection', () => {
 
     const result = detectKickHit(world, ...touchAtHole(1));
 
-    expect(result.bKickShrew).toBe(0);
+    expect(result.targetKind).toBe(KickHitTargetKind.None);
   });
 
   it('锤子 hitTable=1 时: 正常响应触摸', () => {
@@ -86,7 +87,7 @@ describe('KickHitDetection', () => {
 
     const result = detectKickHit(world, ...touchAtHole(1));
 
-    expect(result.bKickShrew).toBe(1);
+    expect(result.targetKind).toBe(KickHitTargetKind.Shrew);
   });
 
   it('击中红鼠: hp-1, actionState=Dizzy', () => {
@@ -121,7 +122,7 @@ describe('KickHitDetection', () => {
     // 触摸坐标超出所有洞位范围
     const result = detectKickHit(world, 0.01, 0.01);
 
-    expect(result.bKickShrew).toBe(0);
+    expect(result.targetKind).toBe(KickHitTargetKind.None);
   });
 
   it('击中后 hitTable 设为 0 (防止连点)', () => {
@@ -143,7 +144,6 @@ describe('KickHitDetection', () => {
     const result = detectKickHit(world, x, y);
 
     expect(result.targetKind).toBe(KickHitTargetKind.None);
-    expect(result.hitMonsterEid).toBe(-1);
     expect(MonsterComponent.hp[monster]).toBe(3);
     for (const index of [0, 1, 3]) {
       const resident = HoleComponent.residentEid[holes[index]];
@@ -160,6 +160,8 @@ describe('KickHitDetection', () => {
     for (let i = 0; i < 3; i++) {
       HammerComponent.hitTable[singletons.hammer] = 1;
       const result = detectKickHit(world, x, y);
+      expect(result.targetKind).toBe(KickHitTargetKind.Monster);
+      if (result.targetKind !== KickHitTargetKind.Monster) throw new Error("expected monster hit");
       expect(result.hitMonsterEid).toBe(monster);
     }
 

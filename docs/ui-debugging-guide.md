@@ -127,7 +127,7 @@ MonsterComponent.holeA/B/C
 1. `monsterSpawnSystem` 是否只从 `canOccupyTriad(board, triad)` 返回可用的三角形里随机选择。
 2. `spawnMonster` 是否通过 `tryOccupyTriad(board, triad, ...)` 成功后才写 `MonsterComponent.visible/holeA/holeB/holeC/spawnSeq`。
 3. Shrew 候选是否仍要求对应 Hole 的 `occupantKind/eid` 等于当前 Shrew。
-4. Monster 消失或 Dizzy 结束后，`releaseTriad` 是否把三洞恢复为 resident。
+4. Monster 消失或 Dizzy 结束后，`releaseTriadIfOwned` 是否只释放当前 Monster 拥有的三洞，并恢复为 resident。
 5. 切图后 `MapCycleSystem` 是否保留 occupant，`monsterBoardSyncSystem` 是否重算 Monster 三角中心。
 
 ## Monster 对齐标记
@@ -175,7 +175,7 @@ createSkeleton(templet, 2);
 | 差异 | 预览页 | `debug-tsc.html` |
 | --- | --- | --- |
 | 地图 | 固定一张地图。 | 每 `SCENE_CYCLE_INTERVAL` 切图。 |
-| 生成 | 手动按钮播放。 | 金币跨 100 倍数触发。 |
+| 生成 | 手动按钮播放。 | `session` 把金币映射成 Monster 里程碑后触发。 |
 | 占用 | 直接隐藏 triad 对应 Shrew。 | 通过 `HoleComponent.occupantKind/eid` 互斥。 |
 | 位置 | 直接调用 `MonsterNode.setPosition`。 | `BoardPositionComponent` 经 Projection 投影。 |
 | 复用 | 常见是单节点重复播放。 | 固定实体池和节点池复用。 |

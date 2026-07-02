@@ -50,6 +50,10 @@ export function getPlayerAngry(playerEid: number): number {
   return PlayerComponent.angry[playerEid];
 }
 
+export function getPlayerMoney(playerEid: number): number {
+  return PlayerComponent.money[playerEid];
+}
+
 export function applyPlayerReward(playerEid: number, reward: number): void {
   PlayerComponent.money[playerEid] += reward;
 }

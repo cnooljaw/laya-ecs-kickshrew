@@ -5,7 +5,6 @@ export { HoleProjection, SceneProjection } from "./BoardProjection";
 export {
   BoardTopologyCapability,
   createBoardTopology,
-  createBoardTopologyFromWorld,
   type BoardTopology,
 } from "./BoardTopology";
 export {
@@ -16,9 +15,7 @@ export {
   getHoleCenter,
   getHoleEid,
   getHoleIndex,
-  releaseTriad,
   releaseTriadIfOwned,
-  restoreResident,
   tryOccupyTriad,
 } from "./BoardOps";
 export { HoleNode } from "./HoleNode";

@@ -20,4 +20,14 @@ describe("monster slice boundaries", () => {
     expect(systems).not.toContain("MonsterViewConfig");
     expect(node).toContain("MonsterViewConfig");
   });
+
+  it("keeps cross-feature trigger sources out of Monster systems", () => {
+    const systems = readFileSync(
+      "src/game/features/monster/MonsterSystems.ts",
+      "utf8",
+    );
+
+    expect(systems).not.toContain("PlayerComponent");
+    expect(systems).not.toContain("../playerHud");
+  });
 });

@@ -11,6 +11,10 @@ export {
 } from "./MonsterKick";
 export { MONSTER_SPAWN_RULES, type MonsterSpawnRule } from "./MonsterRules";
 export {
+  MonsterSpawnMilestoneCapability,
+  type MonsterSpawnMilestoneProvider,
+} from "./MonsterSpawnTrigger";
+export {
   getMonsterTriadCenter,
   MONSTER_HOLE_TRIADS,
   type MonsterHoleTriad,

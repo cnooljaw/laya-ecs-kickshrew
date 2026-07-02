@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createGameWorld } from "../../../../framework/ecs/GameWorld";
 import { createSingletonEntities } from "../../../helpers/SingletonTestEntities";
-import { PlayerComponent } from "../../../../game/features/playerHud";
 import { MonsterComponent, MonsterSpawnComponent } from "../../../../game/features/monster/MonsterComponents";
 import { MonsterAction, MonsterType } from "../../../../game/features/monster/MonsterTypes";
 import { monsterBoardSyncSystem, monsterLifetimeSystem, monsterSpawnSystem } from "../../../../game/features/monster/MonsterSystems";
@@ -61,6 +60,10 @@ describe("MonsterSystem", () => {
     return createBoardTopology(scene, holes);
   }
 
+  function fixedMilestone(value: number) {
+    return () => value;
+  }
+
   it("为每条规则创建独立 tracker，不受四槽字段限制", () => {
     const world = createGameWorld();
     const runtime = createEntityRuntime(world, [MonsterEntity, MonsterTriggerEntity]);
@@ -83,22 +86,20 @@ describe("MonsterSystem", () => {
     expect(monsters).toHaveLength(5);
   });
 
-  it("玩家金币跨过 100 倍数时生成一次 Rhino，重复帧不重复生成", () => {
+  it("外部触发里程碑达到 1 时生成一次 Rhino，重复帧不重复生成", () => {
     const world = createGameWorld();
-    const { player, scene } = createSingletonEntities(world);
+    const { scene } = createSingletonEntities(world);
     const board = createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
     const monster = runtime.create(MonsterEntity, monsterInput());
 
-    PlayerComponent.money[player] = 99;
-    monsterSpawnSystem(world, board);
+    monsterSpawnSystem(world, board, fixedMilestone(0));
 
     expect(MonsterComponent.visible[monster]).toBe(0);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(0);
 
-    PlayerComponent.money[player] = 100;
-    monsterSpawnSystem(world, board);
+    monsterSpawnSystem(world, board, fixedMilestone(1));
 
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Drop);
@@ -117,7 +118,7 @@ describe("MonsterSystem", () => {
     expect(BoardPositionComponent.yRatio[monster]).toBeGreaterThan(0);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
 
-    monsterSpawnSystem(world, board);
+    monsterSpawnSystem(world, board, fixedMilestone(1));
 
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
@@ -126,14 +127,13 @@ describe("MonsterSystem", () => {
   it("从当前可用三角形中随机选择 Monster 出现位置", () => {
     vi.spyOn(Math, "random").mockReturnValue(0.999);
     const world = createGameWorld();
-    const { player, scene } = createSingletonEntities(world);
+    const { scene } = createSingletonEntities(world);
     const board = createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     runtime.create(MonsterTriggerEntity, 0);
     const monster = runtime.create(MonsterEntity, monsterInput());
 
-    PlayerComponent.money[player] = 100;
-    monsterSpawnSystem(world, board);
+    monsterSpawnSystem(world, board, fixedMilestone(1));
 
     expect([MonsterComponent.holeA[monster], MonsterComponent.holeB[monster], MonsterComponent.holeC[monster]])
       .toEqual(MONSTER_HOLE_TRIADS[MONSTER_HOLE_TRIADS.length - 1]);
@@ -223,14 +223,13 @@ describe("MonsterSystem", () => {
 
   it("一次跨过多个 100 倍数时默认只生成一次，并消费到最新里程碑", () => {
     const world = createGameWorld();
-    const { player, scene } = createSingletonEntities(world);
+    const { scene } = createSingletonEntities(world);
     const board = createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
     const monster = runtime.create(MonsterEntity, monsterInput());
 
-    PlayerComponent.money[player] = 350;
-    monsterSpawnSystem(world, board);
+    monsterSpawnSystem(world, board, fixedMilestone(3));
 
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
@@ -239,28 +238,26 @@ describe("MonsterSystem", () => {
 
   it("达到新 100 倍数时如果 Rhino 仍在场，则丢弃这次触发且隐藏后不补发", () => {
     const world = createGameWorld();
-    const { player, scene } = createSingletonEntities(world);
+    const { scene } = createSingletonEntities(world);
     const board = createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
     const monster = runtime.create(MonsterEntity, monsterInput());
 
-    PlayerComponent.money[player] = 100;
-    monsterSpawnSystem(world, board);
+    monsterSpawnSystem(world, board, fixedMilestone(1));
 
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
 
-    PlayerComponent.money[player] = 200;
-    monsterSpawnSystem(world, board);
+    monsterSpawnSystem(world, board, fixedMilestone(2));
 
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(2);
 
     MonsterComponent.visible[monster] = 0;
-    monsterSpawnSystem(world, board);
+    monsterSpawnSystem(world, board, fixedMilestone(2));
 
     expect(MonsterComponent.visible[monster]).toBe(0);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
@@ -286,7 +283,7 @@ describe("MonsterSystem", () => {
 
   it("没有任何可用三角形时跳过本次刷怪且不挤掉现有占用", () => {
     const world = createGameWorld();
-    const { player, scene } = createSingletonEntities(world);
+    const { scene } = createSingletonEntities(world);
     const board = createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
@@ -298,9 +295,8 @@ describe("MonsterSystem", () => {
       HoleComponent.occupantKind[hole] = BoardOccupantKind.Monster;
       HoleComponent.occupantEid[hole] = 999;
     }
-    PlayerComponent.money[player] = 100;
 
-    monsterSpawnSystem(world, board);
+    monsterSpawnSystem(world, board, fixedMilestone(1));
 
     expect(MonsterComponent.visible[monster]).toBe(0);
     expect(MonsterComponent.spawnSeq[monster]).toBe(0);

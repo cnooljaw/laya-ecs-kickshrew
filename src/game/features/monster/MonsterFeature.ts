@@ -15,6 +15,7 @@ import {
 } from "./MonsterRules";
 import { monsterBoardSyncSystem, monsterLifetimeSystem, monsterSpawnSystem } from "./MonsterSystems";
 import { MONSTER_VIEW_CONFIG, validateMonsterViewConfig } from "./MonsterViewConfig";
+import { MonsterSpawnMilestoneCapability } from "./MonsterSpawnTrigger";
 
 export const MonsterFeature = defineFeature({
   name: "monster",
@@ -35,6 +36,7 @@ export const MonsterFeature = defineFeature({
   },
   setupSystems: ctx => {
     const board = ctx.use(BoardTopologyCapability);
+    const currentMilestone = ctx.use(MonsterSpawnMilestoneCapability);
     return [
       defineSystem("feature", "monster.lifetime", (world, deltaSec) => {
         monsterLifetimeSystem(world, deltaSec, board);
@@ -43,7 +45,7 @@ export const MonsterFeature = defineFeature({
         monsterBoardSyncSystem(world, board);
       }),
       defineSystem("feature", "monster.spawn", (world, deltaSec) => {
-        monsterSpawnSystem(world, board, deltaSec);
+        monsterSpawnSystem(world, board, currentMilestone, deltaSec);
       }),
     ];
   },

@@ -1,6 +1,6 @@
 # 架构
 
-本文说明模块职责、依赖方向、运行流和生命周期 owner。具体 ECS API 看 `docs/ecs-binding.md`；Laya 细节看 `docs/laya-rules.md`。
+本文说明模块职责、依赖方向、运行流和生命周期 owner。玩法组装看 `docs/gameplay-assembly.md`；具体 ECS API 看 `docs/ecs-binding.md`；Laya 细节看 `docs/laya-rules.md`。
 
 ## 模块职责
 
@@ -101,7 +101,7 @@ defineFeature({
 
 `ShrewFeature` 只创建 Shrew，并通过 `bindResident(board, index, BoardOccupantKind.Shrew, shrewEid)` 建立 1:1 默认住户关系。`ShrewNode` 挂在 root，由 `BoardPositionComponent` 投影自己的位置和 zOrder。它不拥有 HoleNode，也不直接写洞位坐标。
 
-`MonsterFeature` 使用固定实体池。金币跨过 100 倍数时从 board 查找空闲三角形洞位，调用 `tryOccupyTriad(board, triad, BoardOccupantKind.Monster, monsterEid)` 原子占用 3 个 Hole，并把 Monster 放在三角形中心。没有可用三角形时跳过本次刷怪，不挤掉已有 Shrew 或 Monster。
+`MonsterFeature` 使用固定实体池。`session` 把 PlayerHUD 的 money 映射成 `MonsterSpawnMilestoneCapability`，Monster 只消费当前规则里程碑。里程碑增加时，它从 board 查找空闲三角形洞位，调用 `tryOccupyTriad(board, triad, BoardOccupantKind.Monster, monsterEid)` 原子占用 3 个 Hole，并把 Monster 放在三角形中心。没有可用三角形时跳过本次刷怪，不挤掉已有 Shrew 或 Monster。
 
 洞位互斥由 `HoleComponent.occupantKind/occupantEid` 表达。Shrew 是 resident；Monster 是临时 occupant。Monster 占用三洞后，这三个洞的 resident Shrew 仍存在，但不再是 current occupant，因此不会参与命中候选。Monster 释放时只把 occupant 恢复为 resident。
 
@@ -115,6 +115,7 @@ GameScene.init
   -> create EntityRuntime / ProjectionRuntime / EffectRuntime
   -> bootstrap singleton entities
   -> GAME_FEATURE_REGISTRY.setupAll
+  -> setupGameSession provides cross-feature capabilities
   -> create per-scene GameFeatureRuntime
   -> projectionRuntime.mark/sync initial state
 ```

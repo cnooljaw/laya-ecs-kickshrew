@@ -91,6 +91,7 @@ UI 调试页面索引看 `docs/ui-debugging-guide.md`。洞位、Shrew 站位、
 ## 下一步
 
 - `docs/architecture.md`：模块职责、依赖方向、生命周期 owner。
+- `docs/gameplay-assembly.md`：board、session 和跨 Feature 玩法组装。
 - `docs/ecs-binding.md`：EntityDefinition、ProjectionDefinition、EffectRuntime 的写法。
 - `docs/laya-rules.md`：Laya 生命周期、资源加载、坐标和 atlas 规则。
 - `docs/ui-debugging-guide.md`：Shrew 洞位、Monster 三角落点和 Spine 表现调试。

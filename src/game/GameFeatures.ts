@@ -6,7 +6,7 @@ import { HammerFeature } from "./features/hammer";
 import { MonsterFeature } from "./features/monster";
 import { PerfHeroFeature } from "./features/perfHero";
 import { PlayerHUDFeature } from "./features/playerHud";
-import { GAME_SESSION_SYSTEMS } from "./session";
+import { GAME_SESSION_SYSTEMS, setupGameSession } from "./session";
 
 export const GAME_FOUNDATIONS: readonly FeatureManifest[] = [
   BoardFoundation,
@@ -26,5 +26,6 @@ export const GAME_MODULES: readonly FeatureManifest[] = [
 ];
 
 export const GAME_FEATURE_REGISTRY = createGameFeatureRegistry(GAME_MODULES, {
+  setup: setupGameSession,
   systems: GAME_SESSION_SYSTEMS,
 });

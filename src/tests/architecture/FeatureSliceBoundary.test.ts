@@ -71,6 +71,14 @@ describe("feature slice boundaries", () => {
     expect(sources).not.toMatch(/\bcreateBoardRuntimeFromWorld\b/);
   });
 
+  it("keeps board world reconstruction and raw release helpers out of the public barrel", () => {
+    const barrel = readFileSync("src/game/board/index.ts", "utf8");
+
+    expect(barrel).not.toMatch(/\bcreateBoardTopologyFromWorld\b/);
+    expect(barrel).not.toMatch(/\breleaseTriad\b(?!IfOwned)/);
+    expect(barrel).not.toMatch(/\brestoreResident\b/);
+  });
+
   it("feature setup context does not expose the ECS world", () => {
     const source = readFileSync("src/framework/feature/FeatureSetupContext.ts", "utf8");
 
