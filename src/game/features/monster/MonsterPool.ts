@@ -58,8 +58,10 @@ export function spawnMonster(
   monsterType: MonsterType,
   triad: MonsterHoleTriad,
   board: BoardRuntime,
-): void {
+): boolean {
   const center = getMonsterTriadCenter(triad, board);
+  if (!board.tryOccupyTriad(triad, BoardOccupantKind.Monster, eid)) return false;
+
   MonsterComponent.monsterType[eid] = monsterType;
   MonsterComponent.visible[eid] = 1;
   MonsterComponent.ageSec[eid] = 0;
@@ -75,6 +77,6 @@ export function spawnMonster(
   BoardPositionComponent.xRatio[eid] = center.xRatio;
   BoardPositionComponent.yRatio[eid] = center.yRatio;
   BoardPositionComponent.zIndex[eid] = 80;
-  board.occupyTriad(triad, BoardOccupantKind.Monster, eid);
   MonsterComponent.spawnSeq[eid] += 1;
+  return true;
 }

@@ -11,7 +11,7 @@
 - `HoleComponent.residentKind/residentEid` 表示洞位默认住户，例如 Shrew。
 - `HoleComponent.occupantKind/occupantEid` 表示当前占用者，例如 Monster 临时占用三个洞。
 - `BoardPositionComponent` 表示挂在 root 下的业务目标位置和 zOrder；Shrew、Monster 和后续新目标都应复用它。
-- 其他 Feature 通过 `BoardCapability` / `BoardRuntime` 绑定、占用或释放洞位，不直接导入 board 内部文件。
+- 其他 Feature 通过 `BoardCapability` / `BoardRuntime` 绑定常驻、尝试占用或释放洞位，不直接导入 board 内部文件，也不直接写 `HoleComponent.occupant*`。
 
 ## EntityDefinition
 
@@ -112,7 +112,7 @@ Effect 按 definition 对象身份隔离。`emit` 只入队，主循环最后 `f
 新增会出现在洞位上的目标：
 
 1. Entity 组合里加入 `BoardPositionComponent`。
-2. Feature setup 或 system 通过 `BoardRuntime` 选择洞位、绑定 resident 或占用 triad。
+2. Feature setup 或 system 通过 `BoardRuntime` 选择洞位、绑定 resident 或调用原子占位 API 占用 triad。
 3. 同步 `BoardPositionComponent.xRatio/yRatio/zIndex`，Projection 只读该组件做 view 定位。
 4. 命中检测比较 Hammer 触点和目标中心，不把 HoleNode 当作业务命中入口。
 

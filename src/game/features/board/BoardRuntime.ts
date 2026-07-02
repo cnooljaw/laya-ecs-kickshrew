@@ -61,13 +61,14 @@ export class BoardRuntime {
     });
   }
 
-  occupyTriad(triad: readonly [number, number, number], kind: BoardOccupantKind, eid: number): void {
-    if (!this.canOccupyTriad(triad)) return;
+  tryOccupyTriad(triad: readonly [number, number, number], kind: BoardOccupantKind, eid: number): boolean {
+    if (!this.canOccupyTriad(triad)) return false;
     for (const index of triad) {
       const holeEid = this.getHoleEid(index);
       HoleComponent.occupantKind[holeEid] = kind;
       HoleComponent.occupantEid[holeEid] = eid;
     }
+    return true;
   }
 
   releaseTriad(triad: readonly [number, number, number]): void {

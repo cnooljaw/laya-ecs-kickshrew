@@ -162,6 +162,30 @@ describe("MonsterSystem", () => {
     }
   });
 
+  it("spawnMonster 占位失败时不写入 Monster 可见状态", () => {
+    const world = createGameWorld();
+    const { scene } = createSingletonEntities(world);
+    const board = createBoard(world, scene);
+    const monster = createMonsterRuntime(world).create(MonsterEntity, monsterInput());
+    const triad: readonly [number, number, number] = [1, 3, 4];
+    for (const holeIndex of triad) {
+      board.bindResident(holeIndex, BoardOccupantKind.Shrew, 1000 + holeIndex);
+    }
+    const blockedHole = board.getHoleEid(3);
+    HoleComponent.occupantKind[blockedHole] = BoardOccupantKind.Monster;
+    HoleComponent.occupantEid[blockedHole] = 999;
+
+    const spawned = spawnMonster(monster, MonsterType.Rhino, triad, board);
+
+    expect(spawned).toBe(false);
+    expect(MonsterComponent.visible[monster]).toBe(0);
+    expect(MonsterComponent.spawnSeq[monster]).toBe(0);
+    expect(MonsterComponent.holeA[monster]).toBe(-1);
+    expect(MonsterComponent.holeB[monster]).toBe(-1);
+    expect(MonsterComponent.holeC[monster]).toBe(-1);
+    expect(HoleComponent.occupantEid[blockedHole]).toBe(999);
+  });
+
   it("地图切换后仍保持 Monster 三洞占用并按新地图洞位重算中心", () => {
     const world = createGameWorld();
     const { scene } = createSingletonEntities(world);

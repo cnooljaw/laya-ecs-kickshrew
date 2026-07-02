@@ -42,7 +42,7 @@ export function monsterSpawnSystem(
 
     const eid = findInactiveMonster(world, rule.monsterType);
     if (eid <= 0) continue;
-    spawnMonster(eid, rule.monsterType, triad, board);
+    if (!spawnMonster(eid, rule.monsterType, triad, board)) continue;
   }
 }
 
