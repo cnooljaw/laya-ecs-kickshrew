@@ -6,7 +6,7 @@ describe("LayaSpine", () => {
     vi.unstubAllGlobals();
   });
 
-  it("prefers template buildArmature when available", () => {
+  it("passes aniMode to template buildArmature when available", () => {
     const skeleton = {};
     const buildArmature = vi.fn().mockReturnValue(skeleton);
 
@@ -16,14 +16,16 @@ describe("LayaSpine", () => {
 
   it("falls back to Laya.Skeleton and assigns the template", () => {
     class FakeSkeleton {
+      constructor(public aniMode = 0) {}
       templet: unknown = null;
     }
     vi.stubGlobal("window", { Laya: { Skeleton: FakeSkeleton } });
     const template = {};
 
-    const skeleton = createSkeleton(template);
+    const skeleton = createSkeleton(template, 2);
 
     expect(skeleton).toBeInstanceOf(FakeSkeleton);
+    expect(skeleton.aniMode).toBe(2);
     expect(skeleton.templet).toBe(template);
   });
 });

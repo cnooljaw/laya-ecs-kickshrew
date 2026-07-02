@@ -19,6 +19,8 @@ interface MonsterNodeOptions {
   resolveViewConfig?: (monsterType: number) => MonsterViewConfig;
 }
 
+const MONSTER_SKELETON_ANI_MODE = 2;
+
 interface MonsterDebugBounds {
   x: number;
   y: number;
@@ -207,7 +209,7 @@ export class MonsterNode implements IMonsterNode {
       if (this._destroyed || !this._container || request.spawnSeq !== this._lastSpawnSeq) return;
 
       destroyNode(this._skeleton);
-      this._skeleton = createSkeleton(templet);
+      this._skeleton = createSkeleton(templet, MONSTER_SKELETON_ANI_MODE);
       this._loadedMonsterType = request.monsterType;
       this._loopPlaying = false;
       this._skeleton.name = `MonsterSkeleton:${request.monsterType}`;

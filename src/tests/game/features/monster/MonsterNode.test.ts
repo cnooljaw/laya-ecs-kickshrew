@@ -128,12 +128,13 @@ describe("MonsterNode", () => {
 
   it("加载后立即播放 Spine 动画，击败时继续播放自身动画", async () => {
     const skeletons: FakeSkeleton[] = [];
+    const buildArmature = vi.fn(() => {
+      const skeleton = new FakeSkeleton();
+      skeletons.push(skeleton);
+      return skeleton;
+    });
     const load = vi.fn().mockResolvedValue({
-      buildArmature: () => {
-        const skeleton = new FakeSkeleton();
-        skeletons.push(skeleton);
-        return skeleton;
-      },
+      buildArmature,
     });
     vi.stubGlobal("window", {
       Laya: {
@@ -149,6 +150,7 @@ describe("MonsterNode", () => {
 
     node.spawn(1, 1);
     await flushPromises();
+    expect(buildArmature).toHaveBeenCalledWith(2);
     expect(skeletons[0].playCalls).toBe(1);
     expect(skeletons[0].lastLoop).toBe(true);
 
