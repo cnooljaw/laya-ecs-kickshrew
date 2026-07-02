@@ -1,5 +1,5 @@
 import { defineEntity } from "../../../framework/ecs/EntityDefinition";
-import { BoardPositionComponent } from "../board/index";
+import { BoardPositionComponent } from "../../board/index";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponents";
 import { MonsterAction, type MonsterType } from "./MonsterTypes";
 

@@ -1,4 +1,4 @@
-import { defineEntity } from "../../../framework/ecs/EntityDefinition";
+import { defineEntity } from "../../framework/ecs/EntityDefinition";
 import { SCENE_CYCLE_INTERVAL } from "./SceneConfig";
 import { HolePositions, getHoleGrid, getHoleZOrder } from "./HolePositions";
 import { BoardOccupantKind, MapType } from "./BoardTypes";

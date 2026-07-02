@@ -1,4 +1,5 @@
 import { defineFeature, defineSystem } from "../../../framework/feature/FeatureManifest";
+import { BoardTopologyCapability } from "../../board";
 import { MonsterEntity, MonsterTriggerEntity } from "./MonsterEntities";
 import { MonsterNode } from "./MonsterNode";
 import {
@@ -19,11 +20,6 @@ export const MonsterFeature = defineFeature({
   name: "monster",
   entities: [MonsterEntity, MonsterTriggerEntity],
   projections: [MonsterProjection],
-  systems: [
-    defineSystem("feature", "monster.lifetime", monsterLifetimeSystem),
-    defineSystem("feature", "monster.boardSync", monsterBoardSyncSystem),
-    defineSystem("feature", "monster.spawn", monsterSpawnSystem),
-  ],
   setup: ({ entities, mountPool }) => {
     assertValidMonsterFeature();
     createMonsterTriggerEntities(entities, MONSTER_SPAWN_RULES);
@@ -36,6 +32,20 @@ export const MonsterFeature = defineFeature({
       projection: MonsterProjection,
       create: () => new MonsterNode(),
     });
+  },
+  setupSystems: ctx => {
+    const board = ctx.use(BoardTopologyCapability);
+    return [
+      defineSystem("feature", "monster.lifetime", (world, deltaSec) => {
+        monsterLifetimeSystem(world, deltaSec, board);
+      }),
+      defineSystem("feature", "monster.boardSync", world => {
+        monsterBoardSyncSystem(world, board);
+      }),
+      defineSystem("feature", "monster.spawn", (world, deltaSec) => {
+        monsterSpawnSystem(world, board, deltaSec);
+      }),
+    ];
   },
 });
 

@@ -6,6 +6,7 @@
 
 ```text
 src/framework/            稳定的 ECS / Feature / Sync / View 机制
+src/game/board/           棋盘基础层：Scene、Hole、BoardPosition、拓扑和占用操作
 src/game/features/        业务纵向切片
 src/game/session/         输入、回包和跨 Feature 编排
 src/game/GameFeatures.ts  显式 Feature 组合根
@@ -15,7 +16,7 @@ src/resource/             atlas、plist 和资源路径工具
 src/config/               少量跨业务配置
 ```
 
-`framework` 提供机制。`game/features` 保存业务规则和表现绑定。`app` 负责把 world、runtime、network 和 Laya stage 组装起来。
+`framework` 提供机制。`game/board` 保存稳定棋盘基础能力。`game/features` 保存业务规则和表现绑定。`app` 负责把 world、runtime、network 和 Laya stage 组装起来。
 
 ## 依赖方向
 
@@ -46,7 +47,8 @@ adapter
 - ECS system 不操作 Laya。
 - Laya node 不反查 ECS。
 - socket 回包不直接操作 view。
-- Feature 不导入另一个 Feature 的内部文件。
+- Feature 不导入另一个业务 Feature 的内部文件。
+- Feature 可以依赖 `game/board` 公开 API；board 不依赖任何业务 Feature。
 
 ## 运行时
 
@@ -89,17 +91,17 @@ defineFeature({
 常见固定输入池优先使用 `ctx.createAndMountMany({ entity, inputs, projection, create })`。
 父子拓扑、规则校验、trigger 创建和跨实体关系仍应在 Feature setup 中显式表达。
 
-`BoardFeature` 拥有基础棋盘拓扑：
+`BoardFoundation` 拥有基础棋盘拓扑：
 
 1. mount Scene。
 2. 创建 9 个 Hole。
 3. 维护地图轮换、洞位坐标、洞位 zOrder。
 4. 维护 `residentKind/residentEid` 和 `occupantKind/occupantEid`。
-5. provide `BoardCapability`，供其他 Feature 通过受控 API 绑定或占用洞位。
+5. provide `BoardTopologyCapability`，供其他 Feature 使用 `BoardTopology` 和 `BoardOps` 绑定或占用洞位。
 
-`ShrewFeature` 只创建 Shrew，并通过 `board.bindResident(index, BoardOccupantKind.Shrew, shrewEid)` 建立 1:1 默认住户关系。`ShrewNode` 挂在 root，由 `BoardPositionComponent` 投影自己的位置和 zOrder。它不拥有 HoleNode，也不直接写洞位坐标。
+`ShrewFeature` 只创建 Shrew，并通过 `bindResident(board, index, BoardOccupantKind.Shrew, shrewEid)` 建立 1:1 默认住户关系。`ShrewNode` 挂在 root，由 `BoardPositionComponent` 投影自己的位置和 zOrder。它不拥有 HoleNode，也不直接写洞位坐标。
 
-`MonsterFeature` 使用固定实体池。金币跨过 100 倍数时从 board 查找空闲三角形洞位，调用 `tryOccupyTriad` 原子占用 3 个 Hole，并把 Monster 放在三角形中心。没有可用三角形时跳过本次刷怪，不挤掉已有 Shrew 或 Monster。
+`MonsterFeature` 使用固定实体池。金币跨过 100 倍数时从 board 查找空闲三角形洞位，调用 `tryOccupyTriad(board, triad, BoardOccupantKind.Monster, monsterEid)` 原子占用 3 个 Hole，并把 Monster 放在三角形中心。没有可用三角形时跳过本次刷怪，不挤掉已有 Shrew 或 Monster。
 
 洞位互斥由 `HoleComponent.occupantKind/occupantEid` 表达。Shrew 是 resident；Monster 是临时 occupant。Monster 占用三洞后，这三个洞的 resident Shrew 仍存在，但不再是 current occupant，因此不会参与命中候选。Monster 释放时只把 occupant 恢复为 resident。
 
@@ -113,6 +115,7 @@ GameScene.init
   -> create EntityRuntime / ProjectionRuntime / EffectRuntime
   -> bootstrap singleton entities
   -> GAME_FEATURE_REGISTRY.setupAll
+  -> create per-scene GameFeatureRuntime
   -> projectionRuntime.mark/sync initial state
 ```
 

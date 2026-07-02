@@ -2,8 +2,9 @@ import type { EntityRuntime } from "../../../framework/ecs/EntityRuntime";
 import {
   BoardOccupantKind,
   BoardPositionComponent,
-  type BoardRuntime,
-} from "../board/index";
+  tryOccupyTriad,
+  type BoardTopology,
+} from "../../board/index";
 import { MonsterComponent } from "./MonsterComponents";
 import {
   MonsterEntity,
@@ -57,10 +58,10 @@ export function spawnMonster(
   eid: number,
   monsterType: MonsterType,
   triad: MonsterHoleTriad,
-  board: BoardRuntime,
+  board: BoardTopology,
 ): boolean {
   const center = getMonsterTriadCenter(triad, board);
-  if (!board.tryOccupyTriad(triad, BoardOccupantKind.Monster, eid)) return false;
+  if (!tryOccupyTriad(board, triad, BoardOccupantKind.Monster, eid)) return false;
 
   MonsterComponent.monsterType[eid] = monsterType;
   MonsterComponent.visible[eid] = 1;

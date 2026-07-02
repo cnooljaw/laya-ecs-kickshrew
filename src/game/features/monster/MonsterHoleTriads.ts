@@ -1,4 +1,4 @@
-import type { BoardRuntime } from "../board/index";
+import { getHoleCenter, type BoardTopology } from "../../board/index";
 
 export type MonsterHoleTriad = readonly [number, number, number];
 
@@ -11,12 +11,12 @@ export const MONSTER_HOLE_TRIADS: readonly MonsterHoleTriad[] = [
 
 export function getMonsterTriadCenter(
   triad: MonsterHoleTriad,
-  board: BoardRuntime,
+  board: BoardTopology,
 ): { xRatio: number; yRatio: number } {
   let xRatio = 0;
   let yRatio = 0;
   for (const holeIndex of triad) {
-    const center = board.getHoleCenter(holeIndex);
+    const center = getHoleCenter(board, holeIndex);
     xRatio += center.xRatio;
     yRatio += center.yRatio;
   }

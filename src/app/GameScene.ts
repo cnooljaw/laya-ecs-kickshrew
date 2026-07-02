@@ -27,6 +27,7 @@ import {
   type ProjectionRuntime,
 } from "../framework/sync/ProjectionRuntime";
 import { createEffectRuntime, type EffectRuntime } from "../framework/sync/EffectRuntime";
+import type { GameFeatureRuntime } from "../framework/feature/FeatureRegistry";
 import {
   KickInputController,
   createKickInputController,
@@ -50,6 +51,7 @@ export class GameScene {
   private _effectRuntime: EffectRuntime | null = null;
   private _loopPipeline: GameLoopPipeline | null = null;
   private _kickInput: KickInputController | null = null;
+  private _featureRuntime: GameFeatureRuntime | null = null;
 
   constructor() {
     this._network = new NetworkAdapter();
@@ -86,7 +88,7 @@ export class GameScene {
       Laya.SoundManager.playMusic(SND.bg, 0);
     }
 
-    GAME_FEATURE_REGISTRY.setupAll(createFeatureSetupContext({
+    this._featureRuntime = GAME_FEATURE_REGISTRY.setupAll(createFeatureSetupContext({
       root: this._root,
       viewRegistry: this._viewRegistry,
       entityRuntime: this._entityRuntime,
@@ -102,7 +104,7 @@ export class GameScene {
     this._loopPipeline = new GameLoopPipeline({
       world: this._world,
       network: this._network,
-      featureRegistry: GAME_FEATURE_REGISTRY,
+      featureRuntime: this._featureRuntime,
       projectionRuntime: this._projectionRuntime,
       effects: this._effectRuntime,
     });
@@ -139,6 +141,7 @@ export class GameScene {
     resetShrewTimingOverride();
     this._kickInput = null;
     this._loopPipeline = null;
+    this._featureRuntime = null;
     this._viewRegistry.clear();
     this._effectRuntime?.clear();
     this._effectRuntime = null;

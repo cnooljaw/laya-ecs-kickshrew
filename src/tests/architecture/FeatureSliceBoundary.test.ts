@@ -34,12 +34,43 @@ function findImports(root: string): ImportRecord[] {
   return imports;
 }
 
+function readTypeScriptSources(root: string): string {
+  if (!existsSync(root)) {
+    return "";
+  }
+
+  const sources: string[] = [];
+  for (const name of readdirSync(root)) {
+    const path = join(root, name);
+    if (statSync(path).isDirectory()) {
+      sources.push(readTypeScriptSources(path));
+      continue;
+    }
+    if (path.endsWith(".ts")) {
+      sources.push(readFileSync(path, "utf8"));
+    }
+  }
+  return sources.join("\n");
+}
+
 function featureName(path: string): string | undefined {
   const normalized = path.replace(/\\/g, "/");
   return normalized.match(/src\/game\/features\/([^/]+)/)?.[1];
 }
 
 describe("feature slice boundaries", () => {
+  it("keeps board as a game foundation outside business features", () => {
+    expect(existsSync("src/game/board")).toBe(true);
+    expect(existsSync("src/game/features/board")).toBe(false);
+  });
+
+  it("does not reintroduce BoardRuntime as a runtime service", () => {
+    const sources = readTypeScriptSources("src/game");
+
+    expect(sources).not.toMatch(/\bBoardRuntime\b/);
+    expect(sources).not.toMatch(/\bcreateBoardRuntimeFromWorld\b/);
+  });
+
   it("feature setup context does not expose the ECS world", () => {
     const source = readFileSync("src/framework/feature/FeatureSetupContext.ts", "utf8");
 

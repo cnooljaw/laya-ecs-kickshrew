@@ -1,22 +1,22 @@
 import { hasComponent } from "bitecs";
 import { describe, expect, it } from "vitest";
-import { HolePositions, SCENE_CYCLE_INTERVAL } from "../../game/features/board";
+import { HolePositions, SCENE_CYCLE_INTERVAL } from "../../game/board";
 import {
   AnimationComponent,
   ShrewComponent,
 } from "../../game/features/shrew";
-import { HoleComponent, SceneComponent } from "../../game/features/board";
+import { HoleComponent, SceneComponent } from "../../game/board";
 import { PlayerComponent } from "../../game/features/playerHud";
 import {
   HoleEntity,
   SceneEntity,
-} from "../../game/features/board";
+} from "../../game/board";
 import {
   ShrewEntity,
 } from "../../game/features/shrew";
 import { PlayerEntity } from "../../game/features/playerHud";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { HOLE_COUNT, MapType } from "../../game/features/board";
+import { HOLE_COUNT, MapType } from "../../game/board";
 import { ShrewAction, ShrewType } from "../../game/features/shrew";
 import { createGameWorld } from "../../framework/ecs/GameWorld";
 

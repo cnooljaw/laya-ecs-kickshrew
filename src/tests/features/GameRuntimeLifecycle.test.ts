@@ -2,7 +2,7 @@ import { deleteWorld } from "bitecs";
 import { describe, expect, it } from "vitest";
 import { ShrewEntity } from "../../game/features/shrew";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { MapType } from "../../game/features/board";
+import { MapType } from "../../game/board";
 import { ShrewType } from "../../game/features/shrew";
 import { createGameWorld } from "../../framework/ecs/GameWorld";
 import type { IShrewNode } from "../../game/features/shrew";

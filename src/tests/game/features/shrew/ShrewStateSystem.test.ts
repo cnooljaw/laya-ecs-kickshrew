@@ -13,7 +13,7 @@ import {
   setShrewTimingOverride,
   shrewStateSystem,
 } from "../../../../game/features/shrew";
-import { HoleComponent, MapType } from "../../../../game/features/board";
+import { HoleComponent, MapType } from "../../../../game/board";
 
 const FRAME_DELTA = 1 / 60;
 

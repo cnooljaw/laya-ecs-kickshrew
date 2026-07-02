@@ -1,6 +1,6 @@
-import { defineFeature, defineSystem } from "../../../framework/feature/FeatureManifest";
-import type { FeatureSetupContext } from "../../../framework/feature/FeatureSetupContext";
-import { BoardRuntime, BoardCapability } from "./BoardRuntime";
+import { defineFeature, defineSystem } from "../../framework/feature/FeatureManifest";
+import type { FeatureSetupContext } from "../../framework/feature/FeatureSetupContext";
+import { createBoardTopology, BoardTopologyCapability, type BoardTopology } from "./BoardTopology";
 import { HoleEntity, SceneEntity } from "./BoardEntities";
 import { HoleNode } from "./HoleNode";
 import { HoleProjection, SceneProjection } from "./BoardProjection";
@@ -11,6 +11,7 @@ import { HOLE_COUNT, MapType } from "./BoardTypes";
 export interface BoardSetupResult {
   scene: number;
   holes: number[];
+  topology: BoardTopology;
 }
 
 export function setupBoard({
@@ -39,12 +40,12 @@ export function setupBoard({
     });
   }
 
-  const board = new BoardRuntime(scene, holes);
-  provide(BoardCapability, board);
-  return { scene, holes };
+  const topology = createBoardTopology(scene, holes);
+  provide(BoardTopologyCapability, topology);
+  return { scene, holes, topology };
 }
 
-export const BoardFeature = defineFeature({
+export const BoardFoundation = defineFeature({
   name: "board",
   entities: [SceneEntity, HoleEntity],
   projections: [SceneProjection, HoleProjection],

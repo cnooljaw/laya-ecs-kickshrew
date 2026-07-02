@@ -1,7 +1,12 @@
 import { defineFeature, defineSystem } from "../../../framework/feature/FeatureManifest";
 import type { FeatureSetupContext } from "../../../framework/feature/FeatureSetupContext";
 import { shrewAnimationTimerSystem } from "./ShrewAnimationTimerSystem";
-import { BoardCapability, BoardOccupantKind } from "../board/index";
+import {
+  bindResident,
+  BoardOccupantKind,
+  BoardTopologyCapability,
+  getHoleEid,
+} from "../../board/index";
 import { ShrewEntity } from "./ShrewEntities";
 import { shrewBoardSyncSystem, syncShrewBoardPosition } from "./ShrewBoardSyncSystem";
 import { ShrewProjection } from "./ShrewProjection";
@@ -18,7 +23,7 @@ export function setupCoreGameplay({
   mountOne,
   use,
 }: FeatureSetupContext): CoreGameplaySetupResult {
-  const board = use(BoardCapability);
+  const board = use(BoardTopologyCapability);
   const shrews: number[] = [];
   for (let index = 0; index < board.holes.length; index++) {
     const shrewEid = entities.create(ShrewEntity, {
@@ -26,8 +31,8 @@ export function setupCoreGameplay({
       mapType: MapType.Meadow,
       holeIndex: index,
     });
-    board.bindResident(index, BoardOccupantKind.Shrew, shrewEid);
-    syncShrewBoardPosition(shrewEid, board.getHoleEid(index));
+    bindResident(board, index, BoardOccupantKind.Shrew, shrewEid);
+    syncShrewBoardPosition(shrewEid, getHoleEid(board, index));
     shrews.push(shrewEid);
 
     mountOne({

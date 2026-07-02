@@ -11,7 +11,7 @@ import {
   SceneComponent,
   SceneEntity,
   mapCycleSystem,
-} from "../../../../game/features/board";
+} from "../../../../game/board";
 import {
   ShrewAction,
   ShrewComponent,

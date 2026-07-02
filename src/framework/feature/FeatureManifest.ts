@@ -14,6 +14,7 @@ export interface SystemDefinition {
 export interface FeatureManifest {
   readonly name: string;
   setup?: (ctx: FeatureSetupContext) => void;
+  setupSystems?: (ctx: FeatureSetupContext) => readonly SystemDefinition[];
   entities?: readonly EntityDefinition<any>[];
   projections?: readonly ProjectionDefinition<any>[];
   systems?: readonly SystemDefinition[];

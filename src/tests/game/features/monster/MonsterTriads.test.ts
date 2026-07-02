@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../../../framework/ecs/GameWorld";
 import {
-  BoardRuntime,
+  createBoardTopology,
   HoleComponent,
   HoleEntity,
   MapType,
   SceneEntity,
-} from "../../../../game/features/board";
+} from "../../../../game/board";
 import {
   getMonsterTriadCenter,
   MONSTER_HOLE_TRIADS,
@@ -32,7 +32,7 @@ describe("Monster triads", () => {
       HoleEntity,
       Array.from({ length: 9 }, (_, index) => ({ index, mapType: MapType.Meadow })),
     );
-    const board = new BoardRuntime(scene, holes);
+    const board = createBoardTopology(scene, holes);
 
     const center = getMonsterTriadCenter([0, 1, 3], board);
 

@@ -42,7 +42,7 @@ http://localhost:8080/debug-space-monster-drop.html
 
 1. 打开目标地图的 `debug-*-shrews-stand.html`。
 2. 只看 `Stand` 状态下 Shrew body 的视觉中心。
-3. 修改 `src/game/features/board/HolePositions.ts` 对应地图的 `xRatios` / `yRatios`。
+3. 修改 `src/game/board/HolePositions.ts` 对应地图的 `xRatios` / `yRatios`。
 4. 重新跑 `npm run debug:ready`，刷新页面确认。
 5. 再用 `debug-meadow-shrews-up0.html` 检查 Up 起点和 cover 遮挡。
 
@@ -124,8 +124,8 @@ MonsterComponent.holeA/B/C
 
 互斥排查顺序：
 
-1. `monsterSpawnSystem` 是否只从 `board.canOccupyTriad` 返回可用的三角形里随机选择。
-2. `spawnMonster` 是否通过 `board.tryOccupyTriad` 成功后才写 `MonsterComponent.visible/holeA/holeB/holeC/spawnSeq`。
+1. `monsterSpawnSystem` 是否只从 `canOccupyTriad(board, triad)` 返回可用的三角形里随机选择。
+2. `spawnMonster` 是否通过 `tryOccupyTriad(board, triad, ...)` 成功后才写 `MonsterComponent.visible/holeA/holeB/holeC/spawnSeq`。
 3. Shrew 候选是否仍要求对应 Hole 的 `occupantKind/eid` 等于当前 Shrew。
 4. Monster 消失或 Dizzy 结束后，`releaseTriad` 是否把三洞恢复为 resident。
 5. 切图后 `MapCycleSystem` 是否保留 occupant，`monsterBoardSyncSystem` 是否重算 Monster 三角中心。
@@ -149,7 +149,7 @@ Monster drop 页面有蓝色和灰色调试框：
 | 表现 | 常见原因 | 排查位置 |
 | --- | --- | --- |
 | 整个角色忽隐忽现 | `visible`、`actionState`、对象池复用或 Projection 顺序。 | `MonsterComponent.visible`、`MonsterNode.setVisible`。 |
-| 位置从旧点跳到新点 | `BoardPositionComponent` 未按当前地图重算。 | `monsterBoardSyncSystem`、`BoardRuntime`。 |
+| 位置从旧点跳到新点 | `BoardPositionComponent` 未按当前地图重算。 | `monsterBoardSyncSystem`、`BoardOps`。 |
 | 局部部件画了两份 | 资源 slot 同时显示整图和拆分部件，或 Skeleton 绘制缓存异常。 | `MonsterNode`、`rhino.png`、`rhino.sk`。 |
 
 这次 Rhino 的叠影原因是资源里同时有完整整图 `zong` 和拆分骨骼部件。运行时必须在每次 `play` 后隐藏 `zong` slot：

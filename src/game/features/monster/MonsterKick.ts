@@ -1,5 +1,5 @@
 import { defineQuery } from "bitecs";
-import { BoardPositionComponent } from "../board/index";
+import { BoardPositionComponent } from "../../board/index";
 import { MonsterComponent } from "./MonsterComponents";
 import { startMonsterDizzy } from "./MonsterSystems";
 import { MonsterAction } from "./MonsterTypes";

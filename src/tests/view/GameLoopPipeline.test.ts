@@ -1,21 +1,18 @@
 import { describe, expect, it } from "vitest";
-import type { GameFeatureRegistry } from "../../framework/feature/FeatureRegistry";
+import type { GameFeatureRuntime } from "../../framework/feature/FeatureRegistry";
 import { GameLoopPipeline } from "../../app/GameLoopPipeline";
 
 describe("GameLoopPipeline", () => {
   it("固定执行 state -> network -> feature -> projection sync -> effects", () => {
     const order: string[] = [];
-    const featureRegistry: GameFeatureRegistry = {
-      setupAll: () => {},
+    const featureRuntime: GameFeatureRuntime = {
       systemsByPhase: phase => phase === "state"
-        ? [{ name: "state", run: () => order.push("state") }]
-        : [{ name: "feature", run: () => order.push("feature") }],
-      entityTypes: () => [],
-      projections: () => [],
+        ? [{ phase: "state", name: "state", run: () => order.push("state") }]
+        : [{ phase: "feature", name: "feature", run: () => order.push("feature") }],
     };
     const pipeline = new GameLoopPipeline({
       world: {},
-      featureRegistry,
+      featureRuntime,
       network: { update: () => order.push("network") } as any,
       projectionRuntime: {
         mark: () => order.push("projectionMark"),

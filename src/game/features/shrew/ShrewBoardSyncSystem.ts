@@ -1,6 +1,6 @@
 import { defineQuery } from "bitecs";
 import { BoardPositionComponent, HoleComponent, ShrewComponent } from "./ShrewComponents";
-import { BoardOccupantKind } from "../board/index";
+import { BoardOccupantKind } from "../../board/index";
 import { ShrewAction } from "./ShrewTypes";
 
 const shrewQuery = defineQuery([ShrewComponent, BoardPositionComponent]);

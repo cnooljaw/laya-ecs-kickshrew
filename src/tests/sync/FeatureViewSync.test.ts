@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MonsterComponent } from "../../game/features/monster";
 import { MonsterEntity } from "../../game/features/monster";
 import { MonsterAction, MonsterType } from "../../game/features/monster";
-import { BoardPositionComponent } from "../../game/features/board";
+import { BoardPositionComponent } from "../../game/board";
 import { PerfHeroComponent } from "../../game/features/perfHero";
 import { PerfHeroEntity } from "../../game/features/perfHero";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";

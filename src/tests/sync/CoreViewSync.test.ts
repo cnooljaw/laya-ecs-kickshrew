@@ -7,25 +7,25 @@ import {
   BoardPositionComponent,
   HoleComponent,
   SceneComponent,
-} from "../../game/features/board";
+} from "../../game/board";
 import {
   HoleEntity,
   SceneEntity,
-} from "../../game/features/board";
+} from "../../game/board";
 import {
   ShrewEntity,
 } from "../../game/features/shrew";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { MapType } from "../../game/features/board";
+import { MapType } from "../../game/board";
 import { AnimType, ShrewAction, ShrewType } from "../../game/features/shrew";
 import { createGameWorld } from "../../framework/ecs/GameWorld";
-import type { IHoleNode, ISceneLayer } from "../../game/features/board";
+import type { IHoleNode, ISceneLayer } from "../../game/board";
 import type { IShrewNode } from "../../game/features/shrew";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import {
   HoleProjection,
   SceneProjection,
-} from "../../game/features/board";
+} from "../../game/board";
 import {
   ShrewProjection,
 } from "../../game/features/shrew";

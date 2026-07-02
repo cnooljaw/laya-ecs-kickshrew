@@ -47,4 +47,4 @@ export const enum AnimType {
   TreasureBox = 9,
 }
 
-export { GRID_SIZE, HOLE_COUNT, MapType } from "../board/index";
+export { GRID_SIZE, HOLE_COUNT, MapType } from "../../board/index";

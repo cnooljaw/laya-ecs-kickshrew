@@ -2,9 +2,10 @@ import { defineQuery } from "bitecs";
 import {
   BoardOccupantKind,
   BoardPositionComponent,
-  createBoardRuntimeFromWorld,
-  type BoardRuntime,
-} from "../board/index";
+  canOccupyTriad,
+  releaseTriadIfOwned,
+  type BoardTopology,
+} from "../../board/index";
 import { PlayerComponent } from "../playerHud/index";
 import { MonsterComponent, MonsterSpawnComponent } from "./MonsterComponents";
 import { spawnMonster } from "./MonsterPool";
@@ -18,6 +19,7 @@ const monsterSpawnQuery = defineQuery([MonsterSpawnComponent]);
 
 export function monsterSpawnSystem(
   world: any,
+  board: BoardTopology,
   _deltaSec: number = 0,
   rules: readonly MonsterSpawnRule[] = MONSTER_SPAWN_RULES,
 ): void {
@@ -36,8 +38,6 @@ export function monsterSpawnSystem(
     MonsterSpawnComponent.lastMilestone[state] = milestone;
     if (activeCount(world, rule.monsterType) >= rule.maxActiveCount) continue;
 
-    const board = createBoardRuntimeFromWorld(world);
-    if (!board) continue;
     const triad = findAvailableTriad(board);
     if (!triad) continue;
 
@@ -47,7 +47,7 @@ export function monsterSpawnSystem(
   }
 }
 
-export function monsterLifetimeSystem(world: any, deltaSec: number): void {
+export function monsterLifetimeSystem(world: any, deltaSec: number, board: BoardTopology): void {
   const entities = monsterQuery(world);
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i];
@@ -70,22 +70,19 @@ export function monsterLifetimeSystem(world: any, deltaSec: number): void {
       const duration = MonsterComponent.durationSec[eid];
       MonsterComponent.ageSec[eid] = Math.min(duration, MonsterComponent.ageSec[eid] + deltaSec);
       MonsterComponent.stateTimer[eid] = Math.max(0, MonsterComponent.stateTimer[eid] - deltaSec);
-      if (MonsterComponent.stateTimer[eid] <= 0) resetMonsterToWait(world, eid);
+      if (MonsterComponent.stateTimer[eid] <= 0) resetMonsterToWait(board, eid);
       continue;
     }
 
     if (action === MonsterAction.Dizzy) {
       MonsterComponent.stateTimer[eid] = Math.max(0, MonsterComponent.stateTimer[eid] - deltaSec);
       MonsterComponent.animationProgress[eid] = 1 - MonsterComponent.stateTimer[eid] / MONSTER_TIMING.dizzySec;
-      if (MonsterComponent.stateTimer[eid] <= 0) resetMonsterToWait(world, eid);
+      if (MonsterComponent.stateTimer[eid] <= 0) resetMonsterToWait(board, eid);
     }
   }
 }
 
-export function monsterBoardSyncSystem(world: any): void {
-  const board = createBoardRuntimeFromWorld(world);
-  if (!board) return;
-
+export function monsterBoardSyncSystem(world: any, board: BoardTopology): void {
   const entities = monsterQuery(world);
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i];
@@ -101,12 +98,10 @@ export function monsterBoardSyncSystem(world: any): void {
   }
 }
 
-export function releaseMonsterTriad(world: any, monsterEid: number): void {
-  const board = createBoardRuntimeFromWorld(world);
-  if (!board) return;
+export function releaseMonsterTriad(board: BoardTopology, monsterEid: number): void {
   const triad = getMonsterTriad(monsterEid);
   if (!triad) return;
-  board.releaseTriadIfOwned(triad, BoardOccupantKind.Monster, monsterEid);
+  releaseTriadIfOwned(board, triad, BoardOccupantKind.Monster, monsterEid);
   MonsterComponent.holeA[monsterEid] = -1;
   MonsterComponent.holeB[monsterEid] = -1;
   MonsterComponent.holeC[monsterEid] = -1;
@@ -147,10 +142,10 @@ function findInactiveMonster(world: any, monsterType: MonsterType): number {
   return 0;
 }
 
-function findAvailableTriad(board: BoardRuntime): MonsterHoleTriad | undefined {
+function findAvailableTriad(board: BoardTopology): MonsterHoleTriad | undefined {
   const available: MonsterHoleTriad[] = [];
   for (const triad of MONSTER_HOLE_TRIADS) {
-    if (!board.canOccupyTriad(triad)) continue;
+    if (!canOccupyTriad(board, triad)) continue;
     available.push(triad);
   }
   if (available.length === 0) return undefined;
@@ -166,12 +161,12 @@ function getMonsterTriad(monsterEid: number): MonsterHoleTriad | undefined {
   return triad.every(index => index >= 0) ? triad : undefined;
 }
 
-function resetMonsterToWait(world: any, monsterEid: number): void {
+function resetMonsterToWait(board: BoardTopology, monsterEid: number): void {
   MonsterComponent.visible[monsterEid] = 0;
   MonsterComponent.actionState[monsterEid] = MonsterAction.Wait;
   MonsterComponent.stateTimer[monsterEid] = 0;
   MonsterComponent.animationProgress[monsterEid] = 0;
   MonsterComponent.ageSec[monsterEid] = 0;
   MonsterComponent.hp[monsterEid] = 0;
-  releaseMonsterTriad(world, monsterEid);
+  releaseMonsterTriad(board, monsterEid);
 }

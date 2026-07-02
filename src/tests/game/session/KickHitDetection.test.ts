@@ -10,10 +10,12 @@ import {
 import { HammerComponent } from "../../../game/features/hammer";
 import {
   BoardOccupantKind,
+  createBoardTopology,
   HoleComponent,
   MapType,
   HOLE_COUNT,
-} from "../../../game/features/board";
+  type BoardTopology,
+} from "../../../game/board";
 import {
   SHREW_TIMING,
   ShrewAction,
@@ -28,12 +30,14 @@ import { HAMMER_RULES } from "../../../config/GameTuning";
 describe('KickHitDetection', () => {
   let world: ReturnType<typeof createGameWorld>;
   let holes: number[];
+  let board: BoardTopology;
   let singletons: ReturnType<typeof createSingletonEntities>;
 
   beforeEach(() => {
     world = createGameWorld();
     singletons = createSingletonEntities(world);
     holes = createHoleEntities(world, MapType.Meadow);
+    board = createBoardTopology(singletons.scene, holes);
 
     // 为每个洞位创建地鼠，并设为可点击
     for (let i = 0; i < HOLE_COUNT; i++) {
@@ -169,7 +173,7 @@ describe('KickHitDetection', () => {
       expect(HoleComponent.occupantEid[holes[index]]).toBe(monster);
     }
 
-    monsterLifetimeSystem(world, 0.6);
+    monsterLifetimeSystem(world, 0.6, board);
 
     expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Wait);
     expect(MonsterComponent.visible[monster]).toBe(0);

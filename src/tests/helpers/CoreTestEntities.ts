@@ -5,13 +5,14 @@ import {
 } from "../../game/features/shrew";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import {
+  bindResident,
   BoardOccupantKind,
-  BoardRuntime,
+  createBoardTopology,
   HOLE_COUNT,
   HoleComponent,
   HoleEntity,
   type MapType,
-} from "../../game/features/board";
+} from "../../game/board";
 import { type ShrewType } from "../../game/features/shrew";
 import {
   MonsterAction,
@@ -41,11 +42,11 @@ export function createHoleEntities(world: any, mapType: MapType): number[] {
 }
 
 export function bindShrewToHoleForTest(holeEid: number, shrewEid: number): void {
-  const board = new BoardRuntime(0, [holeEid]);
+  const board = createBoardTopology(0, [holeEid]);
   const holeIndex = Math.round(HoleComponent.index[holeEid]);
-  board.bindResident(0, BoardOccupantKind.Shrew, shrewEid);
+  bindResident(board, 0, BoardOccupantKind.Shrew, shrewEid);
   syncShrewBoardPosition(shrewEid, holeEid);
-  // BoardRuntime only knows the local one-hole array; restore the real board index on Shrew.
+  // The local topology only knows one hole; restore the real board index on Shrew.
   ShrewComponent.holeIndex[shrewEid] = holeIndex;
 }
 
@@ -67,7 +68,7 @@ export function createMonsterAtTriadForTest(
     posY: 0,
     durationSec: 10,
   });
-  const board = new BoardRuntime(0, holes);
+  const board = createBoardTopology(0, holes);
   const spawned = spawnMonster(monster, MonsterType.Rhino, triad, board);
   if (!spawned) throw new Error(`Failed to spawn monster at triad: ${triad.join(",")}`);
 

@@ -1,12 +1,12 @@
 import { NetworkAdapter } from "../network/NetworkAdapter";
-import type { GameFeatureRegistry } from "../framework/feature/FeatureRegistry";
+import type { GameFeatureRuntime } from "../framework/feature/FeatureRegistry";
 import type { ProjectionRuntime } from "../framework/sync/ProjectionRuntime";
 import type { EffectRuntime } from "../framework/sync/EffectRuntime";
 
 interface GameLoopPipelineDeps {
   world: any;
   network: NetworkAdapter;
-  featureRegistry: GameFeatureRegistry;
+  featureRuntime: GameFeatureRuntime;
   projectionRuntime?: Pick<ProjectionRuntime, "mark" | "sync">;
   effects?: Pick<EffectRuntime, "flush">;
 }
@@ -17,11 +17,11 @@ export class GameLoopPipeline {
   update(deltaSec: number): void {
     const { world, network } = this._deps;
 
-    for (const system of this._deps.featureRegistry.systemsByPhase("state")) {
+    for (const system of this._deps.featureRuntime.systemsByPhase("state")) {
       system.run(world, deltaSec);
     }
     network.update();
-    for (const system of this._deps.featureRegistry.systemsByPhase("feature")) {
+    for (const system of this._deps.featureRuntime.systemsByPhase("feature")) {
       system.run(world, deltaSec);
     }
     this._deps.projectionRuntime?.mark(world);

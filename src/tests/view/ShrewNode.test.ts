@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MapType } from "../../game/features/board";
+import { MapType } from "../../game/board";
 import { ShrewAction, ShrewType } from "../../game/features/shrew";
 import { getShrewClipLayout, getShrewMainLayerLocalY, getShrewMainLayerY, ShrewNode } from "../../game/features/shrew/ShrewNode";
 

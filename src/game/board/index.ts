@@ -1,8 +1,26 @@
-export { BoardFeature, setupBoard, type BoardSetupResult } from "./BoardFeature";
+export { BoardFoundation, setupBoard, type BoardSetupResult } from "./BoardFoundation";
 export { BoardPositionComponent, HoleComponent, SceneComponent } from "./BoardComponents";
 export { HoleEntity, SceneEntity, type HoleEntityInput } from "./BoardEntities";
 export { HoleProjection, SceneProjection } from "./BoardProjection";
-export { BoardCapability, BoardRuntime, createBoardRuntimeFromWorld } from "./BoardRuntime";
+export {
+  BoardTopologyCapability,
+  createBoardTopology,
+  createBoardTopologyFromWorld,
+  type BoardTopology,
+} from "./BoardTopology";
+export {
+  bindResident,
+  canOccupyTriad,
+  getBoardHoleZOrder,
+  getCurrentMap,
+  getHoleCenter,
+  getHoleEid,
+  getHoleIndex,
+  releaseTriad,
+  releaseTriadIfOwned,
+  restoreResident,
+  tryOccupyTriad,
+} from "./BoardOps";
 export { HoleNode } from "./HoleNode";
 export { HolePositions, getHoleGrid, getHoleZOrder } from "./HolePositions";
 export type { IHoleNode } from "./IHoleNode";

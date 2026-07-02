@@ -2,9 +2,9 @@
  * HoleNode — 洞位容器节点
  * 含裁剪遮罩 + ShrewNode 子节点
  */
-import { VIEWPORT } from "../../../config/ViewLayoutConfig";
-import { destroyNode } from "../../../framework/view/LayaLifecycle";
-import { getLaya } from "../../../framework/view/LayaRuntime";
+import { VIEWPORT } from "../../config/ViewLayoutConfig";
+import { destroyNode } from "../../framework/view/LayaLifecycle";
+import { getLaya } from "../../framework/view/LayaRuntime";
 import type { IHoleNode } from "./IHoleNode";
 
 export class HoleNode implements IHoleNode {

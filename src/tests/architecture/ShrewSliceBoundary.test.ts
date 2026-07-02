@@ -8,7 +8,7 @@ describe("shrew slice boundaries", () => {
       "utf8",
     );
 
-    expect(feature).toContain("board.bindResident(index, BoardOccupantKind.Shrew, shrewEid)");
+    expect(feature).toContain("bindResident(board, index, BoardOccupantKind.Shrew, shrewEid)");
     expect(feature).toContain("mountOne");
     expect(feature).not.toContain("mountTree");
   });

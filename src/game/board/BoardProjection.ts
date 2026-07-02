@@ -3,7 +3,7 @@ import {
   noProjection,
   projectionSource,
   watch,
-} from "../../../framework/sync/ProjectionDefinition";
+} from "../../framework/sync/ProjectionDefinition";
 import { HoleComponent, SceneComponent } from "./BoardComponents";
 import type { IHoleNode } from "./IHoleNode";
 import type { ISceneLayer } from "./ISceneLayer";

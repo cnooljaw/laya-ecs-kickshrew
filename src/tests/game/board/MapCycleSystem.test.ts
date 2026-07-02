@@ -11,9 +11,9 @@ import {
   SCENE_CYCLE_INTERVAL,
   getHoleZOrder,
   mapCycleSystem,
-} from "../../../../game/features/board";
-import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
-import { createGameWorld } from "../../../../framework/ecs/GameWorld";
+} from "../../../game/board";
+import { createEntityRuntime } from "../../../framework/ecs/EntityRuntime";
+import { createGameWorld } from "../../../framework/ecs/GameWorld";
 
 describe("Board MapCycleSystem", () => {
   let world: ReturnType<typeof createGameWorld>;

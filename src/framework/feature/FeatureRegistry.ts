@@ -9,15 +9,20 @@ import type {
 } from "./FeatureManifest";
 
 export interface RegisteredGameSystem {
+  readonly phase: GameSystemPhase;
   readonly name: string;
   readonly run: GameSystem;
 }
 
 export interface GameFeatureRegistry {
-  setupAll(ctx: FeatureSetupContext): void;
+  setupAll(ctx: FeatureSetupContext): GameFeatureRuntime;
   systemsByPhase(phase: GameSystemPhase): readonly RegisteredGameSystem[];
   entityTypes(): readonly EntityDefinition<any>[];
   projections(): readonly ProjectionDefinition<any>[];
+}
+
+export interface GameFeatureRuntime {
+  systemsByPhase(phase: GameSystemPhase): readonly RegisteredGameSystem[];
 }
 
 export interface GameFeatureRegistryOptions {
@@ -38,6 +43,16 @@ export function createGameFeatureRegistry(
   return {
     setupAll: ctx => {
       for (const feature of features) feature.setup?.(ctx);
+      const runtimeSystems = collectRuntimeSystems(features, options.systems ?? [], ctx);
+      const runtimeStateSystems = filterSystemsByPhase(runtimeSystems, "state");
+      const runtimeFeatureSystems = filterSystemsByPhase(runtimeSystems, "feature");
+      validateRegisteredSystems([
+        ...runtimeStateSystems,
+        ...runtimeFeatureSystems,
+      ]);
+      return {
+        systemsByPhase: phase => phase === "state" ? runtimeStateSystems : runtimeFeatureSystems,
+      };
     },
     systemsByPhase: phase => phase === "state" ? stateSystems : featureSystems,
     entityTypes: () => entityTypes,
@@ -91,6 +106,7 @@ function collectSystems(
     for (const system of feature.systems ?? []) {
       if (system.phase !== phase) continue;
       systems.push({
+        phase: system.phase,
         name: system.name,
         run: system.run,
       });
@@ -99,11 +115,63 @@ function collectSystems(
   for (const system of extraSystems) {
     if (system.phase !== phase) continue;
     systems.push({
+      phase: system.phase,
       name: system.name,
       run: system.run,
     });
   }
   return systems;
+}
+
+function collectRuntimeSystems(
+  features: readonly FeatureManifest[],
+  extraSystems: readonly SystemDefinition[],
+  ctx: FeatureSetupContext,
+): RegisteredGameSystem[] {
+  const systems: RegisteredGameSystem[] = [];
+  for (const feature of features) {
+    for (const system of feature.systems ?? []) {
+      systems.push({
+        phase: system.phase,
+        name: system.name,
+        run: system.run,
+      });
+    }
+    for (const system of feature.setupSystems?.(ctx) ?? []) {
+      systems.push({
+        phase: system.phase,
+        name: system.name,
+        run: system.run,
+      });
+    }
+  }
+  for (const system of extraSystems) {
+    systems.push({
+      phase: system.phase,
+      name: system.name,
+      run: system.run,
+    });
+  }
+  return systems;
+}
+
+function filterSystemsByPhase(
+  systems: readonly RegisteredGameSystem[],
+  phase: GameSystemPhase,
+): RegisteredGameSystem[] {
+  const filtered: RegisteredGameSystem[] = [];
+  for (const system of systems) {
+    if (system.phase !== phase) continue;
+    filtered.push(system);
+  }
+  return filtered;
+}
+
+function validateRegisteredSystems(systems: readonly RegisteredGameSystem[]): void {
+  const systemNames = new Set<string>();
+  for (const system of systems) {
+    assertUnique(systemNames, system.name, "FeatureSystem");
+  }
 }
 
 function assertUnique(names: Set<string>, name: string, kind: string): void {

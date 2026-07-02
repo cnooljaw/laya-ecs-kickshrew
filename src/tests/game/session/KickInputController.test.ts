@@ -8,7 +8,7 @@ import {
   createShrewEntity,
 } from "../../helpers/CoreTestEntities";
 import { HammerComponent } from "../../../game/features/hammer";
-import { HoleComponent, MapType } from "../../../game/features/board";
+import { HoleComponent, MapType } from "../../../game/board";
 import { ShrewAction, ShrewComponent, ShrewType } from "../../../game/features/shrew";
 import { MonsterAction } from "../../../game/features/monster";
 import { PlayerComponent } from "../../../game/features/playerHud";

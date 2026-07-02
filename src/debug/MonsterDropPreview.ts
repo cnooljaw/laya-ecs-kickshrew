@@ -7,7 +7,7 @@ import {
   SceneLayer,
   getHoleGrid,
   getHoleZOrder,
-} from "../game/features/board";
+} from "../game/board";
 import { MONSTER_HOLE_TRIADS, type MonsterHoleTriad } from "../game/features/monster/MonsterHoleTriads";
 import { MonsterAction, MonsterType } from "../game/features/monster/MonsterTypes";
 import { MonsterNode } from "../game/features/monster/MonsterNode";

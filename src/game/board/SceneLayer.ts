@@ -17,11 +17,11 @@
  *   Laya 中将 cover 压缩到 960px 宽度，但高度必须保持自然值，
  *   否则 cover 过短无法正确遮挡洞口区域。
  */
-import { SCENE_LAYOUT, VIEWPORT } from "../../../config/ViewLayoutConfig";
-import { destroyNode } from "../../../framework/view/LayaLifecycle";
-import { loadResource } from "../../../framework/view/LayaLoader";
-import { getLaya } from "../../../framework/view/LayaRuntime";
-import { getAtlasPath, getFrameTexture } from "../../../resource/AtlasConfig";
+import { SCENE_LAYOUT, VIEWPORT } from "../../config/ViewLayoutConfig";
+import { destroyNode } from "../../framework/view/LayaLifecycle";
+import { loadResource } from "../../framework/view/LayaLoader";
+import { getLaya } from "../../framework/view/LayaRuntime";
+import { getAtlasPath, getFrameTexture } from "../../resource/AtlasConfig";
 import type { ISceneLayer } from "./ISceneLayer";
 import { MapType } from "./BoardTypes";
 

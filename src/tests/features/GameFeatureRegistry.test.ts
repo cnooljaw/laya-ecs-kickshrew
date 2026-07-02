@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { MONSTER_SPAWN_RULES } from "../../game/features/monster";
 import {
-  BoardFeature,
+  BoardFoundation,
   BoardOccupantKind,
-  BoardRuntime,
-  BoardCapability,
+  BoardTopologyCapability,
   HoleComponent,
   HoleEntity,
   HoleProjection,
@@ -12,7 +11,7 @@ import {
   SceneEntity,
   SceneProjection,
   setupBoard,
-} from "../../game/features/board";
+} from "../../game/board";
 import { ShrewAction, ShrewComponent, ShrewEntity } from "../../game/features/shrew";
 import { HammerEntity } from "../../game/features/hammer";
 import { PlayerComponent, PlayerEntity } from "../../game/features/playerHud";
@@ -27,7 +26,12 @@ import {
   defineSystem,
   type FeatureManifest,
 } from "../../framework/feature/FeatureManifest";
-import { GAME_FEATURES, GAME_FEATURE_REGISTRY } from "../../game/GameFeatures";
+import {
+  GAME_FEATURES,
+  GAME_FEATURE_REGISTRY,
+  GAME_FOUNDATIONS,
+  GAME_MODULES,
+} from "../../game/GameFeatures";
 import { createGameFeatureRegistry, validateGameFeatures } from "../../framework/feature/FeatureRegistry";
 import {
   defineCapability,
@@ -159,12 +163,19 @@ describe("GameFeatureRegistry", () => {
   });
 
   it("keeps real feature contribution order stable", () => {
+    expect(GAME_FOUNDATIONS.map(feature => feature.name)).toEqual(["board"]);
     expect(GAME_FEATURES.map(feature => feature.name).slice(0, 3)).toEqual([
+      "monster",
+      "shrew",
+      "hammer",
+    ]);
+    expect(GAME_FEATURES.map(feature => feature.name)).not.toContain("board");
+    expect(GAME_FEATURES.map(feature => feature.name)).not.toContain("session");
+    expect(GAME_MODULES.map(feature => feature.name).slice(0, 3)).toEqual([
       "board",
       "monster",
       "shrew",
     ]);
-    expect(GAME_FEATURES.map(feature => feature.name)).not.toContain("session");
     expect(GAME_FEATURE_REGISTRY.systemsByPhase("state").map(item => item.name)).toEqual([
       "board.mapCycle",
       "shrew.animationTimer",
@@ -173,9 +184,6 @@ describe("GameFeatureRegistry", () => {
       "session.hammerThunder",
     ]);
     expect(GAME_FEATURE_REGISTRY.systemsByPhase("feature").map(item => item.name)).toEqual([
-      "monster.lifetime",
-      "monster.boardSync",
-      "monster.spawn",
       "shrew.boardSync",
       "perfHero.state",
     ]);
@@ -211,7 +219,7 @@ describe("GameFeatureRegistry", () => {
 
     expect(boardResult.holes).toHaveLength(9);
     expect(result.shrews).toHaveLength(9);
-    expect(context.use(BoardCapability)).toBeInstanceOf(BoardRuntime);
+    expect(context.use(BoardTopologyCapability)).toBe(boardResult.topology);
     expect(boardResult.holes.map(eid => HoleComponent.residentEid[eid])).toEqual(result.shrews);
     expect(boardResult.holes.map(eid => HoleComponent.occupantEid[eid])).toEqual(result.shrews);
   });
@@ -267,7 +275,7 @@ describe("GameFeatureRegistry", () => {
     entities.bootstrapSingletons();
     const setup = createSetupContext(entities);
 
-    GAME_FEATURE_REGISTRY.setupAll(setup.context);
+    const runtime = GAME_FEATURE_REGISTRY.setupAll(setup.context);
 
     expect(Object.fromEntries(setup.mounts)).toEqual({
       scene: 1,
@@ -278,6 +286,13 @@ describe("GameFeatureRegistry", () => {
       monster: MONSTER_SPAWN_RULES.reduce((count, rule) => count + rule.maxActiveCount, 0),
     });
     expect(setup.resourceCount()).toBe(1);
+    expect(runtime.systemsByPhase("feature").map(item => item.name)).toEqual([
+      "monster.lifetime",
+      "monster.boardSync",
+      "monster.spawn",
+      "shrew.boardSync",
+      "perfHero.state",
+    ]);
   });
 
   it("runs Monster occupancy before final Shrew board sync in the same loop frame", () => {
@@ -285,8 +300,8 @@ describe("GameFeatureRegistry", () => {
     const entities = createEntityRuntime(world, GAME_FEATURE_REGISTRY.entityTypes());
     entities.bootstrapSingletons();
     const setup = createSetupContext(entities);
-    GAME_FEATURE_REGISTRY.setupAll(setup.context);
-    const board = setup.context.use(BoardCapability);
+    const runtime = GAME_FEATURE_REGISTRY.setupAll(setup.context);
+    const board = setup.context.use(BoardTopologyCapability);
 
     PlayerComponent.money[entities.one(PlayerEntity)] = 100;
     for (const hole of board.holes) {
@@ -295,10 +310,10 @@ describe("GameFeatureRegistry", () => {
       ShrewComponent.isClickable[shrew] = 1;
     }
 
-    for (const system of GAME_FEATURE_REGISTRY.systemsByPhase("state")) {
+    for (const system of runtime.systemsByPhase("state")) {
       system.run(world, 0);
     }
-    for (const system of GAME_FEATURE_REGISTRY.systemsByPhase("feature")) {
+    for (const system of runtime.systemsByPhase("feature")) {
       system.run(world, 0);
     }
 
@@ -337,6 +352,18 @@ describe("GameFeatureRegistry", () => {
     ], {
       systems: [defineSystem("feature", "duplicate.extra", duplicateSystem)],
     })).toThrow("FeatureSystem name 重复: duplicate.extra");
+    expect(() => {
+      const world = createGameWorld();
+      const entities = createEntityRuntime(world, []);
+      const setup = createSetupContext(entities);
+      createGameFeatureRegistry([
+        defineFeature({
+          name: "a",
+          systems: [defineSystem("state", "duplicate.setup", duplicateSystem)],
+          setupSystems: () => [defineSystem("feature", "duplicate.setup", duplicateSystem)],
+        }),
+      ]).setupAll(setup.context);
+    }).toThrow("FeatureSystem name 重复: duplicate.setup");
     expect(() => validateGameFeatures([feature("same"), feature("same")]))
       .toThrow("GameFeature name 重复: same");
     expect(() => validateGameFeatures([
@@ -350,7 +377,8 @@ describe("GameFeatureRegistry", () => {
   });
 
   it("validates the real feature table", () => {
-    expect(GAME_FEATURES).toContain(BoardFeature);
-    expect(() => validateGameFeatures(GAME_FEATURES)).not.toThrow();
+    expect(GAME_FOUNDATIONS).toContain(BoardFoundation);
+    expect(GAME_FEATURES).not.toContain(BoardFoundation);
+    expect(() => validateGameFeatures(GAME_MODULES)).not.toThrow();
   });
 });

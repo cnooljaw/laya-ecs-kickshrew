@@ -7,9 +7,11 @@ import { MonsterAction, MonsterType } from "../../../../game/features/monster/Mo
 import { monsterBoardSyncSystem, monsterLifetimeSystem, monsterSpawnSystem } from "../../../../game/features/monster/MonsterSystems";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 import {
+  bindResident,
   BoardOccupantKind,
   BoardPositionComponent,
-  BoardRuntime,
+  createBoardTopology,
+  getHoleEid,
   HoleComponent,
   HolePositions,
   HoleEntity,
@@ -17,7 +19,8 @@ import {
   SceneComponent,
   SCENE_CYCLE_INTERVAL,
   mapCycleSystem,
-} from "../../../../game/features/board";
+  type BoardTopology,
+} from "../../../../game/board";
 import {
   MonsterEntity,
   MonsterTriggerEntity,
@@ -49,13 +52,13 @@ describe("MonsterSystem", () => {
     return createEntityRuntime(world, [MonsterEntity, MonsterTriggerEntity]);
   }
 
-  function createBoard(world: any, scene: number): BoardRuntime {
+  function createBoard(world: any, scene: number): BoardTopology {
     const runtime = createEntityRuntime(world, [HoleEntity]);
     const holes = runtime.createMany(
       HoleEntity,
       Array.from({ length: 9 }, (_, index) => ({ index, mapType: MapType.Meadow })),
     );
-    return new BoardRuntime(scene, holes);
+    return createBoardTopology(scene, holes);
   }
 
   it("为每条规则创建独立 tracker，不受四槽字段限制", () => {
@@ -89,13 +92,13 @@ describe("MonsterSystem", () => {
     const monster = runtime.create(MonsterEntity, monsterInput());
 
     PlayerComponent.money[player] = 99;
-    monsterSpawnSystem(world);
+    monsterSpawnSystem(world, board);
 
     expect(MonsterComponent.visible[monster]).toBe(0);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(0);
 
     PlayerComponent.money[player] = 100;
-    monsterSpawnSystem(world);
+    monsterSpawnSystem(world, board);
 
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Drop);
@@ -107,14 +110,14 @@ describe("MonsterSystem", () => {
     const triad = [MonsterComponent.holeA[monster], MonsterComponent.holeB[monster], MonsterComponent.holeC[monster]];
     expect(MONSTER_HOLE_TRIADS.some(candidate => candidate.every((hole, index) => hole === triad[index]))).toBe(true);
     for (const holeIndex of triad) {
-      expect(HoleComponent.occupantKind[board.getHoleEid(holeIndex)]).toBe(BoardOccupantKind.Monster);
-      expect(HoleComponent.occupantEid[board.getHoleEid(holeIndex)]).toBe(monster);
+      expect(HoleComponent.occupantKind[getHoleEid(board, holeIndex)]).toBe(BoardOccupantKind.Monster);
+      expect(HoleComponent.occupantEid[getHoleEid(board, holeIndex)]).toBe(monster);
     }
     expect(BoardPositionComponent.xRatio[monster]).toBeGreaterThan(0);
     expect(BoardPositionComponent.yRatio[monster]).toBeGreaterThan(0);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
 
-    monsterSpawnSystem(world);
+    monsterSpawnSystem(world, board);
 
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
@@ -124,13 +127,13 @@ describe("MonsterSystem", () => {
     vi.spyOn(Math, "random").mockReturnValue(0.999);
     const world = createGameWorld();
     const { player, scene } = createSingletonEntities(world);
-    createBoard(world, scene);
+    const board = createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     runtime.create(MonsterTriggerEntity, 0);
     const monster = runtime.create(MonsterEntity, monsterInput());
 
     PlayerComponent.money[player] = 100;
-    monsterSpawnSystem(world);
+    monsterSpawnSystem(world, board);
 
     expect([MonsterComponent.holeA[monster], MonsterComponent.holeB[monster], MonsterComponent.holeC[monster]])
       .toEqual(MONSTER_HOLE_TRIADS[MONSTER_HOLE_TRIADS.length - 1]);
@@ -144,21 +147,21 @@ describe("MonsterSystem", () => {
     const triad: readonly [number, number, number] = [1, 3, 4];
     spawnMonster(monster, MonsterType.Rhino, triad, board);
 
-    monsterLifetimeSystem(world, MONSTER_TIMING.dropSec - 0.01);
+    monsterLifetimeSystem(world, MONSTER_TIMING.dropSec - 0.01, board);
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Drop);
 
-    monsterLifetimeSystem(world, 0.02);
+    monsterLifetimeSystem(world, 0.02, board);
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Stay);
 
-    monsterLifetimeSystem(world, 10);
+    monsterLifetimeSystem(world, 10, board);
     expect(MonsterComponent.visible[monster]).toBe(0);
     expect(MonsterComponent.actionState[monster]).toBe(MonsterAction.Wait);
     expect(MonsterComponent.ageSec[monster]).toBe(0);
     for (const holeIndex of triad) {
-      expect(HoleComponent.occupantKind[board.getHoleEid(holeIndex)]).toBe(HoleComponent.residentKind[board.getHoleEid(holeIndex)]);
-      expect(HoleComponent.occupantEid[board.getHoleEid(holeIndex)]).toBe(HoleComponent.residentEid[board.getHoleEid(holeIndex)]);
+      expect(HoleComponent.occupantKind[getHoleEid(board, holeIndex)]).toBe(HoleComponent.residentKind[getHoleEid(board, holeIndex)]);
+      expect(HoleComponent.occupantEid[getHoleEid(board, holeIndex)]).toBe(HoleComponent.residentEid[getHoleEid(board, holeIndex)]);
     }
   });
 
@@ -169,9 +172,9 @@ describe("MonsterSystem", () => {
     const monster = createMonsterRuntime(world).create(MonsterEntity, monsterInput());
     const triad: readonly [number, number, number] = [1, 3, 4];
     for (const holeIndex of triad) {
-      board.bindResident(holeIndex, BoardOccupantKind.Shrew, 1000 + holeIndex);
+      bindResident(board, holeIndex, BoardOccupantKind.Shrew, 1000 + holeIndex);
     }
-    const blockedHole = board.getHoleEid(3);
+    const blockedHole = getHoleEid(board, 3);
     HoleComponent.occupantKind[blockedHole] = BoardOccupantKind.Monster;
     HoleComponent.occupantEid[blockedHole] = 999;
 
@@ -196,11 +199,11 @@ describe("MonsterSystem", () => {
 
     SceneComponent.sceneTimer[scene] = SCENE_CYCLE_INTERVAL;
     mapCycleSystem(world);
-    monsterBoardSyncSystem(world);
+    monsterBoardSyncSystem(world, board);
 
     expect(SceneComponent.currentMap[scene]).toBe(MapType.Ship);
     for (const holeIndex of triad) {
-      const holeEid = board.getHoleEid(holeIndex);
+      const holeEid = getHoleEid(board, holeIndex);
       expect(HoleComponent.occupantKind[holeEid]).toBe(BoardOccupantKind.Monster);
       expect(HoleComponent.occupantEid[holeEid]).toBe(monster);
     }
@@ -221,13 +224,13 @@ describe("MonsterSystem", () => {
   it("一次跨过多个 100 倍数时默认只生成一次，并消费到最新里程碑", () => {
     const world = createGameWorld();
     const { player, scene } = createSingletonEntities(world);
-    createBoard(world, scene);
+    const board = createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
     const monster = runtime.create(MonsterEntity, monsterInput());
 
     PlayerComponent.money[player] = 350;
-    monsterSpawnSystem(world);
+    monsterSpawnSystem(world, board);
 
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
@@ -237,27 +240,27 @@ describe("MonsterSystem", () => {
   it("达到新 100 倍数时如果 Rhino 仍在场，则丢弃这次触发且隐藏后不补发", () => {
     const world = createGameWorld();
     const { player, scene } = createSingletonEntities(world);
-    createBoard(world, scene);
+    const board = createBoard(world, scene);
     const runtime = createMonsterRuntime(world);
     const spawnState = runtime.create(MonsterTriggerEntity, 0);
     const monster = runtime.create(MonsterEntity, monsterInput());
 
     PlayerComponent.money[player] = 100;
-    monsterSpawnSystem(world);
+    monsterSpawnSystem(world, board);
 
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(1);
 
     PlayerComponent.money[player] = 200;
-    monsterSpawnSystem(world);
+    monsterSpawnSystem(world, board);
 
     expect(MonsterComponent.visible[monster]).toBe(1);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
     expect(MonsterSpawnComponent.lastMilestone[spawnState]).toBe(2);
 
     MonsterComponent.visible[monster] = 0;
-    monsterSpawnSystem(world);
+    monsterSpawnSystem(world, board);
 
     expect(MonsterComponent.visible[monster]).toBe(0);
     expect(MonsterComponent.spawnSeq[monster]).toBe(1);
@@ -297,7 +300,7 @@ describe("MonsterSystem", () => {
     }
     PlayerComponent.money[player] = 100;
 
-    monsterSpawnSystem(world);
+    monsterSpawnSystem(world, board);
 
     expect(MonsterComponent.visible[monster]).toBe(0);
     expect(MonsterComponent.spawnSeq[monster]).toBe(0);

@@ -1,5 +1,5 @@
 import { defineQuery } from "bitecs";
-import { BoardOccupantKind } from "../board/index";
+import { BoardOccupantKind } from "../../board/index";
 import {
   BoardPositionComponent,
   HoleComponent,

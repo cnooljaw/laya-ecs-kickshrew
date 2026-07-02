@@ -1,5 +1,5 @@
 import { defineProjection, projectionSource, watch } from "../../../framework/sync/ProjectionDefinition";
-import { BoardPositionComponent } from "../board/index";
+import { BoardPositionComponent } from "../../board/index";
 import { MonsterComponent } from "./MonsterComponents";
 import type { IMonsterNode } from "./IMonsterNode";
 
