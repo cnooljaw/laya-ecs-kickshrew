@@ -7,6 +7,12 @@ export { ShrewFeature, setupCoreGameplay } from "./ShrewFeature";
 export { startShrewDizzyHold } from "./ShrewLifecycle";
 export { ShrewProjection } from "./ShrewProjection";
 export {
+  applyShrewLocalHit,
+  collectShrewKickTargets,
+  type ShrewKickTarget,
+  type ShrewLocalHitResult,
+} from "./ShrewKick";
+export {
   PERF_SHREW_TIMING,
   SHREW_TIMING,
   getShrewTiming,

@@ -45,3 +45,11 @@ export function applyPlayerKickResponse(
     shrewResp: response.shrewResp,
   });
 }
+
+export function getPlayerAngry(playerEid: number): number {
+  return PlayerComponent.angry[playerEid];
+}
+
+export function applyPlayerReward(playerEid: number, reward: number): void {
+  PlayerComponent.money[playerEid] += reward;
+}

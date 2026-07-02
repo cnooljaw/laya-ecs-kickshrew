@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld } from '../../../framework/ecs/GameWorld';
 import { createSingletonEntities } from '../../helpers/SingletonTestEntities';
-import { createHoleEntities, createShrewEntity } from '../../helpers/CoreTestEntities';
-import { createEntityRuntime } from "../../../framework/ecs/EntityRuntime";
-import { HammerComponent } from "../../../game/features/hammer";
-import { HammerType } from "../../../game/features/hammer";
 import {
-  BoardPositionComponent,
+  bindShrewToHoleForTest,
+  createHoleEntities,
+  createMonsterAtTriadForTest,
+  createShrewEntity,
+} from '../../helpers/CoreTestEntities';
+import { HammerComponent } from "../../../game/features/hammer";
+import {
   BoardOccupantKind,
   HoleComponent,
   MapType,
@@ -18,7 +20,7 @@ import {
   ShrewComponent,
   ShrewType,
 } from "../../../game/features/shrew";
-import { monsterLifetimeSystem, MonsterAction, MonsterComponent, MonsterEntity, MonsterType } from "../../../game/features/monster";
+import { monsterLifetimeSystem, MonsterAction, MonsterComponent } from "../../../game/features/monster";
 import { PlayerComponent } from "../../../game/features/playerHud";
 import { detectKickHit, KickHitTargetKind } from "../../../game/session/KickHitDetection";
 import { HAMMER_RULES } from "../../../config/GameTuning";
@@ -36,7 +38,7 @@ describe('KickHitDetection', () => {
     // 为每个洞位创建地鼠，并设为可点击
     for (let i = 0; i < HOLE_COUNT; i++) {
       const shrewEid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
-      bindShrewToHole(holes[i], shrewEid);
+      bindShrewToHoleForTest(holes[i], shrewEid);
       ShrewComponent.actionState[shrewEid] = ShrewAction.Stand;
       ShrewComponent.isClickable[shrewEid] = 1;
     }
@@ -45,29 +47,6 @@ describe('KickHitDetection', () => {
   const touchAtHole = (holeIndex: number): [number, number] => {
     const holeEid = holes[holeIndex];
     return [HoleComponent.posXRatio[holeEid], HoleComponent.posYRatio[holeEid]];
-  };
-
-  const createMonsterAtTriad = (triad: readonly [number, number, number]): number => {
-    const monster = createEntityRuntime(world, [MonsterEntity]).create(MonsterEntity, {
-      monsterType: MonsterType.Rhino,
-      posX: 0,
-      posY: 0,
-      durationSec: 10,
-    });
-    MonsterComponent.visible[monster] = 1;
-    MonsterComponent.actionState[monster] = MonsterAction.Stay;
-    MonsterComponent.hp[monster] = 3;
-    MonsterComponent.holeA[monster] = triad[0];
-    MonsterComponent.holeB[monster] = triad[1];
-    MonsterComponent.holeC[monster] = triad[2];
-    BoardPositionComponent.xRatio[monster] = triad.reduce((sum, index) => sum + HoleComponent.posXRatio[holes[index]], 0) / 3;
-    BoardPositionComponent.yRatio[monster] = triad.reduce((sum, index) => sum + HoleComponent.posYRatio[holes[index]], 0) / 3;
-    BoardPositionComponent.zIndex[monster] = 80;
-    for (const index of triad) {
-      HoleComponent.occupantKind[holes[index]] = BoardOccupantKind.Monster;
-      HoleComponent.occupantEid[holes[index]] = monster;
-    }
-    return monster;
   };
 
   it('触摸点在地鼠 hitArea 内: 返回击中结果', () => {
@@ -121,7 +100,7 @@ describe('KickHitDetection', () => {
 
   it('击中蓝鼠第一击: hp-1, hasHat→0, 进入Dizzy', () => {
     const shrewEid = createShrewEntity(world, ShrewType.Blue, MapType.Meadow);
-    bindShrewToHole(holes[1], shrewEid);
+    bindShrewToHoleForTest(holes[1], shrewEid);
     ShrewComponent.hp[shrewEid] = 2;
     ShrewComponent.hasHat[shrewEid] = 1;
     ShrewComponent.isClickable[shrewEid] = 1;
@@ -151,10 +130,11 @@ describe('KickHitDetection', () => {
   });
 
   it("Monster Drop 阶段不可命中，也不会穿透命中被占用三洞内的地鼠", () => {
-    const monster = createMonsterAtTriad([0, 1, 3]);
-    MonsterComponent.actionState[monster] = MonsterAction.Drop;
-    const x = BoardPositionComponent.xRatio[monster];
-    const y = BoardPositionComponent.yRatio[monster];
+    const triad: readonly [number, number, number] = [0, 1, 3];
+    const monster = createMonsterAtTriadForTest(world, holes, triad, {
+      actionState: MonsterAction.Drop,
+    });
+    const [x, y] = triadCenter(holes, triad);
 
     const result = detectKickHit(world, x, y);
 
@@ -168,9 +148,9 @@ describe('KickHitDetection', () => {
   });
 
   it("命中 Monster 三次后进入 Dizzy，奖励 30 金币，Dizzy 结束后释放三角形洞位", () => {
-    const monster = createMonsterAtTriad([0, 1, 3]);
-    const x = BoardPositionComponent.xRatio[monster];
-    const y = BoardPositionComponent.yRatio[monster];
+    const triad: readonly [number, number, number] = [0, 1, 3];
+    const monster = createMonsterAtTriadForTest(world, holes, triad);
+    const [x, y] = triadCenter(holes, triad);
     PlayerComponent.money[singletons.player] = 100;
 
     for (let i = 0; i < 3; i++) {
@@ -200,13 +180,12 @@ describe('KickHitDetection', () => {
   });
 });
 
-function bindShrewToHole(holeEid: number, shrewEid: number): void {
-  ShrewComponent.holeIndex[shrewEid] = HoleComponent.index[holeEid];
-  HoleComponent.residentKind[holeEid] = BoardOccupantKind.Shrew;
-  HoleComponent.residentEid[holeEid] = shrewEid;
-  HoleComponent.occupantKind[holeEid] = BoardOccupantKind.Shrew;
-  HoleComponent.occupantEid[holeEid] = shrewEid;
-  BoardPositionComponent.xRatio[shrewEid] = HoleComponent.posXRatio[holeEid];
-  BoardPositionComponent.yRatio[shrewEid] = HoleComponent.posYRatio[holeEid];
-  BoardPositionComponent.zIndex[shrewEid] = HoleComponent.zIndex[holeEid];
+function triadCenter(
+  holes: readonly number[],
+  triad: readonly [number, number, number],
+): [number, number] {
+  return [
+    triad.reduce((sum, index) => sum + HoleComponent.posXRatio[holes[index]], 0) / 3,
+    triad.reduce((sum, index) => sum + HoleComponent.posYRatio[holes[index]], 0) / 3,
+  ];
 }

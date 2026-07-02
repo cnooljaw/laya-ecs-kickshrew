@@ -1,24 +1,18 @@
-import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../config/GameTuning";
+import { DESIGN_RESOLUTION } from "../../config/GameTuning";
 import {
-  actionStateName,
-  animTypeName,
   consoleHitTraceLogger,
   HitTraceLogger,
 } from "../../debug/HitTraceLogger";
 import type { EffectRuntime } from "../../framework/sync/EffectRuntime";
 import { NetworkAdapter } from "../../network/NetworkAdapter";
-import type { KickRequest } from "../../network/ProtocolTypes";
 import {
-  HammerComponent,
   findHammer,
+  getHammerHitStatus,
+  recordHammerFeedback,
 } from "../features/hammer/index";
 import { HitMissEffect } from "../features/playerHud/index";
-import {
-  AnimationComponent,
-  ShrewAction,
-  ShrewComponent,
-} from "../features/shrew/index";
 import { detectKickHit, KickHitTargetKind } from "./KickHitDetection";
+import { createKickRequest } from "./KickRequestMapper";
 
 export const KICK_INPUT_SOUNDS = {
   hitOne:  "resources/sound/sound_shrew/Hit_One.wav",
@@ -42,24 +36,24 @@ export class KickInputController {
     const { world, hammerEid, network, effects, playSound } = this._deps;
     const traceLogger = this._deps.traceLogger ?? consoleHitTraceLogger;
     const { xRatio, yRatio } = normalizeTouch(x, y);
-    const hitTable = HammerComponent.hitTable[hammerEid];
+    const hammer = getHammerHitStatus(hammerEid);
     traceLogger.log("input.touch", {
       x,
       y,
       xRatio,
       yRatio,
-      hammerType: HammerComponent.selectedType[hammerEid],
-      hitTable,
+      hammerType: hammer.hammerType,
+      hitTable: hammer.hitTable,
     });
 
-    if (hitTable !== 1) {
+    if (!hammer.canHit) {
       traceLogger.log("hit.blocked", {
         x,
         y,
         xRatio,
         yRatio,
-        hitTable,
-        hitCooldownSec: HammerComponent.hitCooldownSec[hammerEid],
+        hitTable: hammer.hitTable,
+        hitCooldownSec: hammer.hitCooldownSec,
       });
       playSound(KICK_INPUT_SOUNDS.hitNull);
       return;
@@ -77,26 +71,24 @@ export class KickInputController {
     }
 
     if (result.targetKind === KickHitTargetKind.Shrew) {
-      const actionState = ShrewComponent.actionState[result.hitShrewEid];
-      const animType = AnimationComponent.animType[result.hitShrewEid];
       traceLogger.log("hit.detected", {
         hitHoleIndex: result.hitHoleIndex,
         hitHoleEid: result.hitHoleEid,
         hitShrewEid: result.hitShrewEid,
         hitShrewType: result.hitShrewType,
         numOfShrew: result.numOfShrew,
-        actionState,
-        actionStateName: actionStateName(actionState),
-        animType,
-        animTypeName: animTypeName(animType),
-        dizzyTriggered: actionState === ShrewAction.Dizzy,
-        isClickable: ShrewComponent.isClickable[result.hitShrewEid],
-        hp: ShrewComponent.hp[result.hitShrewEid],
+        actionState: result.actionState,
+        actionStateName: result.actionStateName,
+        animType: result.animType,
+        animTypeName: result.animTypeName,
+        dizzyTriggered: result.dizzyTriggered,
+        isClickable: result.isClickable,
+        hp: result.hp,
       });
       playSound(KICK_INPUT_SOUNDS.hitOne);
       playSound(KICK_INPUT_SOUNDS.mouse1);
 
-      const request = createKickRequest(hammerEid, result);
+      const request = createKickRequest(hammer.hammerType, result);
       traceLogger.log("network.requestQueued", {
         hitHoleIndex: result.hitHoleIndex,
         hitShrewEid: result.hitShrewEid,
@@ -117,7 +109,7 @@ export class KickInputController {
       y,
       xRatio,
       yRatio,
-      hitTable: HammerComponent.hitTable[hammerEid],
+      hitTable: getHammerHitStatus(hammerEid).hitTable,
     });
     effects.emit(HitMissEffect, undefined);
     playSound(KICK_INPUT_SOUNDS.hitNull);
@@ -139,26 +131,4 @@ export function normalizeTouch(x: number, y: number): { xRatio: number; yRatio: 
     xRatio: x / DESIGN_RESOLUTION.width,
     yRatio: y / DESIGN_RESOLUTION.height,
   };
-}
-
-export function createKickRequest(
-  hammerEid: number,
-  result: ReturnType<typeof detectKickHit>,
-): Omit<KickRequest, "seqId"> {
-  return {
-    cmd: "kick",
-    hammerType: HammerComponent.selectedType[hammerEid],
-    bKickShrew: result.bKickShrew,
-    numOfShrew: result.numOfShrew,
-    shrews: result.bKickShrew
-      ? [{ shrewindex: result.hitHoleIndex + HOLE_PROTOCOL.clientIndexOffset, protectType: 0 }]
-      : [],
-    comboID: 0,
-  };
-}
-
-function recordHammerFeedback(hammerEid: number, x: number, y: number): void {
-  HammerComponent.touchX[hammerEid] = x;
-  HammerComponent.touchY[hammerEid] = y;
-  HammerComponent.hitSeq[hammerEid] += 1;
 }

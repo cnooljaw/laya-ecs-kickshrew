@@ -74,6 +74,22 @@ export class BoardRuntime {
   releaseTriad(triad: readonly [number, number, number]): void {
     for (const index of triad) this.restoreResident(index);
   }
+
+  releaseTriadIfOwned(
+    triad: readonly [number, number, number],
+    kind: BoardOccupantKind,
+    eid: number,
+  ): boolean {
+    const ownsAll = triad.every(index => {
+      const holeEid = this.getHoleEid(index);
+      return HoleComponent.occupantKind[holeEid] === kind
+        && HoleComponent.occupantEid[holeEid] === eid;
+    });
+    if (!ownsAll) return false;
+
+    this.releaseTriad(triad);
+    return true;
+  }
 }
 
 export const BoardCapability = defineCapability<BoardRuntime>("board");

@@ -61,6 +61,32 @@ describe("BoardRuntime", () => {
     expect(occupied).toBe(false);
     expect(snapshotOccupants(board, triad)).toEqual(before);
   });
+
+  it("只释放指定占用者拥有的三角形，避免误清新的占用", () => {
+    const triad: readonly [number, number, number] = [0, 1, 3];
+    for (const index of triad) {
+      board.bindResident(index, BoardOccupantKind.Shrew, 1000 + index);
+    }
+    board.tryOccupyTriad(triad, BoardOccupantKind.Monster, 2001);
+
+    const releasedByWrongOwner = board.releaseTriadIfOwned(triad, BoardOccupantKind.Monster, 999);
+
+    expect(releasedByWrongOwner).toBe(false);
+    for (const index of triad) {
+      const hole = board.getHoleEid(index);
+      expect(HoleComponent.occupantKind[hole]).toBe(BoardOccupantKind.Monster);
+      expect(HoleComponent.occupantEid[hole]).toBe(2001);
+    }
+
+    const releasedByOwner = board.releaseTriadIfOwned(triad, BoardOccupantKind.Monster, 2001);
+
+    expect(releasedByOwner).toBe(true);
+    for (const index of triad) {
+      const hole = board.getHoleEid(index);
+      expect(HoleComponent.occupantKind[hole]).toBe(BoardOccupantKind.Shrew);
+      expect(HoleComponent.occupantEid[hole]).toBe(1000 + index);
+    }
+  });
 });
 
 function snapshotOccupants(

@@ -1,23 +1,20 @@
-import { defineQuery } from "bitecs";
 import { HAMMER_RULES } from "../../config/GameTuning";
 import {
-  HammerComponent,
-  HammerType,
+  activateHammerThunder,
+  findHammer,
+  isHammerThunderActive,
 } from "../features/hammer/index";
-import { PlayerComponent } from "../features/playerHud/index";
-
-const hammerQuery = defineQuery([HammerComponent]);
-const playerQuery = defineQuery([PlayerComponent]);
+import {
+  findPlayer,
+  getPlayerAngry,
+} from "../features/playerHud/index";
 
 export function activateHammerThunderIfCharged(world: any): void {
-  const hammer = hammerQuery(world)[0];
-  const player = playerQuery(world)[0];
+  const hammer = findHammer(world);
+  const player = findPlayer(world);
   if (hammer === undefined || player === undefined) return;
-  if (HammerComponent.isThunderActive[hammer] === 1) return;
-  if (PlayerComponent.angry[player] < HAMMER_RULES.thunderAngryThreshold) return;
+  if (isHammerThunderActive(hammer)) return;
+  if (getPlayerAngry(player) < HAMMER_RULES.thunderAngryThreshold) return;
 
-  HammerComponent.isThunderActive[hammer] = 1;
-  HammerComponent.selectedType[hammer] = HammerType.Thunder;
-  HammerComponent.hitTable[hammer] = 0;
-  HammerComponent.hitCooldownSec[hammer] = 0;
+  activateHammerThunder(hammer);
 }

@@ -5,6 +5,7 @@ import type {
   FeatureManifest,
   GameSystem,
   GameSystemPhase,
+  SystemDefinition,
 } from "./FeatureManifest";
 
 export interface RegisteredGameSystem {
@@ -19,10 +20,18 @@ export interface GameFeatureRegistry {
   projections(): readonly ProjectionDefinition<any>[];
 }
 
-export function createGameFeatureRegistry(features: readonly FeatureManifest[]): GameFeatureRegistry {
+export interface GameFeatureRegistryOptions {
+  readonly systems?: readonly SystemDefinition[];
+}
+
+export function createGameFeatureRegistry(
+  features: readonly FeatureManifest[],
+  options: GameFeatureRegistryOptions = {},
+): GameFeatureRegistry {
   validateGameFeatures(features);
-  const stateSystems = collectSystems(features, "state");
-  const featureSystems = collectSystems(features, "feature");
+  validateRegistrySystems(features, options.systems ?? []);
+  const stateSystems = collectSystems(features, "state", options.systems);
+  const featureSystems = collectSystems(features, "feature", options.systems);
   const entityTypes = collectFeatureItems(features, feature => feature.entities);
   const projections = collectFeatureItems(features, feature => feature.projections);
 
@@ -57,9 +66,25 @@ export function validateGameFeatures(features: readonly FeatureManifest[]): void
   }
 }
 
+function validateRegistrySystems(
+  features: readonly FeatureManifest[],
+  extraSystems: readonly SystemDefinition[],
+): void {
+  const systemNames = new Set<string>();
+  for (const feature of features) {
+    for (const system of feature.systems ?? []) {
+      assertUnique(systemNames, system.name, "FeatureSystem");
+    }
+  }
+  for (const system of extraSystems) {
+    assertUnique(systemNames, system.name, "FeatureSystem");
+  }
+}
+
 function collectSystems(
   features: readonly FeatureManifest[],
   phase: GameSystemPhase,
+  extraSystems: readonly SystemDefinition[] = [],
 ): RegisteredGameSystem[] {
   const systems: RegisteredGameSystem[] = [];
   for (const feature of features) {
@@ -70,6 +95,13 @@ function collectSystems(
         run: system.run,
       });
     }
+  }
+  for (const system of extraSystems) {
+    if (system.phase !== phase) continue;
+    systems.push({
+      name: system.name,
+      run: system.run,
+    });
   }
   return systems;
 }

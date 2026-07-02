@@ -6,7 +6,7 @@ import { HammerFeature } from "./features/hammer";
 import { MonsterFeature } from "./features/monster";
 import { PerfHeroFeature } from "./features/perfHero";
 import { PlayerHUDFeature } from "./features/playerHud";
-import { SessionFeature } from "./session";
+import { GAME_SESSION_SYSTEMS } from "./session";
 
 export const GAME_FEATURES: readonly FeatureManifest[] = [
   BoardFeature,
@@ -14,8 +14,9 @@ export const GAME_FEATURES: readonly FeatureManifest[] = [
   ShrewFeature,
   HammerFeature,
   PlayerHUDFeature,
-  SessionFeature,
   PerfHeroFeature,
 ];
 
-export const GAME_FEATURE_REGISTRY = createGameFeatureRegistry(GAME_FEATURES);
+export const GAME_FEATURE_REGISTRY = createGameFeatureRegistry(GAME_FEATURES, {
+  systems: GAME_SESSION_SYSTEMS,
+});

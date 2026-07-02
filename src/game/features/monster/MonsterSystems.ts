@@ -1,5 +1,6 @@
 import { defineQuery } from "bitecs";
 import {
+  BoardOccupantKind,
   BoardPositionComponent,
   createBoardRuntimeFromWorld,
   type BoardRuntime,
@@ -105,7 +106,7 @@ export function releaseMonsterTriad(world: any, monsterEid: number): void {
   if (!board) return;
   const triad = getMonsterTriad(monsterEid);
   if (!triad) return;
-  board.releaseTriad(triad);
+  board.releaseTriadIfOwned(triad, BoardOccupantKind.Monster, monsterEid);
   MonsterComponent.holeA[monsterEid] = -1;
   MonsterComponent.holeB[monsterEid] = -1;
   MonsterComponent.holeC[monsterEid] = -1;

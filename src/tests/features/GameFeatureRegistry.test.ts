@@ -137,6 +137,7 @@ describe("GameFeatureRegistry", () => {
   it("expands entities, projections and phased systems", () => {
     function updateState(): void {}
     function updateFeature(): void {}
+    function updateSession(): void {}
     const registry = createGameFeatureRegistry([
       defineFeature({
         name: "compiled",
@@ -147,11 +148,13 @@ describe("GameFeatureRegistry", () => {
           defineSystem("feature", "compiled.feature", updateFeature),
         ],
       }),
-    ]);
+    ], {
+      systems: [defineSystem("state", "session.test", updateSession)],
+    });
 
     expect(registry.entityTypes()).toEqual([TestSceneEntity]);
     expect(registry.projections()).toEqual([TestSceneProjection]);
-    expect(registry.systemsByPhase("state").map(item => item.run)).toEqual([updateState]);
+    expect(registry.systemsByPhase("state").map(item => item.run)).toEqual([updateState, updateSession]);
     expect(registry.systemsByPhase("feature").map(item => item.run)).toEqual([updateFeature]);
   });
 
@@ -161,6 +164,7 @@ describe("GameFeatureRegistry", () => {
       "monster",
       "shrew",
     ]);
+    expect(GAME_FEATURES.map(feature => feature.name)).not.toContain("session");
     expect(GAME_FEATURE_REGISTRY.systemsByPhase("state").map(item => item.name)).toEqual([
       "board.mapCycle",
       "shrew.animationTimer",
@@ -325,6 +329,14 @@ describe("GameFeatureRegistry", () => {
         systems: [defineSystem("feature", "duplicate.system", duplicateSystem)],
       }),
     ])).toThrow("FeatureSystem name 重复: duplicate.system");
+    expect(() => createGameFeatureRegistry([
+      defineFeature({
+        name: "a",
+        systems: [defineSystem("state", "duplicate.extra", duplicateSystem)],
+      }),
+    ], {
+      systems: [defineSystem("feature", "duplicate.extra", duplicateSystem)],
+    })).toThrow("FeatureSystem name 重复: duplicate.extra");
     expect(() => validateGameFeatures([feature("same"), feature("same")]))
       .toThrow("GameFeature name 重复: same");
     expect(() => validateGameFeatures([

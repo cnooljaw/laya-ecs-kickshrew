@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { createGameWorld } from "../../../framework/ecs/GameWorld";
 import { createSingletonEntities } from "../../helpers/SingletonTestEntities";
-import { createHoleEntities, createShrewEntity } from "../../helpers/CoreTestEntities";
-import { createEntityRuntime } from "../../../framework/ecs/EntityRuntime";
+import {
+  bindShrewToHoleForTest,
+  createHoleEntities,
+  createMonsterAtTriadForTest,
+  createShrewEntity,
+} from "../../helpers/CoreTestEntities";
 import { HammerComponent } from "../../../game/features/hammer";
-import { BoardOccupantKind, BoardPositionComponent, HoleComponent, MapType } from "../../../game/features/board";
+import { HoleComponent, MapType } from "../../../game/features/board";
 import { ShrewAction, ShrewComponent, ShrewType } from "../../../game/features/shrew";
-import { MonsterAction, MonsterComponent, MonsterEntity, MonsterType } from "../../../game/features/monster";
+import { MonsterAction } from "../../../game/features/monster";
 import { PlayerComponent } from "../../../game/features/playerHud";
 import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../../config/GameTuning";
 import { KickInputController, KICK_INPUT_SOUNDS } from "../../../game/session";
@@ -22,7 +26,7 @@ describe("KickInputController", () => {
     const playedSounds: string[] = [];
     const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
 
-    bindShrewToHole(holeEid, shrewEid);
+    bindShrewToHoleForTest(holeEid, shrewEid);
     ShrewComponent.isClickable[shrewEid] = 1;
     HammerComponent.hitTable[singletons.hammer] = 1;
 
@@ -95,37 +99,16 @@ describe("KickInputController", () => {
     const world = createGameWorld();
     const singletons = createSingletonEntities(world);
     const holes = createHoleEntities(world, MapType.Meadow);
-    const monster = createEntityRuntime(world, [MonsterEntity]).create(MonsterEntity, {
-      monsterType: MonsterType.Rhino,
-      posX: 0,
-      posY: 0,
-      durationSec: 10,
+    const triad: readonly [number, number, number] = [0, 1, 3];
+    createMonsterAtTriadForTest(world, holes, triad, {
+      actionState: MonsterAction.Stay,
+      hp: 1,
+      reward: 30,
     });
     const sentRequests: any[] = [];
     const playedSounds: string[] = [];
     const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
 
-    MonsterComponent.visible[monster] = 1;
-    MonsterComponent.actionState[monster] = MonsterAction.Stay;
-    MonsterComponent.hp[monster] = 1;
-    MonsterComponent.reward[monster] = 30;
-    MonsterComponent.holeA[monster] = 0;
-    MonsterComponent.holeB[monster] = 1;
-    MonsterComponent.holeC[monster] = 3;
-    BoardPositionComponent.xRatio[monster] = (
-      HoleComponent.posXRatio[holes[0]]
-      + HoleComponent.posXRatio[holes[1]]
-      + HoleComponent.posXRatio[holes[3]]
-    ) / 3;
-    BoardPositionComponent.yRatio[monster] = (
-      HoleComponent.posYRatio[holes[0]]
-      + HoleComponent.posYRatio[holes[1]]
-      + HoleComponent.posYRatio[holes[3]]
-    ) / 3;
-    for (const index of [0, 1, 3]) {
-      HoleComponent.occupantKind[holes[index]] = BoardOccupantKind.Monster;
-      HoleComponent.occupantEid[holes[index]] = monster;
-    }
     HammerComponent.hitTable[singletons.hammer] = 1;
     PlayerComponent.money[singletons.player] = 100;
 
@@ -141,8 +124,8 @@ describe("KickInputController", () => {
     });
 
     adapter.handleTouch(
-      BoardPositionComponent.xRatio[monster] * DESIGN_RESOLUTION.width,
-      BoardPositionComponent.yRatio[monster] * DESIGN_RESOLUTION.height,
+      triadCenter(holes, triad)[0] * DESIGN_RESOLUTION.width,
+      triadCenter(holes, triad)[1] * DESIGN_RESOLUTION.height,
     );
 
     expect(sentRequests).toHaveLength(0);
@@ -192,7 +175,7 @@ describe("KickInputController", () => {
     const shrewEid = createShrewEntity(world, ShrewType.Red, MapType.Meadow);
     const traceEvents: Array<{ event: string; payload: Record<string, unknown> }> = [];
 
-    bindShrewToHole(holeEid, shrewEid);
+    bindShrewToHoleForTest(holeEid, shrewEid);
     ShrewComponent.isClickable[shrewEid] = 1;
 
     const adapter = new KickInputController({
@@ -225,13 +208,12 @@ describe("KickInputController", () => {
   });
 });
 
-function bindShrewToHole(holeEid: number, shrewEid: number): void {
-  ShrewComponent.holeIndex[shrewEid] = HoleComponent.index[holeEid];
-  HoleComponent.residentKind[holeEid] = BoardOccupantKind.Shrew;
-  HoleComponent.residentEid[holeEid] = shrewEid;
-  HoleComponent.occupantKind[holeEid] = BoardOccupantKind.Shrew;
-  HoleComponent.occupantEid[holeEid] = shrewEid;
-  BoardPositionComponent.xRatio[shrewEid] = HoleComponent.posXRatio[holeEid];
-  BoardPositionComponent.yRatio[shrewEid] = HoleComponent.posYRatio[holeEid];
-  BoardPositionComponent.zIndex[shrewEid] = HoleComponent.zIndex[holeEid];
+function triadCenter(
+  holes: readonly number[],
+  triad: readonly [number, number, number],
+): [number, number] {
+  return [
+    triad.reduce((sum, index) => sum + HoleComponent.posXRatio[holes[index]], 0) / 3,
+    triad.reduce((sum, index) => sum + HoleComponent.posYRatio[holes[index]], 0) / 3,
+  ];
 }

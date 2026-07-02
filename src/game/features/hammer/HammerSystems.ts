@@ -8,6 +8,7 @@
  * 4. 锤子动画结束后恢复 hitTable=1
  */
 import { defineQuery } from "bitecs";
+import { HAMMER_RULES } from "../../../config/GameTuning";
 import { HammerComponent } from "./HammerComponents";
 import { HammerType } from "./HammerTypes";
 
@@ -72,4 +73,43 @@ export function applyHammerKickResponse(
   response: { readonly hammerId: number },
 ): void {
   HammerComponent.selectedType[hammerEid] = response.hammerId;
+}
+
+export interface HammerHitStatus {
+  readonly canHit: boolean;
+  readonly hitTable: number;
+  readonly hitCooldownSec: number;
+  readonly hammerType: number;
+}
+
+export function getHammerHitStatus(hammerEid: number): HammerHitStatus {
+  const hitTable = HammerComponent.hitTable[hammerEid];
+  return {
+    canHit: hitTable === 1,
+    hitTable,
+    hitCooldownSec: HammerComponent.hitCooldownSec[hammerEid],
+    hammerType: HammerComponent.selectedType[hammerEid],
+  };
+}
+
+export function recordHammerFeedback(hammerEid: number, x: number, y: number): void {
+  HammerComponent.touchX[hammerEid] = x;
+  HammerComponent.touchY[hammerEid] = y;
+  HammerComponent.hitSeq[hammerEid] += 1;
+}
+
+export function startHammerHitCooldown(hammerEid: number): void {
+  HammerComponent.hitTable[hammerEid] = 0;
+  HammerComponent.hitCooldownSec[hammerEid] = HAMMER_RULES.hitCooldownSec;
+}
+
+export function activateHammerThunder(hammerEid: number): void {
+  HammerComponent.isThunderActive[hammerEid] = 1;
+  HammerComponent.selectedType[hammerEid] = HammerType.Thunder;
+  HammerComponent.hitTable[hammerEid] = 0;
+  HammerComponent.hitCooldownSec[hammerEid] = 0;
+}
+
+export function isHammerThunderActive(hammerEid: number): boolean {
+  return HammerComponent.isThunderActive[hammerEid] === 1;
 }
