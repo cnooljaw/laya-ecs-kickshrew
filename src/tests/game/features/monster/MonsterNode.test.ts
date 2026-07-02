@@ -26,6 +26,7 @@ class FakeSprite {
 class FakeSkeleton extends FakeSprite {
   playCalls = 0;
   stopCalls = 0;
+  hiddenSlots: Array<[string, number]> = [];
   lastLoop: boolean | undefined;
   height = 120;
   bounds = { x: 0, y: 0, width: 0, height: 0 };
@@ -41,6 +42,10 @@ class FakeSkeleton extends FakeSprite {
 
   stop(): void {
     this.stopCalls++;
+  }
+
+  showSlotSkinByIndex(slotName: string, index: number): void {
+    this.hiddenSlots.push([slotName, index]);
   }
 
   offAll(): void {}
@@ -153,6 +158,7 @@ describe("MonsterNode", () => {
     expect(buildArmature).toHaveBeenCalledWith(2);
     expect(skeletons[0].playCalls).toBe(1);
     expect(skeletons[0].lastLoop).toBe(true);
+    expect(skeletons[0].hiddenSlots).toEqual([["zong", -1]]);
 
     node.playHit(1);
     expect(skeletons[0].playCalls).toBe(1);
@@ -160,6 +166,7 @@ describe("MonsterNode", () => {
     node.playDefeated(1);
     expect(skeletons[0].playCalls).toBe(2);
     expect(skeletons[0].lastLoop).toBe(false);
+    expect(skeletons[0].hiddenSlots).toEqual([["zong", -1], ["zong", -1]]);
   });
 
   it("同类型重复 spawn 复用已加载 Skeleton，避免重复销毁重建导致闪烁", async () => {

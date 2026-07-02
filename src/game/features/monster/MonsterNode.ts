@@ -20,6 +20,7 @@ interface MonsterNodeOptions {
 }
 
 const MONSTER_SKELETON_ANI_MODE = 2;
+const MONSTER_WHOLE_BODY_SLOT = "zong";
 
 interface MonsterDebugBounds {
   x: number;
@@ -84,6 +85,7 @@ export class MonsterNode implements IMonsterNode {
   playDefeated(_defeatedSeq: number): void {
     if (_defeatedSeq <= 0) return;
     this._skeleton?.play?.(0, false);
+    this._hideWholeBodySlot();
     this._loopPlaying = false;
   }
 
@@ -224,7 +226,12 @@ export class MonsterNode implements IMonsterNode {
   private _playLoopIfNeeded(): void {
     if (!this._skeleton || this._loopPlaying) return;
     this._skeleton.play?.(0, true);
+    this._hideWholeBodySlot();
     this._loopPlaying = true;
+  }
+
+  private _hideWholeBodySlot(): void {
+    this._skeleton?.showSlotSkinByIndex?.(MONSTER_WHOLE_BODY_SLOT, -1);
   }
 
   private _stopLoop(): void {
