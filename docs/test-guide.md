@@ -84,9 +84,13 @@ npm run debug:ready
 ```text
 http://localhost:8080/debug-tsc.html
 http://localhost:8080/debug-tsc.html?perf=1&heroes=200
+http://localhost:8080/debug-meadow-shrews-stand.html
+http://localhost:8080/debug-space-shrews-stand.html
+http://localhost:8080/debug-meadow-monster-drop.html
 ```
 
 `debug:ready` 会编译 TypeScript、修复 ESM 扩展、复制 vendor/资源，并确认 8080 服务可用。
+洞位、Monster 三角落点和 Spine 表现调试看 `docs/ui-debugging-guide.md`。
 
 以下改动必须优先做浏览器验证：
 

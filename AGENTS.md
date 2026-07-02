@@ -16,6 +16,7 @@
 - 架构和目录：`docs/architecture.md`
 - ECS / Projection / Effect：`docs/ecs-binding.md`
 - Laya 运行时：`docs/laya-rules.md`
+- 界面调试：`docs/ui-debugging-guide.md`
 - 性能压测：`docs/performance-tuning.md`
 - 协议：`docs/protocol.md`
 - 测试与调试：`docs/test-guide.md`
