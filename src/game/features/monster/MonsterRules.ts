@@ -8,7 +8,6 @@ export interface MonsterSpawnRule {
     readonly source: "money";
     readonly mode: "multiple";
     readonly interval: number;
-    readonly catchUp: boolean;
   };
 }
 
@@ -30,7 +29,6 @@ export const MONSTER_SPAWN_RULES: readonly MonsterSpawnRule[] = [
       source: "money",
       mode: "multiple",
       interval: 100,
-      catchUp: false,
     },
   },
 ];

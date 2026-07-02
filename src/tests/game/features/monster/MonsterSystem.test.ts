@@ -65,7 +65,7 @@ describe("MonsterSystem", () => {
       slot: index,
       monsterType: MonsterType.Rhino,
       maxActiveCount: 1,
-      trigger: { source: "money" as const, mode: "multiple" as const, interval: 100, catchUp: false },
+      trigger: { source: "money" as const, mode: "multiple" as const, interval: 100 },
     }));
 
     const trackers = createMonsterTriggerEntities(runtime, rules);

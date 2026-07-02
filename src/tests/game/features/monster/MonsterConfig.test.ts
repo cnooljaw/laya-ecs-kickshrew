@@ -18,6 +18,14 @@ describe("Monster configuration", () => {
     expect(validateMonsterViewConfig(MONSTER_VIEW_CONFIG)).toEqual([]);
   });
 
+  it("keeps spawn trigger configuration limited to supported fields", () => {
+    expect(Object.keys(MONSTER_SPAWN_RULES[0].trigger).sort()).toEqual([
+      "interval",
+      "mode",
+      "source",
+    ]);
+  });
+
   it("expands spawn rules into fixed pool entity inputs", () => {
     const inputs = createMonsterPoolInputs(
       [
@@ -25,7 +33,7 @@ describe("Monster configuration", () => {
           slot: 0,
           monsterType: MonsterType.Rhino,
           maxActiveCount: 2,
-          trigger: { source: "money", mode: "multiple", interval: 100, catchUp: false },
+          trigger: { source: "money", mode: "multiple", interval: 100 },
         },
       ],
       MONSTER_VIEW_CONFIG,
@@ -54,13 +62,13 @@ describe("Monster configuration", () => {
         slot: 0,
         monsterType: MonsterType.Rhino,
         maxActiveCount: 0,
-        trigger: { source: "money", mode: "multiple", interval: 100, catchUp: false },
+        trigger: { source: "money", mode: "multiple", interval: 100 },
       },
       {
         slot: 0,
         monsterType: MonsterType.Rhino,
         maxActiveCount: 1,
-        trigger: { source: "money", mode: "multiple", interval: 0, catchUp: false },
+        trigger: { source: "money", mode: "multiple", interval: 0 },
       },
     ];
 
