@@ -190,6 +190,34 @@ spawnMonster(monsterEid, MonsterType.Rhino, triad, board);
 
 有些 system 需要 setup 阶段能力，例如 Monster system 需要 `BoardTopology`。这类 system 不应该每帧从 world 反查 board，也不应该读全局单例。
 
+### Capability 提供过程
+
+`Capability` 是 setup 阶段的 typed key。`FeatureSetupContext` 内部用一张表保存 capability 值：
+
+```ts
+provide(BoardTopologyCapability, board);
+const board = use(BoardTopologyCapability);
+```
+
+提供和使用遵循同一个场景生命周期：
+
+```text
+GameScene.init
+  -> createFeatureSetupContext
+  -> Feature setup provide capability
+  -> session setup provide cross-feature capability
+  -> Feature setupSystems use capability
+  -> GameFeatureRuntime 持有闭包后的 systems
+```
+
+典型例子：
+
+- `BoardFoundation.setup` 创建 `BoardTopology` 后提供 `BoardTopologyCapability`。
+- `setupMonsterSpawnSession` 提供 `MonsterSpawnMilestoneCapability`，把 PlayerHUD 的公开 money API 组装成 Monster 刷怪里程碑。
+- `MonsterFeature.setupSystems` 使用这两个 capability，把 `board` 和 `currentMilestone` 捕获到 `monster.spawn` system 闭包里。
+
+如果某个 Feature 在 `setupSystems` 里 `use` 一个未提供的 capability，setup 会直接抛错。这样错误发生在进场阶段，而不是在某一帧运行中隐式失败。
+
 `FeatureManifest` 提供 `setupSystems`：
 
 ```ts
@@ -205,6 +233,35 @@ setupSystems: ctx => {
 ```
 
 `setupSystems` 生成当前场景的 `GameFeatureRuntime`。场景销毁后，这批 system 闭包随 runtime 一起丢弃，不会持有旧 world 或旧 board。
+
+### systemsByPhase 在哪里
+
+`systemsByPhase` 不再属于 `GameFeatureRegistry`。原因是 registry 只知道静态声明，拿不到 setup 阶段生成的 capability，因此无法安全生成完整系统表。
+
+现在的替代关系是：
+
+```ts
+const featureRuntime = GAME_FEATURE_REGISTRY.setupAll(ctx);
+featureRuntime.systemsByPhase("feature");
+```
+
+职责拆分：
+
+- `GameFeatureRegistry.entityTypes()`：给 `EntityRuntime` 编译 entity 声明。
+- `GameFeatureRegistry.projections()`：给 `ProjectionRuntime` 编译 projection 声明。
+- `GameFeatureRegistry.setupAll(ctx)`：执行 Feature setup、session setup，并生成当前场景的 `GameFeatureRuntime`。
+- `GameFeatureRuntime.systemsByPhase(phase)`：返回真正参与帧循环的 state / feature systems。
+
+主循环只依赖 `GameFeatureRuntime`：
+
+```text
+GameLoopPipeline.update
+  -> featureRuntime.systemsByPhase("state")
+  -> network.update
+  -> featureRuntime.systemsByPhase("feature")
+  -> projection mark/sync
+  -> effect flush
+```
 
 ## Session
 

@@ -115,21 +115,25 @@ GameScene.init
   -> create EntityRuntime / ProjectionRuntime / EffectRuntime
   -> bootstrap singleton entities
   -> GAME_FEATURE_REGISTRY.setupAll
-  -> setupGameSession provides cross-feature capabilities
-  -> create per-scene GameFeatureRuntime
+     -> feature.setup provide/use setup capability
+     -> setupGameSession provide cross-feature capability
+     -> feature.setupSystems capture capability
+     -> return per-scene GameFeatureRuntime
   -> projectionRuntime.mark/sync initial state
 ```
 
 每帧：
 
 ```text
-state systems
+featureRuntime.systemsByPhase("state")
 network.update
-feature systems
+featureRuntime.systemsByPhase("feature")
 projectionRuntime.mark
 projectionRuntime.sync
 effectRuntime.flush
 ```
+
+`GameFeatureRegistry` 只负责静态声明和 setup，不再暴露 `systemsByPhase`。需要进入帧循环的系统必须从 `setupAll` 返回的 `GameFeatureRuntime` 获取，因为只有 setup 后才能拿到 `BoardTopologyCapability`、`MonsterSpawnMilestoneCapability` 这类场景级能力。
 
 ## 网络与输入
 
