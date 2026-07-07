@@ -7,6 +7,11 @@ interface ImportRecord {
   readonly importPath: string;
 }
 
+const ALLOWED_ASSEMBLY_IMPORTERS = new Set([
+  "src/game/GameFeatures.ts",
+  "src/tests/features/GameAssembly.test.ts",
+]);
+
 function findImports(root: string): ImportRecord[] {
   if (!existsSync(root)) {
     return [];
@@ -85,22 +90,30 @@ describe("feature slice boundaries", () => {
     expect(barrel).not.toMatch(/\brestoreResident\b/);
   });
 
-  it("keeps business feature public barrels focused on runtime contracts", () => {
-    const featureBarrels = [
-      "src/game/features/shrew/index.ts",
-      "src/game/features/monster/index.ts",
-      "src/game/features/hammer/index.ts",
-      "src/game/features/playerHud/index.ts",
-      "src/game/features/perfHero/index.ts",
+  it("keeps assembly barrels from becoming a second public API", () => {
+    const assemblyFiles = [
+      "src/game/board/assembly.ts",
+      "src/game/features/shrew/assembly.ts",
+      "src/game/features/monster/assembly.ts",
+      "src/game/features/hammer/assembly.ts",
+      "src/game/features/playerHud/assembly.ts",
+      "src/game/features/perfHero/assembly.ts",
     ];
 
-    for (const file of featureBarrels) {
-      const barrel = readFileSync(file, "utf8");
-      expect(barrel).not.toMatch(/\bFeature\b/);
-      expect(barrel).not.toMatch(/\bEntity\b/);
-      expect(barrel).not.toMatch(/\bProjection\b/);
-      expect(barrel).not.toMatch(/\bComponent\b/);
+    for (const file of assemblyFiles) {
+      const source = readFileSync(file, "utf8");
+      expect(source).not.toMatch(/export\s+\*\s+from\s+["']\.\/index["']/);
     }
+  });
+
+  it("limits assembly imports to the composition root and real assembly tests", () => {
+    const violations = findImports("src").filter(item => {
+      if (!item.importPath.endsWith("/assembly")) return false;
+      const file = item.file.replace(/\\/g, "/");
+      return !ALLOWED_ASSEMBLY_IMPORTERS.has(file);
+    });
+
+    expect(violations).toEqual([]);
   });
 
   it("feature setup context does not expose the ECS world", () => {

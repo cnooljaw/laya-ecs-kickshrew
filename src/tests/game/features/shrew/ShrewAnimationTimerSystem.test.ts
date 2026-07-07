@@ -3,12 +3,13 @@ import { createGameWorld } from '../../../../framework/ecs/GameWorld';
 import { createSingletonEntities } from '../../../helpers/SingletonTestEntities';
 import { createShrewEntity } from '../../../helpers/CoreTestEntities';
 import {
-  AnimationComponent,
   AnimType,
   ShrewType,
-  shrewAnimationTimerSystem,
-} from "../../../../game/features/shrew/assembly";
-import { MapType, SceneComponent } from "../../../../game/board/assembly";
+} from "../../../../game/features/shrew";
+import { AnimationComponent } from "../../../../game/features/shrew/ShrewComponents";
+import { shrewAnimationTimerSystem } from "../../../../game/features/shrew/ShrewAnimationTimerSystem";
+import { MapType } from "../../../../game/board";
+import { SceneComponent } from "../../../../game/board/BoardComponents";
 
 describe('ShrewAnimationTimerSystem', () => {
   let world: ReturnType<typeof createGameWorld>;

@@ -34,7 +34,7 @@ framework
   <- app
 ```
 
-业务 Feature 可以依赖 `game/board` 的公开 API。业务 Feature 之间不能互相导入内部文件。`session` 只依赖各 Feature 的公开 `index.ts`。组合根和测试需要 Feature manifest、Entity、Projection 时走相邻的 `assembly.ts`。
+业务 Feature 可以依赖 `game/board` 的公开 API。业务 Feature 之间不能互相导入内部文件。`session` 只依赖各 Feature 的公开 `index.ts`。组合根和真实装配测试需要 Feature manifest、Entity、Projection 时走相邻的 `assembly.ts`。
 
 ## Board Foundation
 
@@ -357,6 +357,7 @@ export const GAME_FEATURE_REGISTRY = createGameFeatureRegistry(GAME_MODULES, {
 - Feature import `game/board/index.ts`。
 - `session` import Feature 的公开 `index.ts`。
 - `GameFeatures.ts` import `game/board/assembly.ts` 和 Feature 的 `assembly.ts`。
+- 普通规则、Projection、Node 测试直接 import 被测文件。
 - Feature 暴露小而明确的意图 API。
 - `setupSystems` 捕获 setup capability。
 - `setupGameSession` 提供跨 Feature capability。

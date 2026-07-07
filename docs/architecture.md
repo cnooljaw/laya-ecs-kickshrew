@@ -21,7 +21,7 @@ src/config/               少量跨业务配置
 跨模块引用看两个入口：
 
 - `index.ts`：公开契约。给 `session`、其他 Feature 和调试入口使用，只暴露真正需要的能力。
-- `assembly.ts`：装配材料。给 `GameFeatures.ts` 和测试使用，暴露 Feature manifest、Entity、Projection 和低层 Component。
+- `assembly.ts`：装配材料。仅给 `GameFeatures.ts` 和真实装配测试使用，暴露 Feature manifest、Entity、Projection 和低层 Component。
 
 ## 依赖方向
 
@@ -190,7 +190,7 @@ deleteWorld
 
 ## 扩展点
 
-新增业务采用纵向切片：Component、Entity、System、Projection、contract、Node 和配置放在 `src/game/features/foo`。跨模块能力从 `index.ts` 暴露；组合根材料从 `assembly.ts` 暴露，并在 `src/game/GameFeatures.ts` 增加显式注册项。
+新增业务采用纵向切片：Component、Entity、System、Projection、contract、Node 和配置放在 `src/game/features/foo`。跨模块能力从 `index.ts` 暴露；组合根材料从 `assembly.ts` 暴露，并在 `src/game/GameFeatures.ts` 增加显式注册项。测试具体规则时直接 import 被测文件，不把 `assembly.ts` 当通用入口。
 
 框架负责 registry、dirty bit、full sync 和 teardown。业务不维护这些机制，也不依赖运行期频繁 `removeEntity`。具体写法见 `docs/ecs-binding.md`。
 

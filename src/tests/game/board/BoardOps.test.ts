@@ -6,15 +6,14 @@ import {
   BoardOccupantKind,
   createBoardTopology,
   getHoleEid,
-  HoleComponent,
-  HoleEntity,
   HOLE_COUNT,
   MapType,
   releaseTriadIfOwned,
-  SceneEntity,
   tryOccupyTriad,
   type BoardTopology,
-} from "../../../game/board/assembly";
+} from "../../../game/board";
+import { HoleComponent } from "../../../game/board/BoardComponents";
+import { HoleEntity, SceneEntity } from "../../../game/board/BoardEntities";
 
 describe("BoardOps", () => {
   let world: ReturnType<typeof createGameWorld>;

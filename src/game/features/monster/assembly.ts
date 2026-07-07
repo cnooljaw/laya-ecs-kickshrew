@@ -1,4 +1,3 @@
-export * from "./index";
 export { MonsterFeature } from "./MonsterFeature";
 export { MonsterComponent } from "./MonsterComponents";
 export { MonsterEntity, MonsterTriggerEntity } from "./MonsterEntities";

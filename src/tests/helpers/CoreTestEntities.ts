@@ -1,27 +1,22 @@
-import {
-  ShrewComponent,
-  ShrewEntity,
-  syncShrewBoardPosition,
-} from "../../game/features/shrew/assembly";
+import { ShrewComponent } from "../../game/features/shrew/ShrewComponents";
+import { ShrewEntity } from "../../game/features/shrew/ShrewEntities";
+import { syncShrewBoardPosition } from "../../game/features/shrew/ShrewBoardSyncSystem";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import {
   bindResident,
   BoardOccupantKind,
   createBoardTopology,
   HOLE_COUNT,
-  HoleComponent,
-  HoleEntity,
   type MapType,
-} from "../../game/board/assembly";
-import { type ShrewType } from "../../game/features/shrew/assembly";
-import {
-  MonsterAction,
-  MonsterComponent,
-  MonsterEntity,
-  MonsterType,
-  spawnMonster,
-  type MonsterHoleTriad,
-} from "../../game/features/monster/assembly";
+} from "../../game/board";
+import { HoleComponent } from "../../game/board/BoardComponents";
+import { HoleEntity } from "../../game/board/BoardEntities";
+import { type ShrewType } from "../../game/features/shrew";
+import { MonsterAction, MonsterType } from "../../game/features/monster";
+import { MonsterComponent } from "../../game/features/monster/MonsterComponents";
+import { MonsterEntity } from "../../game/features/monster/MonsterEntities";
+import { spawnMonster } from "../../game/features/monster/MonsterPool";
+import { type MonsterHoleTriad } from "../../game/features/monster/MonsterHoleTriads";
 
 export function createShrewEntity(
   world: any,

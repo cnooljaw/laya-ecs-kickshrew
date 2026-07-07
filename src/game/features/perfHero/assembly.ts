@@ -1,4 +1,3 @@
-export * from "./index";
 export { PerfHeroFeature } from "./PerfHeroFeature";
 export { PerfHeroComponent } from "./PerfHeroComponents";
 export { PerfHeroEntity, respawnPerfHero } from "./PerfHeroEntities";

@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { HAMMER_RULES } from "../../../config/GameTuning";
-import { HammerComponent } from "../../../game/features/hammer/assembly";
-import { PlayerComponent } from "../../../game/features/playerHud/assembly";
+import { HammerComponent } from "../../../game/features/hammer/HammerComponents";
+import { PlayerComponent } from "../../../game/features/playerHud/PlayerComponents";
 import {
   applyKickResponse,
   type KickResponse,
 } from "../../../game/session";
-import { HammerType } from "../../../game/features/hammer/assembly";
+import { HammerType } from "../../../game/features/hammer";
 import { createGameWorld } from "../../../framework/ecs/GameWorld";
 import { createSingletonEntities } from "../../helpers/SingletonTestEntities";
 

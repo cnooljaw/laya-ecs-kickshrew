@@ -1,34 +1,18 @@
 import { describe, expect, it } from "vitest";
-import {
-  AnimationComponent,
-  ShrewComponent,
-} from "../../game/features/shrew/assembly";
-import {
-  BoardPositionComponent,
-  HoleComponent,
-  SceneComponent,
-} from "../../game/board/assembly";
-import {
-  HoleEntity,
-  SceneEntity,
-} from "../../game/board/assembly";
-import {
-  ShrewEntity,
-} from "../../game/features/shrew/assembly";
+import { AnimationComponent, ShrewComponent } from "../../game/features/shrew/ShrewComponents";
+import { BoardPositionComponent, MapType } from "../../game/board";
+import { HoleComponent, SceneComponent } from "../../game/board/BoardComponents";
+import { HoleEntity, SceneEntity } from "../../game/board/BoardEntities";
+import { ShrewEntity } from "../../game/features/shrew/ShrewEntities";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { MapType } from "../../game/board/assembly";
-import { AnimType, ShrewAction, ShrewType } from "../../game/features/shrew/assembly";
+import { AnimType, ShrewAction, ShrewType } from "../../game/features/shrew";
 import { createGameWorld } from "../../framework/ecs/GameWorld";
-import type { IHoleNode, ISceneLayer } from "../../game/board/assembly";
-import type { IShrewNode } from "../../game/features/shrew/assembly";
+import type { IHoleNode } from "../../game/board/IHoleNode";
+import type { ISceneLayer } from "../../game/board/ISceneLayer";
+import type { IShrewNode } from "../../game/features/shrew";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
-import {
-  HoleProjection,
-  SceneProjection,
-} from "../../game/board/assembly";
-import {
-  ShrewProjection,
-} from "../../game/features/shrew/assembly";
+import { HoleProjection, SceneProjection } from "../../game/board/BoardProjection";
+import { ShrewProjection } from "../../game/features/shrew/ShrewProjection";
 
 function createShrewNode(calls: {
   sprites: Array<[number, number]>;

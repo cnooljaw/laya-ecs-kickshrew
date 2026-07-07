@@ -1,4 +1,3 @@
-export * from "./index";
 export { AnimationComponent, ShrewComponent } from "./ShrewComponents";
 export { ShrewEntity } from "./ShrewEntities";
 export { ShrewFeature, setupCoreGameplay } from "./ShrewFeature";

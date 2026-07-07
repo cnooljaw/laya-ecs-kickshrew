@@ -2,12 +2,12 @@ import { defineQuery } from "bitecs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createGameWorld } from "../../../../framework/ecs/GameWorld";
 import {
-  PerfHeroComponent,
-  PerfHeroEntity,
   PERF_HERO_RESOURCES,
   PERF_HERO_VIEW_CONFIG,
-  perfHeroSystem,
-} from "../../../../game/features/perfHero/assembly";
+} from "../../../../game/features/perfHero";
+import { PerfHeroComponent } from "../../../../game/features/perfHero/PerfHeroComponents";
+import { PerfHeroEntity } from "../../../../game/features/perfHero/PerfHeroEntities";
+import { perfHeroSystem } from "../../../../game/features/perfHero/PerfHeroSystems";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 
 function createPerfHeroEntities(world: any, count: number): number[] {

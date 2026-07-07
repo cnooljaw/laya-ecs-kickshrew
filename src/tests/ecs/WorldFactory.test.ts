@@ -1,23 +1,14 @@
 import { hasComponent } from "bitecs";
 import { describe, expect, it } from "vitest";
-import { HolePositions, SCENE_CYCLE_INTERVAL } from "../../game/board/assembly";
-import {
-  AnimationComponent,
-  ShrewComponent,
-} from "../../game/features/shrew/assembly";
-import { HoleComponent, SceneComponent } from "../../game/board/assembly";
-import { PlayerComponent } from "../../game/features/playerHud/assembly";
-import {
-  HoleEntity,
-  SceneEntity,
-} from "../../game/board/assembly";
-import {
-  ShrewEntity,
-} from "../../game/features/shrew/assembly";
-import { PlayerEntity } from "../../game/features/playerHud/assembly";
+import { HolePositions, HOLE_COUNT, MapType, SCENE_CYCLE_INTERVAL } from "../../game/board";
+import { HoleComponent, SceneComponent } from "../../game/board/BoardComponents";
+import { HoleEntity, SceneEntity } from "../../game/board/BoardEntities";
+import { AnimationComponent, ShrewComponent } from "../../game/features/shrew/ShrewComponents";
+import { ShrewEntity } from "../../game/features/shrew/ShrewEntities";
+import { ShrewAction, ShrewType } from "../../game/features/shrew";
+import { PlayerComponent } from "../../game/features/playerHud/PlayerComponents";
+import { PlayerEntity } from "../../game/features/playerHud/PlayerEntities";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { HOLE_COUNT, MapType } from "../../game/board/assembly";
-import { ShrewAction, ShrewType } from "../../game/features/shrew/assembly";
 import { createGameWorld } from "../../framework/ecs/GameWorld";
 
 describe("world factory", () => {

@@ -1409,7 +1409,7 @@ exit scene
             <div class="mini accent-blue"><strong>System 保持纯净</strong><p>不 import Laya、Node、resource loader、registry。</p></div>
             <div class="mini accent-cyan"><strong>Projection 走 contract</strong><p>持久可见状态通过 <code>*Projection.ts</code> 同步。</p></div>
             <div class="mini accent-violet"><strong>Effect 传瞬时事实</strong><p>reward、miss、声音、一次性动画不要塞进 Projection。</p></div>
-            <div class="mini accent-amber"><strong>Feature 不导入别的内部文件</strong><p>业务 Feature 可以依赖 <code>game/board</code> 公开 API，跨业务 Feature 走公开 <code>index.ts</code> 或 session；组合根材料走 <code>assembly.ts</code>。</p></div>
+            <div class="mini accent-amber"><strong>Feature 不导入别的内部文件</strong><p>业务 Feature 可以依赖 <code>game/board</code> 公开 API，跨业务 Feature 走公开 <code>index.ts</code> 或 session；组合根材料只在 <code>GameFeatures.ts</code> 和真实装配测试走 <code>assembly.ts</code>。</p></div>
             <div class="mini accent-red"><strong>业务不维护 dirty</strong><p>dirtyBits、snapshot、fullSync、node map 都属于 framework/sync。</p></div>
           </div>
           <div class="quote"><p>判断代码放哪：稳定机制放 <code>framework</code>；棋盘基础能力放 <code>game/board</code>；业务规则放 <code>game/features/&lt;name&gt;</code>；跨 Feature 输入、网络回包编排放 <code>game/session</code>；Laya 应用壳放 <code>app</code>。</p></div>

@@ -1,13 +1,13 @@
 import { deleteWorld } from "bitecs";
 import { describe, expect, it } from "vitest";
-import { ShrewEntity } from "../../game/features/shrew/assembly";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { MapType } from "../../game/board/assembly";
-import { ShrewType } from "../../game/features/shrew/assembly";
+import { MapType } from "../../game/board";
+import { ShrewType } from "../../game/features/shrew";
 import { createGameWorld } from "../../framework/ecs/GameWorld";
-import type { IShrewNode } from "../../game/features/shrew/assembly";
+import type { IShrewNode } from "../../game/features/shrew";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
-import { ShrewProjection } from "../../game/features/shrew/assembly";
+import { ShrewEntity } from "../../game/features/shrew/ShrewEntities";
+import { ShrewProjection } from "../../game/features/shrew/ShrewProjection";
 
 function createNode(onSprite: () => void): IShrewNode {
   return {

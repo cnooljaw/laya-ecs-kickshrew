@@ -14,7 +14,7 @@ import {
   projectionSource,
   watch,
 } from "../../framework/sync/ProjectionDefinition";
-import { SceneComponent } from "../../game/board/assembly";
+import { SceneComponent } from "../../game/board/BoardComponents";
 import { createSetupContext } from "../helpers/FeatureSetupTestContext";
 
 const TestSceneEntity = defineEntity({

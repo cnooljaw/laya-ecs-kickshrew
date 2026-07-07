@@ -7,14 +7,16 @@ import {
   createMonsterAtTriadForTest,
   createShrewEntity,
 } from "../../helpers/CoreTestEntities";
-import { HammerComponent } from "../../../game/features/hammer/assembly";
-import { HoleComponent, MapType } from "../../../game/board/assembly";
-import { ShrewAction, ShrewComponent, ShrewType } from "../../../game/features/shrew/assembly";
-import { MonsterAction } from "../../../game/features/monster/assembly";
-import { PlayerComponent } from "../../../game/features/playerHud/assembly";
+import { HammerComponent } from "../../../game/features/hammer/HammerComponents";
+import { HoleComponent } from "../../../game/board/BoardComponents";
+import { MapType } from "../../../game/board";
+import { ShrewAction, ShrewType } from "../../../game/features/shrew";
+import { ShrewComponent } from "../../../game/features/shrew/ShrewComponents";
+import { MonsterAction } from "../../../game/features/monster";
+import { PlayerComponent } from "../../../game/features/playerHud/PlayerComponents";
 import { DESIGN_RESOLUTION, HOLE_PROTOCOL } from "../../../config/GameTuning";
 import { KickInputController, KICK_INPUT_SOUNDS } from "../../../game/session";
-import { HitMissEffect } from "../../../game/features/playerHud/assembly";
+import { HitMissEffect } from "../../../game/features/playerHud";
 
 describe("KickInputController", () => {
   it("点中可点击地鼠时播放命中音效并发送击打请求", () => {

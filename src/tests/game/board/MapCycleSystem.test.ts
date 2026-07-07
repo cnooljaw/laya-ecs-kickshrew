@@ -1,17 +1,15 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   BoardOccupantKind,
-  HoleComponent,
-  HoleEntity,
   HolePositions,
   HOLE_COUNT,
   MapType,
-  SceneComponent,
-  SceneEntity,
   SCENE_CYCLE_INTERVAL,
   getHoleZOrder,
-  mapCycleSystem,
-} from "../../../game/board/assembly";
+} from "../../../game/board";
+import { HoleComponent, SceneComponent } from "../../../game/board/BoardComponents";
+import { HoleEntity, SceneEntity } from "../../../game/board/BoardEntities";
+import { mapCycleSystem } from "../../../game/board/MapCycleSystem";
 import { createEntityRuntime } from "../../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../../framework/ecs/GameWorld";
 

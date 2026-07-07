@@ -4,8 +4,6 @@ import { createGameWorld } from "../../framework/ecs/GameWorld";
 import { validateGameFeatures } from "../../framework/feature/FeatureRegistry";
 import {
   BoardFoundation,
-  BoardOccupantKind,
-  BoardTopologyCapability,
   HoleComponent,
   HoleEntity,
   HoleProjection,
@@ -13,6 +11,7 @@ import {
   SceneProjection,
   setupBoard,
 } from "../../game/board/assembly";
+import { BoardOccupantKind, BoardTopologyCapability } from "../../game/board";
 import { HammerEntity, HammerProjection } from "../../game/features/hammer/assembly";
 import { MONSTER_SPAWN_RULES } from "../../game/features/monster";
 import {
@@ -31,11 +30,11 @@ import {
 } from "../../game/features/playerHud/assembly";
 import {
   setupCoreGameplay,
-  ShrewAction,
   ShrewComponent,
   ShrewEntity,
   ShrewProjection,
 } from "../../game/features/shrew/assembly";
+import { ShrewAction } from "../../game/features/shrew";
 import {
   GAME_FEATURES,
   GAME_FEATURE_REGISTRY,

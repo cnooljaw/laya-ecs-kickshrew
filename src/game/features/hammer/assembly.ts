@@ -1,4 +1,3 @@
-export * from "./index";
 export { HammerComponent } from "./HammerComponents";
 export { HammerEntity } from "./HammerEntities";
 export { HammerFeature } from "./HammerFeature";

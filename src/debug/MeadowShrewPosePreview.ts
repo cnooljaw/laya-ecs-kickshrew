@@ -5,14 +5,14 @@ import {
   MapType,
   getHoleGrid,
   getHoleZOrder,
-} from "../game/board/assembly";
+} from "../game/board";
 import {
   AnimType,
   ShrewAction,
   ShrewType,
-} from "../game/features/shrew/assembly";
-import { HoleNode } from "../game/board/assembly";
-import { SceneLayer } from "../game/board/assembly";
+} from "../game/features/shrew";
+import { HoleNode } from "../game/board/HoleNode";
+import { SceneLayer } from "../game/board/SceneLayer";
 import { ShrewNode } from "../game/features/shrew/ShrewNode";
 
 type PreviewPose = "up0" | "stand";

@@ -4,21 +4,19 @@ import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 import {
   BoardOccupantKind,
   HOLE_COUNT,
-  HoleComponent,
-  HoleEntity,
   MapType,
   SCENE_CYCLE_INTERVAL,
-  SceneComponent,
-  SceneEntity,
-  mapCycleSystem,
-} from "../../../../game/board/assembly";
+} from "../../../../game/board";
+import { HoleComponent, SceneComponent } from "../../../../game/board/BoardComponents";
+import { HoleEntity, SceneEntity } from "../../../../game/board/BoardEntities";
+import { mapCycleSystem } from "../../../../game/board/MapCycleSystem";
 import {
   ShrewAction,
-  ShrewComponent,
-  ShrewEntity,
   ShrewType,
-  shrewBoardSyncSystem,
-} from "../../../../game/features/shrew/assembly";
+} from "../../../../game/features/shrew";
+import { ShrewComponent } from "../../../../game/features/shrew/ShrewComponents";
+import { ShrewEntity } from "../../../../game/features/shrew/ShrewEntities";
+import { shrewBoardSyncSystem } from "../../../../game/features/shrew/ShrewBoardSyncSystem";
 
 describe("ShrewBoardSyncSystem", () => {
   it("洞被 Monster 占用时隐藏该洞默认 Shrew 并禁用点击", () => {

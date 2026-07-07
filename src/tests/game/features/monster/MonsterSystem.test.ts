@@ -11,15 +11,14 @@ import {
   BoardPositionComponent,
   createBoardTopology,
   getHoleEid,
-  HoleComponent,
   HolePositions,
-  HoleEntity,
   MapType,
-  SceneComponent,
   SCENE_CYCLE_INTERVAL,
-  mapCycleSystem,
   type BoardTopology,
-} from "../../../../game/board/assembly";
+} from "../../../../game/board";
+import { HoleComponent, SceneComponent } from "../../../../game/board/BoardComponents";
+import { HoleEntity } from "../../../../game/board/BoardEntities";
+import { mapCycleSystem } from "../../../../game/board/MapCycleSystem";
 import {
   MonsterEntity,
   MonsterTriggerEntity,

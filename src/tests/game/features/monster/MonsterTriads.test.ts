@@ -3,15 +3,14 @@ import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../../../framework/ecs/GameWorld";
 import {
   createBoardTopology,
-  HoleComponent,
-  HoleEntity,
   MapType,
-  SceneEntity,
-} from "../../../../game/board/assembly";
+} from "../../../../game/board";
+import { HoleComponent } from "../../../../game/board/BoardComponents";
+import { HoleEntity, SceneEntity } from "../../../../game/board/BoardEntities";
 import {
   getMonsterTriadCenter,
   MONSTER_HOLE_TRIADS,
-} from "../../../../game/features/monster/assembly";
+} from "../../../../game/features/monster/MonsterHoleTriads";
 
 describe("Monster triads", () => {
   it("defines all adjacent 3-hole triangle combinations in the 3x3 board", () => {

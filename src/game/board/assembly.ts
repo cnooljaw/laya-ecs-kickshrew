@@ -1,4 +1,3 @@
-export * from "./index";
 export { BoardFoundation, setupBoard, type BoardSetupResult } from "./BoardFoundation";
 export { HoleComponent, SceneComponent } from "./BoardComponents";
 export { HoleEntity, SceneEntity, type HoleEntityInput } from "./BoardEntities";

@@ -36,7 +36,7 @@
 - `src/app/**`：Laya 应用壳、world/runtime 装配和主循环。
 - `src/network/**`：协议、请求匹配和 transport；回包不得直接操作 view。
 
-`framework` 不得依赖 `game/app`。业务 Feature 不得导入另一个业务 Feature 的内部文件。业务 Feature 可以依赖 `game/board` 公开 API。`index.ts` 只放跨模块公开契约；`assembly.ts` 放 Feature/board 的装配材料，供 `GameFeatures.ts` 和测试使用。
+`framework` 不得依赖 `game/app`。业务 Feature 不得导入另一个业务 Feature 的内部文件。业务 Feature 可以依赖 `game/board` 公开 API。`index.ts` 只放跨模块公开契约；`assembly.ts` 放 Feature/board 的装配材料，仅供 `GameFeatures.ts` 和真实装配测试使用。
 
 ## 数据流
 
