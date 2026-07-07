@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MapType } from "../../game/board";
-import { ShrewAction, ShrewType } from "../../game/features/shrew";
+import { MapType } from "../../game/board/assembly";
+import { ShrewAction, ShrewType } from "../../game/features/shrew/assembly";
 import { getShrewClipLayout, getShrewMainLayerLocalY, getShrewMainLayerY, ShrewNode } from "../../game/features/shrew/ShrewNode";
 
 class FakeGraphics {

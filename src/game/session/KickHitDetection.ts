@@ -111,9 +111,6 @@ function collectKickTargets(world: any): KickTarget[] {
       eid: target.eid,
       xRatio: target.xRatio,
       yRatio: target.yRatio,
-      holeIndex: -1,
-      holeEid: -1,
-      hitShrewType: 0,
     })),
   ];
 }

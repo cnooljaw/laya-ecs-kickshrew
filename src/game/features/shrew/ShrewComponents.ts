@@ -1,5 +1,4 @@
 import { defineComponent, Types } from "bitecs";
-export { BoardPositionComponent, HoleComponent, SceneComponent } from "../../board/index";
 
 export const ShrewComponent = defineComponent({
   shrewType: Types.f32,

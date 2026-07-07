@@ -7,12 +7,12 @@ import {
   SceneLayer,
   getHoleGrid,
   getHoleZOrder,
-} from "../game/board";
+} from "../game/board/assembly";
 import { MONSTER_HOLE_TRIADS, type MonsterHoleTriad } from "../game/features/monster/MonsterHoleTriads";
 import { MonsterAction, MonsterType } from "../game/features/monster/MonsterTypes";
 import { MonsterNode } from "../game/features/monster/MonsterNode";
 import { MONSTER_VIEW_CONFIG } from "../game/features/monster/MonsterViewConfig";
-import { AnimType, ShrewAction, ShrewType } from "../game/features/shrew";
+import { AnimType, ShrewAction, ShrewType } from "../game/features/shrew/assembly";
 import { ShrewNode } from "../game/features/shrew/ShrewNode";
 
 type PreviewMapKey = "meadow" | "ship" | "space";

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   PERF_HERO_RESOURCES,
   PerfHeroNode,
-} from "../../../../game/features/perfHero";
+} from "../../../../game/features/perfHero/assembly";
 
 class FakeSprite {
   name = "";

@@ -70,7 +70,7 @@ component field -> I* 接口 -> projection row -> node method
 defineEffect -> emit -> feature handler -> effect node
 ```
 
-新增业务通常只改 `src/game/features/foo/`，再到 `src/game/GameFeatures.ts` 增加一行显式注册。
+新增业务通常只改 `src/game/features/foo/`，再到 `src/game/GameFeatures.ts` 增加一行显式注册。跨模块调用看 `index.ts`，组合根材料看 `assembly.ts`。
 需要洞位、坐标或占用关系时，依赖 `src/game/board/index.ts` 的公开 API，不把 board 当普通业务 Feature 复制一套。
 
 ## 常用检查

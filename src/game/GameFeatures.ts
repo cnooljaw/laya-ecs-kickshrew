@@ -1,11 +1,11 @@
-import { BoardFoundation } from "./board";
-import { ShrewFeature } from "./features/shrew";
+import { BoardFoundation } from "./board/assembly";
+import { ShrewFeature } from "./features/shrew/assembly";
 import type { FeatureManifest } from "../framework/feature/FeatureManifest";
 import { createGameFeatureRegistry } from "../framework/feature/FeatureRegistry";
-import { HammerFeature } from "./features/hammer";
-import { MonsterFeature } from "./features/monster";
-import { PerfHeroFeature } from "./features/perfHero";
-import { PlayerHUDFeature } from "./features/playerHud";
+import { HammerFeature } from "./features/hammer/assembly";
+import { MonsterFeature } from "./features/monster/assembly";
+import { PerfHeroFeature } from "./features/perfHero/assembly";
+import { PlayerHUDFeature } from "./features/playerHud/assembly";
 import { GAME_SESSION_SYSTEMS, setupGameSession } from "./session";
 
 export const GAME_FOUNDATIONS: readonly FeatureManifest[] = [
@@ -26,6 +26,6 @@ export const GAME_MODULES: readonly FeatureManifest[] = [
 ];
 
 export const GAME_FEATURE_REGISTRY = createGameFeatureRegistry(GAME_MODULES, {
-  setup: setupGameSession,
+  sessionSetup: setupGameSession,
   systems: GAME_SESSION_SYSTEMS,
 });

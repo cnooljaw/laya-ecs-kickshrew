@@ -7,11 +7,11 @@ import {
   HoleEntity,
   MapType,
   SceneEntity,
-} from "../../../../game/board";
+} from "../../../../game/board/assembly";
 import {
   getMonsterTriadCenter,
   MONSTER_HOLE_TRIADS,
-} from "../../../../game/features/monster";
+} from "../../../../game/features/monster/assembly";
 
 describe("Monster triads", () => {
   it("defines all adjacent 3-hole triangle combinations in the 3x3 board", () => {

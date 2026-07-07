@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { HAMMER_RULES } from "../../../../config/GameTuning";
-import { HammerComponent } from "../../../../game/features/hammer";
-import { PlayerComponent } from "../../../../game/features/playerHud";
-import { HammerEntity } from "../../../../game/features/hammer";
-import { hammerSystem } from "../../../../game/features/hammer";
+import { HammerComponent } from "../../../../game/features/hammer/assembly";
+import { PlayerComponent } from "../../../../game/features/playerHud/assembly";
+import { HammerEntity } from "../../../../game/features/hammer/assembly";
+import { hammerSystem } from "../../../../game/features/hammer/assembly";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
-import { HammerType } from "../../../../game/features/hammer";
+import { HammerType } from "../../../../game/features/hammer/assembly";
 import { createGameWorld } from "../../../../framework/ecs/GameWorld";
 import { activateHammerThunderIfCharged } from "../../../../game/session";
 import { createSingletonEntities } from "../../../helpers/SingletonTestEntities";

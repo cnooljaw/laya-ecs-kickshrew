@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createGameWorld } from '../../../../framework/ecs/GameWorld';
 import { createSingletonEntities } from '../../../helpers/SingletonTestEntities';
 import { createHoleEntities, createShrewEntity } from '../../../helpers/CoreTestEntities';
-import { HammerComponent } from "../../../../game/features/hammer";
+import { HammerComponent } from "../../../../game/features/hammer/assembly";
 import {
   AnimationComponent,
   AnimType,
@@ -12,8 +12,8 @@ import {
   resetShrewTimingOverride,
   setShrewTimingOverride,
   shrewStateSystem,
-} from "../../../../game/features/shrew";
-import { HoleComponent, MapType } from "../../../../game/board";
+} from "../../../../game/features/shrew/assembly";
+import { HoleComponent, MapType } from "../../../../game/board/assembly";
 
 const FRAME_DELTA = 1 / 60;
 

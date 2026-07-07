@@ -26,7 +26,7 @@ export interface GameFeatureRuntime {
 
 export interface GameFeatureRegistryOptions {
   readonly systems?: readonly SystemDefinition[];
-  readonly setup?: (ctx: FeatureSetupContext) => void;
+  readonly sessionSetup?: (ctx: FeatureSetupContext) => void;
 }
 
 export function createGameFeatureRegistry(
@@ -41,7 +41,7 @@ export function createGameFeatureRegistry(
   return {
     setupAll: ctx => {
       for (const feature of features) feature.setup?.(ctx);
-      options.setup?.(ctx);
+      options.sessionSetup?.(ctx);
       const runtimeSystems = collectRuntimeSystems(features, options.systems ?? [], ctx);
       const runtimeStateSystems = filterSystemsByPhase(runtimeSystems, "state");
       const runtimeFeatureSystems = filterSystemsByPhase(runtimeSystems, "feature");

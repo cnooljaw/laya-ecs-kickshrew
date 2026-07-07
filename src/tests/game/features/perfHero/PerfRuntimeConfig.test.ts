@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getPerfRuntimeConfig } from "../../../../game/features/perfHero";
+import { getPerfRuntimeConfig } from "../../../../game/features/perfHero/assembly";
 
 describe("PerfRuntimeConfig", () => {
   it("perf=1 默认启用地鼠加速和英雄 Spine 压测", () => {

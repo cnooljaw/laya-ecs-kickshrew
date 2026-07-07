@@ -6,15 +6,24 @@ export const enum KickHitTargetKind {
   Monster = 2,
 }
 
-export interface KickTarget {
-  readonly kind: KickHitTargetKind.Shrew | KickHitTargetKind.Monster;
+interface BaseKickTarget {
   readonly eid: number;
   readonly xRatio: number;
   readonly yRatio: number;
+}
+
+export interface ShrewKickTargetRef extends BaseKickTarget {
+  readonly kind: KickHitTargetKind.Shrew;
   readonly holeIndex: number;
   readonly holeEid: number;
   readonly hitShrewType: number;
 }
+
+export interface MonsterKickTargetRef extends BaseKickTarget {
+  readonly kind: KickHitTargetKind.Monster;
+}
+
+export type KickTarget = ShrewKickTargetRef | MonsterKickTargetRef;
 
 export interface KickTouchRatio {
   readonly xRatio: number;

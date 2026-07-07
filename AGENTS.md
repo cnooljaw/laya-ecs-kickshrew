@@ -36,7 +36,7 @@
 - `src/app/**`：Laya 应用壳、world/runtime 装配和主循环。
 - `src/network/**`：协议、请求匹配和 transport；回包不得直接操作 view。
 
-`framework` 不得依赖 `game/app`。业务 Feature 不得导入另一个业务 Feature 的内部文件。业务 Feature 可以依赖 `game/board` 公开 API。
+`framework` 不得依赖 `game/app`。业务 Feature 不得导入另一个业务 Feature 的内部文件。业务 Feature 可以依赖 `game/board` 公开 API。`index.ts` 只放跨模块公开契约；`assembly.ts` 放 Feature/board 的装配材料，供 `GameFeatures.ts` 和测试使用。
 
 ## 数据流
 
@@ -71,7 +71,7 @@ transient result
 1. 创建 `src/game/features/foo/`。
 2. 在目录内定义 Component、Entity、System、Projection、contract、Node、规则和表现配置。
 3. 用 `defineFeature`、`defineSystem`、`mountOne/mountPool/createView/own` 装配。
-4. 只从 `index.ts` 暴露外部真正需要的能力。
+4. 只从 `index.ts` 暴露外部真正需要的能力；Component、Entity、Projection 和 Feature manifest 从 `assembly.ts` 暴露给组合根。
 5. 在 `src/game/GameFeatures.ts` 增加显式 import 和一个数组项。
 
 禁止 BaseFeature、目录自动扫描、反射注册、`mountTree` 和通用 UI DSL。

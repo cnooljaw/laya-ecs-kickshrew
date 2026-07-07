@@ -1,6 +1,6 @@
 import { defineEntity } from "../../../framework/ecs/EntityDefinition";
-export { HoleEntity, SceneEntity, type HoleEntityInput } from "../../board/index";
-import { AnimationComponent, BoardPositionComponent, ShrewComponent } from "./ShrewComponents";
+import { BoardPositionComponent } from "../../board/index";
+import { AnimationComponent, ShrewComponent } from "./ShrewComponents";
 import { MapType, type ShrewType } from "./ShrewTypes";
 import { resetShrewForNextCycle } from "./ShrewLifecycle";
 

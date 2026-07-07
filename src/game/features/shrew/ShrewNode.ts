@@ -124,6 +124,7 @@ export class ShrewNode implements IShrewNode {
   private _isDizzyVisible: boolean = false;
   private _blockedByOccupant = false;
 
+  // View contract and lifecycle entry points.
   create(parent: any): void {
     const Laya = getLaya();
     if (!Laya) { this._container = parent; return; }
@@ -355,6 +356,7 @@ export class ShrewNode implements IShrewNode {
     // TODO: 根据 propType 显示不同道具
   }
 
+  // Internal rendering helpers.
   private _configureClip(Laya: any, bodyW: number, bodyH: number): void {
     if (!this._clipLayer || !this._mainLayer) return;
 
@@ -433,6 +435,7 @@ export class ShrewNode implements IShrewNode {
     });
   }
 
+  // View contract cleanup.
   destroy(): void {
     if (this._container) {
       clearTweens(this._dizzyLayer);

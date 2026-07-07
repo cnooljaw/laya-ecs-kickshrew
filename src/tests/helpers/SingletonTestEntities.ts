@@ -1,6 +1,6 @@
-import { SceneEntity } from "../../game/board";
-import { HammerEntity } from "../../game/features/hammer";
-import { PlayerEntity } from "../../game/features/playerHud";
+import { SceneEntity } from "../../game/board/assembly";
+import { HammerEntity } from "../../game/features/hammer/assembly";
+import { PlayerEntity } from "../../game/features/playerHud/assembly";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 
 export function createSingletonEntities(world: any): {

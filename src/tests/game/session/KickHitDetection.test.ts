@@ -7,7 +7,7 @@ import {
   createMonsterAtTriadForTest,
   createShrewEntity,
 } from '../../helpers/CoreTestEntities';
-import { HammerComponent } from "../../../game/features/hammer";
+import { HammerComponent } from "../../../game/features/hammer/assembly";
 import {
   BoardOccupantKind,
   createBoardTopology,
@@ -15,15 +15,15 @@ import {
   MapType,
   HOLE_COUNT,
   type BoardTopology,
-} from "../../../game/board";
+} from "../../../game/board/assembly";
 import {
   SHREW_TIMING,
   ShrewAction,
   ShrewComponent,
   ShrewType,
-} from "../../../game/features/shrew";
-import { monsterLifetimeSystem, MonsterAction, MonsterComponent } from "../../../game/features/monster";
-import { PlayerComponent } from "../../../game/features/playerHud";
+} from "../../../game/features/shrew/assembly";
+import { monsterLifetimeSystem, MonsterAction, MonsterComponent } from "../../../game/features/monster/assembly";
+import { PlayerComponent } from "../../../game/features/playerHud/assembly";
 import { detectKickHit, KickHitTargetKind } from "../../../game/session/KickHitDetection";
 import { HAMMER_RULES } from "../../../config/GameTuning";
 

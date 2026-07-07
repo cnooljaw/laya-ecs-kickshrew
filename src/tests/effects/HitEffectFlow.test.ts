@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { HammerEntity } from "../../game/features/hammer";
-import { PlayerEntity } from "../../game/features/playerHud";
+import { HammerEntity } from "../../game/features/hammer/assembly";
+import { PlayerEntity } from "../../game/features/playerHud/assembly";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
-import { HammerType } from "../../game/features/hammer";
+import { HammerType } from "../../game/features/hammer/assembly";
 import { createGameWorld } from "../../framework/ecs/GameWorld";
 import { createEffectRuntime } from "../../framework/sync/EffectRuntime";
-import { HitRewardEffect } from "../../game/features/playerHud";
+import { HitRewardEffect } from "../../game/features/playerHud/assembly";
 import { handleKickResponse } from "../../game/session";
 
 describe("hit effect flow", () => {

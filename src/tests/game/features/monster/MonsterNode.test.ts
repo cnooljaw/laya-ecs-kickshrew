@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DESIGN_RESOLUTION } from "../../../../config/GameTuning";
 import { MonsterNode } from "../../../../game/features/monster/MonsterNode";
-import { MonsterAction } from "../../../../game/features/monster";
+import { MonsterAction } from "../../../../game/features/monster/assembly";
 import type { MonsterViewConfig } from "../../../../game/features/monster/MonsterViewConfig";
 
 class FakeSprite {

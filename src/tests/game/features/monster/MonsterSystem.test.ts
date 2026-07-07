@@ -19,7 +19,7 @@ import {
   SCENE_CYCLE_INTERVAL,
   mapCycleSystem,
   type BoardTopology,
-} from "../../../../game/board";
+} from "../../../../game/board/assembly";
 import {
   MonsterEntity,
   MonsterTriggerEntity,

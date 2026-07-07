@@ -99,9 +99,10 @@ src/game/features/foo/
   FooNode.ts
   FooFeature.ts
   index.ts
+  assembly.ts
 ```
 
-新增业务主要在自己的目录内完成，再到 `src/game/GameFeatures.ts` 显式注册。运行期优先使用固定槽位或对象池，不依赖频繁 `removeEntity`。
+新增业务主要在自己的目录内完成，再到 `src/game/GameFeatures.ts` 显式注册。`index.ts` 暴露跨模块公开契约，`assembly.ts` 暴露组合根需要的 Feature、Entity 和 Projection。运行期优先使用固定槽位或对象池，不依赖频繁 `removeEntity`。
 
 `board` 是基础层，不是普通业务 Feature。需要洞位、坐标、occupant、`BoardPositionComponent` 时，从 `src/game/board/index.ts` 使用公开 API；业务 Feature 之间仍不能互相导入内部文件。
 

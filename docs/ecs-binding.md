@@ -12,6 +12,7 @@
 - `HoleComponent.occupantKind/occupantEid` 表示当前占用者，例如 Monster 临时占用三个洞。
 - `BoardPositionComponent` 表示挂在 root 下的业务目标位置和 zOrder；Shrew、Monster 和后续新目标都应复用它。
 - 其他 Feature 可以依赖 `game/board` 的公开 API，通过 `BoardTopologyCapability`、`BoardTopology` 和 `BoardOps` 绑定常驻、尝试占用或按 owner 释放洞位，不直接写 `HoleComponent.occupant*`。
+- `HoleComponent`、`SceneComponent`、Entity 和 Projection 属于装配/测试材料，从 `game/board/assembly.ts` 使用，不从公开 `index.ts` 扩散。
 
 ## Board 洞位占用
 

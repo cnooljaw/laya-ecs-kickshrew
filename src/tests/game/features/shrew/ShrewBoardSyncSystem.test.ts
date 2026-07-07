@@ -11,14 +11,14 @@ import {
   SceneComponent,
   SceneEntity,
   mapCycleSystem,
-} from "../../../../game/board";
+} from "../../../../game/board/assembly";
 import {
   ShrewAction,
   ShrewComponent,
   ShrewEntity,
   ShrewType,
   shrewBoardSyncSystem,
-} from "../../../../game/features/shrew";
+} from "../../../../game/features/shrew/assembly";
 
 describe("ShrewBoardSyncSystem", () => {
   it("洞被 Monster 占用时隐藏该洞默认 Shrew 并禁用点击", () => {

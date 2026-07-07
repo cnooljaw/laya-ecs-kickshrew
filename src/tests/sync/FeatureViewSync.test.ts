@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { MonsterComponent } from "../../game/features/monster";
-import { MonsterEntity } from "../../game/features/monster";
-import { MonsterAction, MonsterType } from "../../game/features/monster";
-import { BoardPositionComponent } from "../../game/board";
-import { PerfHeroComponent } from "../../game/features/perfHero";
-import { PerfHeroEntity } from "../../game/features/perfHero";
+import { MonsterComponent } from "../../game/features/monster/assembly";
+import { MonsterEntity } from "../../game/features/monster/assembly";
+import { MonsterAction, MonsterType } from "../../game/features/monster/assembly";
+import { BoardPositionComponent } from "../../game/board/assembly";
+import { PerfHeroComponent } from "../../game/features/perfHero/assembly";
+import { PerfHeroEntity } from "../../game/features/perfHero/assembly";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../framework/ecs/GameWorld";
 import type { IMonsterNode } from "../../game/features/monster/IMonsterNode";
 import type { IPerfHeroNode } from "../../game/features/perfHero/IPerfHeroNode";
-import { MonsterProjection } from "../../game/features/monster";
-import { PerfHeroProjection } from "../../game/features/perfHero";
+import { MonsterProjection } from "../../game/features/monster/assembly";
+import { PerfHeroProjection } from "../../game/features/perfHero/assembly";
 import { createProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 
 describe("feature projections", () => {

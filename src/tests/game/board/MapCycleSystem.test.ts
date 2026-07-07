@@ -11,7 +11,7 @@ import {
   SCENE_CYCLE_INTERVAL,
   getHoleZOrder,
   mapCycleSystem,
-} from "../../../game/board";
+} from "../../../game/board/assembly";
 import { createEntityRuntime } from "../../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../../framework/ecs/GameWorld";
 

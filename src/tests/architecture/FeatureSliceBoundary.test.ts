@@ -74,9 +74,33 @@ describe("feature slice boundaries", () => {
   it("keeps board world reconstruction and raw release helpers out of the public barrel", () => {
     const barrel = readFileSync("src/game/board/index.ts", "utf8");
 
+    expect(barrel).not.toMatch(/\bBoardFoundation\b/);
+    expect(barrel).not.toMatch(/\bsetupBoard\b/);
+    expect(barrel).not.toMatch(/\bHoleEntity\b/);
+    expect(barrel).not.toMatch(/\bSceneEntity\b/);
+    expect(barrel).not.toMatch(/\bHoleProjection\b/);
+    expect(barrel).not.toMatch(/\bSceneProjection\b/);
     expect(barrel).not.toMatch(/\bcreateBoardTopologyFromWorld\b/);
     expect(barrel).not.toMatch(/\breleaseTriad\b(?!IfOwned)/);
     expect(barrel).not.toMatch(/\brestoreResident\b/);
+  });
+
+  it("keeps business feature public barrels focused on runtime contracts", () => {
+    const featureBarrels = [
+      "src/game/features/shrew/index.ts",
+      "src/game/features/monster/index.ts",
+      "src/game/features/hammer/index.ts",
+      "src/game/features/playerHud/index.ts",
+      "src/game/features/perfHero/index.ts",
+    ];
+
+    for (const file of featureBarrels) {
+      const barrel = readFileSync(file, "utf8");
+      expect(barrel).not.toMatch(/\bFeature\b/);
+      expect(barrel).not.toMatch(/\bEntity\b/);
+      expect(barrel).not.toMatch(/\bProjection\b/);
+      expect(barrel).not.toMatch(/\bComponent\b/);
+    }
   });
 
   it("feature setup context does not expose the ECS world", () => {

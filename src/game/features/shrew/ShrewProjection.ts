@@ -7,9 +7,9 @@ import {
 } from "../../../framework/sync/ProjectionDefinition";
 import {
   AnimationComponent,
-  BoardPositionComponent,
   ShrewComponent,
 } from "./ShrewComponents";
+import { BoardPositionComponent } from "../../board/index";
 import { AnimType, ShrewAction } from "./ShrewTypes";
 import type { IShrewNode } from "./IShrewNode";
 

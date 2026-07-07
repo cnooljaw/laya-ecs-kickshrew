@@ -14,7 +14,7 @@ import {
   SceneEntity,
   tryOccupyTriad,
   type BoardTopology,
-} from "../../../game/board";
+} from "../../../game/board/assembly";
 
 describe("BoardOps", () => {
   let world: ReturnType<typeof createGameWorld>;

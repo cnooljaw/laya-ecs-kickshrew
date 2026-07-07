@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MapType, SceneLayer } from "../../game/board";
+import { MapType, SceneLayer } from "../../game/board/assembly";
 
 class FakeSprite {
   children: FakeSprite[] = [];

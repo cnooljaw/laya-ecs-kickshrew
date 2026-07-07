@@ -2,7 +2,7 @@ import {
   ShrewComponent,
   ShrewEntity,
   syncShrewBoardPosition,
-} from "../../game/features/shrew";
+} from "../../game/features/shrew/assembly";
 import { createEntityRuntime } from "../../framework/ecs/EntityRuntime";
 import {
   bindResident,
@@ -12,8 +12,8 @@ import {
   HoleComponent,
   HoleEntity,
   type MapType,
-} from "../../game/board";
-import { type ShrewType } from "../../game/features/shrew";
+} from "../../game/board/assembly";
+import { type ShrewType } from "../../game/features/shrew/assembly";
 import {
   MonsterAction,
   MonsterComponent,
@@ -21,7 +21,7 @@ import {
   MonsterType,
   spawnMonster,
   type MonsterHoleTriad,
-} from "../../game/features/monster";
+} from "../../game/features/monster/assembly";
 
 export function createShrewEntity(
   world: any,

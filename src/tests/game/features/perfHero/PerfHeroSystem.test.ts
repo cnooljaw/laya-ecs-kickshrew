@@ -7,7 +7,7 @@ import {
   PERF_HERO_RESOURCES,
   PERF_HERO_VIEW_CONFIG,
   perfHeroSystem,
-} from "../../../../game/features/perfHero";
+} from "../../../../game/features/perfHero/assembly";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 
 function createPerfHeroEntities(world: any, count: number): number[] {

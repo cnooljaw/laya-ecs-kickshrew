@@ -7,8 +7,8 @@ import {
   AnimType,
   ShrewType,
   shrewAnimationTimerSystem,
-} from "../../../../game/features/shrew";
-import { MapType, SceneComponent } from "../../../../game/board";
+} from "../../../../game/features/shrew/assembly";
+import { MapType, SceneComponent } from "../../../../game/board/assembly";
 
 describe('ShrewAnimationTimerSystem', () => {
   let world: ReturnType<typeof createGameWorld>;

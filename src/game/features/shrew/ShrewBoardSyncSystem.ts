@@ -1,5 +1,7 @@
 import { defineQuery } from "bitecs";
-import { BoardPositionComponent, HoleComponent, ShrewComponent } from "./ShrewComponents";
+import { BoardPositionComponent } from "../../board/index";
+import { HoleComponent } from "../../board/BoardComponents";
+import { ShrewComponent } from "./ShrewComponents";
 import { BoardOccupantKind } from "../../board/index";
 import { ShrewAction } from "./ShrewTypes";
 
