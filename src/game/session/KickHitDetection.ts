@@ -14,6 +14,7 @@ import {
 import {
   applyShrewLocalHit,
   collectShrewKickTargets,
+  getShrewKickState,
 } from "../features/shrew/index";
 import {
   findClosestKickTarget,
@@ -33,6 +34,7 @@ export interface KickShrewHitResult {
   hitHoleEid: number;
   hitShrewEid: number;
   hitShrewType: number;
+  spawnSeq: number;
   actionState: number;
   actionStateName: string;
   animType: number;
@@ -78,13 +80,15 @@ export function detectKickHit(world: any, touchXRatio: number, touchYRatio: numb
     };
   }
 
-  const hit = applyShrewLocalHit(target.eid);
+  const current = getShrewKickState(target.eid);
+  const hit = current.serverControlled ? current : applyShrewLocalHit(target.eid);
   return {
     targetKind: KickHitTargetKind.Shrew,
     hitHoleIndex: target.holeIndex,
     hitHoleEid: target.holeEid,
     hitShrewEid: target.eid,
     hitShrewType: hit.hitShrewType,
+    spawnSeq: target.spawnSeq ?? 0,
     actionState: hit.actionState,
     actionStateName: hit.actionStateName,
     animType: hit.animType,
@@ -105,6 +109,7 @@ function collectKickTargets(world: any): KickTarget[] {
       holeIndex: target.holeIndex,
       holeEid: target.holeEid,
       hitShrewType: target.shrewType,
+      spawnSeq: target.spawnSeq,
     })),
     ...collectMonsterKickTargets(world).map(target => ({
       kind: KickHitTargetKind.Monster as const,

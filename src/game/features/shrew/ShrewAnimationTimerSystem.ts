@@ -7,7 +7,7 @@
  * 3. duration=0 时跳过该实体（防止除零）
  */
 import { defineQuery } from "bitecs";
-import { AnimationComponent } from "./ShrewComponents";
+import { AnimationComponent, ShrewComponent } from "./ShrewComponents";
 
 const animationQuery = defineQuery([AnimationComponent]);
 
@@ -21,6 +21,7 @@ export function shrewAnimationTimerSystem(world: any, delta: number): void {
   const animEntities = animationQuery(world);
   for (let i = 0; i < animEntities.length; i++) {
     const eid = animEntities[i];
+    if (ShrewComponent.serverControlled[eid] === 1) continue;
     const duration = AnimationComponent.duration[eid];
 
     // duration=0 时跳过，防止除零

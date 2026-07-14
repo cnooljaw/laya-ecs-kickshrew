@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { decodeKickRequest, decodeKickResponse, encodeKickRequest, encodeKickResponse } from '../../network/KickProtoCodec';
+import {
+  decodeInboundMessage,
+  decodeKickRequest,
+  decodeKickResponse,
+  encodeGameSnapshotResponse,
+  encodeKickRequest,
+  encodeKickResponse,
+  encodeShrewStatePush,
+} from '../../network/KickProtoCodec';
 import { PROTOCOL_MSG_IDS } from '../../network/ProtocolTypes';
 import type { KickRequest, KickResponse } from '../../network/ProtocolTypes';
 
@@ -90,9 +98,9 @@ function readKickRequestPayload(data: Uint8Array): { fieldNumbers: number[]; ham
   while (!reader.done) {
     const { field, wireType } = reader.tag();
     payload.fieldNumbers.push(field);
-    if (field === 1) payload.hammerType = reader.uint32() | 0;
-    else if (field === 2) payload.kickShrew = reader.bool();
-    else if (field === 3) payload.numOfShrew = reader.uint32() | 0;
+    if (field === 2) payload.hammerType = reader.uint32() | 0;
+    else if (field === 3) payload.kickShrew = reader.bool();
+    else if (field === 4) payload.numOfShrew = reader.uint32() | 0;
     else reader.skip(wireType);
   }
   return payload;
@@ -147,7 +155,7 @@ describe('KickProtoCodec', () => {
     expect(payload.hammerType).toBe(1);
     expect(payload.kickShrew).toBe(true);
     expect(payload.numOfShrew).toBe(1);
-    expect(payload.fieldNumbers).toEqual([1, 2, 3, 4, 5]);
+    expect(payload.fieldNumbers).toEqual([2, 3, 4, 5, 6]);
   });
 
   it('按 kick.proto 编解码 KickResponse', () => {
@@ -225,5 +233,52 @@ describe('KickProtoCodec', () => {
       0x10, 0x63,
       0x1a, 0x00,
     ]))).toThrow("unsupported protocol msg_id 99");
+  });
+
+  it('保留服务端快照和状态推送中的 64 位毫秒时间', () => {
+    const serverTimeMs = 1_752_000_000_123;
+    const snapshot = decodeInboundMessage(encodeGameSnapshotResponse({
+      seqId: 9,
+      snapshot: {
+        serverTimeMs,
+        attackId: 1,
+        attackEpoch: 2,
+        timelineRev: 3,
+        defaultTiming: { waitMs: 1000, upMs: 300, standMs: 2000, downMs: 300, dizzyMs: 500 },
+        activeCycles: [{
+          holeIndex: 1,
+          spawnSeq: 4,
+          shrewType: 2,
+          protectType: 0,
+          hp: 2,
+          waitStartMs: serverTimeMs,
+          upStartMs: serverTimeMs + 1000,
+          standStartMs: serverTimeMs + 1300,
+          downStartMs: serverTimeMs + 3300,
+          endMs: serverTimeMs + 3600,
+        }],
+      },
+    }));
+
+    expect(snapshot.msgId).toBe(PROTOCOL_MSG_IDS.GameSnapshotResp);
+    if (snapshot.msgId !== PROTOCOL_MSG_IDS.GameSnapshotResp) throw new Error("expected snapshot");
+    expect(snapshot.value.snapshot.activeCycles[0].standStartMs).toBe(serverTimeMs + 1300);
+
+    const state = decodeInboundMessage(encodeShrewStatePush({
+      serverTimeMs,
+      attackId: 1,
+      attackEpoch: 2,
+      timelineRev: 3,
+      holeIndex: 1,
+      spawnSeq: 4,
+      actionState: 5,
+      phaseStartMs: serverTimeMs,
+      phaseEndMs: serverTimeMs + 500,
+      hp: 0,
+      clickable: false,
+    }));
+    expect(state.msgId).toBe(PROTOCOL_MSG_IDS.ShrewStatePush);
+    if (state.msgId !== PROTOCOL_MSG_IDS.ShrewStatePush) throw new Error("expected state push");
+    expect(state.value.phaseEndMs).toBe(serverTimeMs + 500);
   });
 });

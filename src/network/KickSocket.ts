@@ -1,146 +1,123 @@
-/**
- * KickSocket — 基于 seqId 的请求-回包匹配网络封装
- *
- * 核心机制:
- * 1. 每个请求携带递增 seqId
- * 2. 发送后存入 pendingRequests Map
- * 3. 收到回包后按 seqId 弹出对应 pending
- * 4. 超时(3秒)未回包自动移除
- * 5. 不阻塞输入——玩家可连续敲击
- *
- * 传输层抽象为 ISocketTransport，便于测试时注入 mock
- */
-import type { KickRequest, KickResponse } from "./ProtocolTypes";
-import { decodeKickResponse, encodeKickRequest } from "./KickProtoCodec";
+import type {
+  GameSnapshotResponse,
+  KickRequest,
+  KickResponse,
+  TimeSyncResponse,
+} from "./ProtocolTypes";
+import {
+  decodeInboundMessage,
+  encodeGameSnapshotRequest,
+  encodeKickRequest,
+  encodeTimeSyncRequest,
+  type InboundMessage,
+} from "./KickProtoCodec";
 import { consoleHitTraceLogger, HitTraceLogger } from "../debug/HitTraceLogger";
 
 export type SocketMessageData = Uint8Array | ArrayBuffer | number[];
 
-/** 传输层接口，Laya.Socket 或测试 mock 均可实现 */
 export interface ISocketTransport {
   send(data: Uint8Array): void;
   close?(): void;
-  // onMessage 回调由构造函数或 setter 设置
 }
 
-interface PendingEntry {
-  req: KickRequest;
-  timestamp: number;
-  resolve: (resp: KickResponse) => void;
-  reject: (reason: string) => void;
+interface PendingEntry<T> {
+  readonly kind: string;
+  readonly request: unknown;
+  readonly timestamp: number;
+  readonly resolve: (value: T) => void;
+  readonly reject: (reason: string) => void;
 }
 
 const DEFAULT_TIMEOUT_MS = 3000;
 
 export class KickSocket {
-  private _seqId: number = 0;
-  private _pendingRequests: Map<number, PendingEntry> = new Map();
-  private _transport: ISocketTransport;
-  private _timeoutMs: number;
-  private _nowFn: () => number;
+  private _seqId = 0;
+  private readonly _pendingRequests = new Map<number, PendingEntry<unknown>>();
   private _onTimeout: ((seqId: number) => void) | null = null;
-  private _traceLogger: HitTraceLogger;
+  private _onPush: ((message: InboundMessage) => void) | null = null;
 
   constructor(
-    transport: ISocketTransport,
-    timeoutMs: number = DEFAULT_TIMEOUT_MS,
-    nowFn?: () => number,
-    traceLogger: HitTraceLogger = consoleHitTraceLogger,
-  ) {
-    this._transport = transport;
-    this._timeoutMs = timeoutMs;
-    this._nowFn = nowFn || (() => Date.now());
-    this._traceLogger = traceLogger;
-  }
+    private readonly _transport: ISocketTransport,
+    private readonly _timeoutMs: number = DEFAULT_TIMEOUT_MS,
+    private readonly _nowFn: () => number = () => Date.now(),
+    private readonly _traceLogger: HitTraceLogger = consoleHitTraceLogger,
+  ) {}
 
-  /** 设置超时回调，超时后不再 reject Promise */
   setOnTimeout(fn: (seqId: number) => void): void {
     this._onTimeout = fn;
   }
 
-  /**
-   * 发送击打请求，返回 Promise
-   * @param req 不含 seqId 的请求体
-   * @returns Promise<KickResponse>
-   */
-  sendKick(req: Omit<KickRequest, 'seqId'>): Promise<KickResponse> {
-    const seqId = ++this._seqId;
-    const fullReq: KickRequest = { ...req, seqId };
-
-    return new Promise<KickResponse>((resolve, reject) => {
-      this._pendingRequests.set(seqId, {
-        req: fullReq,
-        timestamp: this._nowFn(),
-        resolve,
-        reject,
-      });
-      const encoded = encodeKickRequest(fullReq);
-      this._traceLogger.log("socket.send", {
-        seqId,
-        byteLength: encoded.byteLength,
-        request: fullReq,
-        pendingCount: this._pendingRequests.size,
-      });
-      this._transport.send(encoded);
-    });
+  setOnPush(fn: ((message: InboundMessage) => void) | null): void {
+    this._onPush = fn;
   }
 
-  /**
-   * 收到消息，按 seqId 匹配 pending 请求
-   * @param data protobuf 二进制 KickResponse
-   */
+  sendKick(req: Omit<KickRequest, "seqId">): Promise<KickResponse> {
+    return this._send("kick", req, (seqId) => encodeKickRequest({ ...req, seqId }));
+  }
+
+  requestGameSnapshot(): Promise<GameSnapshotResponse> {
+    return this._send("gameSnapshot", undefined, (seqId) => encodeGameSnapshotRequest(seqId));
+  }
+
+  requestTimeSync(clientSendMs: number): Promise<TimeSyncResponse> {
+    return this._send("timeSync", { clientSendMs }, (seqId) => encodeTimeSyncRequest(seqId, clientSendMs));
+  }
+
   onMessage(data: SocketMessageData): void {
     try {
-      const resp: KickResponse = decodeKickResponse(data);
-      const pending = this._pendingRequests.get(resp.seqId);
-      if (pending) {
-        this._pendingRequests.delete(resp.seqId);
-        this._traceLogger.log("socket.response", {
-          seqId: resp.seqId,
-          matched: true,
-          pendingCount: this._pendingRequests.size,
-          response: resp,
-        });
-        pending.resolve(resp);
+      const message = decodeInboundMessage(data);
+      if (message.msgId === 3001 || message.msgId === 3002) {
+        this._traceLogger.log("socket.push", { msgId: message.msgId, value: message.value });
+        this._onPush?.(message);
         return;
       }
+
+      const seqId = message.value.seqId;
+
+      const pending = this._pendingRequests.get(seqId);
+      if (!pending) {
+        this._traceLogger.log("socket.response", { seqId, matched: false, response: message.value });
+        return;
+      }
+      this._pendingRequests.delete(seqId);
+
+      if (message.msgId === 9001) {
+        pending.reject(`Server error: ${message.value.code} ${message.value.message}`);
+        return;
+      }
+
       this._traceLogger.log("socket.response", {
-        seqId: resp.seqId,
-        matched: false,
+        seqId,
+        kind: pending.kind,
+        matched: true,
         pendingCount: this._pendingRequests.size,
-        response: resp,
+        response: message.value,
       });
-      // 无匹配 seqId 则丢弃（可能是超时后的迟到回包）
-    } catch (e) {
-      this._traceLogger.log("socket.decodeFailed", {
-        error: String(e),
-      });
-      console.error('KickSocket: failed to decode protobuf message', e);
+      pending.resolve(message.value);
+    } catch (error) {
+      this._traceLogger.log("socket.decodeFailed", { error: String(error) });
+      console.error("KickSocket: failed to decode protobuf message", error);
     }
   }
 
-  /**
-   * 检查超时请求，移除超时的 pending
-   * 应每帧调用
-   */
   checkTimeout(): void {
     const now = this._nowFn();
     for (const [seqId, pending] of this._pendingRequests) {
-      if (now - pending.timestamp > this._timeoutMs) {
-        this._pendingRequests.delete(seqId);
-        this._traceLogger.log("socket.timeout", {
-          seqId,
-          elapsedMs: now - pending.timestamp,
-          request: pending.req,
-          pendingCount: this._pendingRequests.size,
-        });
-        this._onTimeout?.(seqId);
-        pending.reject(`Kick request timeout: seqId=${seqId}`);
-      }
+      if (now - pending.timestamp <= this._timeoutMs) continue;
+      this._pendingRequests.delete(seqId);
+      this._traceLogger.log("socket.timeout", {
+        seqId,
+        kind: pending.kind,
+        elapsedMs: now - pending.timestamp,
+        request: pending.request,
+        pendingCount: this._pendingRequests.size,
+      });
+      this._onTimeout?.(seqId);
+      const requestName = pending.kind === "kick" ? "Kick" : pending.kind;
+      pending.reject(`${requestName} request timeout: seqId=${seqId}`);
     }
   }
 
-  /** 获取当前等待回包的请求数量 */
   getPendingCount(): number {
     return this._pendingRequests.size;
   }
@@ -151,5 +128,27 @@ export class KickSocket {
     }
     this._pendingRequests.clear();
     this._transport.close?.();
+  }
+
+  private _send<T>(kind: string, request: unknown, encode: (seqId: number) => Uint8Array): Promise<T> {
+    const seqId = ++this._seqId;
+    const encoded = encode(seqId);
+    return new Promise<T>((resolve, reject) => {
+      this._pendingRequests.set(seqId, {
+        kind,
+        request,
+        timestamp: this._nowFn(),
+        resolve: resolve as (value: unknown) => void,
+        reject,
+      });
+      this._traceLogger.log("socket.send", {
+        seqId,
+        kind,
+        byteLength: encoded.byteLength,
+        request,
+        pendingCount: this._pendingRequests.size,
+      });
+      this._transport.send(encoded);
+    });
   }
 }

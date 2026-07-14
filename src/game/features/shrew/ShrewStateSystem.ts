@@ -16,6 +16,7 @@ import { ShrewComponent, AnimationComponent } from "./ShrewComponents";
 import { resetShrewForNextCycle } from "./ShrewLifecycle";
 import { getShrewTiming } from "./ShrewRules";
 import { ShrewAction, AnimType } from "./ShrewTypes";
+import { syncServerShrewState } from "./ShrewServerSync";
 
 const shrewQuery = defineQuery([ShrewComponent, AnimationComponent]);
 
@@ -28,6 +29,10 @@ export function shrewStateSystem(world: any, deltaSec: number): void {
 
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i];
+    if (ShrewComponent.serverControlled[eid] === 1) {
+      syncServerShrewState(eid);
+      continue;
+    }
     const state = ShrewComponent.actionState[eid] as ShrewAction;
 
     switch (state) {

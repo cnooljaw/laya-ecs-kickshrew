@@ -1,21 +1,20 @@
-/**
- * NetworkAdapter — Socket 请求/回包生命周期适配器
- *
- * 职责:
- * 1. 持有 KickSocket 和 MockServer 实例
- * 2. 将 KickSocket 收到的回包转发给 KickResponseHandler
- * 3. 将 KickHitDetection 的击中结果通过 KickSocket 发送
- * 4. 每帧调用 checkTimeout
- *
- * 依赖 Laya 运行时（触摸事件），不在 vitest 中测试
- */
-import { KickSocket, ISocketTransport } from "./KickSocket";
+import { KickSocket, type ISocketTransport } from "./KickSocket";
 import { MockServer } from "./MockServer";
-import { WebSocketTransport, WebSocketCtorLike } from "./WebSocketTransport";
-import type { KickRequest, KickResponse } from "./ProtocolTypes";
+import { WebSocketTransport, type WebSocketCtorLike } from "./WebSocketTransport";
+import type {
+  GameSnapshot,
+  KickRequest,
+  KickResponse,
+  ShrewStatePush,
+  ShrewTimelinePush,
+  TimeSyncResponse,
+} from "./ProtocolTypes";
 import { decodeKickRequest, encodeKickResponse } from "./KickProtoCodec";
-import { getNetworkConfig, NetworkRuntimeConfig } from "../config/NetworkConfig";
-import { consoleHitTraceLogger, HitTraceLogger } from "../debug/HitTraceLogger";
+import { getNetworkConfig, type NetworkRuntimeConfig } from "../config/NetworkConfig";
+import { consoleHitTraceLogger, type HitTraceLogger } from "../debug/HitTraceLogger";
+
+const SNAPSHOT_REFRESH_MS = 500;
+const TIME_SYNC_REFRESH_MS = 5_000;
 
 export interface NetworkAdapterOptions {
   transport?: ISocketTransport;
@@ -27,98 +26,136 @@ export interface NetworkAdapterOptions {
 export class NetworkAdapter {
   private _socket!: KickSocket;
   private _mockServer: MockServer | null = null;
+  private _attackEpoch = 0;
+  private _hasAuthoritativeSnapshot = false;
+  private _lastSnapshotRequestMs = 0;
+  private _lastTimeSyncRequestMs = 0;
   private _onResponse: ((resp: KickResponse) => void) | null = null;
-  private _traceLogger: HitTraceLogger;
+  private _onSnapshot: ((snapshot: GameSnapshot) => void) | null = null;
+  private _onTimeline: ((push: ShrewTimelinePush) => void) | null = null;
+  private _onShrewState: ((push: ShrewStatePush) => void) | null = null;
+  private _onTimeSync: ((response: TimeSyncResponse) => void) | null = null;
 
   constructor(transportOrOptions?: ISocketTransport | NetworkAdapterOptions) {
     const options = normalizeOptions(transportOrOptions);
     const config = getNetworkConfig(options.config);
-    this._traceLogger = options.traceLogger ?? consoleHitTraceLogger;
-    this._traceLogger.log("network.config", {
-      mode: config.mode,
-      serverUrl: config.serverUrl,
-      timeoutMs: config.timeoutMs,
-    });
+    const traceLogger = options.traceLogger ?? consoleHitTraceLogger;
+    traceLogger.log("network.config", { mode: config.mode, serverUrl: config.serverUrl, timeoutMs: config.timeoutMs });
 
     if (options.transport) {
-      this._socket = new KickSocket(options.transport, config.timeoutMs, undefined, this._traceLogger);
-      return;
+      this._socket = new KickSocket(options.transport, config.timeoutMs, undefined, traceLogger);
+    } else if (config.mode === "mock") {
+      this._socket = new KickSocket(this._createMockTransport(), config.timeoutMs, undefined, traceLogger);
+    } else {
+      const transport = new WebSocketTransport({
+        url: config.serverUrl,
+        onMessage: (data) => this._socket.onMessage(data),
+        WebSocketCtor: options.WebSocketCtor,
+        traceLogger,
+      });
+      this._socket = new KickSocket(transport, config.timeoutMs, undefined, traceLogger);
+      transport.connect();
     }
 
-    if (config.mode === "mock") {
-      this._socket = new KickSocket(this._createMockTransport(), config.timeoutMs, undefined, this._traceLogger);
-      return;
-    }
-
-    const transport = new WebSocketTransport({
-      url: config.serverUrl,
-      onMessage: (data) => this._socket.onMessage(data),
-      WebSocketCtor: options.WebSocketCtor,
-      traceLogger: this._traceLogger,
+    this._socket.setOnPush((message) => {
+      if (message.msgId === 3001) {
+        this._attackEpoch = message.value.attackEpoch;
+        this._onTimeline?.(message.value);
+      } else if (message.msgId === 3002) {
+        this._attackEpoch = message.value.attackEpoch;
+        this._onShrewState?.(message.value);
+      }
     });
-    this._socket = new KickSocket(transport, config.timeoutMs, undefined, this._traceLogger);
-    transport.connect();
+  }
+
+  onResponse(fn: ((resp: KickResponse) => void) | null): void {
+    this._onResponse = fn;
+  }
+
+  onGameSnapshot(fn: ((snapshot: GameSnapshot) => void) | null): void {
+    this._onSnapshot = fn;
+  }
+
+  onShrewTimeline(fn: ((push: ShrewTimelinePush) => void) | null): void {
+    this._onTimeline = fn;
+  }
+
+  onShrewState(fn: ((push: ShrewStatePush) => void) | null): void {
+    this._onShrewState = fn;
+  }
+
+  onTimeSync(fn: ((response: TimeSyncResponse) => void) | null): void {
+    this._onTimeSync = fn;
+  }
+
+  async requestGameSnapshot(): Promise<GameSnapshot | null> {
+    if (this._mockServer) return null;
+    this._lastSnapshotRequestMs = Date.now();
+    const response = await this._socket.requestGameSnapshot();
+    this._attackEpoch = response.snapshot.attackEpoch;
+    this._hasAuthoritativeSnapshot = true;
+    this._onSnapshot?.(response.snapshot);
+    return response.snapshot;
+  }
+
+  async requestTimeSync(): Promise<TimeSyncResponse | null> {
+    if (this._mockServer) return null;
+    const clientSendMs = Date.now();
+    this._lastTimeSyncRequestMs = clientSendMs;
+    const response = await this._socket.requestTimeSync(clientSendMs);
+    this._onTimeSync?.(response);
+    return response;
+  }
+
+  destroy(): void {
+    this._onResponse = null;
+    this._onSnapshot = null;
+    this._onTimeline = null;
+    this._onShrewState = null;
+    this._onTimeSync = null;
+    this._socket.close();
+    this._mockServer = null;
+  }
+
+  async sendKick(req: Omit<KickRequest, "seqId" | "attackEpoch"> & { attackEpoch?: number }): Promise<KickResponse> {
+    const result = await this._socket.sendKick({
+      ...req,
+      attackEpoch: req.attackEpoch ?? this._attackEpoch,
+    });
+    this._onResponse?.(result);
+    return result;
+  }
+
+  update(): void {
+    this._socket.checkTimeout();
+    if (this._mockServer || !this._hasAuthoritativeSnapshot) return;
+    const now = Date.now();
+    if (now - this._lastSnapshotRequestMs >= SNAPSHOT_REFRESH_MS) {
+      void this.requestGameSnapshot().catch((): void => undefined);
+    }
+    if (now - this._lastTimeSyncRequestMs >= TIME_SYNC_REFRESH_MS) {
+      void this.requestTimeSync().catch((): void => undefined);
+    }
   }
 
   private _createMockTransport(): ISocketTransport {
     this._mockServer = new MockServer();
     return {
       send: (data: Uint8Array) => {
-        // 本地模拟: 直接将请求交给 MockServer 处理
         try {
-          const req: KickRequest = decodeKickRequest(data);
+          const req = decodeKickRequest(data);
           const resp = this._mockServer?.handleKick(req);
           if (!resp) return;
-          // 异步回包，模拟网络延迟
-          setTimeout(() => {
-            this._socket.onMessage(encodeKickResponse(resp));
-          }, 50);
-        } catch (e) {
-          console.error('NetworkAdapter: mock send error', e);
+          setTimeout(() => this._socket.onMessage(encodeKickResponse(resp)), 50);
+        } catch (error) {
+          console.error("NetworkAdapter: mock send error", error);
         }
       },
     };
   }
-
-  /** 设置回包回调 */
-  onResponse(fn: ((resp: KickResponse) => void) | null): void {
-    this._onResponse = fn;
-  }
-
-  clearResponseHandler(): void {
-    this._onResponse = null;
-  }
-
-  destroy(): void {
-    this.clearResponseHandler();
-    this._socket.close();
-    this._mockServer = null;
-  }
-
-  /** 发送击打请求 */
-  async sendKick(req: Omit<KickRequest, 'seqId'>): Promise<KickResponse> {
-    this._traceLogger.log("network.send", {
-      request: req,
-    });
-    const result = await this._socket.sendKick(req);
-    this._traceLogger.log("network.response", {
-      seqId: result.seqId,
-      ret: result.ret,
-      response: result,
-    });
-    this._onResponse?.(result);
-    return result;
-  }
-
-  /** 每帧调用：检查超时 */
-  update(): void {
-    this._socket.checkTimeout();
-  }
 }
 
-function normalizeOptions(
-  transportOrOptions?: ISocketTransport | NetworkAdapterOptions,
-): NetworkAdapterOptions {
+function normalizeOptions(transportOrOptions?: ISocketTransport | NetworkAdapterOptions): NetworkAdapterOptions {
   if (!transportOrOptions) return {};
   if ("send" in transportOrOptions && typeof transportOrOptions.send === "function") {
     return { transport: transportOrOptions };

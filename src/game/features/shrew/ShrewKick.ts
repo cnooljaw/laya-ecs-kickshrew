@@ -16,6 +16,7 @@ export interface ShrewKickTarget {
   readonly xRatio: number;
   readonly yRatio: number;
   readonly shrewType: number;
+  readonly spawnSeq: number;
 }
 
 export interface ShrewLocalHitResult {
@@ -27,6 +28,7 @@ export interface ShrewLocalHitResult {
   readonly dizzyTriggered: boolean;
   readonly isClickable: number;
   readonly hp: number;
+  readonly serverControlled: boolean;
 }
 
 const holeQuery = defineQuery([HoleComponent]);
@@ -47,6 +49,7 @@ export function collectShrewKickTargets(world: any): ShrewKickTarget[] {
       xRatio: BoardPositionComponent.xRatio[eid],
       yRatio: BoardPositionComponent.yRatio[eid],
       shrewType: ShrewComponent.shrewType[eid],
+      spawnSeq: ShrewComponent.spawnSeq[eid],
     });
   }
   return targets;
@@ -61,6 +64,11 @@ export function applyShrewLocalHit(shrewEid: number): ShrewLocalHitResult {
     ShrewComponent.hasHat[shrewEid] = 0;
   }
 
+  return getShrewKickState(shrewEid);
+}
+
+export function getShrewKickState(shrewEid: number): ShrewLocalHitResult {
+  const shrewType = ShrewComponent.shrewType[shrewEid] as ShrewType;
   const actionState = ShrewComponent.actionState[shrewEid];
   const animType = AnimationComponent.animType[shrewEid];
   return {
@@ -72,6 +80,7 @@ export function applyShrewLocalHit(shrewEid: number): ShrewLocalHitResult {
     dizzyTriggered: actionState === ShrewAction.Dizzy,
     isClickable: ShrewComponent.isClickable[shrewEid],
     hp: ShrewComponent.hp[shrewEid],
+    serverControlled: ShrewComponent.serverControlled[shrewEid] === 1,
   };
 }
 

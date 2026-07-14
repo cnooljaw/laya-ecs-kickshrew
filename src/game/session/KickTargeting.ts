@@ -17,6 +17,7 @@ export interface ShrewKickTargetRef extends BaseKickTarget {
   readonly holeIndex: number;
   readonly holeEid: number;
   readonly hitShrewType: number;
+  readonly spawnSeq?: number;
 }
 
 export interface MonsterKickTargetRef extends BaseKickTarget {

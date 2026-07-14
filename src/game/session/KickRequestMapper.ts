@@ -11,7 +11,11 @@ export function createKickRequest(
     hammerType,
     bKickShrew: 1,
     numOfShrew: 1,
-    shrews: [{ shrewindex: result.hitHoleIndex + HOLE_PROTOCOL.clientIndexOffset, protectType: 0 }],
+    shrews: [{
+      shrewindex: result.hitHoleIndex + HOLE_PROTOCOL.clientIndexOffset,
+      protectType: 0,
+      spawnSeq: result.spawnSeq,
+    }],
     comboID: 0,
   };
 }

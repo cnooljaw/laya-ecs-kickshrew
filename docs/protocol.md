@@ -33,8 +33,16 @@ api/proto/kick.proto
 ```text
 PingReqID=1
 PongRespID=2
+JoinRoomReqID=1001
+JoinRoomRespID=1002
+GameSnapshotReqID=1003
+GameSnapshotRespID=1004
+TimeSyncReqID=1005
+TimeSyncRespID=1006
 KickReqID=2001
 KickRespID=2002
+ShrewTimelinePushID=3001
+ShrewStatePushID=3002
 ErrorRespID=9001
 ```
 
@@ -43,7 +51,7 @@ ErrorRespID=9001
 ```bash
 cp ../GoServerActorFsm/api/proto/kick.proto api/proto/kick.proto
 diff -u ../GoServerActorFsm/api/proto/kick.proto api/proto/kick.proto
-rg -n "PingReqID|PongRespID|KickReqID|KickRespID|ErrorRespID" ../GoServerActorFsm/internal/protocol/codec.go src/network/ProtocolTypes.ts
+rg -n "PingReqID|PongRespID|JoinRoomReqID|GameSnapshotReqID|TimeSyncReqID|KickReqID|KickRespID|ShrewTimelinePushID|ShrewStatePushID|ErrorRespID" ../GoServerActorFsm/internal/protocol/codec.go src/network/ProtocolTypes.ts
 ```
 
 `diff` 没有输出时，客户端 proto 与服务端权威 proto 一致。`rg` 输出中的协议号必须和 `src/network/ProtocolTypes.ts` 的 `PROTOCOL_MSG_IDS` 一致。
@@ -58,7 +66,23 @@ rg -n "PingReqID|PongRespID|KickReqID|KickRespID|ErrorRespID" ../GoServerActorFs
 - `src/network/NetworkAdapter.ts`：MockServer 链路也必须走 protobuf 编解码，不退回 JSON。
 - `src/tests/network/KickProtoCodec.test.ts`、`KickSocket.test.ts`、`MockServer.test.ts`：同步协议测试。
 
-`Envelope.seq_id` 是请求-回包匹配的唯一权威 seq。`Envelope.msg_id` 是消息类型权威协议号。业务 payload 不再携带 `seq_id` 或 `cmd`。
+`Envelope.seq_id` 是请求-回包匹配的唯一权威 seq。`Envelope.msg_id` 是消息类型权威协议号。`ShrewTimelinePush` 和 `ShrewStatePush` 必须使用 `seq_id=0`，不进入 pending 请求表。
+
+## 地鼠权威时间线
+
+服务端 `AttackActor` 拥有房间内所有洞位的 `ShrewTimeline`。客户端不再随机生成真实对局中的地鼠生命周期：
+
+```text
+GameSnapshot / ShrewTimelinePush
+  -> ServerGameClock 校正服务端时间
+  -> Shrew ECS 的 spawnSeq 与绝对阶段时间
+  -> ShrewStateSystem 按服务端时间投影 Wait/Up/Stand/Down
+```
+
+- `GameSnapshotRequest` 在进入场景后发送，客户端每 500ms 刷新一次快照；服务端会推进到当前周期并在生成新周期时广播 `ShrewTimelinePush`。
+- `TimeSyncRequest` 每 5 秒校正一次时钟偏移。时间字段使用毫秒整数，客户端不得用 `f32` 保存。
+- `KickRequest.attack_epoch` 和每个 `KickShrew.spawn_seq` 必须来自最新快照。服务端拒绝过期周期、非 `Stand` 阶段或已经命中的请求。
+- 命中后服务端先广播更新后的时间线，再广播 `Dizzy` 状态推送；客户端不得在服务端权威模式下本地扣血或切换地鼠状态。
 
 ## 防回退检查
 

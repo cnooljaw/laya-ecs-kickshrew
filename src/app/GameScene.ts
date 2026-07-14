@@ -16,7 +16,12 @@ import { GameLoopPipeline } from "./GameLoopPipeline";
 import { ViewRegistry } from "../framework/view/ViewRegistry";
 import { getPerfShrewTiming, getPerfRuntimeConfig, PerfRuntimeConfig } from "../game/features/perfHero";
 import {
+  applyServerGameSnapshot,
+  applyServerShrewState,
+  applyServerShrewTimeline,
+  resetServerGameClock,
   resetShrewTimingOverride,
+  setServerClockSample,
   setShrewTimingOverride,
 } from "../game/features/shrew";
 import { GAME_FEATURE_REGISTRY } from "../game/GameFeatures";
@@ -100,6 +105,18 @@ export class GameScene {
     this._network.onResponse((resp: KickResponse) => {
       handleKickResponse(this._world, this._effectRuntime!, resp);
     });
+    this._network.onGameSnapshot((snapshot) => {
+      applyServerGameSnapshot(this._world, snapshot);
+    });
+    this._network.onShrewTimeline((push) => {
+      applyServerShrewTimeline(this._world, push);
+    });
+    this._network.onShrewState((push) => {
+      applyServerShrewState(this._world, push);
+    });
+    this._network.onTimeSync((response) => {
+      setServerClockSample(response.serverTimeMs);
+    });
 
     this._loopPipeline = new GameLoopPipeline({
       world: this._world,
@@ -122,6 +139,7 @@ export class GameScene {
     // 4. 统一执行首次投影同步。
     this._projectionRuntime.mark(this._world);
     this._projectionRuntime.sync(this._world);
+    void this._network.requestGameSnapshot().catch((): void => undefined);
   }
 
   /** 启动帧循环 */
@@ -138,6 +156,7 @@ export class GameScene {
   destroy(): void {
     this.stop();
     this._network.destroy();
+    resetServerGameClock();
     resetShrewTimingOverride();
     this._kickInput = null;
     this._loopPipeline = null;
