@@ -18,6 +18,12 @@ export const SceneEntity = defineEntity({
     SceneComponent.sceneTimer[eid] = 0;
     SceneComponent.cycleInterval[eid] = SCENE_CYCLE_INTERVAL;
     SceneComponent.transitioning[eid] = 0;
+    SceneComponent.serverControlled[eid] = 0;
+    SceneComponent.mapRevision[eid] = 0;
+    SceneComponent.mapStartedMs[eid] = 0;
+    SceneComponent.nextSwitchMs[eid] = 0;
+    SceneComponent.nextMap[eid] = MapType.None;
+    SceneComponent.cycleMs[eid] = SCENE_CYCLE_INTERVAL * 1000;
   },
 });
 

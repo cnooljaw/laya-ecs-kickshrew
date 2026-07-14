@@ -5,6 +5,7 @@ import type {
   GameSnapshot,
   KickRequest,
   KickResponse,
+  MapStatePush,
   ShrewStatePush,
   ShrewTimelinePush,
   TimeSyncResponse,
@@ -27,6 +28,7 @@ export class NetworkAdapter {
   private _socket!: KickSocket;
   private _mockServer: MockServer | null = null;
   private _attackEpoch = 0;
+  private _attackId = 0;
   private _hasAuthoritativeSnapshot = false;
   private _lastSnapshotRequestMs = 0;
   private _lastTimeSyncRequestMs = 0;
@@ -34,6 +36,7 @@ export class NetworkAdapter {
   private _onSnapshot: ((snapshot: GameSnapshot) => void) | null = null;
   private _onTimeline: ((push: ShrewTimelinePush) => void) | null = null;
   private _onShrewState: ((push: ShrewStatePush) => void) | null = null;
+  private _onMapState: ((push: MapStatePush) => void) | null = null;
   private _onTimeSync: ((response: TimeSyncResponse) => void) | null = null;
 
   constructor(transportOrOptions?: ISocketTransport | NetworkAdapterOptions) {
@@ -59,11 +62,17 @@ export class NetworkAdapter {
 
     this._socket.setOnPush((message) => {
       if (message.msgId === 3001) {
+        if (!this._acceptAttack(message.value.attackId, message.value.attackEpoch)) return;
         this._attackEpoch = message.value.attackEpoch;
         this._onTimeline?.(message.value);
       } else if (message.msgId === 3002) {
+        if (!this._acceptAttack(message.value.attackId, message.value.attackEpoch)) return;
         this._attackEpoch = message.value.attackEpoch;
         this._onShrewState?.(message.value);
+      } else if (message.msgId === 3003) {
+        if (!this._acceptAttack(message.value.attackId, message.value.attackEpoch)) return;
+        this._attackEpoch = message.value.attackEpoch;
+        this._onMapState?.(message.value);
       }
     });
   }
@@ -84,6 +93,10 @@ export class NetworkAdapter {
     this._onShrewState = fn;
   }
 
+  onMapState(fn: ((push: MapStatePush) => void) | null): void {
+    this._onMapState = fn;
+  }
+
   onTimeSync(fn: ((response: TimeSyncResponse) => void) | null): void {
     this._onTimeSync = fn;
   }
@@ -92,6 +105,7 @@ export class NetworkAdapter {
     if (this._mockServer) return null;
     this._lastSnapshotRequestMs = Date.now();
     const response = await this._socket.requestGameSnapshot();
+    this._attackId = response.snapshot.attackId;
     this._attackEpoch = response.snapshot.attackEpoch;
     this._hasAuthoritativeSnapshot = true;
     this._onSnapshot?.(response.snapshot);
@@ -112,6 +126,7 @@ export class NetworkAdapter {
     this._onSnapshot = null;
     this._onTimeline = null;
     this._onShrewState = null;
+    this._onMapState = null;
     this._onTimeSync = null;
     this._socket.close();
     this._mockServer = null;
@@ -152,6 +167,10 @@ export class NetworkAdapter {
         }
       },
     };
+  }
+
+  private _acceptAttack(attackId: number, attackEpoch: number): boolean {
+    return this._attackId === 0 || (this._attackId === attackId && this._attackEpoch === attackEpoch);
   }
 }
 

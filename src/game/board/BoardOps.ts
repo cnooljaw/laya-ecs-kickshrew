@@ -1,9 +1,35 @@
+import { defineQuery } from "bitecs";
+import { HolePositions, getHoleZOrder } from "./HolePositions";
 import { HoleComponent, SceneComponent } from "./BoardComponents";
 import type { BoardTopology } from "./BoardTopology";
 import { BoardOccupantKind, type MapType } from "./BoardTypes";
 
+const sceneQuery = defineQuery([SceneComponent]);
+const holeQuery = defineQuery([HoleComponent]);
+
 export function getCurrentMap(board: BoardTopology): MapType {
   return SceneComponent.currentMap[board.scene] as MapType;
+}
+
+/** Applies one map layout without changing resident or temporary occupant state. */
+export function applyMapToBoard(world: any, mapType: MapType): void {
+  const scenes = sceneQuery(world);
+  if (scenes.length === 0) return;
+  const positions = HolePositions[mapType];
+  if (!positions) return;
+
+  const scene = scenes[0];
+  SceneComponent.currentMap[scene] = mapType;
+  SceneComponent.transitioning[scene] = 1;
+
+  const holes = holeQuery(world);
+  for (let index = 0; index < holes.length; index++) {
+    const eid = holes[index];
+    const holeIndex = Math.round(HoleComponent.index[eid]);
+    HoleComponent.posXRatio[eid] = positions.xRatios[holeIndex];
+    HoleComponent.posYRatio[eid] = positions.yRatios[holeIndex];
+    HoleComponent.zIndex[eid] = getHoleZOrder(HoleComponent.gridRow[eid]);
+  }
 }
 
 export function getHoleEid(board: BoardTopology, index: number): number {

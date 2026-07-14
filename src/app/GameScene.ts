@@ -11,6 +11,7 @@
 import { createGameWorld } from "../framework/ecs/GameWorld";
 import { deleteWorld } from "bitecs";
 import { NetworkAdapter } from "../network/NetworkAdapter";
+import { resetServerClock, setServerClockSample } from "../network/ServerClock";
 import type { KickResponse } from "../network/ProtocolTypes";
 import { GameLoopPipeline } from "./GameLoopPipeline";
 import { ViewRegistry } from "../framework/view/ViewRegistry";
@@ -19,11 +20,10 @@ import {
   applyServerGameSnapshot,
   applyServerShrewState,
   applyServerShrewTimeline,
-  resetServerGameClock,
   resetShrewTimingOverride,
-  setServerClockSample,
   setShrewTimingOverride,
 } from "../game/features/shrew";
+import { applyServerMapTimeline } from "../game/board";
 import { GAME_FEATURE_REGISTRY } from "../game/GameFeatures";
 import { createFeatureSetupContext } from "../framework/feature/FeatureSetupContext";
 import { createEntityRuntime, type EntityRuntime } from "../framework/ecs/EntityRuntime";
@@ -107,6 +107,7 @@ export class GameScene {
     });
     this._network.onGameSnapshot((snapshot) => {
       applyServerGameSnapshot(this._world, snapshot);
+      applyServerMapTimeline(this._world, snapshot.mapTimeline);
     });
     this._network.onShrewTimeline((push) => {
       applyServerShrewTimeline(this._world, push);
@@ -114,8 +115,17 @@ export class GameScene {
     this._network.onShrewState((push) => {
       applyServerShrewState(this._world, push);
     });
+    this._network.onMapState((push) => {
+      setServerClockSample(push.serverTimeMs);
+      applyServerMapTimeline(this._world, push.timeline);
+    });
     this._network.onTimeSync((response) => {
-      setServerClockSample(response.serverTimeMs);
+      const clientReceiveMs = Date.now();
+      setServerClockSample(
+        response.serverTimeMs,
+        (response.clientSendMs + clientReceiveMs) / 2,
+        clientReceiveMs - response.clientSendMs,
+      );
     });
 
     this._loopPipeline = new GameLoopPipeline({
@@ -156,7 +166,7 @@ export class GameScene {
   destroy(): void {
     this.stop();
     this._network.destroy();
-    resetServerGameClock();
+    resetServerClock();
     resetShrewTimingOverride();
     this._kickInput = null;
     this._loopPipeline = null;

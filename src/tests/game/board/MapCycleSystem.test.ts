@@ -10,6 +10,7 @@ import {
 import { HoleComponent, SceneComponent } from "../../../game/board/BoardComponents";
 import { HoleEntity, SceneEntity } from "../../../game/board/BoardEntities";
 import { mapCycleSystem } from "../../../game/board/MapCycleSystem";
+import { applyServerMapTimeline } from "../../../game/board/ServerMapSync";
 import { createEntityRuntime } from "../../../framework/ecs/EntityRuntime";
 import { createGameWorld } from "../../../framework/ecs/GameWorld";
 
@@ -68,5 +69,23 @@ describe("Board MapCycleSystem", () => {
       expect(HoleComponent.posYRatio[eid]).toBeCloseTo(HolePositions[MapType.Ship].yRatios[index], 5);
       expect(HoleComponent.zIndex[eid]).toBe(getHoleZOrder(HoleComponent.gridRow[eid]));
     });
+  });
+
+  it("does not advance an authoritative map from render delta", () => {
+    const nowMs = Date.now();
+    applyServerMapTimeline(world, {
+      currentMap: MapType.Meadow,
+      mapRevision: 1,
+      mapStartedMs: nowMs,
+      nextSwitchMs: nowMs + 10_000,
+      nextMap: MapType.Ship,
+      cycleMs: 16_000,
+    }, nowMs);
+
+    mapCycleSystem(world, SCENE_CYCLE_INTERVAL * 2);
+
+    expect(SceneComponent.serverControlled[scene]).toBe(1);
+    expect(SceneComponent.currentMap[scene]).toBe(MapType.Meadow);
+    expect(SceneComponent.sceneTimer[scene]).toBe(0);
   });
 });

@@ -1,14 +1,16 @@
 import { defineQuery } from "bitecs";
 import { HOLE_PROTOCOL } from "../../../config/GameTuning";
-import type { GameSnapshot, ShrewCycle, ShrewStatePush, ShrewTimelinePush } from "../../../network/ProtocolTypes";
+import { RoomPhase, type GameSnapshot, type ShrewCycle, type ShrewStatePush, type ShrewTimelinePush } from "../../../network/ProtocolTypes";
 import { AnimationComponent, ShrewComponent } from "./ShrewComponents";
-import { getServerNowMs, setServerClockSample } from "./ServerGameClock";
+import { getServerNowMs, setServerClockSample } from "../../../network/ServerClock";
 import { AnimType, ShrewAction, ShrewType } from "./ShrewTypes";
 
 const shrewQuery = defineQuery([ShrewComponent, AnimationComponent]);
 
 export function applyServerGameSnapshot(world: any, snapshot: GameSnapshot): void {
   setServerClockSample(snapshot.serverTimeMs);
+  clearServerShrewSlots(world, snapshot.timelineRev);
+  if (snapshot.roomPhase !== RoomPhase.Running) return;
   for (const cycle of snapshot.activeCycles) applyCycle(world, cycle, snapshot.timelineRev);
 }
 
@@ -88,6 +90,31 @@ function applyCycle(world: any, cycle: ShrewCycle, timelineRev: number): void {
   ShrewComponent.serverOverrideStartMs[eid] = 0;
   ShrewComponent.serverOverrideEndMs[eid] = 0;
   syncServerShrewState(eid);
+}
+
+function clearServerShrewSlots(world: any, timelineRev: number): void {
+  const shrews = shrewQuery(world);
+  for (let i = 0; i < shrews.length; i++) {
+    const eid = shrews[i];
+    ShrewComponent.serverControlled[eid] = 1;
+    ShrewComponent.timelineRev[eid] = timelineRev;
+    ShrewComponent.spawnSeq[eid] = 0;
+    ShrewComponent.hp[eid] = 0;
+    ShrewComponent.isClickable[eid] = 0;
+    ShrewComponent.actionState[eid] = ShrewAction.Wait;
+    ShrewComponent.animTimer[eid] = 0;
+    ShrewComponent.waitStartMs[eid] = 0;
+    ShrewComponent.upStartMs[eid] = 0;
+    ShrewComponent.standStartMs[eid] = 0;
+    ShrewComponent.downStartMs[eid] = 0;
+    ShrewComponent.endMs[eid] = 0;
+    ShrewComponent.serverOverrideAction[eid] = 0;
+    ShrewComponent.serverOverrideStartMs[eid] = 0;
+    ShrewComponent.serverOverrideEndMs[eid] = 0;
+    AnimationComponent.animType[eid] = AnimType.Idle;
+    AnimationComponent.progress[eid] = 0;
+    AnimationComponent.duration[eid] = 0;
+  }
 }
 
 function applyAction(eid: number, action: number, phaseStartMs: number, phaseEndMs: number, nowMs: number, clickable: boolean): void {

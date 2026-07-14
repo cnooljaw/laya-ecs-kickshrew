@@ -5,6 +5,12 @@ export const SceneComponent = defineComponent({
   sceneTimer: Types.f32,
   cycleInterval: Types.f32,
   transitioning: Types.f32,
+  serverControlled: Types.ui8,
+  mapRevision: Types.ui32,
+  mapStartedMs: Types.f64,
+  nextSwitchMs: Types.f64,
+  nextMap: Types.f32,
+  cycleMs: Types.f64,
 });
 
 export const HoleComponent = defineComponent({

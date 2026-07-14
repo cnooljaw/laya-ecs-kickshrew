@@ -1,21 +1,25 @@
 import { defineQuery } from "bitecs";
 import { BoardPositionComponent } from "../../board/index";
-import { HoleComponent } from "../../board/BoardComponents";
+import { HoleComponent, SceneComponent } from "../../board/BoardComponents";
 import { ShrewComponent } from "./ShrewComponents";
 import { BoardOccupantKind } from "../../board/index";
 import { ShrewAction } from "./ShrewTypes";
 
 const shrewQuery = defineQuery([ShrewComponent, BoardPositionComponent]);
 const holeQuery = defineQuery([HoleComponent]);
+const sceneQuery = defineQuery([SceneComponent]);
 
 export function shrewBoardSyncSystem(world: any): void {
   const holes = holeQuery(world);
   const shrews = shrewQuery(world);
+  const scenes = sceneQuery(world);
+  const mapType = scenes.length === 0 ? 0 : SceneComponent.currentMap[scenes[0]];
   for (let i = 0; i < shrews.length; i++) {
     const shrewEid = shrews[i];
     const holeEid = findHoleByIndex(holes, ShrewComponent.holeIndex[shrewEid]);
     if (holeEid < 0) continue;
     syncShrewBoardPosition(shrewEid, holeEid);
+    if (mapType !== 0) ShrewComponent.mapType[shrewEid] = mapType;
     syncShrewOccupancyVisibility(shrewEid, holeEid);
   }
 }

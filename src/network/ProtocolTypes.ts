@@ -19,6 +19,7 @@ export const PROTOCOL_MSG_IDS = {
   KickResp: 2002,
   ShrewTimelinePush: 3001,
   ShrewStatePush: 3002,
+  MapStatePush: 3003,
   ErrorResp: 9001,
 } as const;
 
@@ -79,6 +80,21 @@ export interface ShrewCycle {
   endMs: number;
 }
 
+export const enum RoomPhase {
+  Filling = 1,
+  Running = 2,
+}
+
+/** 房间地图的服务端绝对时间线，地图值与 `MapType` 一一对应。 */
+export interface MapTimeline {
+  currentMap: number;
+  mapRevision: number;
+  mapStartedMs: number;
+  nextSwitchMs: number;
+  nextMap: number;
+  cycleMs: number;
+}
+
 export interface GameSnapshot {
   serverTimeMs: number;
   attackId: number;
@@ -86,6 +102,11 @@ export interface GameSnapshot {
   timelineRev: number;
   defaultTiming: ShrewTiming;
   activeCycles: ShrewCycle[];
+  roomPhase: RoomPhase;
+  playerCount: number;
+  roomSize: number;
+  startAtMs: number;
+  mapTimeline: MapTimeline;
 }
 
 export interface GameSnapshotResponse {
@@ -105,6 +126,17 @@ export interface ShrewTimelinePush {
   attackEpoch: number;
   timelineRev: number;
   cycles: ShrewCycle[];
+  roomPhase: RoomPhase;
+  playerCount: number;
+  roomSize: number;
+  startAtMs: number;
+}
+
+export interface MapStatePush {
+  serverTimeMs: number;
+  attackId: number;
+  attackEpoch: number;
+  timeline: MapTimeline;
 }
 
 export interface ShrewStatePush {

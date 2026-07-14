@@ -5,6 +5,9 @@ import {
   type GameSnapshotResponse,
   type KickRequest,
   type KickResponse,
+  type MapStatePush,
+  type MapTimeline,
+  RoomPhase,
   type ShrewCycle,
   type ShrewStatePush,
   type ShrewTimelinePush,
@@ -26,6 +29,7 @@ export type InboundMessage =
   | { readonly msgId: typeof PROTOCOL_MSG_IDS.TimeSyncResp; readonly value: TimeSyncResponse }
   | { readonly msgId: typeof PROTOCOL_MSG_IDS.ShrewTimelinePush; readonly value: ShrewTimelinePush }
   | { readonly msgId: typeof PROTOCOL_MSG_IDS.ShrewStatePush; readonly value: ShrewStatePush }
+  | { readonly msgId: typeof PROTOCOL_MSG_IDS.MapStatePush; readonly value: MapStatePush }
   | { readonly msgId: typeof PROTOCOL_MSG_IDS.ErrorResp; readonly value: ErrorResponse };
 
 const WIRE_VARINT = 0;
@@ -220,6 +224,15 @@ export function encodeShrewStatePush(push: ShrewStatePush): Uint8Array {
   return encodeEnvelope(0, PROTOCOL_MSG_IDS.ShrewStatePush, encodeShrewStatePushPayload(push));
 }
 
+export function encodeMapStatePush(push: MapStatePush): Uint8Array {
+  const writer = new ProtoWriter();
+  writer.int64(1, push.serverTimeMs);
+  writer.uint64(2, push.attackId);
+  writer.uint64(3, push.attackEpoch);
+  writer.message(4, encodeMapTimeline(push.timeline));
+  return encodeEnvelope(0, PROTOCOL_MSG_IDS.MapStatePush, writer.finish());
+}
+
 export function decodeEnvelope(data: BytesLike): ProtocolEnvelope {
   const reader = new ProtoReader(data);
   const envelope: { seqId: number; msgId: number; payload: Uint8Array } = {
@@ -252,6 +265,8 @@ export function decodeInboundMessage(data: BytesLike): InboundMessage {
       return { msgId: PROTOCOL_MSG_IDS.ShrewTimelinePush, value: decodeShrewTimelinePush(envelope.payload) };
     case PROTOCOL_MSG_IDS.ShrewStatePush:
       return { msgId: PROTOCOL_MSG_IDS.ShrewStatePush, value: decodeShrewStatePush(envelope.payload) };
+    case PROTOCOL_MSG_IDS.MapStatePush:
+      return { msgId: PROTOCOL_MSG_IDS.MapStatePush, value: decodeMapStatePush(envelope.payload) };
     case PROTOCOL_MSG_IDS.ErrorResp:
       return { msgId: PROTOCOL_MSG_IDS.ErrorResp, value: decodeErrorResponse(envelope.payload, envelope.seqId) };
     default:
@@ -391,6 +406,11 @@ function encodeGameSnapshot(snapshot: GameSnapshot): Uint8Array {
   writer.uint64(4, snapshot.timelineRev);
   writer.message(5, encodeShrewTiming(snapshot.defaultTiming));
   for (const cycle of snapshot.activeCycles) writer.message(6, encodeShrewCycle(cycle));
+  writer.int32(7, snapshot.roomPhase);
+  writer.int32(8, snapshot.playerCount);
+  writer.int32(9, snapshot.roomSize);
+  writer.int64(10, snapshot.startAtMs);
+  writer.message(11, encodeMapTimeline(snapshot.mapTimeline));
   return writer.finish();
 }
 
@@ -408,7 +428,19 @@ function decodeGameSnapshotResponse(data: Uint8Array, seqId: number): GameSnapsh
 
 function decodeGameSnapshot(data: Uint8Array): GameSnapshot {
   const reader = new ProtoReader(data);
-  const snapshot: GameSnapshot = { serverTimeMs: 0, attackId: 0, attackEpoch: 0, timelineRev: 0, defaultTiming: emptyTiming(), activeCycles: [] };
+  const snapshot: GameSnapshot = {
+    serverTimeMs: 0,
+    attackId: 0,
+    attackEpoch: 0,
+    timelineRev: 0,
+    defaultTiming: emptyTiming(),
+    activeCycles: [],
+    roomPhase: RoomPhase.Filling,
+    playerCount: 0,
+    roomSize: 0,
+    startAtMs: 0,
+    mapTimeline: emptyMapTimeline(),
+  };
   while (!reader.done) {
     const { field, wireType } = reader.tag();
     switch (field) {
@@ -418,6 +450,11 @@ function decodeGameSnapshot(data: Uint8Array): GameSnapshot {
       case 4: snapshot.timelineRev = reader.uint64(); break;
       case 5: snapshot.defaultTiming = decodeShrewTiming(reader.bytes()); break;
       case 6: snapshot.activeCycles.push(decodeShrewCycle(reader.bytes())); break;
+      case 7: snapshot.roomPhase = reader.int32() as RoomPhase; break;
+      case 8: snapshot.playerCount = reader.int32(); break;
+      case 9: snapshot.roomSize = reader.int32(); break;
+      case 10: snapshot.startAtMs = reader.int64(); break;
+      case 11: snapshot.mapTimeline = decodeMapTimeline(reader.bytes()); break;
       default: reader.skip(wireType); break;
     }
   }
@@ -453,6 +490,39 @@ function decodeShrewTiming(data: Uint8Array): ShrewTiming {
 
 function emptyTiming(): ShrewTiming {
   return { waitMs: 0, upMs: 0, standMs: 0, downMs: 0, dizzyMs: 0 };
+}
+
+function encodeMapTimeline(timeline: MapTimeline): Uint8Array {
+  const writer = new ProtoWriter();
+  writer.int32(1, timeline.currentMap);
+  writer.uint64(2, timeline.mapRevision);
+  writer.int64(3, timeline.mapStartedMs);
+  writer.int64(4, timeline.nextSwitchMs);
+  writer.int32(5, timeline.nextMap);
+  writer.int64(6, timeline.cycleMs);
+  return writer.finish();
+}
+
+function decodeMapTimeline(data: Uint8Array): MapTimeline {
+  const reader = new ProtoReader(data);
+  const timeline = emptyMapTimeline();
+  while (!reader.done) {
+    const { field, wireType } = reader.tag();
+    switch (field) {
+      case 1: timeline.currentMap = reader.int32(); break;
+      case 2: timeline.mapRevision = reader.uint64(); break;
+      case 3: timeline.mapStartedMs = reader.int64(); break;
+      case 4: timeline.nextSwitchMs = reader.int64(); break;
+      case 5: timeline.nextMap = reader.int32(); break;
+      case 6: timeline.cycleMs = reader.int64(); break;
+      default: reader.skip(wireType); break;
+    }
+  }
+  return timeline;
+}
+
+function emptyMapTimeline(): MapTimeline {
+  return { currentMap: 2, mapRevision: 0, mapStartedMs: 0, nextSwitchMs: 0, nextMap: 0, cycleMs: 16_000 };
 }
 
 function encodeShrewCycle(cycle: ShrewCycle): Uint8Array {
@@ -508,7 +578,17 @@ function decodeTimeSyncResponse(data: Uint8Array, seqId: number): TimeSyncRespon
 
 function decodeShrewTimelinePush(data: Uint8Array): ShrewTimelinePush {
   const reader = new ProtoReader(data);
-  const push: ShrewTimelinePush = { serverTimeMs: 0, attackId: 0, attackEpoch: 0, timelineRev: 0, cycles: [] };
+  const push: ShrewTimelinePush = {
+    serverTimeMs: 0,
+    attackId: 0,
+    attackEpoch: 0,
+    timelineRev: 0,
+    cycles: [],
+    roomPhase: RoomPhase.Filling,
+    playerCount: 0,
+    roomSize: 0,
+    startAtMs: 0,
+  };
   while (!reader.done) {
     const { field, wireType } = reader.tag();
     switch (field) {
@@ -517,6 +597,26 @@ function decodeShrewTimelinePush(data: Uint8Array): ShrewTimelinePush {
       case 3: push.attackEpoch = reader.uint64(); break;
       case 4: push.timelineRev = reader.uint64(); break;
       case 5: push.cycles.push(decodeShrewCycle(reader.bytes())); break;
+      case 6: push.roomPhase = reader.int32() as RoomPhase; break;
+      case 7: push.playerCount = reader.int32(); break;
+      case 8: push.roomSize = reader.int32(); break;
+      case 9: push.startAtMs = reader.int64(); break;
+      default: reader.skip(wireType); break;
+    }
+  }
+  return push;
+}
+
+function decodeMapStatePush(data: Uint8Array): MapStatePush {
+  const reader = new ProtoReader(data);
+  const push: MapStatePush = { serverTimeMs: 0, attackId: 0, attackEpoch: 0, timeline: emptyMapTimeline() };
+  while (!reader.done) {
+    const { field, wireType } = reader.tag();
+    switch (field) {
+      case 1: push.serverTimeMs = reader.int64(); break;
+      case 2: push.attackId = reader.uint64(); break;
+      case 3: push.attackEpoch = reader.uint64(); break;
+      case 4: push.timeline = decodeMapTimeline(reader.bytes()); break;
       default: reader.skip(wireType); break;
     }
   }

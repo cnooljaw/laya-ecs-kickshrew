@@ -6,9 +6,10 @@ import {
   encodeGameSnapshotResponse,
   encodeKickRequest,
   encodeKickResponse,
+  encodeMapStatePush,
   encodeShrewStatePush,
 } from '../../network/KickProtoCodec';
-import { PROTOCOL_MSG_IDS } from '../../network/ProtocolTypes';
+import { PROTOCOL_MSG_IDS, RoomPhase } from '../../network/ProtocolTypes';
 import type { KickRequest, KickResponse } from '../../network/ProtocolTypes';
 
 type BytesLike = Uint8Array | ArrayBuffer | number[];
@@ -245,6 +246,18 @@ describe('KickProtoCodec', () => {
         attackEpoch: 2,
         timelineRev: 3,
         defaultTiming: { waitMs: 1000, upMs: 300, standMs: 2000, downMs: 300, dizzyMs: 500 },
+        roomPhase: RoomPhase.Running,
+        playerCount: 3,
+        roomSize: 3,
+        startAtMs: serverTimeMs,
+        mapTimeline: {
+          currentMap: 2,
+          mapRevision: 5,
+          mapStartedMs: serverTimeMs,
+          nextSwitchMs: serverTimeMs + 16_000,
+          nextMap: 3,
+          cycleMs: 16_000,
+        },
         activeCycles: [{
           holeIndex: 1,
           spawnSeq: 4,
@@ -263,6 +276,7 @@ describe('KickProtoCodec', () => {
     expect(snapshot.msgId).toBe(PROTOCOL_MSG_IDS.GameSnapshotResp);
     if (snapshot.msgId !== PROTOCOL_MSG_IDS.GameSnapshotResp) throw new Error("expected snapshot");
     expect(snapshot.value.snapshot.activeCycles[0].standStartMs).toBe(serverTimeMs + 1300);
+    expect(snapshot.value.snapshot.mapTimeline.nextSwitchMs).toBe(serverTimeMs + 16_000);
 
     const state = decodeInboundMessage(encodeShrewStatePush({
       serverTimeMs,
@@ -280,5 +294,23 @@ describe('KickProtoCodec', () => {
     expect(state.msgId).toBe(PROTOCOL_MSG_IDS.ShrewStatePush);
     if (state.msgId !== PROTOCOL_MSG_IDS.ShrewStatePush) throw new Error("expected state push");
     expect(state.value.phaseEndMs).toBe(serverTimeMs + 500);
+
+    const map = decodeInboundMessage(encodeMapStatePush({
+      serverTimeMs,
+      attackId: 1,
+      attackEpoch: 2,
+      timeline: {
+        currentMap: 3,
+        mapRevision: 6,
+        mapStartedMs: serverTimeMs + 16_000,
+        nextSwitchMs: serverTimeMs + 32_000,
+        nextMap: 4,
+        cycleMs: 16_000,
+      },
+    }));
+    expect(map.msgId).toBe(PROTOCOL_MSG_IDS.MapStatePush);
+    if (map.msgId !== PROTOCOL_MSG_IDS.MapStatePush) throw new Error("expected map push");
+    expect(map.value.timeline.currentMap).toBe(3);
+    expect(map.value.timeline.mapRevision).toBe(6);
   });
 });

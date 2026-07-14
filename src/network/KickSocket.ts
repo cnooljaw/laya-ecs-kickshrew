@@ -66,7 +66,7 @@ export class KickSocket {
   onMessage(data: SocketMessageData): void {
     try {
       const message = decodeInboundMessage(data);
-      if (message.msgId === 3001 || message.msgId === 3002) {
+      if (message.msgId === 3001 || message.msgId === 3002 || message.msgId === 3003) {
         this._traceLogger.log("socket.push", { msgId: message.msgId, value: message.value });
         this._onPush?.(message);
         return;
