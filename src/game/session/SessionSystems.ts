@@ -2,5 +2,5 @@ import { defineSystem, type SystemDefinition } from "../../framework/feature/Fea
 import { activateHammerThunderIfCharged } from "./HammerThunderSystem";
 
 export const GAME_SESSION_SYSTEMS: readonly SystemDefinition[] = [
-  defineSystem("state", "session.hammerThunder", activateHammerThunderIfCharged),
+  defineSystem("derived", "session.hammerThunder", activateHammerThunderIfCharged),
 ];

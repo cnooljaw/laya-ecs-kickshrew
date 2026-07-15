@@ -114,17 +114,19 @@ describe("Game assembly", () => {
     expect(setup.resourceCount()).toBe(1);
     expect(runtime.systemsByPhase("state").map(item => item.name)).toEqual([
       "board.mapCycle",
+      "monster.lifetime",
       "shrew.animationTimer",
       "shrew.state",
-      "hammer.state",
-      "session.hammerThunder",
-    ]);
-    expect(runtime.systemsByPhase("feature").map(item => item.name)).toEqual([
-      "monster.lifetime",
-      "monster.boardSync",
-      "monster.spawn",
-      "shrew.boardSync",
+      "hammer.cooldown",
       "perfHero.state",
+    ]);
+    expect(runtime.systemsByPhase("gameplay").map(item => item.name)).toEqual([
+      "monster.spawn",
+    ]);
+    expect(runtime.systemsByPhase("derived").map(item => item.name)).toEqual([
+      "monster.boardSync",
+      "shrew.boardSync",
+      "session.hammerThunder",
     ]);
   });
 
@@ -146,7 +148,10 @@ describe("Game assembly", () => {
     for (const system of runtime.systemsByPhase("state")) {
       system.run(world, 0);
     }
-    for (const system of runtime.systemsByPhase("feature")) {
+    for (const system of runtime.systemsByPhase("gameplay")) {
+      system.run(world, 0);
+    }
+    for (const system of runtime.systemsByPhase("derived")) {
       system.run(world, 0);
     }
 

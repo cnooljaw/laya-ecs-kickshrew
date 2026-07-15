@@ -225,7 +225,7 @@ setupSystems: ctx => {
   const board = ctx.use(BoardTopologyCapability);
   const currentMilestone = ctx.use(MonsterSpawnMilestoneCapability);
   return [
-    defineSystem("feature", "monster.spawn", (world, deltaSec) => {
+    defineSystem("gameplay", "monster.spawn", (world, deltaSec) => {
       monsterSpawnSystem(world, board, currentMilestone, deltaSec);
     }),
   ];
@@ -242,7 +242,7 @@ setupSystems: ctx => {
 
 ```ts
 const featureRuntime = GAME_FEATURE_REGISTRY.setupAll(ctx);
-featureRuntime.systemsByPhase("feature");
+featureRuntime.systemsByPhase("gameplay");
 ```
 
 职责拆分：
@@ -250,15 +250,17 @@ featureRuntime.systemsByPhase("feature");
 - `GameFeatureRegistry.entityTypes()`：给 `EntityRuntime` 编译 entity 声明。
 - `GameFeatureRegistry.projections()`：给 `ProjectionRuntime` 编译 projection 声明。
 - `GameFeatureRegistry.setupAll(ctx)`：执行 Feature setup、session setup，并生成当前场景的 `GameFeatureRuntime`。
-- `GameFeatureRuntime.systemsByPhase(phase)`：返回真正参与帧循环的 state / feature systems。
+- `GameFeatureRuntime.systemsByPhase(phase)`：返回真正参与帧循环的 ingress / state / gameplay / derived systems。
 
 主循环只依赖 `GameFeatureRuntime`：
 
 ```text
 GameLoopPipeline.update
-  -> featureRuntime.systemsByPhase("state")
   -> network.update
-  -> featureRuntime.systemsByPhase("feature")
+  -> featureRuntime.systemsByPhase("ingress")
+  -> featureRuntime.systemsByPhase("state")
+  -> featureRuntime.systemsByPhase("gameplay")
+  -> featureRuntime.systemsByPhase("derived")
   -> projection mark/sync
   -> effect flush
 ```

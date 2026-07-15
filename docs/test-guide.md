@@ -53,7 +53,8 @@ npm test -- --run src/tests/features src/tests/view/GameScene.test.ts
 ## 覆盖重点
 
 - EntityDefinition 基数、默认值、固定拓扑和对象池。
-- state/network/feature/projection/effect 顺序。
+- network/ingress/state/gameplay/derived/rebuild/projection/effect 顺序。
+- 网络 callback 入队、ingress FIFO drain 和 scene destroy 清队列。
 - Projection 初次同步、差量比较和 apply 去重。
 - typed Effect 的 enqueue、flush、clear。
 - Shrew 状态机、命中、Hammer、Player 回包。

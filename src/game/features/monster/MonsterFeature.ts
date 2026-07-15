@@ -38,13 +38,13 @@ export const MonsterFeature = defineFeature({
     const board = ctx.use(BoardTopologyCapability);
     const currentMilestone = ctx.use(MonsterSpawnMilestoneCapability);
     return [
-      defineSystem("feature", "monster.lifetime", (world, deltaSec) => {
+      defineSystem("state", "monster.lifetime", (world, deltaSec) => {
         monsterLifetimeSystem(world, deltaSec, board);
       }),
-      defineSystem("feature", "monster.boardSync", world => {
+      defineSystem("derived", "monster.boardSync", world => {
         monsterBoardSyncSystem(world, board);
       }),
-      defineSystem("feature", "monster.spawn", (world, deltaSec) => {
+      defineSystem("gameplay", "monster.spawn", (world, deltaSec) => {
         monsterSpawnSystem(world, board, currentMilestone, deltaSec);
       }),
     ];

@@ -3,7 +3,14 @@ import type { ProjectionDefinition } from "../sync/ProjectionDefinition";
 import type { FeatureSetupContext } from "./FeatureSetupContext";
 
 export type GameSystem = (world: any, deltaSec: number) => void;
-export type GameSystemPhase = "state" | "feature";
+export const GAME_SYSTEM_PHASES = [
+  "ingress",
+  "state",
+  "gameplay",
+  "derived",
+] as const;
+
+export type GameSystemPhase = typeof GAME_SYSTEM_PHASES[number];
 
 export interface SystemDefinition {
   readonly phase: GameSystemPhase;

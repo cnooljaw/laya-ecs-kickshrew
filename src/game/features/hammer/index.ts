@@ -1,11 +1,14 @@
 export {
   applyHammerKickResponse,
+  advanceHammerCooldownSystem,
   activateHammerThunder,
+  completeHammerHitAnimation,
+  completeHammerThunderAnimation,
   findHammer,
   getHammerHitStatus,
-  hammerSystem,
   isHammerThunderActive,
   recordHammerFeedback,
+  selectHammer,
   startHammerHitCooldown,
 } from "./HammerSystems";
 export { HammerType } from "./HammerTypes";

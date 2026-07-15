@@ -9,6 +9,7 @@ import {
 import { HammerType } from "../../../game/features/hammer";
 import { createGameWorld } from "../../../framework/ecs/GameWorld";
 import { createSingletonEntities } from "../../helpers/SingletonTestEntities";
+import { activateHammerThunderIfCharged } from "../../../game/session";
 
 describe("KickResponseHandler", () => {
   let world: ReturnType<typeof createGameWorld>;
@@ -74,8 +75,13 @@ describe("KickResponseHandler", () => {
     { angry: HAMMER_RULES.thunderAngryThreshold - 1, active: 0 },
     { angry: HAMMER_RULES.thunderAngryThreshold, active: 1 },
     { angry: HAMMER_RULES.thunderAngryThreshold + 1, active: 1 },
-  ])("applies the thunder threshold at angry=$angry", ({ angry, active }) => {
+  ])("leaves thunder derivation to the frame system at angry=$angry", ({ angry, active }) => {
     applyKickResponse(world, makeResponse({ angry, hammerId: HammerType.Wood }));
+
+    expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(0);
+    expect(HammerComponent.selectedType[singletons.hammer]).toBe(HammerType.Wood);
+
+    activateHammerThunderIfCharged(world);
 
     expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(active);
     expect(HammerComponent.selectedType[singletons.hammer]).toBe(

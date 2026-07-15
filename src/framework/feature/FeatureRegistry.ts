@@ -7,6 +7,7 @@ import type {
   GameSystemPhase,
   SystemDefinition,
 } from "./FeatureManifest";
+import { GAME_SYSTEM_PHASES } from "./FeatureManifest";
 
 export interface RegisteredGameSystem {
   readonly phase: GameSystemPhase;
@@ -15,7 +16,10 @@ export interface RegisteredGameSystem {
 }
 
 export interface GameFeatureRegistry {
-  setupAll(ctx: FeatureSetupContext): GameFeatureRuntime;
+  setupAll(
+    ctx: FeatureSetupContext,
+    runtimeSystems?: readonly SystemDefinition[],
+  ): GameFeatureRuntime;
   entityTypes(): readonly EntityDefinition<any>[];
   projections(): readonly ProjectionDefinition<any>[];
 }
@@ -39,18 +43,20 @@ export function createGameFeatureRegistry(
   const projections = collectFeatureItems(features, feature => feature.projections);
 
   return {
-    setupAll: ctx => {
+    setupAll: (ctx, runtimeSystems = []) => {
       for (const feature of features) feature.setup?.(ctx);
       options.sessionSetup?.(ctx);
-      const runtimeSystems = collectRuntimeSystems(features, options.systems ?? [], ctx);
-      const runtimeStateSystems = filterSystemsByPhase(runtimeSystems, "state");
-      const runtimeFeatureSystems = filterSystemsByPhase(runtimeSystems, "feature");
-      validateRegisteredSystems([
-        ...runtimeStateSystems,
-        ...runtimeFeatureSystems,
-      ]);
+      const systems = collectRuntimeSystems(features, [
+        ...(options.systems ?? []),
+        ...runtimeSystems,
+      ], ctx);
+      const systemsByPhase = new Map<GameSystemPhase, RegisteredGameSystem[]>();
+      for (const phase of GAME_SYSTEM_PHASES) {
+        systemsByPhase.set(phase, filterSystemsByPhase(systems, phase));
+      }
+      validateRegisteredSystems(systems);
       return {
-        systemsByPhase: phase => phase === "state" ? runtimeStateSystems : runtimeFeatureSystems,
+        systemsByPhase: phase => systemsByPhase.get(phase)!,
       };
     },
     entityTypes: () => entityTypes,

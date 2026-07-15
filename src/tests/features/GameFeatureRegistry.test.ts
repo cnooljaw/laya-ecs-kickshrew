@@ -34,14 +34,14 @@ function feature(name: string): FeatureManifest {
   const run = () => {};
   return defineFeature({
     name,
-    systems: [defineSystem("feature", `${name}.system`, run)],
+    systems: [defineSystem("gameplay", `${name}.system`, run)],
   });
 }
 
 describe("GameFeatureRegistry", () => {
   it("expands declarations and exposes phased systems only through setup runtime", () => {
     function updateState(): void {}
-    function updateFeature(): void {}
+    function updateGameplay(): void {}
     function updateSession(): void {}
     const setupOrder: string[] = [];
     const world = createGameWorld();
@@ -54,7 +54,7 @@ describe("GameFeatureRegistry", () => {
         projections: [TestSceneProjection],
         systems: [
           defineSystem("state", "compiled.state", updateState),
-          defineSystem("feature", "compiled.feature", updateFeature),
+          defineSystem("gameplay", "compiled.gameplay", updateGameplay),
         ],
         setup: () => {
           setupOrder.push("feature.setup");
@@ -82,7 +82,7 @@ describe("GameFeatureRegistry", () => {
       "feature.setupSystems",
     ]);
     expect(runtime.systemsByPhase("state").map(item => item.run)).toEqual([updateState, updateSession]);
-    expect(runtime.systemsByPhase("feature").map(item => item.run)).toEqual([updateFeature]);
+    expect(runtime.systemsByPhase("gameplay").map(item => item.run)).toEqual([updateGameplay]);
   });
 
   it("reuses precomputed phase arrays", () => {
@@ -92,7 +92,7 @@ describe("GameFeatureRegistry", () => {
     const setup = createSetupContext(entities);
     const runtime = registry.setupAll(setup.context);
 
-    expect(runtime.systemsByPhase("feature")).toBe(runtime.systemsByPhase("feature"));
+    expect(runtime.systemsByPhase("gameplay")).toBe(runtime.systemsByPhase("gameplay"));
     expect(runtime.systemsByPhase("state")).toBe(runtime.systemsByPhase("state"));
   });
 
@@ -105,7 +105,7 @@ describe("GameFeatureRegistry", () => {
       }),
       defineFeature({
         name: "b",
-        systems: [defineSystem("feature", "duplicate.system", duplicateSystem)],
+        systems: [defineSystem("gameplay", "duplicate.system", duplicateSystem)],
       }),
     ])).toThrow("FeatureSystem name 重复: duplicate.system");
     expect(() => createGameFeatureRegistry([
@@ -114,7 +114,7 @@ describe("GameFeatureRegistry", () => {
         systems: [defineSystem("state", "duplicate.extra", duplicateSystem)],
       }),
     ], {
-      systems: [defineSystem("feature", "duplicate.extra", duplicateSystem)],
+      systems: [defineSystem("gameplay", "duplicate.extra", duplicateSystem)],
     })).toThrow("FeatureSystem name 重复: duplicate.extra");
     expect(() => {
       const world = createGameWorld();
@@ -124,7 +124,7 @@ describe("GameFeatureRegistry", () => {
         defineFeature({
           name: "a",
           systems: [defineSystem("state", "duplicate.setup", duplicateSystem)],
-          setupSystems: () => [defineSystem("feature", "duplicate.setup", duplicateSystem)],
+          setupSystems: () => [defineSystem("gameplay", "duplicate.setup", duplicateSystem)],
         }),
       ]).setupAll(setup.context);
     }).toThrow("FeatureSystem name 重复: duplicate.setup");

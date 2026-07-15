@@ -10,7 +10,6 @@ import {
   applyPlayerKickResponse,
   findPlayer,
 } from "../features/playerHud/index";
-import { activateHammerThunderIfCharged } from "./HammerThunderSystem";
 
 export function handleKickResponse(
   world: any,
@@ -46,6 +45,5 @@ export function applyKickResponse(
   if (hammer !== undefined) {
     applyHammerKickResponse(hammer, response);
   }
-  activateHammerThunderIfCharged(world);
   return response.shrewResp ?? [];
 }

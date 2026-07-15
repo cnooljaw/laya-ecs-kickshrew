@@ -2,7 +2,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { HAMMER_RULES } from "../../../../config/GameTuning";
 import { HammerComponent } from "../../../../game/features/hammer/HammerComponents";
 import { HammerEntity } from "../../../../game/features/hammer/HammerEntities";
-import { hammerSystem } from "../../../../game/features/hammer/HammerSystems";
+import {
+  advanceHammerCooldownSystem,
+  completeHammerHitAnimation,
+  completeHammerThunderAnimation,
+  selectHammer,
+} from "../../../../game/features/hammer/HammerSystems";
 import { PlayerComponent } from "../../../../game/features/playerHud/PlayerComponents";
 import { createEntityRuntime } from "../../../../framework/ecs/EntityRuntime";
 import { HammerType } from "../../../../game/features/hammer";
@@ -45,7 +50,7 @@ describe("HammerSystem", () => {
   });
 
   it("switches the selected hammer outside thunder mode", () => {
-    hammerSystem(world, HammerType.Gold);
+    selectHammer(singletons.hammer, HammerType.Gold);
 
     expect(HammerComponent.selectedType[singletons.hammer]).toBe(HammerType.Gold);
   });
@@ -70,7 +75,7 @@ describe("HammerSystem", () => {
     PlayerComponent.angry[singletons.player] = HAMMER_RULES.thunderAngryThreshold;
     activateHammerThunderIfCharged(world);
 
-    hammerSystem(world, undefined, true);
+    completeHammerThunderAnimation(singletons.hammer);
 
     expect(HammerComponent.isThunderActive[singletons.hammer]).toBe(0);
     expect(HammerComponent.selectedType[singletons.hammer]).toBe(HammerType.Gold);
@@ -82,7 +87,7 @@ describe("HammerSystem", () => {
     HammerComponent.hitTable[singletons.hammer] = 0;
     HammerComponent.hitCooldownSec[singletons.hammer] = 0.24;
 
-    hammerSystem(world, undefined, false, true);
+    completeHammerHitAnimation(singletons.hammer);
 
     expect(HammerComponent.hitTable[singletons.hammer]).toBe(1);
     expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBe(0);
@@ -92,11 +97,11 @@ describe("HammerSystem", () => {
     HammerComponent.hitTable[singletons.hammer] = 0;
     HammerComponent.hitCooldownSec[singletons.hammer] = 0.24;
 
-    hammerSystem(world, undefined, false, false, 0.12);
+    advanceHammerCooldownSystem(world, 0.12);
     expect(HammerComponent.hitTable[singletons.hammer]).toBe(0);
     expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBeCloseTo(0.12, 3);
 
-    hammerSystem(world, undefined, false, false, 0.12);
+    advanceHammerCooldownSystem(world, 0.12);
     expect(HammerComponent.hitTable[singletons.hammer]).toBe(1);
     expect(HammerComponent.hitCooldownSec[singletons.hammer]).toBe(0);
   });

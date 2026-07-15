@@ -9,7 +9,7 @@ export const PerfHeroFeature = defineFeature({
   name: "perfHero",
   entities: [PerfHeroEntity],
   projections: [PerfHeroProjection],
-  systems: [defineSystem("feature", "perfHero.state", perfHeroSystem)],
+  systems: [defineSystem("state", "perfHero.state", perfHeroSystem)],
   setup: ({ createAndMountMany, own }) => {
     const config = getPerfRuntimeConfig();
     if (config.heroCount <= 0) return;

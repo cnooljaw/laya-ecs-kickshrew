@@ -130,15 +130,27 @@ GameScene.init
 每帧：
 
 ```text
-featureRuntime.systemsByPhase("state")
 network.update
-featureRuntime.systemsByPhase("feature")
+featureRuntime.systemsByPhase("ingress")
+featureRuntime.systemsByPhase("state")
+featureRuntime.systemsByPhase("gameplay")
+featureRuntime.systemsByPhase("derived")
+optional scene-owned rebuild
 projectionRuntime.mark
 projectionRuntime.sync
 effectRuntime.flush
 ```
 
 `GameFeatureRegistry` 只负责静态声明和 setup，不再暴露 `systemsByPhase`。需要进入帧循环的系统必须从 `setupAll` 返回的 `GameFeatureRuntime` 获取，因为只有 setup 后才能拿到 `BoardTopologyCapability`、`MonsterSpawnMilestoneCapability` 这类场景级能力。
+
+阶段职责固定：
+
+- `ingress`：消费已经到达的网络事实，按入队顺序写入权威 Component。
+- `state`：推进时间轴、状态机、冷却等持续状态。
+- `gameplay`：执行生成、命中、占用等会改变玩法关系的规则。
+- `derived`：根据本帧已完成的玩法关系计算派生状态，例如洞位占用后的 Shrew/Monster 位置与阻塞状态、雷神锤激活条件。
+
+`GameLoopPipeline.requestRebuild()` 只供 scene/session runtime 请求一次结构重建。它在 `derived` 后、Projection 前消费；Feature 不持有该 API，业务也不写全局 dirty 标记。当前它是世界整体恢复或未来动态拓扑的预留入口，不替代 `ProjectionRuntime` 的字段比较。
 
 ## 网络与输入
 
@@ -150,6 +162,18 @@ Main -> GameScene -> KickInputController
   -> Shrew: NetworkAdapter.sendKick
   -> Monster: local hp/reward/triad release
 ```
+
+网络 callback 不直接写 world：
+
+```text
+NetworkAdapter callback
+  -> GameIngressQueue enqueue
+  -> ingress phase FIFO drain
+  -> session/server-sync applier
+  -> Component
+```
+
+`GameScene` 拥有这条 per-scene queue，并在 destroy 时 clear。这样 snapshot、timeline、state push、map push、time sync 和 kick response 都只在确定的帧边界更新权威状态；View 仍然只由后续 Projection 和 Effect 驱动。
 
 命中检测不以 Hole 作为唯一目标入口。Hammer 点击位置会和当前可命中的 Shrew、Monster 的 `BoardPositionComponent` 中心比较，选择半径内最近目标。Shrew 候选必须仍是对应 Hole 的 current occupant；Monster 候选看自己的 visible、hp 和 Stay 状态。不存在“先 Monster 后 Shrew”的命中优先级分支，互斥已经由洞占用保证。
 

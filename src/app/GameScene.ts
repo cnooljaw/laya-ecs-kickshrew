@@ -11,19 +11,11 @@
 import { createGameWorld } from "../framework/ecs/GameWorld";
 import { deleteWorld } from "bitecs";
 import { NetworkAdapter } from "../network/NetworkAdapter";
-import { resetServerClock, setServerClockSample } from "../network/ServerClock";
-import type { KickResponse } from "../network/ProtocolTypes";
+import { resetServerClock } from "../network/ServerClock";
 import { GameLoopPipeline } from "./GameLoopPipeline";
 import { ViewRegistry } from "../framework/view/ViewRegistry";
 import { getPerfShrewTiming, getPerfRuntimeConfig, PerfRuntimeConfig } from "../game/features/perfHero";
-import {
-  applyServerGameSnapshot,
-  applyServerShrewState,
-  applyServerShrewTimeline,
-  resetShrewTimingOverride,
-  setShrewTimingOverride,
-} from "../game/features/shrew";
-import { applyServerMapTimeline } from "../game/board";
+import { resetShrewTimingOverride, setShrewTimingOverride } from "../game/features/shrew";
 import { GAME_FEATURE_REGISTRY } from "../game/GameFeatures";
 import { createFeatureSetupContext } from "../framework/feature/FeatureSetupContext";
 import { createEntityRuntime, type EntityRuntime } from "../framework/ecs/EntityRuntime";
@@ -35,9 +27,12 @@ import { createEffectRuntime, type EffectRuntime } from "../framework/sync/Effec
 import type { GameFeatureRuntime } from "../framework/feature/FeatureRegistry";
 import {
   KickInputController,
+  createGameIngressQueue,
+  createGameIngressSystem,
   createKickInputController,
-  handleKickResponse,
+  type GameIngressQueue,
 } from "../game/session";
+import { defineSystem } from "../framework/feature/FeatureManifest";
 
 /** 音效路径 */
 const SND = {
@@ -57,6 +52,7 @@ export class GameScene {
   private _loopPipeline: GameLoopPipeline | null = null;
   private _kickInput: KickInputController | null = null;
   private _featureRuntime: GameFeatureRuntime | null = null;
+  private _ingressQueue: GameIngressQueue | null = null;
 
   constructor() {
     this._network = new NetworkAdapter();
@@ -77,6 +73,7 @@ export class GameScene {
       GAME_FEATURE_REGISTRY.projections(),
     );
     this._effectRuntime = createEffectRuntime();
+    this._ingressQueue = createGameIngressQueue();
     if (this._perfConfig.shrewFast) {
       setShrewTimingOverride(getPerfShrewTiming());
     } else {
@@ -93,39 +90,37 @@ export class GameScene {
       Laya.SoundManager.playMusic(SND.bg, 0);
     }
 
-    this._featureRuntime = GAME_FEATURE_REGISTRY.setupAll(createFeatureSetupContext({
-      root: this._root,
-      viewRegistry: this._viewRegistry,
-      entityRuntime: this._entityRuntime,
-      projectionRuntime: this._projectionRuntime,
-      effectRuntime: this._effectRuntime,
-    }));
+    this._featureRuntime = GAME_FEATURE_REGISTRY.setupAll(
+      createFeatureSetupContext({
+        root: this._root,
+        viewRegistry: this._viewRegistry,
+        entityRuntime: this._entityRuntime,
+        projectionRuntime: this._projectionRuntime,
+        effectRuntime: this._effectRuntime,
+      }),
+      [defineSystem(
+        "ingress",
+        "session.networkIngress",
+        createGameIngressSystem(this._ingressQueue, this._effectRuntime),
+      )],
+    );
 
     // 3. 设置网络回调
-    this._network.onResponse((resp: KickResponse) => {
-      handleKickResponse(this._world, this._effectRuntime!, resp);
-    });
+    this._network.onResponse(resp => this._ingressQueue?.enqueueKickResponse(resp));
     this._network.onGameSnapshot((snapshot) => {
-      applyServerGameSnapshot(this._world, snapshot);
-      applyServerMapTimeline(this._world, snapshot.mapTimeline);
+      this._ingressQueue?.enqueueSnapshot(snapshot);
     });
     this._network.onShrewTimeline((push) => {
-      applyServerShrewTimeline(this._world, push);
+      this._ingressQueue?.enqueueShrewTimeline(push);
     });
     this._network.onShrewState((push) => {
-      applyServerShrewState(this._world, push);
+      this._ingressQueue?.enqueueShrewState(push);
     });
     this._network.onMapState((push) => {
-      setServerClockSample(push.serverTimeMs);
-      applyServerMapTimeline(this._world, push.timeline);
+      this._ingressQueue?.enqueueMapState(push);
     });
     this._network.onTimeSync((response) => {
-      const clientReceiveMs = Date.now();
-      setServerClockSample(
-        response.serverTimeMs,
-        (response.clientSendMs + clientReceiveMs) / 2,
-        clientReceiveMs - response.clientSendMs,
-      );
+      this._ingressQueue?.enqueueTimeSync(response);
     });
 
     this._loopPipeline = new GameLoopPipeline({
@@ -171,6 +166,8 @@ export class GameScene {
     this._kickInput = null;
     this._loopPipeline = null;
     this._featureRuntime = null;
+    this._ingressQueue?.clear();
+    this._ingressQueue = null;
     this._viewRegistry.clear();
     this._effectRuntime?.clear();
     this._effectRuntime = null;

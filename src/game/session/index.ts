@@ -10,3 +10,8 @@ export type { KickResponse } from "../../network/ProtocolTypes";
 export { setupGameSession } from "./SessionSetup";
 export { GAME_SESSION_SYSTEMS } from "./SessionSystems";
 export { activateHammerThunderIfCharged } from "./HammerThunderSystem";
+export {
+  createGameIngressQueue,
+  createGameIngressSystem,
+  type GameIngressQueue,
+} from "./GameIngressQueue";
