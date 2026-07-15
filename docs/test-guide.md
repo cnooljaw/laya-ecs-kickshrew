@@ -103,6 +103,25 @@ http://localhost:8080/debug-space-monster-drop.html
 - Projection 或 Effect 到具体 Laya 节点
 - 输入、网络回包、资源、timer、tween、destroy
 
+## 房间权威同步联调
+
+改动 Go 服务端房间、protobuf、Shrew 时间线、地图时间线或客户端网络接入时，先执行：
+
+```bash
+cd ../GoServerActorFsm && go test ./...
+cd ../LayaEcsDemo && npm test
+cd ../LayaEcsDemo && npx tsc --noEmit
+cd ../LayaEcsDemo && npm run debug:ready
+```
+
+启动服务端后，用三个浏览器页面连接同一个服务端；确认三者进入同一 Running 房间，且 `attack_id`、Shrew 时间线、地图、`map_revision` 与 `next_switch_ms` 一致。再打开第四个页面，确认它进入新的 Filling 房间，显示 Meadow 且没有地鼠。刷新其中一个 Running 页面，确认快照能让它立即追赶当前地图和地鼠状态。
+
+### 控制台报错分流
+
+先按报错源文件判断归属。`content.js`、`polyfill.js`、`useCache` 或 “Could not establish connection. Receiving end does not exist.” 通常来自浏览器扩展的内容脚本或消息通道，不代表 Laya 应用异常。使用无扩展的隐身窗口复现，并查看实际报错栈是否落在 `src/**` 或编译后的应用模块。
+
+`src/app/Main.ts` 的启动日志只说明页面已经执行到游戏入口；它不是网络或运行时异常的定位依据。应用问题应继续检查 WebSocket 连接、协议响应、`attack_id` / revision 和 ECS 投影链路。
+
 ## 排查路径
 
 画面不同步：

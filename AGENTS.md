@@ -90,3 +90,4 @@ transient result
 - `.codex/skills/laya-runtime/SKILL.md`：Laya 节点和生命周期。
 - `.codex/skills/test-workflow/SKILL.md`：测试、调试构建和提交。
 - `.codex/skills/hole-position-tuning/SKILL.md`：洞位和地鼠视觉对齐。
+- `.codex/skills/room-authoritative-sync/SKILL.md`：Go 房间、protobuf 时间线与 Laya 客户端权威同步。

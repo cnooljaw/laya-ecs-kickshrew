@@ -1,0 +1,4 @@
+interface:
+  display_name: "房间权威同步"
+  short_description: "统一 Go 服务端与 Laya 客户端的房间权威状态同步"
+  default_prompt: "Use $room-authoritative-sync to implement or review server-authoritative room, timeline, and map synchronization."

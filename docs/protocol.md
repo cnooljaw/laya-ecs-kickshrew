@@ -105,6 +105,20 @@ GameSnapshot / MapStatePush
 - `map_revision` 单调递增。客户端拒绝旧 revision；迟到但不旧的基线会立即按当前服务端时间追赶到正确地图。
 - `MapStatePush.attack_id/attack_epoch` 必须与当前完整快照一致，旧房间推送不得覆盖新房状态。
 
+### 推进与纠偏
+
+- 服务端不必为了地图轮换按帧组播。`next_switch_ms` 是共同的绝对截止时间，客户端按校正后的 `ServerClock` 自行跨越边界；`MapStatePush` 只在边界后提供状态纠偏。
+- 客户端收到快照或地图推送后，先以较新的 `map_revision` 建立基线，再立即用当前服务端时间追赶。不得从收包时刻重新开始一个较短的本地倒计时。
+- 任何客户端在切场景、重连或加入满房后都必须重新请求 `GameSnapshot`。快照覆盖旧的 Shrew 和地图集合，避免将旧 attack 的本地状态带入新房。
+
+## 房间同步验收
+
+使用三个客户端完成一个房间，并额外打开第四个客户端验证下一房间：
+
+- 前三个客户端的 `attack_id`、`attack_epoch`、阶段、`map_revision`、地图和 `next_switch_ms` 相同；地鼠生命周期由同一服务端时间线驱动。
+- 第四个客户端属于新的 Filling 房间，初始地图为 Meadow、`next_switch_ms=0`、`active_cycles=[]`，不能继承上一组地鼠或自动轮图。
+- 任意一个已运行客户端刷新页面后，快照应让其立即追赶到当前地图和仍有效的地鼠周期，而不是从本地初始状态开始。
+
 ## 防回退检查
 
 协议更新后检查旧 JSON 协议是否残留：
