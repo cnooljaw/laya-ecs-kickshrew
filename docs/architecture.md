@@ -225,6 +225,20 @@ deleteWorld
 
 框架负责 registry、dirty bit、full sync 和 teardown。业务不维护这些机制，也不依赖运行期频繁 `removeEntity`。具体写法见 `docs/ecs-binding.md`。
 
+## 条件式架构待办
+
+本节记录已经识别、但**当前不应提前实现**的架构事项。没有满足进入条件时，保持现有 Feature、`GameScene`、固定槽位和显式注册模型，不为“通用性”改造。
+
+| 事项 | 进入条件 | 满足后要做什么 | 未满足时 |
+| --- | --- | --- | --- |
+| `SceneAssetScope` | 出现至少两种可重复进入的地图/场景，且资源需要预加载或主动释放；或已经复现资源回调落到旧场景、Spine/音频未释放、切场卡顿 | 由 app 层 scope acquire、持有、cancel/release 场景资源；异步回调检查 scope 仍有效 | Node 继续按 `ViewRegistry` 和自身 stale guard 管理资源，不新增全局 ResourceManager。 |
+| `GameEntryFlow` | 进入游戏必须编排两个以上可失败的异步步骤，例如资源预加载、登录/匹配、快照追赶；并且需要取消、重试或错误恢复 | 在 `src/app` 建立显式阶段：`createRuntime -> preloadAssets -> setupFeatures -> requestSnapshot -> initialProjection -> running` | 保持 `GameScene.init()`；不要用 Notification/EventBus 串联启动步骤。 |
+| 配置加载与统一校验 | 至少两个业务切片改为外部内容表驱动，且内容修改者不能依赖改 TypeScript；或已出现配置引用错误在运行期才暴露 | 建立类型化 decode 和 `validateGameAssembly()`，校验资源路径、地图拓扑、对象池基数、规则引用和 capability 关系 | 保持 TypeScript 配置和各切片局部 `validate*` 函数。 |
+| `PanelNavigator` | 出现登录、大厅、背包、任务、商店等多个独立 Panel，且需要模态层、返回栈、预加载或复用 | 在 `src/app/ui` 管理 Panel open/close/stack 与 `SceneAssetScope`；只拥有表现状态 | HUD、命中特效和场景 Node 继续由所属 Feature 与 `ViewRegistry` 管理。 |
+| 按活跃对象动态启停 System | `FrameDiagnostics` 已证明某组 System 在目标设备上长期无活跃实体且构成可测瓶颈 | 只对整组 Feature / mode 增加显式启停，保留 schedule 可见性与测试 | 不给每个 System 添加 `enabled` / `shouldRun`，不因双层循环提前优化。 |
+
+明确不纳入待办：全局 `NotificationCenter`、`WorldManager` 式 Service Locator、业务 System 直接访问 Laya Node、自动扫描 Feature、反射注册。这些会破坏当前的依赖方向、场景级生命周期 owner 或确定的帧时序。
+
 ## 命名与归位
 
 命名优先回答“谁负责什么”，其次才考虑缩短字符数。
