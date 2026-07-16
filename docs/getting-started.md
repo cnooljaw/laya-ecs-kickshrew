@@ -1,6 +1,6 @@
 # 入门
 
-这份文档帮助第一次进入项目的人跑起来、读第一条链路、完成第一次改动。模块边界看 `docs/architecture.md`；ECS API 看 `docs/ecs-binding.md`。
+这份文档帮助第一次进入项目的人跑起来、读第一条链路、完成第一次改动。模块边界看 `docs/architecture.md`；ECS API 看 `docs/ecs-binding.md`；设计思路看 `docs/typescript-architecture.md`。
 
 ## 第一次运行
 
@@ -42,7 +42,7 @@ transient result
 ## 读代码路径
 
 1. `src/app/GameScene.ts`：创建 world、runtime、FeatureRegistry。
-2. `src/app/GameLoopPipeline.ts`：每帧 state、network、feature、projection、effect 顺序。
+2. `src/app/GameLoopPipeline.ts`：每帧 network、ingress、state、gameplay、derived、projection、effect 顺序。
 3. `src/game/GameFeatures.ts`：显式业务组合根。
 4. `src/game/board/BoardFoundation.ts`：基础棋盘拓扑和洞位占用入口。
 5. `src/game/features/shrew/ShrewFeature.ts`：固定拓扑示例。
@@ -91,6 +91,7 @@ UI 调试页面索引看 `docs/ui-debugging-guide.md`。洞位、Shrew 站位、
 ## 下一步
 
 - `docs/architecture.md`：模块职责、依赖方向、生命周期 owner。
+- `docs/typescript-architecture.md`：函数优先、数据驱动、组合、依赖注入和声明式注册如何落在代码中。
 - `docs/gameplay-assembly.md`：board、session 和跨 Feature 玩法组装。
 - `docs/ecs-binding.md`：EntityDefinition、ProjectionDefinition、EffectRuntime 的写法。
 - `docs/laya-rules.md`：Laya 生命周期、资源加载、坐标和 atlas 规则。

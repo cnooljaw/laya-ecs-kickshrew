@@ -1,6 +1,6 @@
 # 架构
 
-本文说明模块职责、依赖方向、运行流和生命周期 owner。玩法组装看 `docs/gameplay-assembly.md`；具体 ECS API 看 `docs/ecs-binding.md`；Laya 细节看 `docs/laya-rules.md`。
+本文说明模块职责、依赖方向、运行流和生命周期 owner。玩法组装看 `docs/gameplay-assembly.md`；具体 ECS API 看 `docs/ecs-binding.md`；Laya 细节看 `docs/laya-rules.md`。理解本项目函数优先、数据驱动、组合和依赖注入的取舍，看 `docs/typescript-architecture.md`。
 
 ## 模块职责
 
