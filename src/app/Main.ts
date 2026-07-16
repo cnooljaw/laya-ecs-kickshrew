@@ -1,4 +1,5 @@
 import { MemoryStatsPanel } from "../debug/MemoryStatsPanel";
+import { RuntimeDiagnosticsPanel } from "../debug/RuntimeDiagnosticsPanel";
 import { GameScene } from "./GameScene";
 
 const { regClass } = Laya;
@@ -7,6 +8,7 @@ const { regClass } = Laya;
 export class Main extends Laya.Script {
     private _gameScene: GameScene | null = null;
     private _memoryStatsPanel: MemoryStatsPanel | null = null;
+    private _runtimeDiagnosticsPanel: RuntimeDiagnosticsPanel | null = null;
 
     onStart() {
         console.log("KickShrew Game starting...");
@@ -19,6 +21,10 @@ export class Main extends Laya.Script {
         // 1. 创建游戏场景
         this._gameScene = new GameScene();
         this._gameScene.init();
+        this._runtimeDiagnosticsPanel = new RuntimeDiagnosticsPanel(
+            () => this._gameScene?.getRuntimeDebugInfo() ?? null,
+        );
+        this._runtimeDiagnosticsPanel.show();
 
         // 2. 注册帧循环
         Laya.timer.frameLoop(1, this, this._onFrameLoop);
@@ -53,6 +59,8 @@ export class Main extends Laya.Script {
         Laya.stage?.off(Laya.Event.MOUSE_DOWN, this, this._onTouch);
         this._memoryStatsPanel?.destroy();
         this._memoryStatsPanel = null;
+        this._runtimeDiagnosticsPanel?.destroy();
+        this._runtimeDiagnosticsPanel = null;
         this._gameScene?.destroy();
         this._gameScene = null;
     }

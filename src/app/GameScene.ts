@@ -33,11 +33,18 @@ import {
   type GameIngressQueue,
 } from "../game/session";
 import { defineSystem } from "../framework/feature/FeatureManifest";
+import type { GameSystemScheduleEntry } from "../framework/feature/FeatureRegistry";
+import { createFrameDiagnostics, type FrameDiagnosticsSnapshot } from "./FrameDiagnostics";
 
 /** 音效路径 */
 const SND = {
   bg:      "resources/sound/sound_shrew/back.wav",
 };
+
+export interface GameRuntimeDebugInfo {
+  readonly schedule: readonly GameSystemScheduleEntry[];
+  readonly frame: FrameDiagnosticsSnapshot;
+}
 
 export class GameScene {
   private _world: any = null;
@@ -53,6 +60,7 @@ export class GameScene {
   private _kickInput: KickInputController | null = null;
   private _featureRuntime: GameFeatureRuntime | null = null;
   private _ingressQueue: GameIngressQueue | null = null;
+  private _frameDiagnostics: ReturnType<typeof createFrameDiagnostics> | null = null;
 
   constructor() {
     this._network = new NetworkAdapter();
@@ -62,89 +70,96 @@ export class GameScene {
 
   /** 初始化游戏 */
   init(): void {
-    // 1. 创建 ECS 世界
-    this._world = createGameWorld();
-    this._entityRuntime = createEntityRuntime(
-      this._world,
-      GAME_FEATURE_REGISTRY.entityTypes(),
-    );
-    this._entityRuntime.bootstrapSingletons();
-    this._projectionRuntime = createProjectionRuntime(
-      GAME_FEATURE_REGISTRY.projections(),
-    );
-    this._effectRuntime = createEffectRuntime();
-    this._ingressQueue = createGameIngressQueue();
-    if (this._perfConfig.shrewFast) {
-      setShrewTimingOverride(getPerfShrewTiming());
-    } else {
-      resetShrewTimingOverride();
-    }
+    try {
+      // 1. 创建 ECS 世界
+      this._world = createGameWorld();
+      this._entityRuntime = createEntityRuntime(
+        this._world,
+        GAME_FEATURE_REGISTRY.entityTypes(),
+      );
+      this._entityRuntime.bootstrapSingletons();
+      this._projectionRuntime = createProjectionRuntime(
+        GAME_FEATURE_REGISTRY.projections(),
+      );
+      this._effectRuntime = createEffectRuntime();
+      this._ingressQueue = createGameIngressQueue();
+      this._frameDiagnostics = createFrameDiagnostics();
+      if (this._perfConfig.shrewFast) {
+        setShrewTimingOverride(getPerfShrewTiming());
+      } else {
+        resetShrewTimingOverride();
+      }
 
-    // 2. 创建 Laya 根容器，并播放背景音乐
-    const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
-    if (Laya) {
-      this._root = new Laya.Sprite();
-      this._root.name = "GameSceneRoot";
-      Laya.stage.addChild(this._root);
-      // 背景音乐（循环播放）
-      Laya.SoundManager.playMusic(SND.bg, 0);
-    }
+      // 2. 创建 Laya 根容器，并播放背景音乐
+      const Laya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+      if (Laya) {
+        this._root = new Laya.Sprite();
+        this._root.name = "GameSceneRoot";
+        Laya.stage.addChild(this._root);
+        // 背景音乐（循环播放）
+        Laya.SoundManager.playMusic(SND.bg, 0);
+      }
 
-    this._featureRuntime = GAME_FEATURE_REGISTRY.setupAll(
-      createFeatureSetupContext({
-        root: this._root,
-        viewRegistry: this._viewRegistry,
-        entityRuntime: this._entityRuntime,
+      this._featureRuntime = GAME_FEATURE_REGISTRY.setupAll(
+        createFeatureSetupContext({
+          root: this._root,
+          viewRegistry: this._viewRegistry,
+          entityRuntime: this._entityRuntime,
+          projectionRuntime: this._projectionRuntime,
+          effectRuntime: this._effectRuntime,
+        }),
+        [defineSystem(
+          "ingress",
+          "session.networkIngress",
+          createGameIngressSystem(this._ingressQueue, this._effectRuntime),
+        )],
+      );
+
+      // 3. 设置网络回调
+      this._network.onResponse(resp => this._ingressQueue?.enqueueKickResponse(resp));
+      this._network.onGameSnapshot((snapshot) => {
+        this._ingressQueue?.enqueueSnapshot(snapshot);
+      });
+      this._network.onShrewTimeline((push) => {
+        this._ingressQueue?.enqueueShrewTimeline(push);
+      });
+      this._network.onShrewState((push) => {
+        this._ingressQueue?.enqueueShrewState(push);
+      });
+      this._network.onMapState((push) => {
+        this._ingressQueue?.enqueueMapState(push);
+      });
+      this._network.onTimeSync((response) => {
+        this._ingressQueue?.enqueueTimeSync(response);
+      });
+
+      this._loopPipeline = new GameLoopPipeline({
+        world: this._world,
+        network: this._network,
+        featureRuntime: this._featureRuntime,
         projectionRuntime: this._projectionRuntime,
-        effectRuntime: this._effectRuntime,
-      }),
-      [defineSystem(
-        "ingress",
-        "session.networkIngress",
-        createGameIngressSystem(this._ingressQueue, this._effectRuntime),
-      )],
-    );
+        effects: this._effectRuntime,
+        diagnostics: this._frameDiagnostics,
+      });
 
-    // 3. 设置网络回调
-    this._network.onResponse(resp => this._ingressQueue?.enqueueKickResponse(resp));
-    this._network.onGameSnapshot((snapshot) => {
-      this._ingressQueue?.enqueueSnapshot(snapshot);
-    });
-    this._network.onShrewTimeline((push) => {
-      this._ingressQueue?.enqueueShrewTimeline(push);
-    });
-    this._network.onShrewState((push) => {
-      this._ingressQueue?.enqueueShrewState(push);
-    });
-    this._network.onMapState((push) => {
-      this._ingressQueue?.enqueueMapState(push);
-    });
-    this._network.onTimeSync((response) => {
-      this._ingressQueue?.enqueueTimeSync(response);
-    });
+      this._kickInput = createKickInputController({
+        world: this._world,
+        network: this._network,
+        effects: this._effectRuntime,
+        playSound: (url: string) => {
+          const RuntimeLaya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
+          if (RuntimeLaya) RuntimeLaya.SoundManager.playSound(url);
+        },
+      });
 
-    this._loopPipeline = new GameLoopPipeline({
-      world: this._world,
-      network: this._network,
-      featureRuntime: this._featureRuntime,
-      projectionRuntime: this._projectionRuntime,
-      effects: this._effectRuntime,
-    });
-
-    this._kickInput = createKickInputController({
-      world: this._world,
-      network: this._network,
-      effects: this._effectRuntime,
-      playSound: (url: string) => {
-        const RuntimeLaya = (typeof (window as any).Laya !== "undefined") ? (window as any).Laya : null;
-        if (RuntimeLaya) RuntimeLaya.SoundManager.playSound(url);
-      },
-    });
-
-    // 4. 统一执行首次投影同步。
-    this._projectionRuntime.mark(this._world);
-    this._projectionRuntime.sync(this._world);
-    void this._network.requestGameSnapshot().catch((): void => undefined);
+      // 4. 统一执行首次投影同步。
+      this._projectionRuntime.mark(this._world);
+      this._projectionRuntime.sync(this._world);
+      void this._network.requestGameSnapshot().catch((): void => undefined);
+    } catch (error) {
+      this.destroy();
+      throw error;
+    }
   }
 
   /** 启动帧循环 */
@@ -166,6 +181,7 @@ export class GameScene {
     this._kickInput = null;
     this._loopPipeline = null;
     this._featureRuntime = null;
+    this._frameDiagnostics = null;
     this._ingressQueue?.clear();
     this._ingressQueue = null;
     this._viewRegistry.clear();
@@ -197,5 +213,13 @@ export class GameScene {
    */
   onTouch(x: number, y: number): void {
     this._kickInput?.handleTouch(x, y);
+  }
+
+  getRuntimeDebugInfo(): GameRuntimeDebugInfo | null {
+    if (!this._featureRuntime || !this._frameDiagnostics) return null;
+    return {
+      schedule: this._featureRuntime.schedule(),
+      frame: this._frameDiagnostics.snapshot(),
+    };
   }
 }

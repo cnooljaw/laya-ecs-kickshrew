@@ -97,6 +97,8 @@ http://localhost:8080/debug-space-monster-drop.html
 `debug:ready` 会编译 TypeScript、修复 ESM 扩展、复制 vendor/资源，并确认 8080 服务可用。
 洞位、Monster 三角落点和 Spine 表现调试看 `docs/ui-debugging-guide.md`。
 
+主调试页还会显示 `ECS frame` 面板：第一行是最近帧、平均帧和最大帧耗时；`schedule` 是实际执行的 `phase:system` 顺序；随后列出最近一帧耗时最高的步骤。先确认 schedule 是否符合预期，再根据耗时决定是否需要优化，不把两层 System 调度循环当作默认瓶颈。
+
 以下改动必须优先做浏览器验证：
 
 - `src/app/GameScene.ts` / `src/app/GameLoopPipeline.ts`

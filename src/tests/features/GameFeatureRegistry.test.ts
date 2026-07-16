@@ -83,6 +83,11 @@ describe("GameFeatureRegistry", () => {
     ]);
     expect(runtime.systemsByPhase("state").map(item => item.run)).toEqual([updateState, updateSession]);
     expect(runtime.systemsByPhase("gameplay").map(item => item.run)).toEqual([updateGameplay]);
+    expect(runtime.schedule()).toEqual([
+      { phase: "state", name: "compiled.state" },
+      { phase: "state", name: "session.test" },
+      { phase: "gameplay", name: "compiled.gameplay" },
+    ]);
   });
 
   it("reuses precomputed phase arrays", () => {

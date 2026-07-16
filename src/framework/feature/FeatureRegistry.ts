@@ -15,6 +15,12 @@ export interface RegisteredGameSystem {
   readonly run: GameSystem;
 }
 
+/** Read-only entry used by diagnostics and schedule-oriented tests. */
+export interface GameSystemScheduleEntry {
+  readonly phase: GameSystemPhase;
+  readonly name: string;
+}
+
 export interface GameFeatureRegistry {
   setupAll(
     ctx: FeatureSetupContext,
@@ -26,6 +32,7 @@ export interface GameFeatureRegistry {
 
 export interface GameFeatureRuntime {
   systemsByPhase(phase: GameSystemPhase): readonly RegisteredGameSystem[];
+  schedule(): readonly GameSystemScheduleEntry[];
 }
 
 export interface GameFeatureRegistryOptions {
@@ -55,8 +62,16 @@ export function createGameFeatureRegistry(
         systemsByPhase.set(phase, filterSystemsByPhase(systems, phase));
       }
       validateRegisteredSystems(systems);
+      const scheduleEntries: GameSystemScheduleEntry[] = [];
+      for (const phase of GAME_SYSTEM_PHASES) {
+        for (const system of systemsByPhase.get(phase)!) {
+          scheduleEntries.push(Object.freeze({ phase: system.phase, name: system.name }));
+        }
+      }
+      const schedule = Object.freeze(scheduleEntries);
       return {
         systemsByPhase: phase => systemsByPhase.get(phase)!,
+        schedule: () => schedule,
       };
     },
     entityTypes: () => entityTypes,

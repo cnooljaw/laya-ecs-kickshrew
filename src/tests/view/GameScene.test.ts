@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GameScene } from "../../app/GameScene";
 import type { GameLoopPipeline } from "../../app/GameLoopPipeline";
 import type { KickInputController } from "../../game/session";
@@ -7,6 +7,7 @@ import type { ProjectionRuntime } from "../../framework/sync/ProjectionRuntime";
 import type { EffectRuntime } from "../../framework/sync/EffectRuntime";
 import { defineQuery } from "bitecs";
 import { HammerComponent } from "../../game/features/hammer/HammerComponents";
+import { GAME_FEATURE_REGISTRY } from "../../game/GameFeatures";
 
 interface GameSceneInternals {
   _world: object | null;
@@ -79,5 +80,21 @@ describe("GameScene lifecycle", () => {
     expect(second._world).not.toBe(firstWorld);
 
     secondScene.destroy();
+  });
+
+  it("rolls back every created runtime when feature setup fails", () => {
+    const setupAll = vi.spyOn(GAME_FEATURE_REGISTRY, "setupAll").mockImplementationOnce(() => {
+      throw new Error("feature setup failed");
+    });
+    const scene = new GameScene();
+    const internals = scene as unknown as GameSceneInternals;
+
+    expect(() => scene.init()).toThrow("feature setup failed");
+    expect(internals._world).toBeNull();
+    expect(internals._loopPipeline).toBeNull();
+    expect(internals._entityRuntime).toBeNull();
+    expect(internals._projectionRuntime).toBeNull();
+    expect(internals._effectRuntime).toBeNull();
+    setupAll.mockRestore();
   });
 });

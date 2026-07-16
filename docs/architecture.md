@@ -143,6 +143,10 @@ effectRuntime.flush
 
 `GameFeatureRegistry` 只负责静态声明和 setup，不再暴露 `systemsByPhase`。需要进入帧循环的系统必须从 `setupAll` 返回的 `GameFeatureRuntime` 获取，因为只有 setup 后才能拿到 `BoardTopologyCapability`、`MonsterSpawnMilestoneCapability` 这类场景级能力。
 
+`GameFeatureRuntime.schedule()` 提供只读的调度计划，按真实执行顺序展开：先 `ingress`，再 `state`、`gameplay`、`derived`，同一 phase 保持注册顺序。它用于调试和测试，不是运行期增删 System 的入口。
+
+`GameLoopPipeline` 在开发态通过 `FrameDiagnostics` 记录整帧、每个 System 与 network / Projection / Effect 步骤的耗时。`RuntimeDiagnosticsPanel` 在主调试页面显示当前 schedule 和最近一帧的慢步骤；先用它和 profiling 判断性能瓶颈，不为消除 phase 与 system 的两层循环提前重写 Pipeline。
+
 阶段职责固定：
 
 - `ingress`：消费已经到达的网络事实，按入队顺序写入权威 Component。
@@ -209,6 +213,8 @@ ProjectionRuntime.clear
 EntityRuntime.clear
 deleteWorld
 ```
+
+`GameScene.init()` 任一步失败也走同一套清理顺序并重新抛出异常。Feature setup 不能留下半挂载的 Node、Effect handler、snapshot 或 world；调用者应创建新的 `GameScene` 再尝试进入。
 
 下一次进入重新创建全部状态、快照和 view。
 
