@@ -35,6 +35,113 @@ expect(ShrewComponent.actionState[eid]).toBe(ShrewAction.Stand);
 
 函数优先不等于没有状态。状态应该放在 Component、每场景 queue 或由明确 owner 持有的 runtime 中；System 本身不要悄悄保留上一场景的 entity 或 Node。
 
+### 从 `GameSystem` 到 `SystemDefinition`
+
+`GameSystem` 是函数类型，不是 class：
+
+```ts
+export type GameSystem = (world: any, deltaSec: number) => void;
+```
+
+以下两个声明都可以提供符合该类型的行为：
+
+```ts
+function movementSystem(world: any, deltaSec: number): void {
+  // 读写 Component
+}
+
+const system: GameSystem = movementSystem;
+system(world, deltaSec); // 等同于 movementSystem(world, deltaSec)
+```
+
+赋值或作为参数传递的是函数引用，不会复制函数实现。Scheduler 最终调用的仍是原来的函数。
+
+有些 System 只需要 `world`，例如网络 ingress：
+
+```ts
+export function createGameIngressSystem(
+  queue: GameIngressQueue,
+  effects: Pick<EffectRuntime, "emit">,
+): GameSystem {
+  return world => queue.drain(world, effects);
+}
+```
+
+这是工厂函数（Factory Function），不是 System 本身。调用工厂时，`queue` 与 `effects` 被闭包捕获；后续 Pipeline 即使统一调用 `run(world, deltaSec)`，这个函数也可以忽略不需要的 `deltaSec`，只执行 `queue.drain(world, effects)`。因此 Pipeline 不需要认识网络 queue 或 EffectRuntime。
+
+`defineSystem` 再为函数补上调度元数据：
+
+```ts
+export interface SystemDefinition {
+  readonly phase: GameSystemPhase;
+  readonly name: string;
+  readonly run: GameSystem;
+}
+
+export function defineSystem(
+  phase: GameSystemPhase,
+  name: string,
+  run: GameSystem,
+): SystemDefinition {
+  return { phase, name, run };
+}
+```
+
+所以：
+
+```ts
+defineSystem("state", "shrew.state", shrewStateSystem)
+```
+
+得到的是普通对象：
+
+```ts
+{
+  phase: "state",
+  name: "shrew.state",
+  run: shrewStateSystem,
+}
+```
+
+`system.run(world, deltaSec)` 只是通过对象字段调用原函数，不表示 `system` 是一个 class 实例。
+
+调用链为：
+
+```text
+shrewStateSystem
+  -> GameSystem
+  -> defineSystem
+  -> SystemDefinition
+  -> GameFeatureRegistry 收集为 RegisteredGameSystem
+  -> GameFeatureRuntime.systemsByPhase
+  -> GameLoopPipeline
+  -> system.run(world, deltaSec)
+```
+
+这里有三种不同职责：
+
+| 内容 | 负责回答的问题 | 当前代码 |
+| --- | --- | --- |
+| `GameSystem` | 规则“怎么做” | 普通函数 |
+| `SystemDefinition` / `RegisteredGameSystem` | 规则“叫什么、在哪个 phase” | 普通元数据对象 |
+| `GameFeatureRegistry` / `GameLoopPipeline` | 规则“何时被收集、何时执行” | 组合与调度机制 |
+
+当前 Pipeline 的调度逻辑保持简单：
+
+```ts
+for (const phase of GAME_SYSTEM_PHASES) {
+  for (const system of featureRuntime.systemsByPhase(phase)) {
+    system.run(world, deltaSec);
+  }
+}
+```
+
+`GAME_SYSTEM_PHASES` 决定 phase 顺序；同一 phase 内的顺序由显式 Feature 注册和 setup-time system 收集顺序决定。这是当前的确定性契约，测试应保护它。
+
+`SystemDefinition` 确实为未来诊断、开关或 profiling 留出了扩展位置，但不要误解为“只加字段就自动生效”。例如新增 `priority`，还必须由 `GameFeatureRegistry` 明确排序；新增 `enabled`，还必须由 Pipeline 或 Registry 决定何时过滤。只有已有的 `phase`、`name`、`run` 才是当前真实支持的调度协议。
+
+因此，更准确的总结是：ECS 用函数承载规则，用对象承载元数据，用 Pipeline 承载时序；同时仍由 Entity 和 Component 承载权威游戏数据与关系。它不是只管理函数，也不是只管理对象。
+
 ## 2. 数据驱动：Definition 和 Manifest 描述“贡献什么”
 
 一个 Feature 用 manifest 声明自己加入 world 的内容，而不是由中心 `GameManager` 知道每个业务细节：
