@@ -145,7 +145,7 @@ effectRuntime.flush
 
 `GameFeatureRuntime.schedule()` 提供只读的调度计划，按真实执行顺序展开：先 `ingress`，再 `state`、`gameplay`、`derived`，同一 phase 保持注册顺序。它用于调试和测试，不是运行期增删 System 的入口。
 
-`GameLoopPipeline` 在开发态通过 `FrameDiagnostics` 记录整帧、每个 System 与 network / Projection / Effect 步骤的耗时。`RuntimeDiagnosticsPanel` 在主调试页面显示当前 schedule 和最近一帧的慢步骤；先用它和 profiling 判断性能瓶颈，不为消除 phase 与 system 的两层循环提前重写 Pipeline。
+`ClientDiagnostics` 是 Laya Stat、Heap 面板、`FrameDiagnostics` 和 `RuntimeDiagnosticsPanel` 的生命周期 owner。它内部的单一硬编码开关默认关闭；关闭时 `GameScene` 不接收 `FrameDiagnostics`，`GameLoopPipeline` 直接执行原始帧循环。开启时才记录整帧、每个 System 与 network / Projection / Effect 步骤的耗时，并在主调试页显示当前 schedule 和最近一帧的慢步骤。先用它和 profiling 判断性能瓶颈，不为消除 phase 与 system 的两层循环提前重写 Pipeline。
 
 阶段职责固定：
 
@@ -198,6 +198,7 @@ NetworkAdapter callback
 ## 生命周期 owner
 
 - `Main`：frameLoop、stage event、背景音乐。
+- `ClientDiagnostics`：可选的 Laya Stat、Heap 面板、帧诊断和调度面板。
 - `GameScene`：world、三个 runtime、network 和 root。
 - `Feature`：本业务的拓扑、对象池、节点和 effect handler。
 - `ViewRegistry`：集中 destroy 由 mount/own 注册的 view/resource。

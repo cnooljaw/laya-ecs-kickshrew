@@ -1,5 +1,4 @@
-import { MemoryStatsPanel } from "../debug/MemoryStatsPanel";
-import { RuntimeDiagnosticsPanel } from "../debug/RuntimeDiagnosticsPanel";
+import { createClientDiagnostics, type ClientDiagnostics } from "./ClientDiagnostics";
 import { GameScene } from "./GameScene";
 
 const { regClass } = Laya;
@@ -7,24 +6,20 @@ const { regClass } = Laya;
 @regClass()
 export class Main extends Laya.Script {
     private _gameScene: GameScene | null = null;
-    private _memoryStatsPanel: MemoryStatsPanel | null = null;
-    private _runtimeDiagnosticsPanel: RuntimeDiagnosticsPanel | null = null;
+    private _diagnostics: ClientDiagnostics | null = null;
 
     onStart() {
         console.log("KickShrew Game starting...");
 
-        // 0. 显示性能统计面板（FPS / DrawCall / 内存等）
-        Laya.Stat.show(0, 0);
-        this._memoryStatsPanel = new MemoryStatsPanel();
-        this._memoryStatsPanel.show();
+        // 0. 创建可选的客户端诊断 owner。
+        this._diagnostics = createClientDiagnostics();
 
         // 1. 创建游戏场景
-        this._gameScene = new GameScene();
+        this._gameScene = new GameScene({
+            frameDiagnostics: this._diagnostics.frameDiagnostics,
+        });
         this._gameScene.init();
-        this._runtimeDiagnosticsPanel = new RuntimeDiagnosticsPanel(
-            () => this._gameScene?.getRuntimeDebugInfo() ?? null,
-        );
-        this._runtimeDiagnosticsPanel.show();
+        this._diagnostics.attach(this._gameScene);
 
         // 2. 注册帧循环
         Laya.timer.frameLoop(1, this, this._onFrameLoop);
@@ -57,10 +52,8 @@ export class Main extends Laya.Script {
     onDestroy(): void {
         Laya.timer.clear(this, this._onFrameLoop);
         Laya.stage?.off(Laya.Event.MOUSE_DOWN, this, this._onTouch);
-        this._memoryStatsPanel?.destroy();
-        this._memoryStatsPanel = null;
-        this._runtimeDiagnosticsPanel?.destroy();
-        this._runtimeDiagnosticsPanel = null;
+        this._diagnostics?.destroy();
+        this._diagnostics = null;
         this._gameScene?.destroy();
         this._gameScene = null;
     }

@@ -34,7 +34,7 @@ import {
 } from "../game/session";
 import { defineSystem } from "../framework/feature/FeatureManifest";
 import type { GameSystemScheduleEntry } from "../framework/feature/FeatureRegistry";
-import { createFrameDiagnostics, type FrameDiagnosticsSnapshot } from "./FrameDiagnostics";
+import type { FrameDiagnostics, FrameDiagnosticsSnapshot } from "./FrameDiagnostics";
 
 /** 音效路径 */
 const SND = {
@@ -44,6 +44,10 @@ const SND = {
 export interface GameRuntimeDebugInfo {
   readonly schedule: readonly GameSystemScheduleEntry[];
   readonly frame: FrameDiagnosticsSnapshot;
+}
+
+export interface GameSceneOptions {
+  readonly frameDiagnostics?: FrameDiagnostics;
 }
 
 export class GameScene {
@@ -60,12 +64,13 @@ export class GameScene {
   private _kickInput: KickInputController | null = null;
   private _featureRuntime: GameFeatureRuntime | null = null;
   private _ingressQueue: GameIngressQueue | null = null;
-  private _frameDiagnostics: ReturnType<typeof createFrameDiagnostics> | null = null;
+  private readonly _frameDiagnostics: FrameDiagnostics | undefined;
 
-  constructor() {
+  constructor(options: GameSceneOptions = {}) {
     this._network = new NetworkAdapter();
     this._viewRegistry = new ViewRegistry();
     this._perfConfig = getPerfRuntimeConfig();
+    this._frameDiagnostics = options.frameDiagnostics;
   }
 
   /** 初始化游戏 */
@@ -83,7 +88,6 @@ export class GameScene {
       );
       this._effectRuntime = createEffectRuntime();
       this._ingressQueue = createGameIngressQueue();
-      this._frameDiagnostics = createFrameDiagnostics();
       if (this._perfConfig.shrewFast) {
         setShrewTimingOverride(getPerfShrewTiming());
       } else {
@@ -181,7 +185,6 @@ export class GameScene {
     this._kickInput = null;
     this._loopPipeline = null;
     this._featureRuntime = null;
-    this._frameDiagnostics = null;
     this._ingressQueue?.clear();
     this._ingressQueue = null;
     this._viewRegistry.clear();

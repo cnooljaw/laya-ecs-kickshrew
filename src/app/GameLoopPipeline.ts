@@ -26,10 +26,33 @@ export class GameLoopPipeline {
   }
 
   update(deltaSec: number): void {
-    const { world, network } = this._deps;
-    const diagnostics = this._deps.diagnostics;
+    if (!this._deps.diagnostics) {
+      this.updateWithoutDiagnostics(deltaSec);
+      return;
+    }
+    this.updateWithDiagnostics(deltaSec, this._deps.diagnostics);
+  }
 
-    diagnostics?.beginFrame();
+  private updateWithoutDiagnostics(deltaSec: number): void {
+    const { world, network } = this._deps;
+    network.update();
+    for (const phase of GAME_SYSTEM_PHASES) {
+      for (const system of this._deps.featureRuntime.systemsByPhase(phase)) {
+        system.run(world, deltaSec);
+      }
+    }
+    if (this._rebuildRequested) {
+      this._rebuildRequested = false;
+      this._deps.rebuild?.();
+    }
+    this._deps.projectionRuntime?.mark(world);
+    this._deps.projectionRuntime?.sync(world);
+    this._deps.effects?.flush();
+  }
+
+  private updateWithDiagnostics(deltaSec: number, diagnostics: FrameDiagnostics): void {
+    const { world, network } = this._deps;
+    diagnostics.beginFrame();
     try {
       this.measure("runtime", "network.update", () => network.update());
       for (const phase of GAME_SYSTEM_PHASES) {
@@ -45,12 +68,11 @@ export class GameLoopPipeline {
       this.measure("runtime", "projection.sync", () => this._deps.projectionRuntime?.sync(world));
       this.measure("runtime", "effects.flush", () => this._deps.effects?.flush());
     } finally {
-      diagnostics?.endFrame();
+      diagnostics.endFrame();
     }
   }
 
   private measure<T>(scope: GameSystemPhase | "runtime", name: string, work: () => T): T {
-    const diagnostics = this._deps.diagnostics;
-    return diagnostics ? diagnostics.measure(scope, name, work) : work();
+    return this._deps.diagnostics!.measure(scope, name, work);
   }
 }

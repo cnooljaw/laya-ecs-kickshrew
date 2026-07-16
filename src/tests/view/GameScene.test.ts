@@ -82,6 +82,15 @@ describe("GameScene lifecycle", () => {
     secondScene.destroy();
   });
 
+  it("does not create frame diagnostics unless its application owner injects one", () => {
+    const scene = new GameScene();
+
+    scene.init();
+
+    expect(scene.getRuntimeDebugInfo()).toBeNull();
+    scene.destroy();
+  });
+
   it("rolls back every created runtime when feature setup fails", () => {
     const setupAll = vi.spyOn(GAME_FEATURE_REGISTRY, "setupAll").mockImplementationOnce(() => {
       throw new Error("feature setup failed");
