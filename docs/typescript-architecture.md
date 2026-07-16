@@ -173,6 +173,82 @@ export const ShrewFeature = defineFeature({
 
 这使新增 Monster、Hero 或 UI Feature 的常见改动集中在自己的目录，最后只在组合根增加一条显式注册，而不是修改多个继承层。
 
+### 从 `FeatureManifest` 到每场景 `GameFeatureRuntime`
+
+把大功能的组装理解为下面这条链路是正确的：
+
+```text
+FeatureManifest（各切片声明贡献）
+  -> GameFeatureRegistry（校验、收集、按场景装配）
+  -> GameFeatureRuntime（已按 phase 排好的本场景系统表）
+  -> GameLoopPipeline（每帧执行系统表）
+```
+
+不过四者的职责需要分清。`FeatureManifest` 是开发期的**装配材料**；`GameFeatureRuntime` 是一次场景进入后得到的**执行计划**，它既不持有 `world`，也不自己执行 System。真正的帧调度者仍是 `GameLoopPipeline`。
+
+一个 Manifest 可以选择性贡献 Entity、Projection、静态 System 和 setup 钩子；并不是每个 Feature 必须同时拥有它们。例如 HUD Feature 可以只有投影和视图装配，Board 是被多个业务切片复用的 Foundation，而非一个业务角色 Feature。
+
+```ts
+export const MonsterFeature = defineFeature({
+  name: "monster",
+  entities: [MonsterEntity, MonsterTriggerEntity],
+  projections: [MonsterProjection],
+  setup: ({ entities, mountPool }) => {
+    const eids = createMonsterPool(entities, poolInputs);
+    mountPool({ eids, projection: MonsterProjection, create: () => new MonsterNode() });
+  },
+  setupSystems: ctx => [/* 使用 ctx.use(...) 创建动态 System */],
+});
+```
+
+`GameFeatures.ts` 是显式的组合根：它用固定数组决定 Foundation、Feature 的加入顺序，并调用 `createGameFeatureRegistry(...)`。这里没有目录扫描、反射注册或“自动发现所有 Feature”；顺序和游戏组成都是可读、可测试的代码。
+
+Registry 在创建时先校验静态名称重复，并预收集 `entityTypes()` 与 `projections()`；`GameScene` 使用这两份材料创建 `EntityRuntime`、`ProjectionRuntime` 等每场景 runtime。随后它以 `FeatureSetupContext` 调用 `setupAll()`，实际顺序为：
+
+```text
+每个 Feature.setup(ctx)                 // 按组合根数组顺序
+  -> options.sessionSetup(ctx)           // 跨 Feature 的 session 组装
+  -> 每个 Feature 的静态 systems         // 同样保持声明顺序
+  -> 每个 Feature.setupSystems(ctx)      // 可读取 setup 已提供的 capability
+  -> options.systems                     // Registry 配置的 session System
+  -> runtimeSystems                      // GameScene 本次传入的运行时 System
+  -> 按 ingress/state/gameplay/derived 分组
+  -> GameFeatureRuntime.systemsByPhase()
+```
+
+同一 phase 内不额外排序，保留上述收集顺序；不同 phase 的先后由 `GAME_SYSTEM_PHASES` 固定。这就是当前 System 顺序的真实来源，而不只是“Feature 的某个数组顺序”。动态返回的 System 与静态 System 一样都会在 setup 完成后校验名称唯一性。
+
+`setup` 也不是“整个程序只执行一次”。它在每次 `GameScene` 创建并调用 `setupAll()` 时执行一次；退出场景后，world、runtime、view 和 queue 一起销毁，再进入新场景会重新装配。适合在这里创建固定槽位、挂载本场景 Node、注册 typed Effect handler、声明 lifecycle owner、通过 `provide` 暴露场景能力。不要把它理解为通用的全局 EventBus 或 Command 注册入口：当前项目的真实 API 是 `ctx.effects.on(...)`、`ctx.provide(...)` / `ctx.use(...)` 等窄能力。
+
+动态 `setupSystems(ctx)` 的价值是让规则在创建时取得本场景依赖并通过闭包保存。例如实际 Monster 装配中：
+
+```text
+BoardFoundation.setup
+  -> provide(BoardTopologyCapability)
+sessionSetup
+  -> provide(MonsterSpawnMilestoneCapability)
+MonsterFeature.setupSystems
+  -> use 两个 capability，创建 monster.boardSync / monster.spawn 等 System
+```
+
+这说明它不是“运行时随时注册系统”：注册仍发生在场景 setup 阶段，只是 System 的函数可以根据本场景拓扑、配置或服务生成。反过来，网络 ingress 的 `GameIngressQueue` 和 `EffectRuntime` 属于 app 层每场景对象，因此当前代码由 `GameScene` 构造 `createGameIngressSystem(...)`，再作为 `runtimeSystems` 传给 Registry；它不属于任何业务 Feature 的 `setupSystems`。
+
+把 Registry 称为“组合器”或“小型装配注册表”比“DI Container / ApplicationContext”更准确。它确实借助 `FeatureSetupContext` 提供有限的 typed capability，但不会自动解析任意对象图，也不拥有 `world`、网络连接或 Laya 生命周期。依赖仍必须由组合根显式创建并以参数、capability 或闭包交给需要它的地方。
+
+完整的场景生命周期可以这样阅读：
+
+```text
+GameFeatures.ts（声明本局组成）
+  -> GameFeatureRegistry（静态校验、Entity / Projection 收集）
+  -> GameScene 创建 world、各 runtime、FeatureSetupContext、network queue
+  -> registry.setupAll(...) 生成 GameFeatureRuntime
+  -> GameLoopPipeline 每帧从 systemsByPhase 读取并执行
+  -> ProjectionRuntime 同步持久状态到 view；EffectRuntime flush 瞬时事实
+  -> 场景退出：清理 queue、runtime、world 与 view；下一场重新生成
+```
+
+因此，一个 Feature 更接近“可组合的游戏纵向切片”，Registry 更接近“将切片编译成场景执行计划的组合根协作者”，而不是传统继承体系中的大型模块对象。
+
 ## 3. 组合优于继承：Feature 是纵向切片，Laya class 是窄适配器
 
 业务 Feature 的目录通常同时拥有 Component、Entity、规则、Projection、Node、配置和公开契约：
