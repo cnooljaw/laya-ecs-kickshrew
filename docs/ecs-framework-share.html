@@ -381,7 +381,7 @@
 
     .route {
       display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
       gap: 8px;
       align-items: stretch;
     }
@@ -407,6 +407,15 @@
       font-size: 12px;
       font-weight: 520;
       margin-top: 5px;
+    }
+
+    .fsm-notes {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .fsm-notes .panel {
+      padding: 14px 16px;
     }
 
     .source-list {
@@ -640,7 +649,7 @@ src/game/features/{shrew,hammer,playerHud,monster,perfHero}</pre>
               <text x="718" y="202" text-anchor="middle" font-size="15" font-weight="700" fill="#172231">ViewRegistry</text>
               <text x="718" y="225" text-anchor="middle" font-size="12" fill="#5f6b7a">生命周期 owner</text>
               <rect x="150" y="291" width="560" height="45" rx="8" fill="#fff8eb" stroke="#b7791f"/>
-              <text x="430" y="319" text-anchor="middle" font-size="14" font-weight="760" fill="#172231">GameLoopPipeline：state → network → feature → mark → sync → flush</text>
+              <text x="430" y="319" text-anchor="middle" font-size="14" font-weight="760" fill="#172231">GameLoopPipeline：network → ingress → state → gameplay → derived → projection → effect</text>
               <path d="M215 72 H275" stroke="#7a8797" stroke-width="2" marker-end="url(#arrow)"/>
               <path d="M475 72 H545" stroke="#7a8797" stroke-width="2" marker-end="url(#arrow)"/>
               <path d="M662 109 V150 H138 V172" stroke="#7a8797" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
@@ -746,7 +755,9 @@ SpeedComponent.value[eid] = fast</pre>
   -> entityRuntime.bootstrapSingletons()
   -> createProjectionRuntime(registry.projections())
   -> createEffectRuntime()
+  -> createGameIngressQueue()
   -> featureRuntime = registry.setupAll(createFeatureSetupContext(...))
+     -> runtime system: session.networkIngress
   -> create GameLoopPipeline(featureRuntime)
   -> projectionRuntime.mark(world)
   -> projectionRuntime.sync(world)</pre>
@@ -793,7 +804,7 @@ export const GAME_FEATURE_REGISTRY =
             <tr><td><code>name</code></td><td>Feature 身份</td><td>校验不能重复</td></tr>
             <tr><td><code>entities</code></td><td>这个模块要创建哪些实体</td><td>交给 EntityRuntime</td></tr>
             <tr><td><code>projections</code></td><td>这个模块有哪些状态同步规则</td><td>交给 ProjectionRuntime</td></tr>
-            <tr><td><code>systems</code></td><td>每帧运行的规则</td><td>按 state/feature 分组</td></tr>
+            <tr><td><code>systems</code></td><td>每帧运行的规则</td><td>按四个 phase 分组</td></tr>
             <tr><td><code>setup</code></td><td>初始化拓扑、池、View、Effect handler</td><td><code>setupAll(ctx)</code> 顺序执行</td></tr>
             <tr><td><code>setupSystems</code></td><td>需要 setup capability 的每场景 system</td><td>生成 <code>GameFeatureRuntime</code></td></tr>
           </table>
@@ -1017,7 +1028,7 @@ export const MonsterProjection = defineProjection&lt;IMonsterNode&gt;({
         <header>
           <div class="kicker">PlayerHUD Example</div>
           <h2>例子：金币变化从回包到 HUD 的完整生命周期</h2>
-          <p class="lead">服务端回包写入 <code>PlayerComponent.money</code> 后，不直接改 HUD。下一帧由 <code>mark</code> 比较快照并标 dirty，再由 <code>sync</code> 调用 <code>PlayerHUD.setMoney</code>。</p>
+          <p class="lead">网络 callback 先把回包放入 <code>GameIngressQueue</code>；ingress drain 写入 <code>PlayerComponent.money</code>，不直接改 HUD。随后同一帧的 <code>mark</code> 比较快照并标 dirty，再由 <code>sync</code> 调用 <code>PlayerHUD.setMoney</code>。</p>
         </header>
         <section class="content split-wide">
           <div class="rows">
@@ -1031,8 +1042,10 @@ export const MonsterProjection = defineProjection&lt;IMonsterNode&gt;({
 // mount 后设置 fullSync，首次 sync 会完整刷新</pre>
             </div>
             <div class="panel accent-blue">
-              <strong>2. 回包写权威状态</strong>
-              <pre class="code">applyPlayerKickResponse(playerEid, response)
+              <strong>2. ingress 写权威状态</strong>
+              <pre class="code">GameIngressQueue.drain(...)
+  -> handleKickResponse(...)
+  -> applyPlayerKickResponse(playerEid, response)
 const old = PlayerComponent.money[playerEid];
 PlayerComponent.money[playerEid] += response.money;</pre>
             </div>
@@ -1057,8 +1070,8 @@ PlayerComponent.money[playerEid] += response.money;</pre>
               <text x="107" y="69" text-anchor="middle" font-size="14" font-weight="700" fill="#17385d">mountOne</text>
               <text x="107" y="91" text-anchor="middle" font-size="12" fill="#5f6b7a">bind HUD + fullSync</text>
               <rect x="220" y="42" width="150" height="64" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="295" y="69" text-anchor="middle" font-size="14" font-weight="700" fill="#1f5f36">KickResponse</text>
-              <text x="295" y="91" text-anchor="middle" font-size="12" fill="#5f6b7a">money += delta</text>
+              <text x="295" y="69" text-anchor="middle" font-size="14" font-weight="700" fill="#1f5f36">ingress drain</text>
+              <text x="295" y="91" text-anchor="middle" font-size="12" fill="#5f6b7a">KickResponse → money += delta</text>
               <rect x="408" y="42" width="150" height="64" rx="8" fill="#fff6e8" stroke="#b7791f"></rect>
               <text x="483" y="69" text-anchor="middle" font-size="14" font-weight="700" fill="#80530f">mark</text>
               <text x="483" y="91" text-anchor="middle" font-size="12" fill="#5f6b7a">compare snapshot</text>
@@ -1164,7 +1177,7 @@ ctx.effects.on(HitRewardEffect, reward => {
   hitEffectNode.showReward(reward);
 });
 
-// 发布：KickResponseHandler 只发布事实
+// 发布：ingress drain 中的 KickResponseHandler 只发布事实
 effects.emit(HitRewardEffect, reward);
 
 // 帧末：统一分发并清空 pending
@@ -1174,7 +1187,7 @@ for (const effect of current) dispatch(effect);</pre>
           <div class="cards">
             <div class="mini accent-blue"><strong>定义主题</strong><p><code>EffectDefinition</code> 是订阅主题，用对象身份匹配，不靠全局字符串 EventBus。</p></div>
             <div class="mini accent-green"><strong>订阅方</strong><p><code>PlayerHUDFeature</code> 订阅 <code>HitRewardEffect</code>，只负责飘字、miss 提示、声音这类表现。</p></div>
-            <div class="mini accent-amber"><strong>发布方</strong><p><code>KickResponseHandler</code> 发布奖励事实，不 import HUD 节点，也不关心有几个订阅方。</p></div>
+            <div class="mini accent-amber"><strong>发布方</strong><p>ingress drain 中的 <code>KickResponseHandler</code> 发布奖励事实，不 import HUD 节点，也不关心有几个订阅方。</p></div>
             <div class="mini accent-red"><strong>退出清理</strong><p>world 退出时 <code>clear()</code> 清空 handler 和 pending，避免旧场景收到回调。</p></div>
             <div class="mini accent-violet"><strong>不是持久状态</strong><p>奖励飘字、miss 提示、一次性声音用 Effect；金币数值仍然写 Component。</p></div>
             <div class="mini accent-cyan"><strong>队列生命周期</strong><p><code>emit</code> 只 <code>pending.push</code>；<code>flush</code> 先 <code>pending = []</code>，再分发本轮事件。</p></div>
@@ -1214,16 +1227,19 @@ for (const effect of current) dispatch(effect);</pre>
         </header>
         <section class="content">
           <div class="route">
-            <div class="route-step">state systems<small>核心状态机、计时</small></div>
-            <div class="route-step">network.update<small>处理回包</small></div>
-            <div class="route-step">feature systems<small>Monster/PerfHero 等功能系统</small></div>
+            <div class="route-step">network.update<small>只分发到 adapter callback</small></div>
+            <div class="route-step">ingress<small>FIFO 消费网络事实</small></div>
+            <div class="route-step">state<small>时间轴、状态机、冷却</small></div>
+            <div class="route-step">gameplay<small>命中、生成、占用</small></div>
+            <div class="route-step">derived<small>计算派生状态</small></div>
+            <div class="route-step">scene rebuild<small>可选，derived 后消费</small></div>
             <div class="route-step">projection.mark<small>比较 Component 快照</small></div>
             <div class="route-step">projection.sync<small>调用 I* 接口</small></div>
             <div class="route-step">effects.flush<small>派发瞬时事实</small></div>
             <div class="route-step">Laya render<small>引擎表现</small></div>
           </div>
           <div class="two">
-            <div class="panel accent-blue"><strong>为什么 network 在中间</strong><p>回包可以更新 ECS 状态或 emit Effect，但不直接操作 View。</p></div>
+            <div class="panel accent-blue"><strong>为什么 network 在最前</strong><p>callback 只入 queue；ingress 再按 FIFO 在确定帧边界写 ECS 或 emit Effect。</p></div>
             <div class="panel accent-green"><strong>为什么 sync 在最后</strong><p>一帧内多个 system 可以合并成一次差量投影。</p></div>
           </div>
         </section>
@@ -1234,7 +1250,7 @@ for (const effect of current) dispatch(effect);</pre>
         <header>
           <div class="kicker">Protocol Boundary</div>
           <h2>protobuf 网络边界：二进制收发，不让协议细节扩散到 View</h2>
-          <p class="lead">当前代码里，View 不读 proto；网络回包进入 session，再更新 ECS 或 emit Effect。协议细节停在 network/session 边界内。</p>
+          <p class="lead">当前代码里，View 不读 proto；网络 callback 只入 <code>GameIngressQueue</code>，ingress phase 才调用 session applier 更新 ECS 或 emit Effect。协议细节停在 network/session 边界内。</p>
         </header>
         <section class="content split-wide">
           <div class="diagram">
@@ -1256,30 +1272,34 @@ for (const effect of current) dispatch(effect);</pre>
               <text x="602" y="221" text-anchor="middle" font-size="15" font-weight="700" fill="#172231">Envelope(seq_id, msg_id, payload)</text>
               <text x="602" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">protobuf 编码/解码</text>
               <rect x="70" y="196" width="280" height="62" rx="8" fill="#f0f8f3" stroke="#2d7d46"></rect>
-              <text x="210" y="221" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">KickResponseHandler</text>
-              <text x="210" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">回包进入 ECS/session</text>
+              <text x="210" y="221" text-anchor="middle" font-size="15" font-weight="700" fill="#1f5f36">GameIngressQueue</text>
+              <text x="210" y="242" text-anchor="middle" font-size="12" fill="#5f6b7a">callback enqueue；ingress FIFO drain</text>
+              <rect x="70" y="310" width="280" height="62" rx="8" fill="#eef4fb" stroke="#2364aa"></rect>
+              <text x="210" y="335" text-anchor="middle" font-size="15" font-weight="700" fill="#17385d">KickResponseHandler</text>
+              <text x="210" y="356" text-anchor="middle" font-size="12" fill="#5f6b7a">ingress 写 ECS / emit Effect</text>
               <path d="M190 80 H238" stroke="#2364aa" stroke-width="3" marker-end="url(#protoArrow)"></path>
               <path d="M396 80 H444" stroke="#2364aa" stroke-width="3" marker-end="url(#protoArrow)"></path>
               <path d="M602 80 H650" stroke="#2364aa" stroke-width="3" marker-end="url(#protoArrow)"></path>
               <path d="M738 112 C730 168 666 190 628 196" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#protoArrow)"></path>
               <path d="M452 227 H358" stroke="#2364aa" stroke-width="3" marker-end="url(#protoArrow)"></path>
-              <text x="430" y="360" text-anchor="middle" font-size="13" fill="#5f6b7a">View 不读 proto；ECS 只收到业务回包类型 KickResponse。</text>
+              <path d="M210 258 V302" stroke="#2364aa" stroke-width="3" marker-end="url(#protoArrow)"></path>
+              <text x="430" y="408" text-anchor="middle" font-size="13" fill="#5f6b7a">View 不读 proto；ECS 只收到 ingress 已应用的业务事实。</text>
             </svg>
           </div>
           <div class="rows">
             <div class="panel accent-blue"><strong>请求怎么出去</strong><p><code>KickInputController</code> 只组业务请求；<code>KickSocket.sendKick()</code> 加 seqId，<code>KickProtoCodec</code> 包成 protobuf 二进制。</p></div>
-            <div class="panel accent-green"><strong>回包怎么回来</strong><p>回包按 seqId 匹配 pending，再由 <code>NetworkAdapter.onResponse</code> 交给 <code>handleKickResponse</code>。</p></div>
+            <div class="panel accent-green"><strong>回包怎么回来</strong><p>回包按 seqId 匹配 pending，<code>NetworkAdapter.onResponse</code> 只 enqueue；随后 ingress drain 调用 <code>handleKickResponse</code>。</p></div>
             <div class="panel accent-red"><strong>边界是什么</strong><p>网络层不直接改 View；View 不知道 wire 格式。</p></div>
           </div>
         </section>
-        <footer class="footer"><span>对应代码：src/network/KickSocket.ts、KickProtoCodec.ts、src/game/session/KickResponseHandler.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
+        <footer class="footer"><span>对应代码：src/network/KickSocket.ts、KickProtoCodec.ts、src/game/session/GameIngressQueue.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
       <article class="slide" data-title="FSM">
         <header>
           <div class="kicker">State Machine</div>
           <h2>状态机：少状态、明语义、统一重置入口</h2>
-          <p class="lead">state systems 放在每帧前半段：规则先决定状态，表现后面由 Projection 统一同步。命中时还要区分本地即时反馈和服务端回包权威。</p>
+          <p class="lead">网络事实先由 ingress 写入 ECS，随后 state systems 推进状态；表现仍由后面的 Projection 统一同步。命中时还要区分本地即时反馈和服务端回包权威。</p>
         </header>
         <section class="content split">
           <div class="diagram">
@@ -1305,18 +1325,20 @@ for (const effect of current) dispatch(effect);</pre>
               <path d="M500 170 V258" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#fsmArrow)"></path>
               <path d="M448 337 C332 392 188 342 134 273" stroke="#2364aa" stroke-width="3" fill="none" marker-end="url(#fsmArrow)"></path>
               <path d="M455 145 C390 206 353 251 322 276" stroke="#b34343" stroke-width="3" stroke-dasharray="8 6" fill="none" marker-end="url(#fsmArrow)"></path>
+              <path d="M246 291 C214 269 180 248 158 233" stroke="#b34343" stroke-width="3" stroke-dasharray="8 6" fill="none" marker-end="url(#fsmArrow)"></path>
               <text x="352" y="214" text-anchor="middle" font-size="13" fill="#b34343">hit -> Dizzy</text>
+              <text x="203" y="280" text-anchor="middle" font-size="13" fill="#b34343">hold ends</text>
               <text x="282" y="414" text-anchor="middle" font-size="14" fill="#5f6b7a">下一轮统一回到 Wait，并重置 hp、clickable、timer</text>
             </svg>
           </div>
-          <div class="rows">
+          <div class="rows fsm-notes">
             <div class="panel accent-green"><strong>自然循环</strong><p>Wait 随机等待，Up 播出洞，Stand 开启可点击，Down 回洞，最后重置回 Wait。</p></div>
             <div class="panel accent-red"><strong>Dizzy 的权威动作</strong><p>触摸命中后，<code>detectKickHit</code> 立刻 <code>hp--</code> 并调用 <code>startShrewDizzyHold</code>。这是本地即时表现的权威动作。</p></div>
-            <div class="panel accent-blue"><strong>applyKickResponse 的职责</strong><p>服务端回包进入 <code>handleKickResponse</code>，更新金币、怒气、锤子和雷电，emit 奖励 Effect；它不再改 Shrew 的 Dizzy 状态。</p></div>
+            <div class="panel accent-blue"><strong>ingress 回包的职责</strong><p>ingress drain 中的 <code>handleKickResponse</code> 更新金币、怒气和锤子资源，emit 奖励 Effect；雷神锤激活由后续 derived system 计算，它不再改 Shrew 的 Dizzy 状态。</p></div>
             <div class="panel accent-amber"><strong>先后顺序</strong><p>touch -> local hit -> Dizzy -> send request；response -> score/resource/effect。这样命中反馈不等待网络。</p></div>
           </div>
         </section>
-        <footer class="footer"><span>对应代码：src/game/features/shrew/ShrewStateSystem.ts、src/tests/ecs/ShrewStateSystem.test.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
+        <footer class="footer"><span>对应代码：src/game/features/shrew/ShrewStateSystem.ts、src/tests/game/features/shrew/ShrewStateSystem.test.ts</span><div class="nav"><button data-prev>‹</button><button data-next>›</button></div></footer>
       </article>
 
       <article class="slide" data-title="World Lifecycle">
@@ -1334,11 +1356,12 @@ for (const effect of current) dispatch(effect);</pre>
   -> initial projection sync
 
 frame
-  -> state systems -> network -> feature systems
-  -> dirty mark -> view sync -> effect flush
+  -> network.update -> ingress -> state -> gameplay -> derived
+  -> optional scene rebuild
+  -> projection mark -> view sync -> effect flush
 
 exit scene
-  -> clear network callbacks
+  -> network.destroy() -> ingressQueue.clear()
   -> effectRuntime.clear()
   -> projectionRuntime.clear()
   -> viewRegistry.clear()
