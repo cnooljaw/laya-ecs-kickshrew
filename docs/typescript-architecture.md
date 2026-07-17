@@ -210,15 +210,15 @@ Registry 在创建时先校验静态名称重复，并预收集 `entityTypes()` 
 ```text
 每个 Feature.setup(ctx)                 // 按组合根数组顺序
   -> options.sessionSetup(ctx)           // 跨 Feature 的 session 组装
-  -> 每个 Feature 的静态 systems         // 同样保持声明顺序
-  -> 每个 Feature.setupSystems(ctx)      // 可读取 setup 已提供的 capability
+  -> 逐个 Feature 收集：静态 systems      // 同样保持声明顺序
+     -> 该 Feature.setupSystems(ctx)      // 可读取 setup 已提供的 capability
   -> options.systems                     // Registry 配置的 session System
   -> runtimeSystems                      // GameScene 本次传入的运行时 System
   -> 按 ingress/state/gameplay/derived 分组
   -> GameFeatureRuntime.systemsByPhase()
 ```
 
-同一 phase 内不额外排序，保留上述收集顺序；不同 phase 的先后由 `GAME_SYSTEM_PHASES` 固定。这就是当前 System 顺序的真实来源，而不只是“Feature 的某个数组顺序”。动态返回的 System 与静态 System 一样都会在 setup 完成后校验名称唯一性。
+同一 phase 内不额外排序，保留上述收集顺序。也就是说，某个 Feature 的 `setupSystems()` 结果紧跟在该 Feature 的静态 System 后，不是等所有 Feature 的静态 System 收集完才追加。不同 phase 的先后由 `GAME_SYSTEM_PHASES` 固定。这就是当前 System 顺序的真实来源，而不只是“Feature 的某个数组顺序”。动态返回的 System 与静态 System 一样都会在 setup 完成后校验名称唯一性。
 
 `setup` 也不是“整个程序只执行一次”。它在每次 `GameScene` 创建并调用 `setupAll()` 时执行一次；退出场景后，world、runtime、view 和 queue 一起销毁，再进入新场景会重新装配。适合在这里创建固定槽位、挂载本场景 Node、注册 typed Effect handler、声明 lifecycle owner、通过 `provide` 暴露场景能力。不要把它理解为通用的全局 EventBus 或 Command 注册入口：当前项目的真实 API 是 `ctx.effects.on(...)`、`ctx.provide(...)` / `ctx.use(...)` 等窄能力。
 

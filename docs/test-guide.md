@@ -140,9 +140,9 @@ system component value
 瞬时效果：
 
 ```text
-adapter emit
+session/system emit
   -> same EffectDefinition identity
-  -> GameLoopPipeline.flush
+  -> EffectRuntime.flush（由 GameLoopPipeline 在帧末调用）
   -> Feature handler
   -> effect node
 ```

@@ -24,8 +24,8 @@
 ## View 节点
 
 ```text
-shrew/SceneLayer          背景、cover、场景切换遮罩
-shrew/HoleNode            洞位容器
+board/SceneLayer          背景、cover、场景切换遮罩
+board/HoleNode            洞位容器
 shrew/ShrewNode           地鼠复合精灵和 Cocos -> Laya 坐标转换
 hammer/HammerNode         锤子光标和击打动画
 playerHud/PlayerHUD      金币、怒气、体力、等级

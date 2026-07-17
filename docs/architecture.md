@@ -117,9 +117,10 @@ defineFeature({
 ```text
 GameScene.init
   -> createGameWorld
-  -> create EntityRuntime / ProjectionRuntime / EffectRuntime
-  -> create per-scene GameIngressQueue
+  -> create EntityRuntime
   -> bootstrap singleton entities
+  -> create ProjectionRuntime / EffectRuntime
+  -> create per-scene GameIngressQueue
   -> GAME_FEATURE_REGISTRY.setupAll
      -> feature.setup provide/use setup capability
      -> setupGameSession provide cross-feature capability
@@ -203,7 +204,7 @@ NetworkAdapter callback
 
 - `Main`：frameLoop、stage event、背景音乐。
 - `ClientDiagnostics`：可选的 Laya Stat、Heap 面板、帧诊断和调度面板。
-- `GameScene`：world、三个 runtime、network 和 root。
+- `GameScene`：world、三个 runtime、network、per-scene ingress queue 和 root。
 - `Feature`：本业务的拓扑、对象池、节点和 effect handler。
 - `ViewRegistry`：集中 destroy 由 mount/own 注册的 view/resource。
 - 具体 Node：自己的 children、timer、tween 和 async callback guard。
@@ -212,11 +213,13 @@ NetworkAdapter callback
 
 ```text
 network.destroy
+GameIngressQueue.clear
 ViewRegistry.clear
 EffectRuntime.clear
 ProjectionRuntime.clear
 EntityRuntime.clear
 deleteWorld
+GameSceneRoot.destroy
 ```
 
 `GameScene.init()` 任一步失败也走同一套清理顺序并重新抛出异常。Feature setup 不能留下半挂载的 Node、Effect handler、snapshot 或 world；调用者应创建新的 `GameScene` 再尝试进入。

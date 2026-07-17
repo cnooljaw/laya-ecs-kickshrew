@@ -149,7 +149,7 @@ Effect 按 definition 对象身份隔离。`emit` 只入队，主循环最后 `f
 新增瞬时效果：
 
 1. 在拥有该事实的业务切片定义 typed EffectDefinition。
-2. adapter/system emit 同一个 definition identity。
+2. `session` 或 system emit 同一个 definition identity。
 3. Feature setup 注册 handler。
 4. effect node 通过 `createView/own` 交给 ViewRegistry 管理。
 5. 补 EffectRuntime 或效果流测试。
