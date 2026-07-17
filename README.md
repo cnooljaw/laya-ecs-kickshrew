@@ -50,6 +50,7 @@ src/tests/                Vitest 测试
 | --- | --- |
 | 第一次运行、读第一条链路 | [docs/getting-started.md](docs/getting-started.md) |
 | 理解模块职责、依赖方向、生命周期 | [docs/architecture.md](docs/architecture.md) |
+| 理解函数式 System、闭包、Feature 组装和调度 | [docs/typescript-architecture.md](docs/typescript-architecture.md) |
 | 理解 board、session 和跨 Feature 玩法组装 | [docs/gameplay-assembly.md](docs/gameplay-assembly.md) |
 | 修改 Entity、Projection、Effect、board 占用 | [docs/ecs-binding.md](docs/ecs-binding.md) |
 | 修改 Laya 节点、资源加载、生命周期 | [docs/laya-rules.md](docs/laya-rules.md) |

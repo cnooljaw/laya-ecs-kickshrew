@@ -118,6 +118,7 @@ defineFeature({
 GameScene.init
   -> createGameWorld
   -> create EntityRuntime / ProjectionRuntime / EffectRuntime
+  -> create per-scene GameIngressQueue
   -> bootstrap singleton entities
   -> GAME_FEATURE_REGISTRY.setupAll
      -> feature.setup provide/use setup capability
@@ -185,15 +186,18 @@ NetworkAdapter callback
 
 ```text
 NetworkAdapter callback
-  -> KickResponseHandler
-  -> Player/Hammer public mutation helpers
-  -> activateHammerThunderIfCharged cross-feature orchestration
-  -> HitRewardEffect emit
+  -> GameIngressQueue enqueue
+  -> ingress phase FIFO drain
+  -> KickResponseHandler / server-sync applier
+  -> Player/Hammer public mutation helper
+  -> Component / HitRewardEffect emit
+  -> derived: activateHammerThunderIfCharged
+  -> ProjectionRuntime mark/sync
   -> frame-end flush
   -> HitEffectNode
 ```
 
-本地 miss 由 `KickInputController` 显式 emit `HitMissEffect`。
+这里的 `KickResponseHandler` 只在 ingress drain 中执行；它不从网络 callback 直接写 world，也不直接调用派生规则。雷神锤是否激活由同帧 `derived` system 根据已经写入的 Component 计算。本地 miss 则由 `KickInputController` 显式 emit `HitMissEffect`。
 
 ## 生命周期 owner
 

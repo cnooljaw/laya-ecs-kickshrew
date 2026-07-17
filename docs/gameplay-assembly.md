@@ -274,7 +274,7 @@ GameLoopPipeline.update
 - 输入点击：`KickInputController`
 - 本地命中：`KickHitDetection`
 - 请求构造：`KickRequestMapper`
-- 网络回包：`KickResponseHandler`
+- 网络回包：`GameIngressQueue` 在 ingress phase drain 后调用 `KickResponseHandler`
 - 跨 Feature 规则：`HammerThunderSystem`
 - 跨 Feature capability：`MonsterSpawnSession`
 

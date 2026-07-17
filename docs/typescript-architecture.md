@@ -138,6 +138,8 @@ for (const phase of GAME_SYSTEM_PHASES) {
 
 `GAME_SYSTEM_PHASES` 决定 phase 顺序；同一 phase 内的顺序由显式 Feature 注册和 setup-time system 收集顺序决定。这是当前的确定性契约，测试应保护它。
 
+这两层循环本身不是已知瓶颈：phase 数量固定为四个，内层只遍历已装配的 System。`ClientDiagnostics` 默认不把 `FrameDiagnostics` 注入 `GameScene`，因此 `GameLoopPipeline` 会走没有逐步骤计时的正常路径。只有在 QA 或开发环境临时打开单一诊断开关后，才额外记录 network、每个 System、Projection 和 Effect 的耗时，用真实数据决定是否需要改变调度或投影模型。
+
 `SystemDefinition` 确实为未来诊断、开关或 profiling 留出了扩展位置，但不要误解为“只加字段就自动生效”。例如新增 `priority`，还必须由 `GameFeatureRegistry` 明确排序；新增 `enabled`，还必须由 Pipeline 或 Registry 决定何时过滤。只有已有的 `phase`、`name`、`run` 才是当前真实支持的调度协议。
 
 因此，更准确的总结是：ECS 用函数承载规则，用对象承载元数据，用 Pipeline 承载时序；同时仍由 Entity 和 Component 承载权威游戏数据与关系。它不是只管理函数，也不是只管理对象。

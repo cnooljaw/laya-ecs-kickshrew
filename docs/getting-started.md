@@ -41,14 +41,14 @@ transient result
 
 ## 读代码路径
 
-1. `src/app/GameScene.ts`：创建 world、runtime、FeatureRegistry。
+1. `src/app/GameScene.ts`：创建 world、各 runtime 和 per-scene ingress queue，调用 Registry 完成本场景装配。
 2. `src/app/GameLoopPipeline.ts`：每帧 network、ingress、state、gameplay、derived、projection、effect 顺序。
 3. `src/game/GameFeatures.ts`：显式业务组合根。
 4. `src/game/board/BoardFoundation.ts`：基础棋盘拓扑和洞位占用入口。
 5. `src/game/features/shrew/ShrewFeature.ts`：固定拓扑示例。
 6. `src/game/features/monster/MonsterFeature.ts`：固定池和 setup-time system 示例。
 7. `src/game/session/KickInputController.ts`：输入进入 ECS。
-8. `src/game/session/KickResponseHandler.ts`：回包进入 ECS 和 Effect。
+8. `src/game/session/GameIngressQueue.ts`：网络事实如何在 ingress phase 进入 ECS；随后看 `KickResponseHandler.ts` 如何应用 kick 回包。
 
 ## 第一次改动
 
@@ -85,6 +85,8 @@ npx tsc --noEmit
 ```
 
 运行时可见改动继续跑 `npm run debug:ready` 并打开浏览器入口。
+
+若要查看 Laya Stat、Heap 和 ECS 帧诊断，在 `src/app/ClientDiagnostics.ts` 改唯一的 `ENABLE_CLIENT_DIAGNOSTICS` 常量。默认关闭，正常客户端不会创建这些调试 UI 或记录逐步骤耗时。
 
 UI 调试页面索引看 `docs/ui-debugging-guide.md`。洞位、Shrew 站位、Monster 三角落点和 Spine 叠影不要只靠主页面猜，先用对应预览页定位。
 

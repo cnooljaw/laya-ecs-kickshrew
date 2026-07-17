@@ -14,6 +14,7 @@
 ## 生命周期 owner
 
 - `Main`：frameLoop、stage event、脚本生命周期。
+- `ClientDiagnostics`：可选的 Laya Stat、Heap 与 ECS 帧诊断面板；只由单一开关创建和销毁。
 - `GameScene`：world、network callback、runtime adapter、ViewRegistry、FeatureRegistry 调用。
 - `Feature`：创建本模块 view node，通过 `mountOne/mountPool/createView/own` 声明关系和所有权。
 - `ProjectionRuntime`：字段快照、eid/node registry 和 dirty arrays。

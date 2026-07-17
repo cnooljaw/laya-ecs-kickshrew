@@ -69,6 +69,8 @@ rg -n "PingReqID|PongRespID|JoinRoomReqID|GameSnapshotReqID|TimeSyncReqID|KickRe
 
 `Envelope.seq_id` 是请求-回包匹配的唯一权威 seq。`Envelope.msg_id` 是消息类型权威协议号。`ShrewTimelinePush`、`ShrewStatePush` 和 `MapStatePush` 必须使用 `seq_id=0`，不进入 pending 请求表。
 
+网络层完成解码后也不直接操作 ECS 或 Laya view。`GameScene` 的 adapter callback 只把 `GameSnapshot`、timeline/state/map push、time sync 与 kick response 放入 per-scene `GameIngressQueue`；随后的 `ingress` phase 按 FIFO 应用它们。这保证协议事实在确定的帧边界进入权威状态，且场景销毁时可以整批清掉未消费消息。
+
 ## 地鼠权威时间线
 
 服务端 `RoomActor` 以 `RoomSize=3` 分配 `AttackActor`，这也是组播边界。未满房间处于 `Filling`，快照的 `active_cycles=[]`；第三人加入后进入 `Running`，用同一 `start_at_ms` 启动地鼠和地图时间线。不同 `AttackActor` 的客户端不应同步。

@@ -23,6 +23,8 @@ http://<LAN-IP>:8080/debug-tsc.html?perf=1&heroes=200
 
 `debug:ready` 固定使用 `0.0.0.0:8080`。如果已有旧服务只监听 `127.0.0.1:8080`，脚本会拒绝继续。
 
+`perf=1` 只开启 PerfHero 压测，不等于开启调试统计。需要采集每帧、每个 System、network、Projection 和 Effect 的耗时时，在 `src/app/ClientDiagnostics.ts` 将唯一的 `ENABLE_CLIENT_DIAGNOSTICS` 常量临时改为 `true`。默认关闭时不创建面板，也不执行逐步骤计时；先用诊断数据确认瓶颈，再决定是否优化 `ProjectionRuntime` 或 System 调度。
+
 ## PerfHero 链路
 
 ```text
@@ -61,6 +63,8 @@ DrawCall / Triangle
 GPUMemory / AllTexture / RenderTexture / GPUBuffer
 JS Heap Used / Peak / Limit
 ```
+
+诊断开启时，`RuntimeDiagnosticsPanel` 还提供实际 `schedule` 和最近帧慢步骤。计数与计时本身会带来少量额外工作，尤其是逐 System 的高精度计时和 UI 文本刷新，因此它只用于 QA、开发机或短时压测采样；不应据此替代正式客户端的 profile 结论。
 
 判断：
 
